@@ -1,0 +1,573 @@
+from datetime import timedelta
+
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
+
+
+class SecurityPostType(models.Model):
+    _name = "security.post.type"
+    _description = "Security Post Type"
+    _order = "name"
+
+    name = fields.Char(required=True)
+    code = fields.Char()
+    description = fields.Text()
+    min_grade_id = fields.Many2one("security.grade", string="Minimum Grade")
+    required_certification_ids = fields.Many2many(
+        "security.certification",
+        "security_post_type_certification_rel",
+        "post_type_id",
+        "certification_id",
+        string="Required Certifications",
+    )
+    required_language_ids = fields.Many2many(
+        "security.language",
+        "security_post_type_language_rel",
+        "post_type_id",
+        "language_id",
+        string="Required Languages",
+    )
+    required_attribute_ids = fields.Many2many(
+        "security.attribute",
+        "security_post_type_attribute_rel",
+        "post_type_id",
+        "attribute_id",
+        string="Required Attributes",
+    )
+    minimum_reliability_score = fields.Integer(default=0)
+    active = fields.Boolean(default=True)
+
+
+class SecurityClientSite(models.Model):
+    _name = "security.client.site"
+    _description = "Security Client Site"
+    _order = "partner_id, name"
+
+    name = fields.Char(required=True)
+    code = fields.Char()
+    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    location = fields.Char()
+    supervisor_id = fields.Many2one(
+        "hr.employee",
+        domain=[("security_guard", "=", True)],
+    )
+    active = fields.Boolean(default=True)
+    post_ids = fields.One2many("security.post", "site_id", string="Post Positions")
+    shift_requirement_ids = fields.One2many(
+        "security.shift.requirement",
+        "site_id",
+        string="Shift Requirements",
+    )
+    exclusion_ids = fields.One2many(
+        "security.guard.exclusion",
+        "site_id",
+        string="Guard Exclusions",
+    )
+    note = fields.Text()
+
+
+class SecurityPost(models.Model):
+    _name = "security.post"
+    _description = "Security Post"
+    _order = "partner_id, site_id, name"
+
+    name = fields.Char(required=True)
+    code = fields.Char()
+    active = fields.Boolean(default=True)
+    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one(
+        "res.partner",
+        string="Client",
+    )
+    post_type_id = fields.Many2one("security.post.type", required=True)
+    location = fields.Char()
+    required_guard_count = fields.Integer(default=1)
+    shift_template_id = fields.Many2one(
+        "security.shift.template",
+        help="Legacy/default shift. Use shift requirements for multiple schedules.",
+    )
+    shift_requirement_ids = fields.One2many(
+        "security.shift.requirement",
+        "post_id",
+        string="Shift Requirements",
+    )
+    note = fields.Text()
+
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for post in self:
+            if post.site_id:
+                post.partner_id = post.site_id.partner_id
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if vals.get("site_id") and not vals.get("partner_id"):
+                vals["partner_id"] = self.env["security.client.site"].browse(vals["site_id"]).partner_id.id
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if vals.get("site_id") and not vals.get("partner_id"):
+            vals["partner_id"] = self.env["security.client.site"].browse(vals["site_id"]).partner_id.id
+        return super().write(vals)
+
+
+class SecurityShiftTemplate(models.Model):
+    _name = "security.shift.template"
+    _description = "Security Shift Template"
+    _order = "name"
+
+    name = fields.Char(required=True)
+    start_hour = fields.Float(required=True, default=6.0)
+    end_hour = fields.Float(required=True, default=18.0)
+    duration_hours = fields.Float(
+        compute="_compute_duration_hours",
+        store=True,
+    )
+    active = fields.Boolean(default=True)
+    note = fields.Text()
+
+    @api.depends("start_hour", "end_hour")
+    def _compute_duration_hours(self):
+        for template in self:
+            duration = template.end_hour - template.start_hour
+            if duration <= 0:
+                duration += 24.0
+            template.duration_hours = duration
+
+
+class SecurityShiftRequirement(models.Model):
+    _name = "security.shift.requirement"
+    _description = "Security Shift Requirement"
+    _order = "site_id, post_id, shift_template_id"
+
+    name = fields.Char(compute="_compute_name", store=True)
+    site_id = fields.Many2one("security.client.site", required=True)
+    partner_id = fields.Many2one(related="site_id.partner_id", store=True, string="Client")
+    post_id = fields.Many2one("security.post", required=True)
+    post_type_id = fields.Many2one(related="post_id.post_type_id", store=True)
+    shift_template_id = fields.Many2one("security.shift.template", required=True)
+    guard_count = fields.Integer(default=1, required=True)
+    monday = fields.Boolean(default=True)
+    tuesday = fields.Boolean(default=True)
+    wednesday = fields.Boolean(default=True)
+    thursday = fields.Boolean(default=True)
+    friday = fields.Boolean(default=True)
+    saturday = fields.Boolean(default=True)
+    sunday = fields.Boolean(default=True)
+    bill_rate = fields.Float(default=0.0)
+    pay_rate = fields.Float(default=0.0)
+    rate_multiplier = fields.Float(default=1.0)
+    overtime_allowed = fields.Boolean(default=True)
+    fairness_weight = fields.Float(
+        default=1.0,
+        help="Higher values identify shifts that should be balanced more carefully.",
+    )
+    minimum_reliability_score = fields.Integer(default=0)
+    required_certification_ids = fields.Many2many(
+        "security.certification",
+        "security_shift_requirement_certification_rel",
+        "requirement_id",
+        "certification_id",
+        string="Required Certifications",
+    )
+    required_language_ids = fields.Many2many(
+        "security.language",
+        "security_shift_requirement_language_rel",
+        "requirement_id",
+        "language_id",
+        string="Required Languages",
+    )
+    required_attribute_ids = fields.Many2many(
+        "security.attribute",
+        "security_shift_requirement_attribute_rel",
+        "requirement_id",
+        "attribute_id",
+        string="Required Attributes",
+    )
+    active = fields.Boolean(default=True)
+    note = fields.Text()
+
+    def _is_active_on_date(self, target_date):
+        self.ensure_one()
+        weekday = target_date.weekday()
+        return [
+            self.monday,
+            self.tuesday,
+            self.wednesday,
+            self.thursday,
+            self.friday,
+            self.saturday,
+            self.sunday,
+        ][weekday]
+
+    @api.depends("site_id", "post_id", "shift_template_id")
+    def _compute_name(self):
+        for requirement in self:
+            parts = [
+                requirement.site_id.name or "",
+                requirement.post_id.name or "",
+                requirement.shift_template_id.name or "",
+            ]
+            requirement.name = " - ".join(part for part in parts if part) or "Shift Requirement"
+
+    @api.onchange("post_id")
+    def _onchange_post_id(self):
+        for requirement in self:
+            if requirement.post_id:
+                requirement.site_id = requirement.post_id.site_id
+
+    @api.constrains("guard_count", "bill_rate", "pay_rate", "rate_multiplier", "fairness_weight")
+    def _check_values(self):
+        for requirement in self:
+            if requirement.guard_count < 1:
+                raise ValidationError("Shift requirement guard count must be at least one.")
+            if requirement.bill_rate < 0 or requirement.pay_rate < 0:
+                raise ValidationError("Shift requirement rates cannot be negative.")
+            if requirement.rate_multiplier <= 0:
+                raise ValidationError("Shift requirement rate multiplier must be greater than zero.")
+            if requirement.fairness_weight < 0:
+                raise ValidationError("Fairness weight cannot be negative.")
+
+
+class SecuritySiteRequirement(models.Model):
+    _name = "security.site.requirement"
+    _description = "Security Site Requirement"
+    _order = "partner_id, post_type_id"
+
+    name = fields.Char(compute="_compute_name", store=True)
+    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    post_type_id = fields.Many2one("security.post.type", required=True)
+    minimum_guard_count = fields.Integer(default=1)
+    site_id = fields.Many2one("security.client.site", string="Client Site")
+    minimum_reliability_score = fields.Integer(default=0)
+    required_language_ids = fields.Many2many(
+        "security.language",
+        "security_site_requirement_language_rel",
+        "requirement_id",
+        "language_id",
+        string="Required Languages",
+    )
+    required_attribute_ids = fields.Many2many(
+        "security.attribute",
+        "security_site_requirement_attribute_rel",
+        "requirement_id",
+        "attribute_id",
+        string="Required Attributes",
+    )
+    preferred_guard_ids = fields.Many2many(
+        "hr.employee",
+        "security_site_requirement_employee_rel",
+        "requirement_id",
+        "employee_id",
+        domain=[("security_guard", "=", True)],
+        string="Preferred Guards",
+    )
+    note = fields.Text()
+
+    @api.depends("partner_id", "post_type_id")
+    def _compute_name(self):
+        for requirement in self:
+            partner = requirement.partner_id.name or ""
+            post_type = requirement.post_type_id.name or ""
+            requirement.name = f"{partner} - {post_type}".strip(" -")
+
+
+class SecurityGuardExclusion(models.Model):
+    _name = "security.guard.exclusion"
+    _description = "Security Guard Client/Site Exclusion"
+    _order = "partner_id, site_id, employee_id"
+
+    employee_id = fields.Many2one(
+        "hr.employee",
+        required=True,
+        domain=[("security_guard", "=", True)],
+        string="Guard",
+    )
+    partner_id = fields.Many2one("res.partner", string="Client")
+    site_id = fields.Many2one("security.client.site", string="Client Site")
+    reason = fields.Char(required=True)
+    active = fields.Boolean(default=True)
+    note = fields.Text()
+
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for exclusion in self:
+            if exclusion.site_id:
+                exclusion.partner_id = exclusion.site_id.partner_id
+
+    @api.constrains("partner_id", "site_id")
+    def _check_scope(self):
+        for exclusion in self:
+            if not exclusion.partner_id and not exclusion.site_id:
+                raise ValidationError("Choose a client or client site for the exclusion.")
+
+
+class SecurityRosterBatch(models.Model):
+    _name = "security.roster.batch"
+    _description = "Security Monthly Roster Batch"
+    _order = "date_from desc, id desc"
+
+    name = fields.Char(compute="_compute_name", store=True)
+    date_from = fields.Date(required=True)
+    date_to = fields.Date(required=True)
+    partner_id = fields.Many2one("res.partner", string="Client")
+    site_id = fields.Many2one("security.client.site", string="Client Site")
+    state = fields.Selection(
+        [
+            ("draft", "Draft"),
+            ("generated", "Generated"),
+            ("confirmed", "Confirmed"),
+            ("cancelled", "Cancelled"),
+        ],
+        default="draft",
+        required=True,
+    )
+    slot_ids = fields.One2many("security.roster.slot", "batch_id", string="Roster Slots")
+    generated_slot_count = fields.Integer(compute="_compute_generated_slot_count")
+    note = fields.Text()
+
+    @api.depends("date_from", "date_to", "partner_id", "site_id")
+    def _compute_name(self):
+        for batch in self:
+            scope = batch.site_id.name or batch.partner_id.name or "All Sites"
+            if batch.date_from and batch.date_to:
+                batch.name = f"{scope}: {batch.date_from} to {batch.date_to}"
+            else:
+                batch.name = scope
+
+    def _compute_generated_slot_count(self):
+        for batch in self:
+            batch.generated_slot_count = len(batch.slot_ids)
+
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for batch in self:
+            if batch.site_id:
+                batch.partner_id = batch.site_id.partner_id
+
+    @api.constrains("date_from", "date_to")
+    def _check_dates(self):
+        for batch in self:
+            if batch.date_to < batch.date_from:
+                raise ValidationError("Roster batch end date cannot be earlier than start date.")
+
+    def action_generate_slots(self):
+        slot_model = self.env["security.roster.slot"]
+        requirement_model = self.env["security.shift.requirement"]
+        for batch in self:
+            domain = [("active", "=", True)]
+            if batch.site_id:
+                domain.append(("site_id", "=", batch.site_id.id))
+            elif batch.partner_id:
+                domain.append(("partner_id", "=", batch.partner_id.id))
+            requirements = requirement_model.search(domain)
+            if not requirements:
+                raise ValidationError("No active shift requirements found for this roster batch.")
+
+            created_count = 0
+            target_date = batch.date_from
+            while target_date <= batch.date_to:
+                for requirement in requirements:
+                    if not requirement._is_active_on_date(target_date):
+                        continue
+                    for guard_number in range(requirement.guard_count):
+                        existing = slot_model.search_count(
+                            [
+                                ("shift_date", "=", target_date),
+                                ("shift_requirement_id", "=", requirement.id),
+                                ("batch_id", "=", batch.id),
+                                ("slot_number", "=", guard_number + 1),
+                            ]
+                        )
+                        if existing:
+                            continue
+                        slot_model.create(
+                            {
+                                "batch_id": batch.id,
+                                "slot_number": guard_number + 1,
+                                "shift_date": target_date,
+                                "shift_requirement_id": requirement.id,
+                                "post_id": requirement.post_id.id,
+                                "shift_template_id": requirement.shift_template_id.id,
+                            }
+                        )
+                        created_count += 1
+                target_date += timedelta(days=1)
+            batch.state = "generated"
+            if not created_count:
+                raise ValidationError("No new roster slots were created. Check dates or existing slots.")
+
+    def action_confirm(self):
+        for batch in self:
+            batch.slot_ids.write({"state": "confirmed"})
+            batch.state = "confirmed"
+
+    def action_cancel(self):
+        for batch in self:
+            batch.state = "cancelled"
+
+    def action_reset_to_draft(self):
+        for batch in self:
+            batch.state = "draft"
+
+
+class SecurityRosterSlot(models.Model):
+    _name = "security.roster.slot"
+    _description = "Security Roster Slot"
+    _order = "shift_date, shift_template_id, post_id"
+
+    name = fields.Char(compute="_compute_name", store=True)
+    batch_id = fields.Many2one("security.roster.batch", ondelete="set null")
+    slot_number = fields.Integer(default=1)
+    shift_date = fields.Date(required=True)
+    shift_requirement_id = fields.Many2one("security.shift.requirement")
+    post_id = fields.Many2one("security.post", required=True)
+    partner_id = fields.Many2one(related="post_id.partner_id", store=True)
+    site_id = fields.Many2one(related="post_id.site_id", store=True)
+    post_type_id = fields.Many2one(related="post_id.post_type_id", store=True)
+    shift_template_id = fields.Many2one(
+        "security.shift.template",
+        required=True,
+    )
+    employee_id = fields.Many2one(
+        "hr.employee",
+        domain=[("security_guard", "=", True)],
+    )
+    state = fields.Selection(
+        [
+            ("draft", "Draft"),
+            ("assigned", "Assigned"),
+            ("confirmed", "Confirmed"),
+            ("cancelled", "Cancelled"),
+        ],
+        default="draft",
+        required=True,
+    )
+    override_reason = fields.Char()
+    overtime_planned = fields.Boolean(default=False)
+    high_value_shift = fields.Boolean(
+        compute="_compute_shift_flags",
+        store=True,
+    )
+    fairness_warning = fields.Char(
+        compute="_compute_fairness_warning",
+        store=True,
+    )
+    note = fields.Text()
+
+    @api.onchange("shift_requirement_id")
+    def _onchange_shift_requirement_id(self):
+        for slot in self:
+            if slot.shift_requirement_id:
+                slot.post_id = slot.shift_requirement_id.post_id
+                slot.shift_template_id = slot.shift_requirement_id.shift_template_id
+
+    @api.depends("shift_requirement_id.rate_multiplier", "shift_requirement_id.fairness_weight")
+    def _compute_shift_flags(self):
+        for slot in self:
+            requirement = slot.shift_requirement_id
+            slot.high_value_shift = bool(
+                requirement
+                and (requirement.rate_multiplier > 1.0 or requirement.fairness_weight > 1.0)
+            )
+
+    @api.depends("employee_id", "shift_date", "high_value_shift", "batch_id")
+    def _compute_fairness_warning(self):
+        for slot in self:
+            slot.fairness_warning = False
+            if not slot.employee_id or not slot.high_value_shift or not slot.shift_date:
+                continue
+            date_from = slot.batch_id.date_from if slot.batch_id else slot.shift_date.replace(day=1)
+            date_to = slot.batch_id.date_to if slot.batch_id else slot.shift_date
+            high_value_count = self.search_count(
+                [
+                    ("employee_id", "=", slot.employee_id.id),
+                    ("high_value_shift", "=", True),
+                    ("shift_date", ">=", date_from),
+                    ("shift_date", "<=", date_to),
+                    ("id", "!=", slot.id),
+                ]
+            )
+            if high_value_count >= 5:
+                slot.fairness_warning = "Guard already has several high-value shifts in this period."
+
+    @api.depends("shift_date", "post_id", "employee_id")
+    def _compute_name(self):
+        for slot in self:
+            date = slot.shift_date or ""
+            post = slot.post_id.name or ""
+            employee = slot.employee_id.name or "Unassigned"
+            slot.name = f"{date} - {post} - {employee}"
+
+    @api.constrains("employee_id", "post_id", "shift_requirement_id")
+    def _check_guard_eligibility(self):
+        for slot in self:
+            employee = slot.employee_id
+            post_type = slot.post_id.post_type_id
+            requirement = slot.shift_requirement_id
+            if not employee or not post_type:
+                continue
+            if employee.security_disqualified:
+                raise ValidationError(
+                    "Disqualified guards cannot be assigned to roster slots."
+                )
+            exclusion_domain = [
+                ("employee_id", "=", employee.id),
+                ("active", "=", True),
+                "|",
+                ("site_id", "=", slot.site_id.id or False),
+                ("partner_id", "=", slot.partner_id.id or False),
+            ]
+            if self.env["security.guard.exclusion"].search_count(exclusion_domain):
+                raise ValidationError(
+                    "This guard is excluded from this client or site."
+                )
+            if post_type.min_grade_id and employee.security_grade_id:
+                if employee.security_grade_id.sequence > post_type.min_grade_id.sequence:
+                    raise ValidationError(
+                        "The assigned guard does not meet the minimum grade for this post type."
+                    )
+            elif post_type.min_grade_id and not employee.security_grade_id:
+                raise ValidationError(
+                    "The assigned guard has no grade but this post requires one."
+                )
+
+            missing_certifications = (
+                post_type.required_certification_ids - employee.security_certification_ids
+            )
+            if requirement:
+                missing_certifications |= (
+                    requirement.required_certification_ids - employee.security_certification_ids
+                )
+            if missing_certifications:
+                raise ValidationError(
+                    "The assigned guard is missing required certifications for this post type."
+                )
+            if post_type.required_language_ids - employee.security_language_ids:
+                raise ValidationError(
+                    "The assigned guard is missing required languages for this post type."
+                )
+            if post_type.required_attribute_ids - employee.security_attribute_ids:
+                raise ValidationError(
+                    "The assigned guard is missing required attributes for this post type."
+                )
+            if requirement:
+                if requirement.required_language_ids - employee.security_language_ids:
+                    raise ValidationError(
+                        "The assigned guard is missing required languages for this shift requirement."
+                    )
+                if requirement.required_attribute_ids - employee.security_attribute_ids:
+                    raise ValidationError(
+                        "The assigned guard is missing required attributes for this shift requirement."
+                    )
+                minimum_score = max(
+                    post_type.minimum_reliability_score,
+                    requirement.minimum_reliability_score,
+                )
+            else:
+                minimum_score = post_type.minimum_reliability_score
+            if employee.security_reliability_score < minimum_score:
+                raise ValidationError(
+                    "The assigned guard does not meet the minimum reliability score."
+                )

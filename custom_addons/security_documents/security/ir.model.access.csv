@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_document_type_user,security.document.type user,model_security_document_type,hr.group_hr_user,1,1,1,1
+access_security_employee_document_user,security.employee.document user,model_security_employee_document,hr.group_hr_user,1,1,1,1

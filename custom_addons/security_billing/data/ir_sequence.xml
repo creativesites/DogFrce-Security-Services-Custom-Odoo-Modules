@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_security_billing_invoice" model="ir.sequence">
+        <field name="name">Security Billing Invoice</field>
+        <field name="code">security.billing.invoice</field>
+        <field name="prefix">SINV/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

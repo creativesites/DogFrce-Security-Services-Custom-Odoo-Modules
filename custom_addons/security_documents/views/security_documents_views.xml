@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_document_type_list" model="ir.ui.view">
+        <field name="name">security.document.type.list</field>
+        <field name="model">security.document.type</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="sequence"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="category"/>
+                <field name="expiry_required"/>
+                <field name="required_for_active_guard"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_document_type_search" model="ir.ui.view">
+        <field name="name">security.document.type.search</field>
+        <field name="model">security.document.type</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <filter name="group_category" string="Category" context="{'group_by': 'category'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_document_type_form" model="ir.ui.view">
+        <field name="name">security.document.type.form</field>
+        <field name="model">security.document.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Identity Card" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="sequence"/>
+                            <field name="category"/>
+                        </group>
+                        <group>
+                            <field name="expiry_required"/>
+                            <field name="default_validity_months"/>
+                            <field name="required_for_active_guard"/>
+                            <field name="required_for_firearm_post"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_document_type" model="ir.actions.act_window">
+        <field name="name">Document Types</field>
+        <field name="res_model">security.document.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_document_type_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Document Type!
+            </p>
+            <p>
+                Define the types of documents required from guards, such as Identity Cards, Passports, or Police Clearances.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_document_type"
+        name="Document Types"
+        parent="security_base.menu_security_configuration"
+        action="action_security_document_type"
+        sequence="80"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_security_employee_document_list" model="ir.ui.view">
+        <field name="name">security.employee.document.list</field>
+        <field name="model">security.employee.document</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'verified'" decoration-warning="expiry_status == 'expiring'" decoration-danger="expiry_status == 'expired'" decoration-muted="state == 'rejected'">
+                <field name="employee_id"/>
+                <field name="document_type_id"/>
+                <field name="document_number"/>
+                <field name="issue_date"/>
+                <field name="expiry_date"/>
+                <field name="days_to_expiry"/>
+                <field name="expiry_status"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_employee_document_search" model="ir.ui.view">
+        <field name="name">security.employee.document.search</field>
+        <field name="model">security.employee.document</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="document_type_id"/>
+                <field name="document_number"/>
+                <filter name="filter_verified" string="Verified" domain="[('state', '=', 'verified')]"/>
+                <filter name="filter_expiring" string="Expiring Soon" domain="[('expiry_status', '=', 'expiring')]"/>
+                <filter name="filter_expired" string="Expired" domain="[('expiry_status', '=', 'expired')]"/>
+                <filter name="filter_rejected" string="Rejected" domain="[('state', '=', 'rejected')]"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_type" string="Group by Document Type" context="{'group_by': 'document_type_id'}"/>
+                <filter name="group_status" string="Group by Expiry Status" context="{'group_by': 'expiry_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_employee_document_form" model="ir.ui.view">
+        <field name="name">security.employee.document.form</field>
+        <field name="model">security.employee.document</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_verify" type="object" string="Verify" invisible="state == 'verified' or state == 'expired'"/>
+                    <button name="action_reject" type="object" string="Reject" invisible="state == 'rejected'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="document_number"/>
+                        <h1><field name="document_number" placeholder="e.g. ID123456789"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="document_type_id"/>
+                            <field name="issuing_authority"/>
+                        </group>
+                        <group>
+                            <field name="issue_date"/>
+                            <field name="expiry_date"/>
+                            <field name="days_to_expiry" readonly="1"/>
+                            <field name="expiry_status" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="attachment" filename="attachment_filename"/>
+                        <field name="attachment_filename" invisible="1"/>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="verified_by_id" readonly="1"/>
+                            <field name="verified_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_employee_document_pivot" model="ir.ui.view">
+        <field name="name">security.employee.document.pivot</field>
+        <field name="model">security.employee.document</field>
+        <field name="arch" type="xml">
+            <pivot string="Document Compliance">
+                <field name="document_type_id" type="row"/>
+                <field name="expiry_status" type="col"/>
+                <field name="days_to_expiry" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_employee_document_graph" model="ir.ui.view">
+        <field name="name">security.employee.document.graph</field>
+        <field name="model">security.employee.document</field>
+        <field name="arch" type="xml">
+            <graph string="Documents By Status" type="bar">
+                <field name="expiry_status"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_employee_document" model="ir.actions.act_window">
+        <field name="name">Employee Documents</field>
+        <field name="res_model">security.employee.document</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_security_employee_document_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Upload a Guard Document!
+            </p>
+            <p>
+                Manage employee documents and track their expiry dates to ensure compliance.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_security_expiring_document" model="ir.actions.act_window">
+        <field name="name">Expiring Documents</field>
+        <field name="res_model">security.employee.document</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="domain">[('expiry_status', 'in', ('expiring', 'expired'))]</field>
+        <field name="context">{'group_by': 'expiry_status'}</field>
+        <field name="search_view_id" ref="view_security_employee_document_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Great job! No documents are expiring soon.
+            </p>
+            <p>
+                When guard documents are close to expiring, they will appear here so you can request renewals.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_employee_document"
+        name="Employee Documents"
+        parent="security_operations.menu_security_posts"
+        action="action_security_employee_document"
+        sequence="180"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_expiring_document"
+        name="Expiring Documents"
+        parent="security_operations.menu_security_posts"
+        action="action_security_expiring_document"
+        sequence="181"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_hr_employee_security_documents_form" model="ir.ui.view">
+        <field name="name">hr.employee.security.documents.form</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="security_base.view_employee_form_security_base"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Security Documents">
+                    <field name="security_document_ids">
+                        <list editable="bottom">
+                            <field name="document_type_id"/>
+                            <field name="document_number"/>
+                            <field name="issue_date"/>
+                            <field name="expiry_date"/>
+                            <field name="expiry_status"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

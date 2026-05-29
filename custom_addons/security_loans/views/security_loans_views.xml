@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- EMPLOYEE LOANS          -->
+    <!-- ======================= -->
+    <record id="view_security_employee_loan_list" model="ir.ui.view">
+        <field name="name">security.employee.loan.list</field>
+        <field name="model">security.employee.loan</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'active'" decoration-muted="state == 'closed'">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="principal_amount"/>
+                <field name="total_repayment_amount"/>
+                <field name="installment_amount"/>
+                <field name="balance_remaining"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'active'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_employee_loan_search" model="ir.ui.view">
+        <field name="name">security.employee.loan.search</field>
+        <field name="model">security.employee.loan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_active" string="Active Loans" domain="[('state', '=', 'active')]"/>
+                <filter name="filter_closed" string="Closed Loans" domain="[('state', '=', 'closed')]"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_employee_loan_form" model="ir.ui.view">
+        <field name="name">security.employee.loan.form</field>
+        <field name="model">security.employee.loan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_activate" type="object" string="Activate Loan" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_close" type="object" string="Close Loan" invisible="state == 'closed'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" placeholder="New Loan"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" placeholder="Select Guard..."/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="start_date"/>
+                        </group>
+                        <group>
+                            <field name="principal_amount"/>
+                            <field name="interest_rate"/>
+                            <field name="repayment_months"/>
+                        </group>
+                    </group>
+                    <group string="Repayment Summary">
+                        <group>
+                            <field name="total_repayment_amount" readonly="1"/>
+                            <field name="installment_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="balance_remaining" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Deduction Schedule">
+                            <field name="deduction_line_ids">
+                                <list editable="bottom">
+                                    <field name="deduction_date"/>
+                                    <field name="payslip_id"/>
+                                    <field name="amount"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <group>
+                        <field name="note" placeholder="Any specific terms or notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_employee_loan_pivot" model="ir.ui.view">
+        <field name="name">security.employee.loan.pivot</field>
+        <field name="model">security.employee.loan</field>
+        <field name="arch" type="xml">
+            <pivot string="Loan Analysis">
+                <field name="employee_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="principal_amount" type="measure"/>
+                <field name="balance_remaining" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_employee_loan_graph" model="ir.ui.view">
+        <field name="name">security.employee.loan.graph</field>
+        <field name="model">security.employee.loan</field>
+        <field name="arch" type="xml">
+            <graph string="Loan Balances" type="bar">
+                <field name="employee_id"/>
+                <field name="balance_remaining" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_employee_loan" model="ir.actions.act_window">
+        <field name="name">Employee Loans</field>
+        <field name="res_model">security.employee.loan</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_security_employee_loan_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Employee Loan!
+            </p>
+            <p>
+                Manage loans and cash advances for guards. Repayments will be automatically deducted from their monthly payslips.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_employee_loan"
+        name="Employee Loans"
+        parent="security_operations.menu_security_posts"
+        action="action_security_employee_loan"
+        sequence="110"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- LOAN DEDUCTIONS         -->
+    <!-- ======================= -->
+    <record id="view_security_loan_deduction_list" model="ir.ui.view">
+        <field name="name">security.loan.deduction.list</field>
+        <field name="model">security.loan.deduction</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="loan_id"/>
+                <field name="employee_id"/>
+                <field name="payslip_id"/>
+                <field name="deduction_date"/>
+                <field name="amount"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_loan_deduction_search" model="ir.ui.view">
+        <field name="name">security.loan.deduction.search</field>
+        <field name="model">security.loan.deduction</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="loan_id"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_date" string="Group by Date" context="{'group_by': 'deduction_date'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_loan_deduction_form" model="ir.ui.view">
+        <field name="name">security.loan.deduction.form</field>
+        <field name="model">security.loan.deduction</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="loan_id"/>
+                        <field name="employee_id" readonly="1"/>
+                        <field name="payslip_id"/>
+                    </group>
+                    <group>
+                        <field name="deduction_date"/>
+                        <field name="amount"/>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_loan_deduction" model="ir.actions.act_window">
+        <field name="name">Loan Deductions</field>
+        <field name="res_model">security.loan.deduction</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_loan_deduction_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Loan Deductions Yet!
+            </p>
+            <p>
+                Deductions will automatically appear here when loan repayments are processed via payslips.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_loan_deduction"
+        name="Loan Deductions"
+        parent="security_operations.menu_security_posts"
+        action="action_security_loan_deduction"
+        sequence="120"
+        groups="hr.group_hr_user"
+    />
+</odoo>

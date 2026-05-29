@@ -1,0 +1,845 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- POST TYPES              -->
+    <!-- ======================= -->
+    <record id="view_security_post_type_list" model="ir.ui.view">
+        <field name="name">security.post.type.list</field>
+        <field name="model">security.post.type</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="min_grade_id"/>
+                <field name="minimum_reliability_score"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_post_type_search" model="ir.ui.view">
+        <field name="name">security.post.type.search</field>
+        <field name="model">security.post.type</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <filter name="group_grade" string="Minimum Grade" context="{'group_by': 'min_grade_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_post_type_form" model="ir.ui.view">
+        <field name="name">security.post.type.form</field>
+        <field name="model">security.post.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. VIP Protection" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. VIP"/>
+                            <field name="min_grade_id"/>
+                            <field name="minimum_reliability_score"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="required_certification_ids" widget="many2many_tags" placeholder="Required Certs..."/>
+                            <field name="required_language_ids" widget="many2many_tags" placeholder="Languages..."/>
+                            <field name="required_attribute_ids" widget="many2many_tags" placeholder="Attributes..."/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Describe the responsibilities for this post type..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_post_type" model="ir.actions.act_window">
+        <field name="name">Post Types</field>
+        <field name="res_model">security.post.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_post_type_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Post Type!
+            </p>
+            <p>
+                Post types define generic roles (e.g. Gate Access, CCTV Monitoring, VIP Protection) and the qualifications a guard must have to work them.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_post_type"
+        name="Post Types"
+        parent="security_operations.menu_security_posts"
+        action="action_security_post_type"
+        sequence="10"
+    />
+
+    <!-- ======================= -->
+    <!-- SHIFT TEMPLATES         -->
+    <!-- ======================= -->
+    <record id="view_security_shift_template_list" model="ir.ui.view">
+        <field name="name">security.shift.template.list</field>
+        <field name="model">security.shift.template</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="start_hour" widget="float_time"/>
+                <field name="end_hour" widget="float_time"/>
+                <field name="duration_hours"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_shift_template_search" model="ir.ui.view">
+        <field name="name">security.shift.template.search</field>
+        <field name="model">security.shift.template</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_shift_template_form" model="ir.ui.view">
+        <field name="name">security.shift.template.form</field>
+        <field name="model">security.shift.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Day Shift 06:00 - 18:00" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="start_hour" widget="float_time"/>
+                            <field name="end_hour" widget="float_time"/>
+                            <field name="duration_hours" readonly="1"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="note" placeholder="Notes about this shift..."/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_shift_template" model="ir.actions.act_window">
+        <field name="name">Shift Templates</field>
+        <field name="res_model">security.shift.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_shift_template_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define your Shift Templates!
+            </p>
+            <p>
+                Shifts determine when guards work. Example: Day Shift (06:00 to 18:00) and Night Shift (18:00 to 06:00).
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_shift_template"
+        name="Shift Templates"
+        parent="security_operations.menu_security_posts"
+        action="action_security_shift_template"
+        sequence="20"
+    />
+
+    <!-- ======================= -->
+    <!-- CLIENT SITES            -->
+    <!-- ======================= -->
+    <record id="view_security_client_site_list" model="ir.ui.view">
+        <field name="name">security.client.site.list</field>
+        <field name="model">security.client.site</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="location"/>
+                <field name="supervisor_id"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_client_site_search" model="ir.ui.view">
+        <field name="name">security.client.site.search</field>
+        <field name="model">security.client.site</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="group_partner" string="Group by Client" context="{'group_by': 'partner_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_client_site_kanban" model="ir.ui.view">
+        <field name="name">security.client.site.kanban</field>
+        <field name="model">security.client.site</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong class="o_kanban_record_title"><field name="name"/></strong>
+                            <div class="text-muted"><field name="partner_id"/></div>
+                            <div>Location: <field name="location"/></div>
+                            <div>Supervisor: <field name="supervisor_id"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_client_site_form" model="ir.ui.view">
+        <field name="name">security.client.site.form</field>
+        <field name="model">security.client.site</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Acme HQ" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. ACMEHQ"/>
+                            <field name="partner_id" placeholder="Select Client..."/>
+                            <field name="location" placeholder="Physical Address..."/>
+                        </group>
+                        <group>
+                            <field name="supervisor_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Post Positions">
+                            <field name="post_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="post_type_id"/>
+                                    <field name="required_guard_count"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Shift Requirements">
+                            <field name="shift_requirement_ids">
+                                <list editable="bottom">
+                                    <field name="post_id"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="guard_count"/>
+                                    <field name="bill_rate"/>
+                                    <field name="pay_rate"/>
+                                    <field name="rate_multiplier"/>
+                                    <field name="fairness_weight"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Guard Exclusions">
+                            <field name="exclusion_ids">
+                                <list editable="bottom">
+                                    <field name="employee_id"/>
+                                    <field name="reason"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <group>
+                        <field name="note" placeholder="Any site-specific notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_client_site" model="ir.actions.act_window">
+        <field name="name">Client Sites</field>
+        <field name="res_model">security.client.site</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_security_client_site_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a Client Site!
+            </p>
+            <p>
+                Client sites represent the physical locations where guards are deployed.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_client_site"
+        name="Client Sites"
+        parent="security_operations.menu_security_posts"
+        action="action_security_client_site"
+        sequence="25"
+    />
+
+    <!-- ======================= -->
+    <!-- SECURITY POSTS          -->
+    <!-- ======================= -->
+    <record id="view_security_post_list" model="ir.ui.view">
+        <field name="name">security.post.list</field>
+        <field name="model">security.post</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="post_type_id"/>
+                <field name="required_guard_count"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_post_search" model="ir.ui.view">
+        <field name="name">security.post.search</field>
+        <field name="model">security.post</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="site_id"/>
+                <field name="post_type_id"/>
+                <filter name="group_site" string="Group by Site" context="{'group_by': 'site_id'}"/>
+                <filter name="group_type" string="Group by Post Type" context="{'group_by': 'post_type_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_post_kanban" model="ir.ui.view">
+        <field name="name">security.post.kanban</field>
+        <field name="model">security.post</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="site_id">
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong><field name="name"/></strong>
+                            <div class="text-muted"><field name="post_type_id"/></div>
+                            <div>Guards Required: <field name="required_guard_count"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_post_form" model="ir.ui.view">
+        <field name="name">security.post.form</field>
+        <field name="model">security.post</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Main Gate" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. MG-01"/>
+                            <field name="partner_id"/>
+                            <field name="site_id"/>
+                            <field name="post_type_id"/>
+                        </group>
+                        <group>
+                            <field name="required_guard_count"/>
+                            <field name="shift_template_id"/>
+                            <field name="location" placeholder="Specific post location..."/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Shift Requirements">
+                            <field name="shift_requirement_ids">
+                                <list editable="bottom">
+                                    <field name="site_id"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="guard_count"/>
+                                    <field name="bill_rate"/>
+                                    <field name="pay_rate"/>
+                                    <field name="rate_multiplier"/>
+                                    <field name="fairness_weight"/>
+                                    <field name="active" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes">
+                            <field name="note" placeholder="Specific instructions for this post..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_post" model="ir.actions.act_window">
+        <field name="name">Security Posts</field>
+        <field name="res_model">security.post</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_security_post_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a Security Post!
+            </p>
+            <p>
+                Posts represent specific duty stations at a Client Site (e.g. Reception, Gate 1, Patrol Route).
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_post"
+        name="Security Posts"
+        parent="security_operations.menu_security_posts"
+        action="action_security_post"
+        sequence="30"
+    />
+
+    <!-- ======================= -->
+    <!-- SHIFT REQUIREMENTS      -->
+    <!-- ======================= -->
+    <record id="view_security_shift_requirement_list" model="ir.ui.view">
+        <field name="name">security.shift.requirement.list</field>
+        <field name="model">security.shift.requirement</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="post_id"/>
+                <field name="shift_template_id"/>
+                <field name="guard_count"/>
+                <field name="bill_rate"/>
+                <field name="pay_rate"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_shift_requirement_form" model="ir.ui.view">
+        <field name="name">security.shift.requirement.form</field>
+        <field name="model">security.shift.requirement</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <group>
+                        <group>
+                            <field name="site_id"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="post_id"/>
+                            <field name="post_type_id" readonly="1"/>
+                            <field name="shift_template_id"/>
+                        </group>
+                        <group>
+                            <field name="guard_count"/>
+                            <field name="bill_rate"/>
+                            <field name="pay_rate"/>
+                            <field name="rate_multiplier"/>
+                            <field name="fairness_weight"/>
+                            <field name="overtime_allowed" widget="boolean_toggle"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group string="Days Required">
+                        <field name="monday" widget="boolean_toggle"/>
+                        <field name="tuesday" widget="boolean_toggle"/>
+                        <field name="wednesday" widget="boolean_toggle"/>
+                        <field name="thursday" widget="boolean_toggle"/>
+                        <field name="friday" widget="boolean_toggle"/>
+                        <field name="saturday" widget="boolean_toggle"/>
+                        <field name="sunday" widget="boolean_toggle"/>
+                    </group>
+                    <group string="Guard Requirements">
+                        <field name="minimum_reliability_score"/>
+                        <field name="required_certification_ids" widget="many2many_tags" placeholder="Add specific certifications..."/>
+                        <field name="required_language_ids" widget="many2many_tags" placeholder="Add required languages..."/>
+                        <field name="required_attribute_ids" widget="many2many_tags" placeholder="Add required attributes..."/>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_shift_requirement" model="ir.actions.act_window">
+        <field name="name">Shift Requirements</field>
+        <field name="res_model">security.shift.requirement</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a Shift Requirement!
+            </p>
+            <p>
+                Shift requirements dictate how many guards are needed for specific shifts at a post.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_shift_requirement"
+        name="Shift Requirements"
+        parent="security_operations.menu_security_posts"
+        action="action_security_shift_requirement"
+        sequence="35"
+    />
+
+    <!-- ======================= -->
+    <!-- SITE REQUIREMENTS       -->
+    <!-- ======================= -->
+    <!-- Omitting individual views for Site Requirement / Guard Exclusion to save space, retaining base list/form -->
+    
+    <record id="view_security_site_requirement_list" model="ir.ui.view">
+        <field name="name">security.site.requirement.list</field>
+        <field name="model">security.site.requirement</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="post_type_id"/>
+                <field name="minimum_guard_count"/>
+                <field name="minimum_reliability_score"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_site_requirement_form" model="ir.ui.view">
+        <field name="name">security.site.requirement.form</field>
+        <field name="model">security.site.requirement</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="partner_id"/>
+                        <field name="site_id"/>
+                        <field name="post_type_id"/>
+                        <field name="minimum_guard_count"/>
+                        <field name="minimum_reliability_score"/>
+                    </group>
+                    <group>
+                        <field name="required_language_ids" widget="many2many_tags"/>
+                        <field name="required_attribute_ids" widget="many2many_tags"/>
+                        <field name="preferred_guard_ids" widget="many2many_tags"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_site_requirement" model="ir.actions.act_window">
+        <field name="name">Site Requirements</field>
+        <field name="res_model">security.site.requirement</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define a Site Requirement!
+            </p>
+            <p>
+                Set global requirements for a client site, such as minimum reliability scores or specific attributes for all guards.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_site_requirement"
+        name="Site Requirements"
+        parent="security_operations.menu_security_posts"
+        action="action_security_site_requirement"
+        sequence="40"
+    />
+
+    <record id="view_security_guard_exclusion_list" model="ir.ui.view">
+        <field name="name">security.guard.exclusion.list</field>
+        <field name="model">security.guard.exclusion</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="employee_id"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="reason"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_guard_exclusion_form" model="ir.ui.view">
+        <field name="name">security.guard.exclusion.form</field>
+        <field name="model">security.guard.exclusion</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="partner_id"/>
+                            <field name="site_id"/>
+                        </group>
+                        <group>
+                            <field name="reason" placeholder="Reason for exclusion..."/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_guard_exclusion" model="ir.actions.act_window">
+        <field name="name">Guard Exclusions</field>
+        <field name="res_model">security.guard.exclusion</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a Guard Exclusion!
+            </p>
+            <p>
+                Exclusions prevent specific guards from being scheduled at a client site, usually due to client requests or previous incidents.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_guard_exclusion"
+        name="Guard Exclusions"
+        parent="security_operations.menu_security_posts"
+        action="action_security_guard_exclusion"
+        sequence="45"
+    />
+
+    <!-- ======================= -->
+    <!-- ROSTER BATCHES          -->
+    <!-- ======================= -->
+    <record id="view_security_roster_batch_list" model="ir.ui.view">
+        <field name="name">security.roster.batch.list</field>
+        <field name="model">security.roster.batch</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'confirmed'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="generated_slot_count"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_roster_batch_search" model="ir.ui.view">
+        <field name="name">security.roster.batch.search</field>
+        <field name="model">security.roster.batch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="site_id"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="group_site" string="Group by Site" context="{'group_by': 'site_id'}"/>
+                <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_roster_batch_form" model="ir.ui.view">
+        <field name="name">security.roster.batch.form</field>
+        <field name="model">security.roster.batch</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_generate_slots" type="object" string="Generate Roster Slots" class="oe_highlight" invisible="state not in ('draft', 'generated')"/>
+                    <button name="action_confirm" type="object" string="Confirm Roster" class="oe_highlight" invisible="state != 'generated'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,generated,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1" placeholder="New Roster Batch"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="partner_id"/>
+                            <field name="site_id"/>
+                        </group>
+                        <group>
+                            <field name="generated_slot_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Generated Roster Slots">
+                            <field name="slot_ids">
+                                <list editable="bottom" decoration-warning="fairness_warning" decoration-danger="not employee_id">
+                                    <field name="shift_date"/>
+                                    <field name="site_id"/>
+                                    <field name="post_id"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="slot_number"/>
+                                    <field name="employee_id" placeholder="Assign Guard..."/>
+                                    <field name="high_value_shift"/>
+                                    <field name="fairness_warning"/>
+                                    <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <group>
+                        <field name="note" placeholder="Batch notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_roster_batch" model="ir.actions.act_window">
+        <field name="name">Monthly Roster Batches</field>
+        <field name="res_model">security.roster.batch</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_roster_batch_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Roster Batch!
+            </p>
+            <p>
+                Roster batches automatically generate shifts for a specific date range based on client site requirements.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_roster_batch"
+        name="Monthly Roster Batches"
+        parent="security_operations.menu_security_posts"
+        action="action_security_roster_batch"
+        sequence="48"
+    />
+
+    <!-- ======================= -->
+    <!-- ROSTER SLOTS            -->
+    <!-- ======================= -->
+    <record id="view_security_roster_slot_list" model="ir.ui.view">
+        <field name="name">security.roster.slot.list</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <list decoration-warning="fairness_warning" decoration-danger="not employee_id">
+                <field name="shift_date"/>
+                <field name="batch_id"/>
+                <field name="site_id"/>
+                <field name="post_id"/>
+                <field name="shift_template_id"/>
+                <field name="employee_id"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'confirmed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_roster_slot_search" model="ir.ui.view">
+        <field name="name">security.roster.slot.search</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="site_id"/>
+                <field name="shift_date"/>
+                <filter name="filter_unassigned" string="Unassigned" domain="[('employee_id', '=', False)]"/>
+                <filter name="group_date" string="Group by Date" context="{'group_by': 'shift_date'}"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_roster_slot_form" model="ir.ui.view">
+        <field name="name">security.roster.slot.form</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="shift_date"/>
+                            <field name="batch_id"/>
+                            <field name="shift_requirement_id"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="site_id" readonly="1"/>
+                            <field name="post_id"/>
+                        </group>
+                        <group>
+                            <field name="shift_template_id"/>
+                            <field name="slot_number"/>
+                            <field name="employee_id" placeholder="Assign Guard..."/>
+                            <field name="overtime_planned" widget="boolean_toggle"/>
+                            <field name="high_value_shift" readonly="1"/>
+                            <field name="fairness_warning" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="override_reason" placeholder="If validation is bypassed, explain why..."/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_roster_slot" model="ir.actions.act_window">
+        <field name="name">Roster Slots</field>
+        <field name="res_model">security.roster.slot</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_roster_slot_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Manage your Roster Slots!
+            </p>
+            <p>
+                Roster slots are individual assignments for a guard on a specific date and post. Usually generated by a Roster Batch.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_roster_slot"
+        name="Roster Slots"
+        parent="security_operations.menu_security_posts"
+        action="action_security_roster_slot"
+        sequence="50"
+    />
+</odoo>

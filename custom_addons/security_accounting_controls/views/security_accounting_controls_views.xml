@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_billing_invoice_accounting_list" model="ir.ui.view">
+        <field name="name">security.billing.invoice.accounting.list</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_list"/>
+        <field name="arch" type="xml">
+            <field name="total_amount" position="after">
+                <field name="paid_amount"/>
+                <field name="balance_amount"/>
+                <field name="payment_status"/>
+                <field name="ageing_bucket"/>
+            </field>
+        </field>
+    </record>
+
+    <record id="view_security_billing_invoice_accounting_form" model="ir.ui.view">
+        <field name="name">security.billing.invoice.accounting.form</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_form"/>
+        <field name="arch" type="xml">
+            <field name="total_amount" position="after">
+                <field name="paid_amount" readonly="1"/>
+                <field name="balance_amount" readonly="1"/>
+                <field name="payment_status" readonly="1"/>
+                <field name="days_overdue" readonly="1"/>
+                <field name="ageing_bucket" readonly="1"/>
+            </field>
+            <xpath expr="//field[@name='attendance_record_ids']/.." position="after">
+                <page string="Payments">
+                    <field name="payment_ids">
+                        <list editable="bottom">
+                            <field name="reference"/>
+                            <field name="payment_date"/>
+                            <field name="amount"/>
+                            <field name="payment_method"/>
+                            <field name="bank_reference"/>
+                            <field name="reconciliation_status"/>
+                            <field name="state"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_security_client_payment_list" model="ir.ui.view">
+        <field name="name">security.client.payment.list</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="reconciliation_status == 'matched'" decoration-danger="reconciliation_status == 'exception'" decoration-muted="state == 'cancelled'">
+                <field name="reference"/>
+                <field name="invoice_id"/>
+                <field name="partner_id"/>
+                <field name="payment_date"/>
+                <field name="amount"/>
+                <field name="payment_method"/>
+                <field name="bank_reference"/>
+                <field name="reconciliation_status"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_client_payment_search" model="ir.ui.view">
+        <field name="name">security.client.payment.search</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="reference"/>
+                <field name="invoice_id"/>
+                <field name="partner_id"/>
+                <field name="bank_reference"/>
+                <filter name="filter_unmatched" string="Unmatched" domain="[('reconciliation_status', '=', 'unmatched')]"/>
+                <filter name="filter_matched" string="Matched" domain="[('reconciliation_status', '=', 'matched')]"/>
+                <filter name="filter_exception" string="Exceptions" domain="[('reconciliation_status', '=', 'exception')]"/>
+                <filter name="group_partner" string="Group by Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_reconciliation" string="Group by Reconciliation" context="{'group_by': 'reconciliation_status'}"/>
+                <filter name="group_payment_date" string="Group by Payment Date" context="{'group_by': 'payment_date'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_client_payment_form" model="ir.ui.view">
+        <field name="name">security.client.payment.form</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_post" type="object" string="Post" invisible="state != 'draft'"/>
+                    <button name="action_match_bank_reference" type="object" string="Match Bank Reference" invisible="state == 'cancelled' or reconciliation_status == 'matched'"/>
+                    <button name="action_flag_exception" type="object" string="Flag Exception" invisible="state == 'cancelled' or reconciliation_status == 'exception'"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="reference" placeholder="e.g. PAY-001" readonly="state != 'draft'"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="invoice_id"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="currency_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="payment_date"/>
+                            <field name="amount"/>
+                            <field name="payment_method"/>
+                            <field name="bank_reference"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="received_by_id"/>
+                        <field name="reconciliation_status"/>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_client_payment_pivot" model="ir.ui.view">
+        <field name="name">security.client.payment.pivot</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <pivot string="Payment Analysis">
+                <field name="partner_id" type="row"/>
+                <field name="reconciliation_status" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_client_payment_graph" model="ir.ui.view">
+        <field name="name">security.client.payment.graph</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <graph string="Payments" type="bar">
+                <field name="partner_id"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_client_payment" model="ir.actions.act_window">
+        <field name="name">Client Payments</field>
+        <field name="res_model">security.client.payment</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_security_client_payment_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record a Client Payment!
+            </p>
+            <p>
+                Track payments received from clients and reconcile them against billing invoices.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_security_invoice_ageing" model="ir.actions.act_window">
+        <field name="name">Invoice Ageing</field>
+        <field name="res_model">security.billing.invoice</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="domain">[('state', '!=', 'cancelled')]</field>
+        <field name="context">{'group_by': 'ageing_bucket'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Review Invoice Ageing!
+            </p>
+            <p>
+                Monitor outstanding invoices grouped by their ageing buckets (e.g., 30 Days, 60 Days, 90+ Days).
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_client_payment"
+        name="Client Payments"
+        parent="security_operations.menu_security_posts"
+        action="action_security_client_payment"
+        sequence="160"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_invoice_ageing"
+        name="Invoice Ageing"
+        parent="security_operations.menu_security_posts"
+        action="action_security_invoice_ageing"
+        sequence="170"
+        groups="hr.group_hr_user"
+    />
+</odoo>

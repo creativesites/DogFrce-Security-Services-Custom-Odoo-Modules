@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- LEAVE TYPES             -->
+    <!-- ======================= -->
+    <record id="view_security_leave_type_list" model="ir.ui.view">
+        <field name="name">security.leave.type.list</field>
+        <field name="model">security.leave.type</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="worked_time_based"/>
+                <field name="negative_balance_limit"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_leave_type_search" model="ir.ui.view">
+        <field name="name">security.leave.type.search</field>
+        <field name="model">security.leave.type</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <filter name="filter_worked_time" string="Worked-Time Based" domain="[('worked_time_based', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_leave_type_form" model="ir.ui.view">
+        <field name="name">security.leave.type.form</field>
+        <field name="model">security.leave.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Annual Leave" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. AL"/>
+                            <field name="worked_time_based"/>
+                        </group>
+                        <group>
+                            <field name="negative_balance_limit"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="accrual_rule_note" placeholder="Explanation of accrual logic..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_leave_type" model="ir.actions.act_window">
+        <field name="name">Leave Types</field>
+        <field name="res_model">security.leave.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_leave_type_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Leave Type!
+            </p>
+            <p>
+                Leave Types (e.g. Annual Leave, Sick Leave) define accrual rules and negative balance limits.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_leave_type"
+        name="Leave Types"
+        parent="security_base.menu_security_configuration"
+        action="action_security_leave_type"
+        sequence="60"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- LEAVE BALANCES          -->
+    <!-- ======================= -->
+    <record id="view_security_leave_balance_list" model="ir.ui.view">
+        <field name="name">security.leave.balance.list</field>
+        <field name="model">security.leave.balance</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="balance_days &lt; 0">
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <field name="balance_days"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_leave_balance_search" model="ir.ui.view">
+        <field name="name">security.leave.balance.search</field>
+        <field name="model">security.leave.balance</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <filter name="filter_negative" string="Negative Balance" domain="[('balance_days', '&lt;', 0)]"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_type" string="Group by Leave Type" context="{'group_by': 'leave_type_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_leave_balance_form" model="ir.ui.view">
+        <field name="name">security.leave.balance.form</field>
+        <field name="model">security.leave.balance</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="employee_id" placeholder="Select Guard..."/>
+                            <field name="leave_type_id"/>
+                        </group>
+                        <group>
+                            <field name="balance_days"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Notes regarding manual balance adjustments..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_leave_balance" model="ir.actions.act_window">
+        <field name="name">Leave Balances</field>
+        <field name="res_model">security.leave.balance</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_leave_balance_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Manage Leave Balances!
+            </p>
+            <p>
+                Balances are normally updated automatically through attendance and payroll, but can be manually overridden here if necessary.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_leave_balance"
+        name="Leave Balances"
+        parent="security_operations.menu_security_posts"
+        action="action_security_leave_balance"
+        sequence="70"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- LEAVE REQUESTS          -->
+    <!-- ======================= -->
+    <record id="view_security_leave_request_list" model="ir.ui.view">
+        <field name="name">security.leave.request.list</field>
+        <field name="model">security.leave.request</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'approved'" decoration-danger="state == 'refused'">
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="requested_days"/>
+                <field name="remaining_balance_after"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'approved'" decoration-danger="state == 'refused'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_leave_request_search" model="ir.ui.view">
+        <field name="name">security.leave.request.search</field>
+        <field name="model">security.leave.request</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <filter name="filter_draft" string="To Approve" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_leave_request_kanban" model="ir.ui.view">
+        <field name="name">security.leave.request.kanban</field>
+        <field name="model">security.leave.request</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false">
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong><field name="employee_id"/></strong>
+                            <div class="text-muted"><field name="leave_type_id"/></div>
+                            <div><field name="date_from"/> to <field name="date_to"/></div>
+                            <div>Days Requested: <field name="requested_days"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_leave_request_form" model="ir.ui.view">
+        <field name="name">security.leave.request.form</field>
+        <field name="model">security.leave.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_refuse" type="object" string="Refuse" class="btn-danger" invisible="state == 'refused'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved,refused"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Leave Request</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" placeholder="Select Guard..."/>
+                            <field name="leave_type_id"/>
+                            <field name="balance_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="requested_days" readonly="1"/>
+                            <field name="remaining_balance_after" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Reason for leave..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_leave_request" model="ir.actions.act_window">
+        <field name="name">Leave Requests</field>
+        <field name="res_model">security.leave.request</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_security_leave_request_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Leave Request!
+            </p>
+            <p>
+                Leave requests deduct from balances and prevent guards from being scheduled in roster batches.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_leave_request"
+        name="Leave Requests"
+        parent="security_operations.menu_security_posts"
+        action="action_security_leave_request"
+        sequence="80"
+        groups="hr.group_hr_user"
+    />
+</odoo>

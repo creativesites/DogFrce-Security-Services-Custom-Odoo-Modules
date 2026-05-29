@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- PAYROLL PERIODS         -->
+    <!-- ======================= -->
+    <record id="view_security_payroll_period_list" model="ir.ui.view">
+        <field name="name">security.payroll.period.list</field>
+        <field name="model">security.payroll.period</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'processed'" decoration-muted="state == 'closed'">
+                <field name="name"/>
+                <field name="rule_set_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="payslip_count"/>
+                <field name="total_earnings"/>
+                <field name="total_deductions"/>
+                <field name="total_net_pay"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'processed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_payroll_period_search" model="ir.ui.view">
+        <field name="name">security.payroll.period.search</field>
+        <field name="model">security.payroll.period</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_processed" string="Processed" domain="[('state', '=', 'processed')]"/>
+                <filter name="filter_closed" string="Closed" domain="[('state', '=', 'closed')]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_payroll_period_form" model="ir.ui.view">
+        <field name="name">security.payroll.period.form</field>
+        <field name="model">security.payroll.period</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_generate_payslips" type="object" string="Generate Payslips" class="oe_highlight" invisible="state == 'closed'"/>
+                    <button name="action_close" type="object" string="Close Period" invisible="state != 'processed'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,processed,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. May 2026 Payroll"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="rule_set_id"/>
+                            <field name="payslip_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Payroll Totals">
+                        <group>
+                            <field name="total_earnings" readonly="1"/>
+                            <field name="total_deductions" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="total_net_pay" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Notes about this payroll run..."/>
+                    </group>
+                    <notebook>
+                        <page string="Payslips">
+                            <field name="payslip_ids"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_payroll_period" model="ir.actions.act_window">
+        <field name="name">Payroll Periods</field>
+        <field name="res_model">security.payroll.period</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_payroll_period_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a Payroll Period!
+            </p>
+            <p>
+                Payroll periods define the date range for calculating guard pay, aggregating attendance, leave, loans, and incidents.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_payroll_period"
+        name="Payroll Periods"
+        parent="security_operations.menu_security_posts"
+        action="action_security_payroll_period"
+        sequence="90"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- PAYSLIPS                -->
+    <!-- ======================= -->
+    <record id="view_security_payslip_list" model="ir.ui.view">
+        <field name="name">security.payslip.list</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'paid'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="period_id"/>
+                <field name="employee_id"/>
+                            <field name="worked_days"/>
+                            <field name="normal_hours"/>
+                            <field name="sunday_hours"/>
+                            <field name="public_holiday_hours"/>
+                            <field name="overtime_hours"/>
+                            <field name="unpaid_hours"/>
+                            <field name="awol_occurrences"/>
+                            <field name="total_earnings"/>
+                <field name="total_deductions"/>
+                <field name="net_pay"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'paid'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_payslip_search" model="ir.ui.view">
+        <field name="name">security.payslip.search</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="period_id"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter name="filter_paid" string="Paid" domain="[('state', '=', 'paid')]"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_period" string="Group by Period" context="{'group_by': 'period_id'}"/>
+                <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_payslip_form" model="ir.ui.view">
+        <field name="name">security.payslip.form</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_compute_from_sources" type="object" string="Compute From Attendance" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_mark_paid" type="object" string="Mark Paid" class="oe_highlight" invisible="state != 'confirmed'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1" placeholder="Payslip Reference..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" placeholder="Select Guard..."/>
+                            <field name="period_id"/>
+                            <field name="hourly_rate" readonly="1"/>
+                            <field name="currency_id" readonly="1" invisible="1"/>
+                        </group>
+                        <group string="Time Summary">
+                            <field name="worked_days" readonly="1"/>
+                            <field name="normal_hours" readonly="1"/>
+                            <field name="sunday_hours" readonly="1"/>
+                            <field name="public_holiday_hours" readonly="1"/>
+                            <field name="overtime_hours" readonly="1"/>
+                            <field name="unpaid_hours" readonly="1"/>
+                            <field name="awol_occurrences" readonly="1"/>
+                            <field name="paid_leave_days" readonly="1"/>
+                            <field name="unpaid_leave_days" readonly="1"/>
+                            <field name="late_occurrences" readonly="1"/>
+                            <field name="early_departure_occurrences" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Financial Summary">
+                        <group>
+                            <field name="total_earnings" readonly="1"/>
+                            <field name="total_deductions" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="net_pay" readonly="1" style="font-size: 1.2em; font-weight: bold;"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Earnings">
+                            <field name="earning_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="quantity"/>
+                                    <field name="rate"/>
+                                    <field name="amount"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Deductions">
+                            <field name="deduction_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="quantity"/>
+                                    <field name="rate"/>
+                                    <field name="amount"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Attendance Sources">
+                            <field name="attendance_record_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Leave Sources">
+                            <field name="leave_request_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                    <group>
+                        <field name="note" placeholder="Any remarks..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_payslip_pivot" model="ir.ui.view">
+        <field name="name">security.payslip.pivot</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <pivot string="Payroll Analysis">
+                <field name="period_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="normal_hours" type="measure"/>
+                <field name="sunday_hours" type="measure"/>
+                <field name="public_holiday_hours" type="measure"/>
+                <field name="overtime_hours" type="measure"/>
+                <field name="unpaid_hours" type="measure"/>
+                <field name="awol_occurrences" type="measure"/>
+                <field name="total_earnings" type="measure"/>
+                <field name="total_deductions" type="measure"/>
+                <field name="net_pay" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_payslip_graph" model="ir.ui.view">
+        <field name="name">security.payslip.graph</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <graph string="Payroll Cost Trend" type="bar">
+                <field name="period_id"/>
+                <field name="net_pay" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_payslip" model="ir.actions.act_window">
+        <field name="name">Payslips</field>
+        <field name="res_model">security.payslip</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_security_payslip_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Generate a Payslip!
+            </p>
+            <p>
+                Payslips calculate the net pay for guards based on their attendance, leave, loans, and behavioral incidents.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_payslip"
+        name="Payslips"
+        parent="security_operations.menu_security_posts"
+        action="action_security_payslip"
+        sequence="100"
+        groups="hr.group_hr_user"
+    />
+</odoo>

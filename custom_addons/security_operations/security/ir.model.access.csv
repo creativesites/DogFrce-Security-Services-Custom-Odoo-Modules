@@ -1,0 +1,10 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_post_type_user,security.post.type user,model_security_post_type,hr.group_hr_user,1,1,1,1
+access_security_client_site_user,security.client.site user,model_security_client_site,hr.group_hr_user,1,1,1,1
+access_security_post_user,security.post user,model_security_post,hr.group_hr_user,1,1,1,1
+access_security_shift_template_user,security.shift.template user,model_security_shift_template,hr.group_hr_user,1,1,1,1
+access_security_shift_requirement_user,security.shift.requirement user,model_security_shift_requirement,hr.group_hr_user,1,1,1,1
+access_security_site_requirement_user,security.site.requirement user,model_security_site_requirement,hr.group_hr_user,1,1,1,1
+access_security_guard_exclusion_user,security.guard.exclusion user,model_security_guard_exclusion,hr.group_hr_user,1,1,1,1
+access_security_roster_batch_user,security.roster.batch user,model_security_roster_batch,hr.group_hr_user,1,1,1,1
+access_security_roster_slot_user,security.roster.slot user,model_security_roster_slot,hr.group_hr_user,1,1,1,1

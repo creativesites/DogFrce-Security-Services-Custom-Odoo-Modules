@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="security_payroll_rule_set_na_default" model="security.payroll.rule.set">
+        <field name="name">Namibia Default Rule Set</field>
+        <field name="country_code">NA</field>
+        <field name="currency_id" ref="base.NAD"/>
+        <field name="effective_from">2024-03-01</field>
+        <field name="employee_ssc_rate">0.009</field>
+        <field name="employer_ssc_rate">0.009</field>
+        <field name="ssc_salary_cap">9000</field>
+        <field name="sunday_multiplier">1.5</field>
+        <field name="public_holiday_multiplier">1.5</field>
+        <field name="saturday_multiplier">1.25</field>
+        <field name="night_shift_multiplier">1.25</field>
+        <field name="overtime_multiplier">1.5</field>
+        <field name="standard_shift_hours">12</field>
+        <field name="vat_rate">15</field>
+        <field name="legal_invoice_text">This invoice must be paid within 30 days of invoice date.</field>
+    </record>
+
+    <!-- 2024/2025 Namibian Tax Brackets -->
+    <record id="security_tax_bracket_na_1" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_na.security_payroll_rule_set_na_default"/>
+        <field name="lower_bound">0</field>
+        <field name="upper_bound">100000</field>
+        <field name="fixed_amount">0</field>
+        <field name="rate">0.00</field>
+    </record>
+
+    <record id="security_tax_bracket_na_2" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_na.security_payroll_rule_set_na_default"/>
+        <field name="lower_bound">100000.01</field>
+        <field name="upper_bound">150000</field>
+        <field name="fixed_amount">0</field>
+        <field name="rate">0.18</field>
+    </record>
+
+    <record id="security_tax_bracket_na_3" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_na.security_payroll_rule_set_na_default"/>
+        <field name="lower_bound">150000.01</field>
+        <field name="upper_bound">1500000</field>
+        <field name="fixed_amount">9000</field>
+        <field name="rate">0.25</field>
+    </record>
+
+    <record id="security_tax_bracket_na_4" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_na.security_payroll_rule_set_na_default"/>
+        <field name="lower_bound">1500000.01</field>
+        <field name="upper_bound">999999999</field>
+        <field name="fixed_amount">346500</field>
+        <field name="rate">0.37</field>
+    </record>
+
+    <record id="security_public_holiday_na_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-01-01</field>
+    </record>
+
+    <record id="security_public_holiday_na_independence" model="security.public.holiday">
+        <field name="name">Independence Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-03-21</field>
+    </record>
+
+    <record id="security_public_holiday_na_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-12-25</field>
+    </record>
+</odoo>

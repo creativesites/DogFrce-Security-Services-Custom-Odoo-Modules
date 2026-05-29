@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- PAYROLL RULE SETS       -->
+    <!-- ======================= -->
+    <record id="view_security_payroll_rule_set_list" model="ir.ui.view">
+        <field name="name">security.payroll.rule.set.list</field>
+        <field name="model">security.payroll.rule.set</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="country_code"/>
+                <field name="currency_id"/>
+                <field name="effective_from"/>
+                <field name="effective_to"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_payroll_rule_set_search" model="ir.ui.view">
+        <field name="name">security.payroll.rule.set.search</field>
+        <field name="model">security.payroll.rule.set</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="country_code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_payroll_rule_set_form" model="ir.ui.view">
+        <field name="name">security.payroll.rule.set.form</field>
+        <field name="model">security.payroll.rule.set</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Namibia Default Rule Set" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="country_code" placeholder="e.g. NA"/>
+                            <field name="currency_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="effective_from"/>
+                            <field name="effective_to"/>
+                            <field name="standard_shift_hours"/>
+                            <field name="vat_rate"/>
+                        </group>
+                    </group>
+                    <group string="Social Security Commission (SSC)">
+                        <group>
+                            <field name="employee_ssc_rate" widget="percentage"/>
+                            <field name="employer_ssc_rate" widget="percentage"/>
+                        </group>
+                        <group>
+                            <field name="ssc_salary_cap"/>
+                        </group>
+                    </group>
+                    <group string="Premium Rate Multipliers">
+                        <group>
+                            <field name="sunday_multiplier"/>
+                            <field name="public_holiday_multiplier"/>
+                            <field name="saturday_multiplier"/>
+                        </group>
+                        <group>
+                            <field name="night_shift_multiplier"/>
+                            <field name="overtime_multiplier"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="legal_invoice_text" placeholder="Standard text appearing on invoices..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_payroll_rule_set" model="ir.actions.act_window">
+        <field name="name">Payroll Rule Sets</field>
+        <field name="res_model">security.payroll.rule.set</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_payroll_rule_set_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define your first Payroll Rule Set!
+            </p>
+            <p>
+                Rule sets configure localized formulas for tax, social security, and overtime rates.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_payroll_rule_set"
+        name="Payroll Rule Sets"
+        parent="security_base.menu_security_configuration"
+        action="action_security_payroll_rule_set"
+        sequence="70"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- TAX BRACKETS            -->
+    <!-- ======================= -->
+    <record id="view_security_tax_bracket_list" model="ir.ui.view">
+        <field name="name">security.tax.bracket.list</field>
+        <field name="model">security.tax.bracket</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="rule_set_id"/>
+                <field name="lower_bound"/>
+                <field name="upper_bound"/>
+                <field name="fixed_amount"/>
+                <field name="rate" widget="percentage"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_tax_bracket_search" model="ir.ui.view">
+        <field name="name">security.tax.bracket.search</field>
+        <field name="model">security.tax.bracket</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="rule_set_id"/>
+                <filter name="group_rule_set" string="Group by Rule Set" context="{'group_by': 'rule_set_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_tax_bracket_form" model="ir.ui.view">
+        <field name="name">security.tax.bracket.form</field>
+        <field name="model">security.tax.bracket</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="rule_set_id"/>
+                        </group>
+                        <group>
+                            <field name="lower_bound"/>
+                            <field name="upper_bound"/>
+                        </group>
+                    </group>
+                    <group string="Tax Calculation">
+                        <field name="fixed_amount"/>
+                        <field name="rate" widget="percentage"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_tax_bracket" model="ir.actions.act_window">
+        <field name="name">Tax Brackets</field>
+        <field name="res_model">security.tax.bracket</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_tax_bracket_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a Tax Bracket!
+            </p>
+            <p>
+                Configure marginal PAYE tax brackets for accurate deduction calculations.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_tax_bracket"
+        name="Tax Brackets"
+        parent="security_base.menu_security_configuration"
+        action="action_security_tax_bracket"
+        sequence="80"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- PUBLIC HOLIDAYS         -->
+    <!-- ======================= -->
+    <record id="view_security_public_holiday_list" model="ir.ui.view">
+        <field name="name">security.public.holiday.list</field>
+        <field name="model">security.public.holiday</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="country_code"/>
+                <field name="holiday_date"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_public_holiday_search" model="ir.ui.view">
+        <field name="name">security.public.holiday.search</field>
+        <field name="model">security.public.holiday</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="holiday_date"/>
+                <filter name="group_country" string="Group by Country" context="{'group_by': 'country_code'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_public_holiday_form" model="ir.ui.view">
+        <field name="name">security.public.holiday.form</field>
+        <field name="model">security.public.holiday</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Independence Day" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="country_code" placeholder="e.g. NA"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="holiday_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_public_holiday" model="ir.actions.act_window">
+        <field name="name">Public Holidays</field>
+        <field name="res_model">security.public.holiday</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_public_holiday_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a Public Holiday!
+            </p>
+            <p>
+                Holidays are used to automatically calculate premium multipliers for guards working on these dates.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_public_holiday"
+        name="Public Holidays"
+        parent="security_base.menu_security_configuration"
+        action="action_security_public_holiday"
+        sequence="90"
+        groups="hr.group_hr_user"
+    />
+</odoo>

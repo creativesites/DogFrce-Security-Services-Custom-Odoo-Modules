@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_security_posts"
+        name="Operations"
+        parent="security_base.menu_security_root"
+        sequence="20"
+        groups="hr.group_hr_user"
+    />
+</odoo>

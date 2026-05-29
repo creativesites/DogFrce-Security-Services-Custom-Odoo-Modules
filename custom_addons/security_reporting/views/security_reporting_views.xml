@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_security_reporting"
+        name="Reporting"
+        parent="security_base.menu_security_root"
+        sequence="90"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_security_roster_slot_reporting_pivot" model="ir.ui.view">
+        <field name="name">security.roster.slot.reporting.pivot</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <pivot string="Roster Coverage">
+                <field name="partner_id" type="row"/>
+                <field name="site_id" type="row"/>
+                <field name="post_id" type="row"/>
+                <field name="post_type_id" type="row"/>
+                <field name="state" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_roster_slot_reporting_graph" model="ir.ui.view">
+        <field name="name">security.roster.slot.reporting.graph</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <graph string="Roster Slots By Client" type="bar">
+                <field name="site_id"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_roster_reporting" model="ir.actions.act_window">
+        <field name="name">Roster Coverage</field>
+        <field name="res_model">security.roster.slot</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'group_by': 'partner_id'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Roster Data Found!
+            </p>
+            <p>
+                Roster coverage analysis will appear here once you generate monthly roster batches.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_roster_reporting"
+        name="Roster Coverage"
+        parent="menu_security_reporting"
+        action="action_security_roster_reporting"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_security_attendance_reporting_pivot" model="ir.ui.view">
+        <field name="name">security.attendance.record.reporting.pivot</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <pivot string="Attendance Analysis">
+                <field name="partner_id" type="row"/>
+                <field name="site_id" type="row"/>
+                <field name="post_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="scheduled_hours" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+                <field name="valid_hours" type="measure"/>
+                <field name="late_minutes" type="measure"/>
+                <field name="early_departure_minutes" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_attendance_reporting_graph" model="ir.ui.view">
+        <field name="name">security.attendance.record.reporting.graph</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <graph string="Attendance Hours" type="bar">
+                <field name="site_id"/>
+                <field name="valid_hours" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_attendance_reporting" model="ir.actions.act_window">
+        <field name="name">Attendance Analysis</field>
+        <field name="res_model">security.attendance.record</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'group_by': 'status'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Attendance Data Found!
+            </p>
+            <p>
+                Attendance analysis will appear here once guards start checking in for their shifts.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_attendance_reporting"
+        name="Attendance Analysis"
+        parent="menu_security_reporting"
+        action="action_security_attendance_reporting"
+        sequence="20"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_security_payslip_reporting_pivot" model="ir.ui.view">
+        <field name="name">security.payslip.reporting.pivot</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <pivot string="Payroll Analysis">
+                <field name="period_id" type="row"/>
+                <field name="employee_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="worked_days" type="measure"/>
+                <field name="total_earnings" type="measure"/>
+                <field name="total_deductions" type="measure"/>
+                <field name="net_pay" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_payslip_reporting_graph" model="ir.ui.view">
+        <field name="name">security.payslip.reporting.graph</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <graph string="Payroll Cost" type="bar">
+                <field name="period_id"/>
+                <field name="net_pay" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_payroll_reporting" model="ir.actions.act_window">
+        <field name="name">Payroll Analysis</field>
+        <field name="res_model">security.payslip</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'group_by': 'period_id'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Payroll Data Found!
+            </p>
+            <p>
+                Payroll cost analysis will be available once payslips are generated for your guards.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_payroll_reporting"
+        name="Payroll Analysis"
+        parent="menu_security_reporting"
+        action="action_security_payroll_reporting"
+        sequence="30"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_security_incident_reporting_pivot" model="ir.ui.view">
+        <field name="name">security.incident.reporting.pivot</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <pivot string="Incident Analysis">
+                <field name="incident_type_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="deduction_amount" type="measure"/>
+                <field name="reliability_score_delta" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_incident_reporting_graph" model="ir.ui.view">
+        <field name="name">security.incident.reporting.graph</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <graph string="Incidents By Type" type="bar">
+                <field name="incident_type_id"/>
+                <field name="deduction_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_incident_reporting" model="ir.actions.act_window">
+        <field name="name">Incident Analysis</field>
+        <field name="res_model">security.incident</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'group_by': 'incident_type_id'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Incident Data Found!
+            </p>
+            <p>
+                Behavioral incident trends and deduction amounts will be analyzed here.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_incident_reporting"
+        name="Incident Analysis"
+        parent="menu_security_reporting"
+        action="action_security_incident_reporting"
+        sequence="40"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="action_security_billing_reporting" model="ir.actions.act_window">
+        <field name="name">Billing Analysis</field>
+        <field name="res_model">security.billing.invoice</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'group_by': 'partner_id'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Billing Data Found!
+            </p>
+            <p>
+                Invoicing revenue will be visualized here once you generate client bills.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_billing_reporting"
+        name="Billing Analysis"
+        parent="menu_security_reporting"
+        action="action_security_billing_reporting"
+        sequence="50"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="action_security_payment_reporting" model="ir.actions.act_window">
+        <field name="name">Payment Analysis</field>
+        <field name="res_model">security.client.payment</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="context">{'group_by': 'reconciliation_status'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Payment Data Found!
+            </p>
+            <p>
+                Client payment reconciliations and received amounts will appear here.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_payment_reporting"
+        name="Payment Analysis"
+        parent="menu_security_reporting"
+        action="action_security_payment_reporting"
+        sequence="60"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="action_security_ageing_reporting" model="ir.actions.act_window">
+        <field name="name">Invoice Ageing Report</field>
+        <field name="res_model">security.billing.invoice</field>
+        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="domain">[('state', '!=', 'cancelled')]</field>
+        <field name="context">{'group_by': 'ageing_bucket'}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Outstanding Invoices!
+            </p>
+            <p>
+                Your invoice ageing report will show overdue balances grouped by time periods.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_ageing_reporting"
+        name="Invoice Ageing"
+        parent="menu_security_reporting"
+        action="action_security_ageing_reporting"
+        sequence="70"
+        groups="hr.group_hr_user"
+    />
+</odoo>

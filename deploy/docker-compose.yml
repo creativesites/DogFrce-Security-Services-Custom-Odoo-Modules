@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16
+    container_name: ${COMPOSE_PROJECT_NAME}-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../.local/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  odoo:
+    image: odoo:${ODOO_VERSION}
+    container_name: ${COMPOSE_PROJECT_NAME}-odoo
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${ODOO_PORT}:8069"
+      - "${ODOO_LONGPOLLING_PORT}:8072"
+    environment:
+      HOST: db
+      USER: ${POSTGRES_USER}
+      PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../.local/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ../custom_addons:/mnt/extra-addons
+      - ../.local/odoo:/var/lib/odoo
+    restart: unless-stopped

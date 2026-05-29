@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inherit hr.employee form view to show mobile configuration fields -->
+    <record id="view_employee_form_inherit_mobile" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.mobile</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Mobile App Access" name="mobile_app_access" groups="security_base.group_security_manager">
+                    <group>
+                        <group string="Authentication &amp; Device">
+                            <field name="security_mobile_pin_hash" password="True" placeholder="Enter hashed PIN or edit directly"/>
+                            <field name="security_mobile_device_token" readonly="1"/>
+                            <field name="security_mobile_last_login"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_payroll_rule_set_user,security.payroll.rule.set user,model_security_payroll_rule_set,hr.group_hr_user,1,1,1,1
+access_security_tax_bracket_user,security.tax.bracket user,model_security_tax_bracket,hr.group_hr_user,1,1,1,1
+access_security_public_holiday_user,security.public.holiday user,model_security_public_holiday,hr.group_hr_user,1,1,1,1

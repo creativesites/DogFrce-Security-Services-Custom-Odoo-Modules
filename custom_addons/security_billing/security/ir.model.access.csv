@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_billing_plan_user,security.billing.plan user,model_security_billing_plan,hr.group_hr_user,1,1,1,1
+access_security_billing_plan_line_user,security.billing.plan.line user,model_security_billing_plan_line,hr.group_hr_user,1,1,1,1
+access_security_billing_invoice_user,security.billing.invoice user,model_security_billing_invoice,hr.group_hr_user,1,1,1,1
+access_security_billing_invoice_line_user,security.billing.invoice.line user,model_security_billing_invoice_line,hr.group_hr_user,1,1,1,1

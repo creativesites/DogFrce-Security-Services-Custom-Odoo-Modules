@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_leave_type_user,security.leave.type user,model_security_leave_type,hr.group_hr_user,1,1,1,1
+access_security_leave_balance_user,security.leave.balance user,model_security_leave_balance,hr.group_hr_user,1,1,1,1
+access_security_leave_request_user,security.leave.request user,model_security_leave_request,hr.group_hr_user,1,1,1,1

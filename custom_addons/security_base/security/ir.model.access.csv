@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_grade_user,security.grade user,model_security_grade,hr.group_hr_user,1,1,1,1
+access_security_certification_user,security.certification user,model_security_certification,hr.group_hr_user,1,1,1,1
+access_security_language_user,security.language user,model_security_language,hr.group_hr_user,1,1,1,1
+access_security_attribute_user,security.attribute user,model_security_attribute,hr.group_hr_user,1,1,1,1
+access_security_disqualification_reason_user,security.disqualification.reason user,model_security_disqualification_reason,hr.group_hr_user,1,1,1,1
+access_security_reliability_adjustment_user,security.reliability.adjustment user,model_security_reliability_adjustment,hr.group_hr_user,1,1,1,1

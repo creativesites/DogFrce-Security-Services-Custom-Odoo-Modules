@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- INCIDENT TYPES          -->
+    <!-- ======================= -->
+    <record id="view_security_incident_type_list" model="ir.ui.view">
+        <field name="name">security.incident.type.list</field>
+        <field name="model">security.incident.type</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="deduction_amount"/>
+                <field name="reliability_score_delta"/>
+                <field name="high_trust_exclusion"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_incident_type_search" model="ir.ui.view">
+        <field name="name">security.incident.type.search</field>
+        <field name="model">security.incident.type</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <filter name="filter_high_trust" string="Excludes from High Trust" domain="[('high_trust_exclusion', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_incident_type_form" model="ir.ui.view">
+        <field name="name">security.incident.type.form</field>
+        <field name="model">security.incident.type</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Sleeping on Duty" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. SLEEP"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="deduction_amount"/>
+                            <field name="reliability_score_delta"/>
+                            <field name="high_trust_exclusion"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Description of this incident type..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_incident_type" model="ir.actions.act_window">
+        <field name="name">Incident Types</field>
+        <field name="res_model">security.incident.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_incident_type_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define your first Incident Type!
+            </p>
+            <p>
+                Incident types standardize behavioral infractions, their financial deductions, and reliability score penalties.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_incident_type"
+        name="Incident Types"
+        parent="security_base.menu_security_configuration"
+        action="action_security_incident_type"
+        sequence="100"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ======================= -->
+    <!-- BEHAVIORAL INCIDENTS    -->
+    <!-- ======================= -->
+    <record id="view_security_incident_list" model="ir.ui.view">
+        <field name="name">security.incident.list</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-danger="state == 'resolved'">
+                <field name="incident_date"/>
+                <field name="employee_id"/>
+                <field name="incident_type_id"/>
+                <field name="deduction_amount"/>
+                <field name="reliability_score_delta"/>
+                <field name="payslip_id"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-danger="state == 'resolved'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_incident_search" model="ir.ui.view">
+        <field name="name">security.incident.search</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="incident_type_id"/>
+                <filter name="filter_draft" string="To Approve" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_resolved" string="Resolved" domain="[('state', '=', 'resolved')]"/>
+                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
+                <filter name="group_type" string="Group by Type" context="{'group_by': 'incident_type_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_incident_kanban" model="ir.ui.view">
+        <field name="name">security.incident.kanban</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" quick_create="false">
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong><field name="employee_id"/></strong>
+                            <div class="text-danger"><field name="incident_type_id"/></div>
+                            <div>Date: <field name="incident_date"/></div>
+                            <div>Deduction: <field name="deduction_amount"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_incident_form" model="ir.ui.view">
+        <field name="name">security.incident.form</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_resolve" type="object" string="Resolve" class="btn-danger" invisible="state == 'resolved'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved,resolved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Behavioral Incident</h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id" placeholder="Select Guard..."/>
+                            <field name="incident_type_id" placeholder="Select Infraction..."/>
+                            <field name="incident_date"/>
+                        </group>
+                        <group>
+                            <field name="deduction_amount"/>
+                            <field name="reliability_score_delta"/>
+                            <field name="high_trust_exclusion"/>
+                            <field name="payslip_id" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="approved_by_id" readonly="1"/>
+                        <field name="note" placeholder="Provide full details of the incident..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_incident" model="ir.actions.act_window">
+        <field name="name">Behavioral Incidents</field>
+        <field name="res_model">security.incident</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_security_incident_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Log a Behavioral Incident!
+            </p>
+            <p>
+                Incidents automatically apply financial deductions to payroll and lower a guard's reliability score for scheduling.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_incident"
+        name="Behavioral Incidents"
+        parent="security_operations.menu_security_posts"
+        action="action_security_incident"
+        sequence="130"
+        groups="hr.group_hr_user"
+    />
+</odoo>

@@ -1,0 +1,15 @@
+.DS_Store
+.env
+.venv/
+*.pyc
+__pycache__/
+
+# Odoo runtime data
+.local/
+filestore/
+sessions/
+
+# Editor files
+.idea/
+.vscode/
+

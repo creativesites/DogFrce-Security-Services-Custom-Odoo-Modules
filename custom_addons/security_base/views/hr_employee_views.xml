@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_employee_form_security_base" model="ir.ui.view">
+        <field name="name">hr.employee.form.security.base</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Security Profile">
+                    <group>
+                        <group>
+                            <field name="security_guard"/>
+                            <field name="security_grade_id" invisible="not security_guard"/>
+                            <field name="security_hourly_rate" invisible="not security_guard"/>
+                            <field name="security_effective_hourly_rate" readonly="1" invisible="not security_guard"/>
+                            <field name="security_reliability_score" invisible="not security_guard"/>
+                            <field name="security_reliability_adjustment_total" readonly="1" invisible="not security_guard"/>
+                            <field name="security_home_location" invisible="not security_guard"/>
+                            <field name="security_medical_fitness_grade" invisible="not security_guard"/>
+                        </group>
+                        <group>
+                            <field name="security_disqualified" invisible="not security_guard"/>
+                            <field name="security_disqualification_reason_id" invisible="not security_guard or not security_disqualified"/>
+                            <field name="security_disqualification_note" invisible="not security_guard or not security_disqualified"/>
+                        </group>
+                    </group>
+                    <group invisible="not security_guard">
+                        <field name="security_certification_ids" widget="many2many_tags"/>
+                        <field name="security_language_ids" widget="many2many_tags"/>
+                        <field name="security_attribute_ids" widget="many2many_tags"/>
+                    </group>
+                    <field name="security_reliability_adjustment_ids" invisible="not security_guard">
+                        <list editable="bottom">
+                            <field name="adjustment_date"/>
+                            <field name="reason"/>
+                            <field name="score_delta"/>
+                            <field name="note"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

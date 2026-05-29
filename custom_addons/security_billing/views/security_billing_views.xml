@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_billing_plan_list" model="ir.ui.view">
+        <field name="name">security.billing.plan.list</field>
+        <field name="model">security.billing.plan</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="billing_mode"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="payment_term_days"/>
+                <field name="vat_rate"/>
+                <field name="currency_id"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_billing_plan_search" model="ir.ui.view">
+        <field name="name">security.billing.plan.search</field>
+        <field name="model">security.billing.plan</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="billing_mode"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                <filter name="group_partner" string="Group by Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_mode" string="Group by Billing Mode" context="{'group_by': 'billing_mode'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_billing_plan_form" model="ir.ui.view">
+        <field name="name">security.billing.plan.form</field>
+        <field name="model">security.billing.plan</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="billing_mode"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="currency_id"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="payment_term_days"/>
+                            <field name="vat_rate"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Billing Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="name"/>
+                                    <field name="post_id"/>
+                                    <field name="post_type_id"/>
+                                    <field name="billing_basis"/>
+                                    <field name="quantity"/>
+                                    <field name="guard_count"/>
+                                    <field name="unit_price"/>
+                                    <field name="subtotal"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_billing_plan_kanban" model="ir.ui.view">
+        <field name="name">security.billing.plan.kanban</field>
+        <field name="model">security.billing.plan</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong><field name="name"/></strong>
+                            <div><field name="partner_id"/></div>
+                            <div><field name="billing_mode"/></div>
+                            <div>VAT: <field name="vat_rate"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_security_billing_plan" model="ir.actions.act_window">
+        <field name="name">Billing Plans</field>
+        <field name="res_model">security.billing.plan</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="search_view_id" ref="view_security_billing_plan_search"/>
+    </record>
+
+    <menuitem
+        id="menu_security_billing_plan"
+        name="Billing Plans"
+        parent="security_operations.menu_security_posts"
+        action="action_security_billing_plan"
+        sequence="140"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="view_security_billing_invoice_list" model="ir.ui.view">
+        <field name="name">security.billing.invoice.list</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'paid'" decoration-muted="state == 'cancelled'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="billing_plan_id"/>
+                <field name="service_date_from"/>
+                <field name="service_date_to"/>
+                <field name="invoice_date"/>
+                <field name="due_date"/>
+                <field name="subtotal_amount"/>
+                <field name="vat_amount"/>
+                <field name="total_amount"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_billing_invoice_search" model="ir.ui.view">
+        <field name="name">security.billing.invoice.search</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="billing_plan_id"/>
+                <field name="invoice_date"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_sent" string="Sent" domain="[('state', '=', 'sent')]"/>
+                <filter name="filter_paid" string="Paid" domain="[('state', '=', 'paid')]"/>
+                <filter name="filter_cancelled" string="Cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <filter name="group_partner" string="Group by Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
+                <filter name="group_invoice_date" string="Group by Invoice Date" context="{'group_by': 'invoice_date'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_billing_invoice_form" model="ir.ui.view">
+        <field name="name">security.billing.invoice.form</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_generate_from_roster" type="object" string="Generate From Roster" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_generate_from_attendance" type="object" string="Generate From Attendance" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_mark_sent" type="object" string="Mark Sent" invisible="state != 'draft'"/>
+                    <button name="action_mark_paid" type="object" string="Mark Paid" invisible="state not in ('draft', 'sent')"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="site_id"/>
+                            <field name="billing_plan_id"/>
+                            <field name="currency_id"/>
+                        </group>
+                        <group>
+                            <field name="service_date_from"/>
+                            <field name="service_date_to"/>
+                            <field name="generation_source" readonly="1"/>
+                            <field name="invoice_date"/>
+                            <field name="due_date"/>
+                            <field name="po_number"/>
+                            <field name="vat_rate"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Invoice Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence"/>
+                                    <field name="name"/>
+                                    <field name="service_date_from"/>
+                                    <field name="service_date_to"/>
+                                    <field name="site_id"/>
+                                    <field name="post_id"/>
+                                    <field name="guard_count"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="quantity"/>
+                                    <field name="unit_price"/>
+                                    <field name="subtotal"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Roster Source">
+                            <field name="roster_slot_ids" widget="many2many_tags"/>
+                        </page>
+                        <page string="Attendance Source">
+                            <field name="attendance_record_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                    <group>
+                        <group>
+                            <field name="subtotal_amount" readonly="1"/>
+                            <field name="vat_amount" readonly="1"/>
+                            <field name="total_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="amount_in_words" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_billing_invoice_kanban" model="ir.ui.view">
+        <field name="name">security.billing.invoice.kanban</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card">
+                            <strong><field name="name"/></strong>
+                            <div><field name="partner_id"/></div>
+                            <div><field name="invoice_date"/></div>
+                            <div>Total: <field name="total_amount"/></div>
+                            <div><field name="state"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_billing_invoice_pivot" model="ir.ui.view">
+        <field name="name">security.billing.invoice.pivot</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <pivot string="Billing Analysis">
+                <field name="partner_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="total_amount" type="measure"/>
+                <field name="vat_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_billing_invoice_graph" model="ir.ui.view">
+        <field name="name">security.billing.invoice.graph</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <graph string="Billing Trend" type="bar">
+                <field name="partner_id"/>
+                <field name="total_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_security_billing_invoice" model="ir.actions.act_window">
+        <field name="name">Billing Invoices</field>
+        <field name="res_model">security.billing.invoice</field>
+        <field name="view_mode">list,form,kanban,pivot,graph</field>
+        <field name="search_view_id" ref="view_security_billing_invoice_search"/>
+    </record>
+
+    <menuitem
+        id="menu_security_billing_invoice"
+        name="Billing Invoices"
+        parent="security_operations.menu_security_posts"
+        action="action_security_billing_invoice"
+        sequence="150"
+        groups="hr.group_hr_user"
+    />
+</odoo>

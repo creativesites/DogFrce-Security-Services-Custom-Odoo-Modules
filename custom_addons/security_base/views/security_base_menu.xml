@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_security_root"
+        name="Security"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_configuration"
+        name="Configuration"
+        parent="menu_security_root"
+        sequence="90"
+        groups="hr.group_hr_user"
+    />
+</odoo>

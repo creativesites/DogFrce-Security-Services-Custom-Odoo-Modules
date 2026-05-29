@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_employee_loan_user,security.employee.loan user,model_security_employee_loan,hr.group_hr_user,1,1,1,1
+access_security_loan_deduction_user,security.loan.deduction user,model_security_loan_deduction,hr.group_hr_user,1,1,1,1

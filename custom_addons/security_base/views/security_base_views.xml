@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================= -->
+    <!-- GRADES                  -->
+    <!-- ======================= -->
+    <record id="view_security_grade_tree" model="ir.ui.view">
+        <field name="name">security.grade.tree</field>
+        <field name="model">security.grade</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="hourly_rate"/>
+                <field name="responsibility_level"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_grade_search" model="ir.ui.view">
+        <field name="name">security.grade.search</field>
+        <field name="model">security.grade</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_grade_form" model="ir.ui.view">
+        <field name="name">security.grade.form</field>
+        <field name="model">security.grade</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Grade A" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. GR-A"/>
+                            <field name="hourly_rate"/>
+                            <field name="responsibility_level"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Internal notes or description about this grade..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_grade" model="ir.actions.act_window">
+        <field name="name">Grades</field>
+        <field name="res_model">security.grade</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_grade_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Security Grade!
+            </p>
+            <p>
+                Grades are used to classify guards and determine their eligibility for specific posts (e.g., Grade A, Grade B, Grade C).
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_grade"
+        name="Grades"
+        parent="menu_security_configuration"
+        action="action_security_grade"
+        sequence="10"
+    />
+
+    <!-- ======================= -->
+    <!-- CERTIFICATIONS          -->
+    <!-- ======================= -->
+    <record id="view_security_certification_tree" model="ir.ui.view">
+        <field name="name">security.certification.tree</field>
+        <field name="model">security.certification</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="expiry_required"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_certification_search" model="ir.ui.view">
+        <field name="name">security.certification.search</field>
+        <field name="model">security.certification</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Archived" domain="[('active', '=', False)]"/>
+                <filter name="filter_expiry" string="Requires Expiry" domain="[('expiry_required', '=', True)]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_certification_form" model="ir.ui.view">
+        <field name="name">security.certification.form</field>
+        <field name="model">security.certification</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Firearm Competency" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. FA-COMP"/>
+                        </group>
+                        <group>
+                            <field name="expiry_required"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Notes about certification requirements..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_certification" model="ir.actions.act_window">
+        <field name="name">Certifications</field>
+        <field name="res_model">security.certification</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_certification_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Certification!
+            </p>
+            <p>
+                Track specialized training and licenses such as First Aid, Firearm Competency, or specific site inductions.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_certification"
+        name="Certifications"
+        parent="menu_security_configuration"
+        action="action_security_certification"
+        sequence="20"
+    />
+
+    <!-- ======================= -->
+    <!-- LANGUAGE SKILLS         -->
+    <!-- ======================= -->
+    <record id="view_security_language_tree" model="ir.ui.view">
+        <field name="name">security.language.tree</field>
+        <field name="model">security.language</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_language_search" model="ir.ui.view">
+        <field name="name">security.language.search</field>
+        <field name="model">security.language</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="code"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_language_form" model="ir.ui.view">
+        <field name="name">security.language.form</field>
+        <field name="model">security.language</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. English" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. ENG"/>
+                        </group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_language" model="ir.actions.act_window">
+        <field name="name">Language Skills</field>
+        <field name="res_model">security.language</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_language_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a new Language Skill!
+            </p>
+            <p>
+                Define languages your guards speak to match them with client site requirements.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_language"
+        name="Language Skills"
+        parent="menu_security_configuration"
+        action="action_security_language"
+        sequence="30"
+    />
+
+    <!-- ======================= -->
+    <!-- ATTRIBUTES              -->
+    <!-- ======================= -->
+    <record id="view_security_attribute_tree" model="ir.ui.view">
+        <field name="name">security.attribute.tree</field>
+        <field name="model">security.attribute</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_attribute_search" model="ir.ui.view">
+        <field name="name">security.attribute.search</field>
+        <field name="model">security.attribute</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="category"/>
+                <filter name="group_category" string="Category" context="{'group_by': 'category'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_attribute_form" model="ir.ui.view">
+        <field name="name">security.attribute.form</field>
+        <field name="model">security.attribute</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Drivers License" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category"/>
+                        </group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Description of this attribute..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_attribute" model="ir.actions.act_window">
+        <field name="name">Attributes</field>
+        <field name="res_model">security.attribute</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_attribute_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Attribute!
+            </p>
+            <p>
+                Attributes capture additional characteristics (like Driver's License or Dog Handler experience) needed for specific posts.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_attribute"
+        name="Attributes"
+        parent="menu_security_configuration"
+        action="action_security_attribute"
+        sequence="40"
+    />
+
+    <!-- ======================= -->
+    <!-- DISQUALIFICATION REASONS-->
+    <!-- ======================= -->
+    <record id="view_security_disqualification_reason_tree" model="ir.ui.view">
+        <field name="name">security.disqualification.reason.tree</field>
+        <field name="model">security.disqualification.reason</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_disqualification_reason_search" model="ir.ui.view">
+        <field name="name">security.disqualification.reason.search</field>
+        <field name="model">security.disqualification.reason</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_security_disqualification_reason_form" model="ir.ui.view">
+        <field name="name">security.disqualification.reason.form</field>
+        <field name="model">security.disqualification.reason</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Criminal Record" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" placeholder="Provide more context around this disqualification reason..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_disqualification_reason" model="ir.actions.act_window">
+        <field name="name">Disqualification Reasons</field>
+        <field name="res_model">security.disqualification.reason</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_disqualification_reason_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define a Disqualification Reason!
+            </p>
+            <p>
+                These reasons are used to formally disqualify guards from active duty assignments (e.g. Disciplinary, Criminal Record).
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_disqualification_reason"
+        name="Disqualification Reasons"
+        parent="menu_security_configuration"
+        action="action_security_disqualification_reason"
+        sequence="50"
+    />
+</odoo>

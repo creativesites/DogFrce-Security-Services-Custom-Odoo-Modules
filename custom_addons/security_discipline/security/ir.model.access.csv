@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_incident_type_user,security.incident.type user,model_security_incident_type,hr.group_hr_user,1,1,1,1
+access_security_incident_user,security.incident user,model_security_incident,hr.group_hr_user,1,1,1,1
