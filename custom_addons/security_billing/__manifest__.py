@@ -8,8 +8,12 @@
     "depends": ["security_payroll_core"],
     "data": [
         "data/ir_sequence.xml",
+        "data/security_billing_cron.xml",
         "security/ir.model.access.csv",
         "views/security_billing_views.xml",
+        "views/security_billing_wizard_views.xml",
+        "reports/security_invoice_report.xml",
+        "reports/security_invoice_aging_report.xml",
     ],
     "installable": True,
     "application": False,

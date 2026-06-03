@@ -1,0 +1,17 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_equipment_category_mgr,security.equipment.category.mgr,model_security_equipment_category,security_base.group_security_manager,1,1,1,1
+access_equipment_category_sup,security.equipment.category.sup,model_security_equipment_category,security_base.group_security_supervisor,1,0,0,0
+access_equipment_category_user,security.equipment.category.user,model_security_equipment_category,hr.group_hr_user,1,0,0,0
+access_equipment_type_mgr,security.equipment.type.mgr,model_security_equipment_type,security_base.group_security_manager,1,1,1,1
+access_equipment_type_sup,security.equipment.type.sup,model_security_equipment_type,security_base.group_security_supervisor,1,0,0,0
+access_equipment_type_user,security.equipment.type.user,model_security_equipment_type,hr.group_hr_user,1,0,0,0
+access_equipment_item_mgr,security.equipment.item.mgr,model_security_equipment_item,security_base.group_security_manager,1,1,1,1
+access_equipment_item_sup,security.equipment.item.sup,model_security_equipment_item,security_base.group_security_supervisor,1,0,0,0
+access_equipment_item_user,security.equipment.item.user,model_security_equipment_item,hr.group_hr_user,1,0,0,0
+access_equipment_allocation_mgr,security.equipment.allocation.mgr,model_security_equipment_allocation,security_base.group_security_manager,1,1,1,1
+access_equipment_allocation_sup,security.equipment.allocation.sup,model_security_equipment_allocation,security_base.group_security_supervisor,1,1,1,0
+access_equipment_allocation_user,security.equipment.allocation.user,model_security_equipment_allocation,hr.group_hr_user,1,0,0,0
+access_equipment_damage_mgr,security.equipment.damage.mgr,model_security_equipment_damage,security_base.group_security_manager,1,1,1,1
+access_equipment_damage_sup,security.equipment.damage.sup,model_security_equipment_damage,security_base.group_security_supervisor,1,1,1,0
+access_equipment_damage_user,security.equipment.damage.user,model_security_equipment_damage,hr.group_hr_user,1,0,0,0
+access_security_equipment_return_wizard,security.equipment.return.wizard,model_security_equipment_return_wizard,base.group_user,1,1,1,1

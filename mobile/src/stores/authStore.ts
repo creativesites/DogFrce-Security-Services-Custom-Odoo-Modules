@@ -7,10 +7,11 @@ interface AuthState {
   isLoading: boolean;
   user: UserProfile | null;
   error: string | null;
-  
+
   bootstrap: () => Promise<void>;
   login: (db: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  setSession: (sessionId: string, user: UserProfile) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -70,5 +71,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false,
       });
     }
+  },
+
+  setSession: async (sessionId: string, user: UserProfile) => {
+    await SecureStore.setItemAsync('odoo_session_id', sessionId);
+    await SecureStore.setItemAsync('user_profile', JSON.stringify(user));
+    set({ isAuthenticated: true, user, isLoading: false, error: null });
   },
 }));

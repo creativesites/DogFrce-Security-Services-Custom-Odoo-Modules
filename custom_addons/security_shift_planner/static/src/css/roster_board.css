@@ -1,0 +1,87 @@
+/* =================================================================
+   Roster Board — scoped component styles
+   Loaded via web.assets_backend in __manifest__.py
+   ================================================================= */
+
+/* Dark select options on nav sidebar */
+.rb-select option {
+    background: #152d4a;
+}
+
+/* ── Button base ── */
+.rb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+.rb-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Primary — dark navy */
+.rb-btn-primary {
+    background: #1e3a5f;
+    color: #fff;
+}
+.rb-btn-primary:hover:not(:disabled) {
+    background: #2d5490;
+}
+
+/* Danger — red tint */
+.rb-btn-danger {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+.rb-btn-danger:hover:not(:disabled) {
+    background: #fecaca;
+}
+
+/* Ghost — outline */
+.rb-btn-ghost {
+    background: transparent;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+.rb-btn-ghost:hover:not(:disabled) {
+    background: #f8fafc;
+}
+
+/* Assign — primary full-width */
+.rb-btn-assign {
+    background: #1e3a5f;
+    color: #fff;
+    padding: 7px;
+    font-size: 12px;
+    width: 100%;
+}
+.rb-btn-assign:hover:not(:disabled) {
+    background: #2d5490;
+}
+
+/* ── Slot cards — hover lift ── */
+.rb-post-row td div:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* ── Suggestion cards ── */
+.rb-suggestion-card:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
+}
+
+/* ── Grid table: override Bootstrap borders ── */
+.rb-grid-table th,
+.rb-grid-table td {
+    border: none;
+}

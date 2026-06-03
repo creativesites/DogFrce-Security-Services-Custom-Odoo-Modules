@@ -1,0 +1,737 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_reporting.ExecutiveDashboard">
+    <div class="o_df_dashboard">
+        <div class="dg-shell">
+
+            <!-- ═══════════════ SIDEBAR ═══════════════ -->
+            <aside class="dg-sidebar">
+                <div class="dg-brand">
+                    <div class="dg-brand-icon">
+                        <img t-attf-src="/web/image/res.company/{{state.companyId}}/logo"
+                             alt="Logo"
+                             style="width:100%;height:100%;object-fit:contain;"/>
+                    </div>
+                    <div>
+                        <div class="dg-brand-name"><t t-esc="state.companyName"/></div>
+                        <div class="dg-brand-subtitle">Command Center</div>
+                    </div>
+                </div>
+
+                <div class="dg-sys-badge">
+                    <span class="dg-sys-dot"/>
+                    <span class="dg-sys-label">Systems Nominal</span>
+                    <span class="dg-sys-time"><t t-esc="lastUpdatedDisplay"/></span>
+                </div>
+
+                <nav class="dg-nav">
+                    <div class="dg-nav-label">Navigation</div>
+                    <t t-foreach="[
+                        ['overview',    'Overview',    'fa-th-large'],
+                        ['roster',      'Roster',      'fa-calendar'],
+                        ['attendance',  'Attendance',  'fa-check-circle'],
+                        ['payroll',     'Payroll',     'fa-money'],
+                        ['billing',     'Billing',     'fa-file-text-o'],
+                        ['workforce',   'Workforce',   'fa-users'],
+                        ['ai',          'AI',          'fa-magic']
+                    ]" t-as="tab" t-key="tab[0]">
+                        <button t-att-class="'dg-nav-button' + (state.activeTab === tab[0] ? ' is-active' : '')"
+                                t-on-click="() => this.setTab(tab[0])">
+                            <i t-att-class="'fa ' + tab[2]"/>
+                            <span><t t-esc="tab[1]"/></span>
+                        </button>
+                    </t>
+                </nav>
+
+                <div class="dg-sidebar-foot">
+                    <div class="dg-coverage-box">
+                        <div class="dg-coverage-lbl">Coverage Today</div>
+                        <div class="dg-sidebar-value"><t t-esc="state.statusBanner.coverage"/></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ═══════════════ MAIN ═══════════════ -->
+            <main class="dg-main">
+
+                <!-- Topbar -->
+                <header class="dg-topbar">
+                    <div>
+                        <h1 class="dg-page-title"><t t-esc="state.companyName"/></h1>
+                        <div class="dg-page-subtitle">Executive Dashboard · <t t-esc="todayDisplay"/></div>
+                    </div>
+                    <div class="dg-top-actions">
+                        <span class="dg-updated">Last sync <t t-esc="lastUpdatedDisplay"/></span>
+                        <button class="dg-button" t-on-click="() => this.refreshData()">
+                            <i t-att-class="'fa fa-refresh' + (state.loading ? ' fa-spin' : '')"/>
+                            Refresh
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Loading -->
+                <t t-if="state.loading">
+                    <div class="dg-loading">Loading mission data…</div>
+                </t>
+
+                <t t-else="">
+                    <div class="dg-content">
+
+                        <!-- ─── OVERVIEW TAB ─── -->
+                        <t t-if="state.activeTab === 'overview'">
+
+                            <!-- Status Strip -->
+                            <section class="dg-status-grid">
+                                <div class="dg-status-card">
+                                    <span t-att-class="'dg-status-dot ' + (state.statusBanner.operational === 'green' ? 'dg-dot-success' : state.statusBanner.operational === 'amber' ? 'dg-dot-warning' : 'dg-dot-danger')"/>
+                                    <div>
+                                        <div class="dg-status-label">Ops Status</div>
+                                        <div class="dg-status-value">
+                                            <t t-if="state.statusBanner.operational === 'green'">Nominal</t>
+                                            <t t-elif="state.statusBanner.operational === 'amber'">Attention Required</t>
+                                            <t t-else="">Critical</t>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="dg-status-card">
+                                    <span class="dg-status-icon" style="--dg-icon-color:#8fff60;"><i class="fa fa-users"/></span>
+                                    <div>
+                                        <div class="dg-status-label">Coverage Today</div>
+                                        <div class="dg-status-value"><t t-esc="state.statusBanner.coverage"/></div>
+                                    </div>
+                                </div>
+                                <div class="dg-status-card">
+                                    <span t-att-class="'dg-status-icon' + (state.statusBanner.pendingActions > 0 ? '' : '')"
+                                          t-att-style="state.statusBanner.pendingActions > 0 ? '--dg-icon-color:#f5a623;' : '--dg-icon-color:#8fff60;'">
+                                        <i class="fa fa-bell"/>
+                                    </span>
+                                    <div>
+                                        <div class="dg-status-label">Pending Actions</div>
+                                        <div class="dg-status-value"><t t-esc="state.statusBanner.pendingActions"/> items</div>
+                                    </div>
+                                </div>
+                                <div class="dg-status-card">
+                                    <span t-att-class="'dg-status-dot ' + (state.statusBanner.billingHealth === 'green' ? 'dg-dot-success' : state.statusBanner.billingHealth === 'amber' ? 'dg-dot-warning' : 'dg-dot-danger')"/>
+                                    <div>
+                                        <div class="dg-status-label">Billing Health</div>
+                                        <div class="dg-status-value">
+                                            <t t-if="state.kpis.overdueInvoices > 0"><t t-esc="state.kpis.overdueInvoices"/> overdue</t>
+                                            <t t-else="">All current</t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Operations KPIs -->
+                            <section class="dg-section" style="--dg-section-color: var(--cyan);">
+                                <div class="dg-section-head">
+                                    <h2 class="dg-section-title">Operations</h2>
+                                    <span class="dg-section-kicker">Live post coverage</span>
+                                </div>
+                                <div class="dg-kpi-grid">
+                                    <button class="dg-kpi-card dg-card-blue"
+                                            t-on-click="() => this.openModel('hr.employee', [['security_guard','=',true],['active','=',true]])">
+                                        <div class="dg-kpi-top">
+                                            <i class="fa fa-users dg-kpi-icon"/>
+                                            <span class="dg-pill">Total</span>
+                                        </div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.activeGuards"/></div>
+                                        <div class="dg-card-label">Active Guards</div>
+                                    </button>
+                                    <button class="dg-kpi-card dg-card-green"
+                                            t-on-click="() => this.openModel('security.attendance.record', [['shift_date','=',_today()],['status','in',['present','late']]])">
+                                        <div class="dg-kpi-top">
+                                            <i class="fa fa-check-circle dg-kpi-icon"/>
+                                            <span class="dg-pill"><t t-esc="state.kpis.attendanceRateToday"/>%</span>
+                                        </div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.onDutyToday"/></div>
+                                        <div class="dg-card-label">On Duty Today</div>
+                                    </button>
+                                    <button class="dg-kpi-card dg-card-red"
+                                            t-on-click="() => this.openModel('security.attendance.record', [['shift_date','=',_today()],['absence_type','=','awol']])">
+                                        <div class="dg-kpi-top">
+                                            <i class="fa fa-user-times dg-kpi-icon"/>
+                                            <t t-if="state.kpis.awolToday > 0"><span class="dg-pill">Alert</span></t>
+                                        </div>
+                                        <div t-att-class="'dg-card-value' + (state.kpis.awolToday > 0 ? ' dg-card-red' : '')">
+                                            <t t-esc="state.kpis.awolToday"/>
+                                        </div>
+                                        <div class="dg-card-label">AWOL Today</div>
+                                    </button>
+                                    <button class="dg-kpi-card dg-card-amber"
+                                            t-on-click="() => this.openModel('security.roster.slot', [['state','=','confirmed'],['employee_id','=',false]])">
+                                        <div class="dg-kpi-top">
+                                            <i class="fa fa-calendar-times-o dg-kpi-icon"/>
+                                        </div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.unassignedSlots"/></div>
+                                        <div class="dg-card-label">Unassigned Slots</div>
+                                    </button>
+                                </div>
+                            </section>
+
+                            <!-- Business Health KPIs -->
+                            <section class="dg-section" style="--dg-section-color: var(--indigo);">
+                                <div class="dg-section-head">
+                                    <h2 class="dg-section-title">Business Health</h2>
+                                    <span class="dg-section-kicker">Workforce · payroll · billing</span>
+                                </div>
+                                <div class="dg-kpi-grid">
+                                    <button class="dg-kpi-card dg-card-purple"
+                                            t-on-click="() => this.openModel('security.leave.request', [['state','=','submitted']])">
+                                        <div class="dg-kpi-top"><i class="fa fa-calendar-check-o dg-kpi-icon"/></div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.pendingLeave"/></div>
+                                        <div class="dg-card-label">Pending Leave</div>
+                                    </button>
+                                    <button class="dg-kpi-card dg-card-red"
+                                            t-on-click="() => this.openModel('security.incident', [['state','=','draft']])">
+                                        <div class="dg-kpi-top"><i class="fa fa-flag dg-kpi-icon"/></div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.openIncidents"/></div>
+                                        <div class="dg-card-label">Open Incidents</div>
+                                    </button>
+                                    <button class="dg-kpi-card dg-card-teal"
+                                            t-on-click="() => this.openModel('security.payslip', [['state','=','draft']])">
+                                        <div class="dg-kpi-top">
+                                            <i class="fa fa-file-text dg-kpi-icon"/>
+                                            <span class="dg-pill">Payroll</span>
+                                        </div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.payslipsPending"/></div>
+                                        <div class="dg-card-label">Payslips Pending</div>
+                                    </button>
+                                    <button class="dg-kpi-card dg-card-red"
+                                            t-on-click="() => this.openModel('security.billing.invoice', [['state','not in',['paid','cancelled']]])">
+                                        <div class="dg-kpi-top">
+                                            <i class="fa fa-exclamation-circle dg-kpi-icon"/>
+                                            <t t-if="state.kpis.overdueInvoices > 0"><span class="dg-pill">Overdue</span></t>
+                                        </div>
+                                        <div class="dg-card-value"><t t-esc="state.kpis.overdueInvoices"/></div>
+                                        <div class="dg-card-label">Overdue Invoices</div>
+                                    </button>
+                                </div>
+                            </section>
+
+                            <!-- Alert Feed + Quick Actions -->
+                            <section class="dg-dashboard-grid">
+                                <!-- Alert Feed -->
+                                <div class="dg-panel">
+                                    <div class="dg-panel-header">
+                                        <div>
+                                            <h2 class="dg-panel-title">Alert Feed</h2>
+                                            <div class="dg-panel-subtitle">Priority operational, workforce &amp; billing items</div>
+                                        </div>
+                                        <span class="dg-pill dg-card-amber">
+                                            <t t-esc="state.recentAlerts.length"/> items
+                                        </span>
+                                    </div>
+                                    <div class="dg-panel-body">
+                                        <div class="dg-alert-list">
+                                            <t t-foreach="state.recentAlerts" t-as="alert" t-key="alert_index">
+                                                <button t-att-class="'dg-alert-row ' + (alert.type === 'danger' ? 'dg-card-red' : alert.type === 'warning' ? 'dg-card-amber' : alert.type === 'success' ? 'dg-card-green' : 'dg-card-blue')"
+                                                        t-on-click="alert.model ? () => this.openModel(alert.model, alert.domain) : undefined">
+                                                    <span class="dg-alert-icon">
+                                                        <i t-att-class="'fa ' + alert.icon"/>
+                                                    </span>
+                                                    <span class="dg-alert-text"><t t-esc="alert.message"/></span>
+                                                    <t t-if="alert.model">
+                                                        <i class="fa fa-chevron-right" style="margin-left:auto; color: var(--text-muted); font-size: 10px;"/>
+                                                    </t>
+                                                </button>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Actions -->
+                                <div class="dg-panel">
+                                    <div class="dg-panel-header">
+                                        <div>
+                                            <h2 class="dg-panel-title">Quick Actions</h2>
+                                            <div class="dg-panel-subtitle">Common daily workflows</div>
+                                        </div>
+                                    </div>
+                                    <div class="dg-panel-body">
+                                        <div class="dg-action-list">
+                                            <button class="dg-action-card dg-card-blue"
+                                                    t-on-click="() => this.openAction('security_shift_planner.roster_board')">
+                                                <span class="dg-action-icon"><i class="fa fa-calendar"/></span>
+                                                <span>
+                                                    <span class="dg-action-title">Roster Board</span>
+                                                    <span class="dg-action-subtitle">Interactive scheduling grid</span>
+                                                </span>
+                                            </button>
+                                            <button class="dg-action-card dg-card-green"
+                                                    t-on-click="() => this.openAction('security_attendance.posting_console')">
+                                                <span class="dg-action-icon"><i class="fa fa-clock-o"/></span>
+                                                <span>
+                                                    <span class="dg-action-title">Posting Console</span>
+                                                    <span class="dg-action-subtitle">Batch attendance entry</span>
+                                                </span>
+                                            </button>
+                                            <button class="dg-action-card dg-card-teal"
+                                                    t-on-click="() => this.openAction('security_payroll_core.payroll_command_center')">
+                                                <span class="dg-action-icon"><i class="fa fa-money"/></span>
+                                                <span>
+                                                    <span class="dg-action-title">Payroll Center</span>
+                                                    <span class="dg-action-subtitle">Process &amp; confirm pay runs</span>
+                                                </span>
+                                            </button>
+                                            <button class="dg-action-card dg-card-purple"
+                                                    t-on-click="() => this.openModel('security.leave.request', [['state','=','submitted']])">
+                                                <span class="dg-action-icon"><i class="fa fa-calendar-check-o"/></span>
+                                                <span>
+                                                    <span class="dg-action-title">Approve Leave</span>
+                                                    <span class="dg-action-subtitle"><t t-esc="state.kpis.pendingLeave"/> pending request(s)</span>
+                                                </span>
+                                            </button>
+                                            <button class="dg-action-card dg-card-red"
+                                                    t-on-click="() => this.openModel('security.incident', [['state','=','draft']])">
+                                                <span class="dg-action-icon"><i class="fa fa-flag"/></span>
+                                                <span>
+                                                    <span class="dg-action-title">Review Incidents</span>
+                                                    <span class="dg-action-subtitle"><t t-esc="state.kpis.openIncidents"/> pending</span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- Summary Bar -->
+                            <div class="dg-panel dg-tab-panel">
+                                <div class="dg-panel-body">
+                                    <div class="dg-tab-summary">
+                                        <div class="dg-summary-card dg-card-blue">
+                                            <div class="dg-summary-value"><t t-esc="state.kpis.activeClientSites"/></div>
+                                            <div class="dg-summary-label">Active Sites</div>
+                                        </div>
+                                        <div class="dg-summary-card dg-card-green">
+                                            <div class="dg-summary-value"><t t-esc="state.kpis.attendanceRateToday"/>%</div>
+                                            <div class="dg-summary-label">Attendance Rate</div>
+                                        </div>
+                                        <div class="dg-summary-card dg-card-amber">
+                                            <div class="dg-summary-value"><t t-esc="trendArrow(state.kpis.awolTrend)"/><t t-esc="Math.abs(state.kpis.awolTrend)"/></div>
+                                            <div class="dg-summary-label">AWOL Trend</div>
+                                        </div>
+                                        <div class="dg-summary-card dg-card-teal">
+                                            <div class="dg-summary-value"><t t-esc="formatCurrency(state.kpis.revenueMtd)"/></div>
+                                            <div class="dg-summary-label">Revenue MTD</div>
+                                        </div>
+                                    </div>
+                                    <div class="dg-progress-row">
+                                        <div class="dg-progress-label">
+                                            <span>Attendance coverage</span>
+                                            <span><t t-esc="state.kpis.attendanceRateToday"/>%</span>
+                                        </div>
+                                        <div class="dg-progress-track">
+                                            <div class="dg-progress-fill dg-card-green"
+                                                 t-att-style="'width:' + state.kpis.attendanceRateToday + '%;'"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Quick Launch Grid -->
+                            <section class="dg-section" style="--dg-section-color: var(--acid);">
+                                <div class="dg-section-head">
+                                    <h2 class="dg-section-title">Quick Launch</h2>
+                                    <span class="dg-section-kicker">Core modules</span>
+                                </div>
+                                <div class="dg-launch-grid">
+                                    <button class="dg-launch-card dg-card-blue"   t-on-click="() => this.openAction('security_shift_planner.roster_board')"><span class="dg-launch-icon"><i class="fa fa-calendar"/></span><div class="dg-launch-title">Roster Board</div><div class="dg-launch-subtitle">Scheduling</div></button>
+                                    <button class="dg-launch-card dg-card-green"  t-on-click="() => this.openAction('security_attendance.posting_console')"><span class="dg-launch-icon"><i class="fa fa-clock-o"/></span><div class="dg-launch-title">Posting Console</div><div class="dg-launch-subtitle">Batch attendance</div></button>
+                                    <button class="dg-launch-card dg-card-teal"   t-on-click="() => this.openAction('security_payroll_core.payroll_command_center')"><span class="dg-launch-icon"><i class="fa fa-money"/></span><div class="dg-launch-title">Payroll Center</div><div class="dg-launch-subtitle">Process pay runs</div></button>
+                                    <button class="dg-launch-card dg-card-blue"   t-on-click="() => this.openModel('hr.employee', [['security_guard','=',true],['active','=',true]])"><span class="dg-launch-icon"><i class="fa fa-id-badge"/></span><div class="dg-launch-title">Guard List</div><div class="dg-launch-subtitle">Active guards</div></button>
+                                    <button class="dg-launch-card dg-card-green"  t-on-click="() => this.openModel('security.billing.invoice', [])"><span class="dg-launch-icon"><i class="fa fa-file-text"/></span><div class="dg-launch-title">Invoices</div><div class="dg-launch-subtitle">All billing</div></button>
+                                    <button class="dg-launch-card dg-card-purple" t-on-click="() => this.openModel('security.leave.request', [])"><span class="dg-launch-icon"><i class="fa fa-calendar-check-o"/></span><div class="dg-launch-title">Leave Requests</div><div class="dg-launch-subtitle">Approve / reject</div></button>
+                                    <button class="dg-launch-card dg-card-red"    t-on-click="() => this.openModel('security.incident', [])"><span class="dg-launch-icon"><i class="fa fa-flag"/></span><div class="dg-launch-title">Incidents</div><div class="dg-launch-subtitle">Behavioral records</div></button>
+                                    <button class="dg-launch-card dg-card-amber"  t-on-click="() => this.openModel('security.employee.document', [])"><span class="dg-launch-icon"><i class="fa fa-file-text-o"/></span><div class="dg-launch-title">Documents</div><div class="dg-launch-subtitle">Expiry compliance</div></button>
+                                    <button class="dg-launch-card dg-card-blue"   t-on-click="() => this.openModel('security.payslip', [])"><span class="dg-launch-icon"><i class="fa fa-file-text"/></span><div class="dg-launch-title">Payslips</div><div class="dg-launch-subtitle">Pay records</div></button>
+                                    <button class="dg-launch-card dg-card-green"  t-on-click="() => this.openModel('security.client.payment', [])"><span class="dg-launch-icon"><i class="fa fa-bank"/></span><div class="dg-launch-title">Client Payments</div><div class="dg-launch-subtitle">Record payments</div></button>
+                                    <button class="dg-launch-card dg-card-slate"  t-on-click="() => this.openModel('fleet.vehicle', [])"><span class="dg-launch-icon"><i class="fa fa-car"/></span><div class="dg-launch-title">Fleet</div><div class="dg-launch-subtitle">Vehicles</div></button>
+                                    <button class="dg-launch-card dg-card-slate"  t-on-click="() => this.openModel('security.equipment', [])"><span class="dg-launch-icon"><i class="fa fa-wrench"/></span><div class="dg-launch-title">Equipment</div><div class="dg-launch-subtitle">Asset tracking</div></button>
+                                    <button class="dg-launch-card dg-card-purple" t-on-click="() => this.openAction('security_client_reports.action_client_reports')"><span class="dg-launch-icon"><i class="fa fa-bar-chart"/></span><div class="dg-launch-title">Client Reports</div><div class="dg-launch-subtitle">Service reports</div></button>
+                                    <button class="dg-launch-card dg-card-teal"   t-on-click="() => this.openAction('security_payroll_core.action_payroll_analysis')"><span class="dg-launch-icon"><i class="fa fa-pie-chart"/></span><div class="dg-launch-title">Payroll Analysis</div><div class="dg-launch-subtitle">Cost breakdown</div></button>
+                                    <button class="dg-launch-card dg-card-amber"  t-on-click="() => this.setTab('roster')"><span class="dg-launch-icon"><i class="fa fa-map"/></span><div class="dg-launch-title">Roster Coverage</div><div class="dg-launch-subtitle">Site coverage</div></button>
+                                    <button class="dg-launch-card dg-card-blue"   t-on-click="() => this.openAction('mail.action_discuss')"><span class="dg-launch-icon"><i class="fa fa-bell"/></span><div class="dg-launch-title">Notifications</div><div class="dg-launch-subtitle">Messages</div></button>
+                                </div>
+                            </section>
+                        </t>
+
+                        <!-- ─── ROSTER TAB ─── -->
+                        <t t-if="state.activeTab === 'roster'">
+                            <div class="dg-tab-summary">
+                                <div class="dg-summary-card dg-card-blue"><div class="dg-summary-value"><t t-esc="state.kpis.activeClientSites"/></div><div class="dg-summary-label">Active Sites</div></div>
+                                <div class="dg-summary-card dg-card-green"><div class="dg-summary-value"><t t-esc="state.kpis.onDutyToday"/></div><div class="dg-summary-label">Guards On Duty</div></div>
+                                <div class="dg-summary-card dg-card-amber"><div class="dg-summary-value"><t t-esc="state.kpis.unassignedSlots"/></div><div class="dg-summary-label">Unassigned Slots</div></div>
+                                <div class="dg-summary-card dg-card-green">
+                                    <div class="dg-summary-value"><t t-esc="state.kpis.attendanceRateToday"/>%</div>
+                                    <div class="dg-summary-label">Coverage Rate</div>
+                                </div>
+                            </div>
+                            <t t-if="state.sitesCoverage.length > 0">
+                                <div class="dg-table-wrap">
+                                    <table class="dg-table">
+                                        <thead><tr><th>Site</th><th class="is-center">Total Slots</th><th class="is-center">Filled</th><th>Coverage</th></tr></thead>
+                                        <tbody>
+                                            <t t-foreach="state.sitesCoverage" t-as="site" t-key="site.name">
+                                                <tr>
+                                                    <td><strong style="color:var(--text);"><t t-esc="site.name"/></strong></td>
+                                                    <td class="is-center"><t t-esc="site.total"/></td>
+                                                    <td class="is-center">
+                                                        <span t-att-style="'color:' + coverageBarColor(site.pct) + '; font-weight:700;'"><t t-esc="site.filled"/></span>
+                                                        <t t-if="site.unfilled > 0"> <span style="color: var(--red);">(-<t t-esc="site.unfilled"/>)</span></t>
+                                                    </td>
+                                                    <td>
+                                                        <div class="dg-progress-row" style="margin:0;">
+                                                            <div class="dg-progress-label">
+                                                                <span/>
+                                                                <span t-att-style="'color:' + coverageBarColor(site.pct) + ';'"><t t-esc="site.pct"/>%</span>
+                                                            </div>
+                                                            <div class="dg-progress-track">
+                                                                <div class="dg-progress-fill" t-att-style="'width:' + site.pct + '%; background:' + coverageBarColor(site.pct) + ';'"/>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                            <t t-else=""><div class="dg-empty"><i class="fa fa-map-marker"/>No site coverage data available for today.</div></t>
+                            <div class="dg-action-row">
+                                <button class="dg-button dg-button-primary" t-on-click="() => this.openAction('security_shift_planner.roster_board')"><i class="fa fa-calendar"/>Roster Board</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.roster.slot', [['state','=','confirmed'],['employee_id','=',false]])"><i class="fa fa-calendar-times-o"/>Unassigned Slots</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.client.site', [])"><i class="fa fa-map-marker"/>Client Sites</button>
+                            </div>
+                        </t>
+
+                        <!-- ─── ATTENDANCE TAB ─── -->
+                        <t t-if="state.activeTab === 'attendance'">
+                            <div class="dg-tab-summary">
+                                <div class="dg-summary-card dg-card-green"><div class="dg-summary-value"><t t-esc="state.kpis.onDutyToday"/></div><div class="dg-summary-label">Present / Late</div></div>
+                                <div class="dg-summary-card dg-card-slate"><div class="dg-summary-value"><t t-esc="state.kpis.guardsOnLeave"/></div><div class="dg-summary-label">On Leave</div></div>
+                                <div class="dg-summary-card dg-card-red"><div class="dg-summary-value"><t t-esc="state.kpis.awolToday"/></div><div class="dg-summary-label">AWOL</div></div>
+                                <div class="dg-summary-card dg-card-blue"><div class="dg-summary-value"><t t-esc="state.kpis.attendanceRateToday"/>%</div><div class="dg-summary-label">Rate</div></div>
+                            </div>
+                            <div class="dg-progress-row">
+                                <div class="dg-progress-label"><span>Present</span><span t-esc="state.kpis.activeGuards > 0 ? ((state.kpis.onDutyToday / state.kpis.activeGuards) * 100).toFixed(0) + '%' : '-'"/></div>
+                                <div class="dg-progress-track"><div class="dg-progress-fill dg-card-green" t-att-style="'width:' + (state.kpis.activeGuards > 0 ? ((state.kpis.onDutyToday / state.kpis.activeGuards) * 100).toFixed(0) : 0) + '%;'"/></div>
+                            </div>
+                            <div class="dg-progress-row">
+                                <div class="dg-progress-label"><span>AWOL</span><span t-esc="state.kpis.activeGuards > 0 ? ((state.kpis.awolToday / state.kpis.activeGuards) * 100).toFixed(0) + '%' : '-'"/></div>
+                                <div class="dg-progress-track"><div class="dg-progress-fill dg-card-red" t-att-style="'width:' + (state.kpis.activeGuards > 0 ? ((state.kpis.awolToday / state.kpis.activeGuards) * 100).toFixed(0) : 0) + '%;'"/></div>
+                            </div>
+                            <div class="dg-table-wrap">
+                                <table class="dg-table">
+                                    <thead><tr><th>Status</th><th class="is-right">Count</th><th class="is-right">% of Guards</th></tr></thead>
+                                    <tbody>
+                                        <tr class="is-clickable" t-on-click="() => this.openModel('security.attendance.record', [['shift_date','=',_today()],['status','in',['present','late']]])">
+                                            <td><span class="dg-badge dg-card-green">Present</span> On Duty / Late</td>
+                                            <td class="is-right" style="color:var(--acid); font-weight:700;"><t t-esc="state.kpis.onDutyToday"/></td>
+                                            <td class="is-right" t-esc="state.kpis.activeGuards > 0 ? ((state.kpis.onDutyToday / state.kpis.activeGuards) * 100).toFixed(1) + '%' : '-'"/>
+                                        </tr>
+                                        <tr class="is-clickable" t-on-click="() => this.openModel('security.attendance.record', [['shift_date','=',_today()],['absence_type','=','awol']])">
+                                            <td><span class="dg-badge dg-card-red">AWOL</span> Absent Without Leave</td>
+                                            <td class="is-right" style="color: var(--red); font-weight:700;"><t t-esc="state.kpis.awolToday"/></td>
+                                            <td class="is-right" t-esc="state.kpis.activeGuards > 0 ? ((state.kpis.awolToday / state.kpis.activeGuards) * 100).toFixed(1) + '%' : '-'"/>
+                                        </tr>
+                                        <tr>
+                                            <td><span class="dg-badge dg-card-amber">Open</span> Unassigned Roster Slots</td>
+                                            <td class="is-right" style="font-weight:700;"><t t-esc="state.kpis.unassignedSlots"/></td>
+                                            <td class="is-right">—</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="dg-action-row">
+                                <button class="dg-button" t-on-click="() => this.openModel('security.attendance.record', [['shift_date','=',_today()]])"><i class="fa fa-list"/>Today's Records</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.attendance.record', [['shift_date','=',_today()],['absence_type','=','awol']])"><i class="fa fa-user-times"/>AWOL Guards</button>
+                            </div>
+                        </t>
+
+                        <!-- ─── PAYROLL TAB ─── -->
+                        <t t-if="state.activeTab === 'payroll'">
+                            <div class="dg-tab-summary">
+                                <div class="dg-summary-card dg-card-green"><div class="dg-summary-value"><t t-esc="state.kpis.activePeriodName"/></div><div class="dg-summary-label">Active Pay Period</div></div>
+                                <div class="dg-summary-card dg-card-blue"><div class="dg-summary-value"><t t-esc="state.kpis.payslipsPending"/></div><div class="dg-summary-label">Payslips Pending</div></div>
+                                <div class="dg-summary-card dg-card-teal"><div class="dg-summary-value"><t t-esc="formatCurrency(state.kpis.payrollCostMtd)"/></div><div class="dg-summary-label">Payroll Cost MTD</div></div>
+                                <div class="dg-summary-card dg-card-slate"><div class="dg-summary-value"><t t-esc="formatCurrency(state.kpis.activeLoanBalances)"/></div><div class="dg-summary-label">Loan Balances</div></div>
+                            </div>
+                            <div class="dg-action-row">
+                                <button class="dg-button dg-button-primary" t-on-click="() => this.openAction('security_payroll_core.payroll_command_center')"><i class="fa fa-money"/>Payroll Center</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.payroll.period', [])"><i class="fa fa-calendar"/>All Periods</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.payslip', [['state','=','draft']])"><i class="fa fa-file-text"/>Draft Payslips</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.employee.loan', [['state','=','active']])"><i class="fa fa-handshake-o"/>Active Loans</button>
+                            </div>
+                        </t>
+
+                        <!-- ─── BILLING TAB ─── -->
+                        <t t-if="state.activeTab === 'billing'">
+                            <div class="dg-tab-summary">
+                                <button class="dg-summary-card dg-card-slate" t-on-click="() => this.openModel('security.billing.invoice', [['state','=','draft']])"><div class="dg-summary-value"><t t-esc="state.kpis.draftInvoices"/></div><div class="dg-summary-label">Draft Invoices</div></button>
+                                <button class="dg-summary-card dg-card-red"   t-on-click="() => this.openModel('security.billing.invoice', [['state','not in',['paid','cancelled']]])"><div class="dg-summary-value"><t t-esc="state.kpis.overdueInvoices"/></div><div class="dg-summary-label">Overdue Invoices</div></button>
+                                <button class="dg-summary-card dg-card-amber" t-on-click="() => this.openModel('security.billing.invoice', [['state','=','sent']])"><div class="dg-summary-value"><t t-esc="formatCurrency(state.kpis.revenueOutstanding)"/></div><div class="dg-summary-label">Outstanding</div></button>
+                                <div class="dg-summary-card dg-card-green"><div class="dg-summary-value"><t t-esc="formatCurrency(state.kpis.revenueMtd)"/></div><div class="dg-summary-label">Revenue MTD</div></div>
+                            </div>
+                            <div class="dg-table-wrap">
+                                <table class="dg-table">
+                                    <thead><tr><th>Invoice Status</th><th class="is-right">Count / Value</th><th>Action</th></tr></thead>
+                                    <tbody>
+                                        <tr class="is-clickable" t-on-click="() => this.openModel('security.billing.invoice', [['state','=','draft']])">
+                                            <td><span class="dg-badge dg-card-slate">Draft</span> Not yet sent to client</td>
+                                            <td class="is-right" style="font-weight:700;"><t t-esc="state.kpis.draftInvoices"/></td>
+                                            <td style="color:var(--text-sub);">View</td>
+                                        </tr>
+                                        <tr class="is-clickable" t-on-click="() => this.openModel('security.billing.invoice', [['state','not in',['paid','cancelled']]])">
+                                            <td><span class="dg-badge dg-card-red">Overdue</span> Past due date</td>
+                                            <td class="is-right" style="color: var(--red); font-weight:700;"><t t-esc="state.kpis.overdueInvoices"/></td>
+                                            <td style="color:var(--text-sub);">Collect</td>
+                                        </tr>
+                                        <tr class="is-clickable" t-on-click="() => this.openModel('security.billing.invoice', [['state','=','sent']])">
+                                            <td><span class="dg-badge dg-card-amber">Sent</span> Awaiting payment</td>
+                                            <td class="is-right" style="font-weight:700;"><t t-esc="formatCurrency(state.kpis.revenueOutstanding)"/></td>
+                                            <td style="color:var(--text-sub);">Follow up</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="dg-action-row">
+                                <button class="dg-button" t-on-click="() => this.openModel('security.billing.invoice', [])"><i class="fa fa-list"/>All Invoices</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.client.payment', [])"><i class="fa fa-bank"/>Client Payments</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.billing.plan', [])"><i class="fa fa-list-alt"/>Billing Plans</button>
+                            </div>
+                        </t>
+
+                        <!-- ─── WORKFORCE TAB ─── -->
+                        <t t-if="state.activeTab === 'workforce'">
+                            <div class="dg-tab-summary">
+                                <button class="dg-summary-card dg-card-purple" t-on-click="() => this.openModel('security.leave.request', [['state','=','submitted']])"><div class="dg-summary-value"><t t-esc="state.kpis.pendingLeave"/></div><div class="dg-summary-label">Pending Leave</div></button>
+                                <button class="dg-summary-card dg-card-red"    t-on-click="() => this.openModel('security.incident', [['state','=','draft']])"><div class="dg-summary-value"><t t-esc="state.kpis.openIncidents"/></div><div class="dg-summary-label">Open Incidents</div></button>
+                                <button class="dg-summary-card dg-card-amber"  t-on-click="() => this.openModel('security.employee.document', [])"><div class="dg-summary-value"><t t-esc="state.kpis.expiringDocs"/></div><div class="dg-summary-label">Docs Expiring (30d)</div></button>
+                                <div class="dg-summary-card dg-card-green"><div class="dg-summary-value"><t t-esc="state.kpis.activeGuards"/></div><div class="dg-summary-label">Active Guards</div></div>
+                            </div>
+                            <div class="dg-action-row">
+                                <button class="dg-button" t-on-click="() => this.openModel('security.leave.request', [['state','=','submitted']])"><i class="fa fa-calendar-check-o"/>Approve Leave</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.incident', [['state','=','draft']])"><i class="fa fa-flag"/>Review Incidents</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('security.employee.document', [])"><i class="fa fa-file-text-o"/>Guard Documents</button>
+                                <button class="dg-button" t-on-click="() => this.openModel('hr.employee', [['security_guard','=',true],['active','=',true]])"><i class="fa fa-users"/>Guard Directory</button>
+                            </div>
+                        </t>
+
+                        <!-- ─── AI INTELLIGENCE TAB ─── -->
+                        <t t-if="state.activeTab === 'ai'">
+
+                            <t t-if="!state.aiSystem.configured">
+                                <div style="text-align:center;padding:48px 24px;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1B3A6B,#2563eb);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:white;font-size:1.4rem;">
+                                        <i class="fa fa-magic"/>
+                                    </div>
+                                    <div style="font-size:1.1rem;font-weight:700;color:#0D1117;margin-bottom:8px;">AI Engine Not Configured</div>
+                                    <div style="font-size:0.87rem;color:#6B7280;max-width:360px;margin:0 auto 20px;line-height:1.6;">
+                                        Add your AI provider API key to unlock 10 intelligent features and the global AI assistant.
+                                    </div>
+                                    <button class="dg-button dg-button-primary" t-on-click="openAIConfig">
+                                        <i class="fa fa-cog"/> Configure AI Engine
+                                    </button>
+                                </div>
+                            </t>
+
+                            <t t-else="">
+
+                                <!-- Stats strip -->
+                                <div class="dg-tab-summary">
+                                    <div class="dg-summary-card dg-card-blue">
+                                        <div class="dg-summary-value" style="font-size:0.9rem;"><t t-esc="aiProviderLabel(state.aiSystem.provider)"/></div>
+                                        <div class="dg-summary-label">Active Provider</div>
+                                    </div>
+                                    <div class="dg-summary-card dg-card-green">
+                                        <div class="dg-summary-value"><t t-esc="state.aiSystem.enabledFeatures"/>/10</div>
+                                        <div class="dg-summary-label">Features On</div>
+                                    </div>
+                                    <div class="dg-summary-card dg-card-teal">
+                                        <div class="dg-summary-value"><t t-esc="state.aiSystem.callsToday"/></div>
+                                        <div class="dg-summary-label">API Calls Today</div>
+                                    </div>
+                                    <div class="dg-summary-card dg-card-slate">
+                                        <div class="dg-summary-value"><t t-esc="state.aiSystem.cacheHitsToday"/></div>
+                                        <div class="dg-summary-label">Cache Hits Today</div>
+                                    </div>
+                                    <div class="dg-summary-card dg-card-purple">
+                                        <div class="dg-summary-value"><t t-esc="state.aiSystem.successRate"/>%</div>
+                                        <div class="dg-summary-label">Success Rate</div>
+                                    </div>
+                                    <div class="dg-summary-card dg-card-amber">
+                                        <div class="dg-summary-value"><t t-esc="formatCostUSD(state.aiSystem.costMtd)"/></div>
+                                        <div class="dg-summary-label">Est. Cost MTD</div>
+                                    </div>
+                                </div>
+
+                                <!-- AI Assistant banner -->
+                                <div style="background:linear-gradient(135deg,#0f2444,#1B3A6B);border-radius:12px;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;gap:16px;">
+                                    <div style="display:flex;align-items:center;gap:14px;min-width:0;">
+                                        <div style="width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;color:white;font-size:1rem;flex-shrink:0;">
+                                            <i class="fa fa-comment"/>
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <div style="color:white;font-weight:700;font-size:0.92rem;">DogForce AI Assistant</div>
+                                            <div style="color:rgba(255,255,255,0.65);font-size:0.78rem;">
+                                                Ask anything · Navigate anywhere · Act with confirmation ·
+                                                <t t-esc="state.aiSystem.chatSessions"/> session(s) logged
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button t-on-click="openAIChat"
+                                            style="flex-shrink:0;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;border-radius:8px;padding:9px 18px;font-size:0.83rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;">
+                                        <i class="fa fa-magic"/> Open Assistant
+                                    </button>
+                                </div>
+
+                                <!-- Feature grid heading -->
+                                <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#94A3B8;margin-bottom:12px;">
+                                    10 AI Features — click to navigate to where each feature lives
+                                </div>
+
+                                <!-- Feature cards grid -->
+                                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-bottom:18px;">
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.attendance_anomaly ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.payslip', [['state','in',['draft','confirmed']]])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#EBF1FB;color:#1B3A6B;"><i class="fa fa-search"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.attendance_anomaly ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.attendance_anomaly ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Anomaly Detection</div>
+                                        <div class="dg-ai-fc-desc">Scans payslip attendance for AWOL patterns, unusual hours, and missing checkouts.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Payslips</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.risk_profiling ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('hr.employee', [['security_guard','=',true],['active','=',true]])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#FEE2E2;color:#991B1B;"><i class="fa fa-shield"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.risk_profiling ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.risk_profiling ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Guard Risk Profile</div>
+                                        <div class="dg-ai-fc-desc">Rates each guard LOW/MEDIUM/HIGH/CRITICAL from 90 days of operational history.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Guard Profiles</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.billing_auditor ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.billing.invoice', [['state','not in',['cancelled']]])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#FEF3C7;color:#92400E;"><i class="fa fa-file-text-o"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.billing_auditor ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.billing_auditor ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Billing Auditor</div>
+                                        <div class="dg-ai-fc-desc">Cross-checks invoice lines against actual attendance — catches overbilling before clients do.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Invoices</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.roster_optimizer ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.roster.batch', [])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#E6F4EE;color:#0D7A4E;"><i class="fa fa-calendar-check-o"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.roster_optimizer ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.roster_optimizer ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Roster Optimizer</div>
+                                        <div class="dg-ai-fc-desc">Ranks optimal guard assignments for unassigned slots based on scores and fairness.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Roster Batches</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.shift_fill ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.attendance.record', [['status','=','absent']])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#E0EEFA;color:#1D5FA4;"><i class="fa fa-exchange"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.shift_fill ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.shift_fill ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Smart Shift Fill</div>
+                                        <div class="dg-ai-fc-desc">Instantly ranks the best available replacement guards when a post becomes vacant.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Attendance Records</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.incident_advisor ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.incident', [['state','=','draft']])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#FEE2E2;color:#991B1B;"><i class="fa fa-gavel"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.incident_advisor ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.incident_advisor ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Incident Advisor</div>
+                                        <div class="dg-ai-fc-desc">Recommends proportionate disciplinary consequences using progressive discipline principles.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Incidents</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.leave_coverage ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.leave.request', [['state','=','draft']])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#EDE9FE;color:#5B21B6;"><i class="fa fa-calendar-times-o"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.leave_coverage ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.leave_coverage ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Leave Coverage Check</div>
+                                        <div class="dg-ai-fc-desc">Flags CRITICAL roster gaps before leave is approved — not after.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Leave Requests</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.doc_renewal_letter ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.employee.document', [['expiry_status','in',['expiring','expired']]])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#FEF3C7;color:#92400E;"><i class="fa fa-envelope"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.doc_renewal_letter ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.doc_renewal_letter ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Renewal Letter</div>
+                                        <div class="dg-ai-fc-desc">Drafts a professional document renewal notice addressed to the guard — one click.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Expiring Documents</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.performance_review ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('hr.employee', [['security_guard','=',true],['active','=',true]])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#E6F4EE;color:#0D7A4E;"><i class="fa fa-star"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.performance_review ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.performance_review ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Performance Review</div>
+                                        <div class="dg-ai-fc-desc">Generates a formal quarterly review across 4 dimensions from 90 days of data.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Guard Profiles</div>
+                                    </button>
+
+                                    <button t-att-class="'dg-ai-feature-card' + (state.aiSystem.features.payslip_explain ? '' : ' is-disabled')"
+                                            t-on-click="() => this.openModel('security.payslip', [])">
+                                        <div class="dg-ai-fc-top">
+                                            <span class="dg-ai-fc-icon" style="background:#E0EEFA;color:#1D5FA4;"><i class="fa fa-language"/></span>
+                                            <span t-att-class="'dg-ai-fc-badge ' + (state.aiSystem.features.payslip_explain ? 'is-on' : 'is-off')"><t t-esc="state.aiSystem.features.payslip_explain ? 'Active' : 'Off'"/></span>
+                                        </div>
+                                        <div class="dg-ai-fc-title">Payslip Explanation</div>
+                                        <div class="dg-ai-fc-desc">Translates payslip line items into plain language — reduces guard pay disputes.</div>
+                                        <div class="dg-ai-fc-link"><i class="fa fa-arrow-right"/> On Payslips</div>
+                                    </button>
+
+                                </div>
+
+                                <!-- Admin action row -->
+                                <div class="dg-action-row">
+                                    <button class="dg-button dg-button-primary" t-on-click="openAIChat">
+                                        <i class="fa fa-magic"/> Open AI Assistant
+                                    </button>
+                                    <button class="dg-button" t-on-click="openAIConfig">
+                                        <i class="fa fa-cog"/> AI Configuration
+                                    </button>
+                                    <button class="dg-button" t-on-click="() => this.openAction('security_ai_engine.action_security_ai_log')">
+                                        <i class="fa fa-list"/> Call Logs
+                                    </button>
+                                    <button class="dg-button" t-on-click="() => this.openAction('security_ai_engine.action_security_ai_chat_session')">
+                                        <i class="fa fa-comments"/> Chat Sessions
+                                    </button>
+                                </div>
+
+                            </t>
+                        </t>
+                        <!-- ─── END AI TAB ─── -->
+
+                    </div>
+                </t>
+            </main>
+        </div>
+    </div>
+</t>
+
+</templates>

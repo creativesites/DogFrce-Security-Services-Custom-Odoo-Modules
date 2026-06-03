@@ -41,6 +41,12 @@
             <form>
                 <header>
                     <button name="action_generate_payslips" type="object" string="Generate Payslips" class="oe_highlight" invisible="state == 'closed'"/>
+                    <button name="action_recompute_payslips" type="object" string="Recompute From Attendance" invisible="state == 'closed' or payslip_count == 0"/>
+                    <button name="action_confirm_payslips" type="object" string="Confirm All Payslips" invisible="state != 'processed' or payslip_count == 0"/>
+                    <button name="action_mark_payslips_paid" type="object" string="Mark All Paid" invisible="state != 'processed' or payslip_count == 0"/>
+                    <button name="action_print_payslips" type="object" string="Print Payslip Batch" invisible="payslip_count == 0"/>
+                    <button name="action_email_payslips" type="object" string="Email Payslips" invisible="state not in ('confirmed', 'paid') or payslip_count == 0"/>
+                    <button name="action_export_payroll_register" type="object" string="Export Register (CSV)" invisible="state not in ('confirmed', 'paid') or payslip_count == 0"/>
                     <button name="action_close" type="object" string="Close Period" invisible="state != 'processed'"/>
                     <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,processed,closed"/>
@@ -75,11 +81,42 @@
                     </group>
                     <notebook>
                         <page string="Payslips">
-                            <field name="payslip_ids"/>
+                            <field name="payslip_ids">
+                                <list>
+                                    <field name="employee_id"/>
+                                    <field name="worked_days"/>
+                                    <field name="normal_hours"/>
+                                    <field name="saturday_hours" optional="hide"/>
+                                    <field name="sunday_hours"/>
+                                    <field name="public_holiday_hours"/>
+                                    <field name="night_hours" optional="hide"/>
+                                    <field name="overtime_hours"/>
+                                    <field name="unpaid_hours"/>
+                                    <field name="awol_occurrences"/>
+                                    <field name="anomaly_score" optional="hide"/>
+                                    <field name="total_earnings"/>
+                                    <field name="total_deductions"/>
+                                    <field name="net_pay"/>
+                                    <field name="state" widget="badge"/>
+                                    <button name="action_print_payslip" type="object" string="Print" icon="fa-print"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>
             </form>
+        </field>
+    </record>
+
+    <!-- Wizard launch button on period list via inherited view -->
+    <record id="view_security_payroll_period_list_wizard_btn" model="ir.ui.view">
+        <field name="name">security.payroll.period.list.wizard.btn</field>
+        <field name="model">security.payroll.period</field>
+        <field name="inherit_id" ref="view_security_payroll_period_list"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list" position="attributes">
+                <attribute name="create">0</attribute>
+            </xpath>
         </field>
     </record>
 
@@ -101,9 +138,9 @@
     <menuitem
         id="menu_security_payroll_period"
         name="Payroll Periods"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_payroll"
         action="action_security_payroll_period"
-        sequence="90"
+        sequence="10"
         groups="hr.group_hr_user"
     />
 
@@ -114,18 +151,21 @@
         <field name="name">security.payslip.list</field>
         <field name="model">security.payslip</field>
         <field name="arch" type="xml">
-            <list decoration-info="state == 'draft'" decoration-success="state == 'paid'" decoration-muted="state == 'cancelled'">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'paid'" decoration-muted="state == 'cancelled'" decoration-warning="anomaly_score &gt; 0">
                 <field name="name"/>
                 <field name="period_id"/>
                 <field name="employee_id"/>
-                            <field name="worked_days"/>
-                            <field name="normal_hours"/>
-                            <field name="sunday_hours"/>
-                            <field name="public_holiday_hours"/>
-                            <field name="overtime_hours"/>
-                            <field name="unpaid_hours"/>
-                            <field name="awol_occurrences"/>
-                            <field name="total_earnings"/>
+                <field name="worked_days"/>
+                <field name="normal_hours"/>
+                <field name="saturday_hours" optional="hide"/>
+                <field name="sunday_hours"/>
+                <field name="public_holiday_hours"/>
+                <field name="night_hours" optional="hide"/>
+                <field name="overtime_hours"/>
+                <field name="unpaid_hours"/>
+                <field name="awol_occurrences"/>
+                <field name="anomaly_score" optional="hide"/>
+                <field name="total_earnings"/>
                 <field name="total_deductions"/>
                 <field name="net_pay"/>
                 <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'paid'"/>
@@ -157,6 +197,8 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <button name="action_preview_payslip" type="object" string="Preview" icon="fa-eye"/>
+                    <button name="action_print_payslip" type="object" string="Print" icon="fa-print"/>
                     <button name="action_confirm" type="object" string="Confirm" class="oe_highlight" invisible="state != 'draft'"/>
                     <button name="action_compute_from_sources" type="object" string="Compute From Attendance" class="oe_highlight" invisible="state != 'draft'"/>
                     <button name="action_mark_paid" type="object" string="Mark Paid" class="oe_highlight" invisible="state != 'confirmed'"/>
@@ -179,8 +221,10 @@
                         <group string="Time Summary">
                             <field name="worked_days" readonly="1"/>
                             <field name="normal_hours" readonly="1"/>
+                            <field name="saturday_hours" readonly="1"/>
                             <field name="sunday_hours" readonly="1"/>
                             <field name="public_holiday_hours" readonly="1"/>
+                            <field name="night_hours" readonly="1"/>
                             <field name="overtime_hours" readonly="1"/>
                             <field name="unpaid_hours" readonly="1"/>
                             <field name="awol_occurrences" readonly="1"/>
@@ -199,6 +243,12 @@
                             <field name="net_pay" readonly="1" style="font-size: 1.2em; font-weight: bold;"/>
                         </group>
                     </group>
+                    <div class="alert alert-warning o_form_no_bottom" role="alert"
+                         invisible="not anomaly_flags">
+                        <strong>Anomaly Alerts (score: <field name="anomaly_score" readonly="1" nolabel="1"/>)</strong>
+                        <br/>
+                        <field name="anomaly_flags" readonly="1" nolabel="1" widget="text"/>
+                    </div>
                     <notebook>
                         <page string="Earnings">
                             <field name="earning_line_ids">
@@ -247,8 +297,10 @@
                 <field name="period_id" type="row"/>
                 <field name="state" type="col"/>
                 <field name="normal_hours" type="measure"/>
+                <field name="saturday_hours" type="measure"/>
                 <field name="sunday_hours" type="measure"/>
                 <field name="public_holiday_hours" type="measure"/>
+                <field name="night_hours" type="measure"/>
                 <field name="overtime_hours" type="measure"/>
                 <field name="unpaid_hours" type="measure"/>
                 <field name="awol_occurrences" type="measure"/>
@@ -288,9 +340,35 @@
     <menuitem
         id="menu_security_payslip"
         name="Payslips"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_payroll"
         action="action_security_payslip"
-        sequence="100"
+        sequence="20"
         groups="hr.group_hr_user"
     />
+
+    <!-- Employee Payroll and Banking View Extension -->
+    <record id="view_employee_form_security_payroll" model="ir.ui.view">
+        <field name="name">hr.employee.form.security.payroll</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Payroll &amp; Banking" invisible="not security_guard">
+                    <group string="Namibian Statutory Registration">
+                        <group>
+                            <field name="security_ssc_number" placeholder="e.g. 1234567-8"/>
+                            <field name="security_tax_number" placeholder="e.g. 9876543-2"/>
+                        </group>
+                    </group>
+                    <group string="Banking Details">
+                        <group>
+                            <field name="security_bank_name" placeholder="e.g. Bank Windhoek / FNB"/>
+                            <field name="security_bank_branch" placeholder="e.g. 481-972"/>
+                            <field name="security_bank_account_number" placeholder="e.g. 8001234567"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
 </odoo>

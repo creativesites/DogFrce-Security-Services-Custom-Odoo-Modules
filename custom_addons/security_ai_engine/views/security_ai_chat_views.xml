@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Chat Session — list view -->
+    <record id="view_security_ai_chat_session_list" model="ir.ui.view">
+        <field name="name">security.ai.chat.session.list</field>
+        <field name="model">security.ai.chat.session</field>
+        <field name="arch" type="xml">
+            <list string="AI Chat Sessions" create="0">
+                <field name="user_id"/>
+                <field name="started_at"/>
+                <field name="last_activity"/>
+                <field name="message_count" string="Messages"/>
+                <field name="context_model" string="Started on"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Chat Session — form view (read-only log browser) -->
+    <record id="view_security_ai_chat_session_form" model="ir.ui.view">
+        <field name="name">security.ai.chat.session.form</field>
+        <field name="model">security.ai.chat.session</field>
+        <field name="arch" type="xml">
+            <form string="Chat Session" create="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="user_id" readonly="1"/>
+                            <field name="started_at" readonly="1"/>
+                            <field name="last_activity" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="context_model" readonly="1" string="Started on Model"/>
+                            <field name="message_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Messages">
+                            <field name="message_ids" readonly="1">
+                                <list create="0" delete="0">
+                                    <field name="timestamp"/>
+                                    <field name="role" widget="badge"
+                                           decoration-info="role == 'user'"
+                                           decoration-success="role == 'assistant'"
+                                           decoration-warning="role == 'pending_action'"/>
+                                    <field name="content" string="User Message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Chat Session — search view -->
+    <record id="view_security_ai_chat_session_search" model="ir.ui.view">
+        <field name="name">security.ai.chat.session.search</field>
+        <field name="model">security.ai.chat.session</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user_id"/>
+                <filter name="today" string="Today"
+                        domain="[('started_at','>=', (context_today()).strftime('%Y-%m-%d'))]"/>
+                <filter name="group_user" string="By User" context="{'group_by':'user_id'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Chat Session — action -->
+    <record id="action_security_ai_chat_session" model="ir.actions.act_window">
+        <field name="name">AI Chat Sessions</field>
+        <field name="res_model">security.ai.chat.session</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_ai_chat_session_search"/>
+    </record>
+
+    <!-- Menu item under AI Engine -->
+    <menuitem id="menu_security_ai_chat_sessions"
+              name="Chat Sessions"
+              parent="security_ai_engine.menu_security_ai_engine_root"
+              action="action_security_ai_chat_session"
+              sequence="4"/>
+
+</odoo>

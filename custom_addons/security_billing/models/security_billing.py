@@ -1,3 +1,4 @@
+import base64
 from datetime import timedelta
 
 from odoo import api, fields, models
@@ -30,12 +31,52 @@ class SecurityBillingPlan(models.Model):
     payment_term_days = fields.Integer(default=30)
     vat_rate = fields.Float(default=15.0)
     active = fields.Boolean(default=True)
+    auto_invoice = fields.Boolean(default=False, string="Auto-Invoice Monthly")
     line_ids = fields.One2many(
         "security.billing.plan.line",
         "billing_plan_id",
         string="Billing Lines",
     )
     note = fields.Text()
+
+    @api.model
+    def action_auto_invoice_all(self):
+        """Cron: auto-generate monthly draft invoices for qualifying billing plans."""
+        from datetime import date
+        import calendar
+
+        today = date.today()
+        first_day = today.replace(day=1)
+        last_day = today.replace(day=calendar.monthrange(today.year, today.month)[1])
+
+        plans = self.search([("active", "=", True), ("auto_invoice", "=", True)])
+        invoice_model = self.env["security.billing.invoice"]
+
+        for plan in plans:
+            existing = invoice_model.search([
+                ("billing_plan_id", "=", plan.id),
+                ("service_date_from", "=", str(first_day)),
+                ("service_date_to", "=", str(last_day)),
+            ], limit=1)
+            if existing:
+                continue
+
+            due = first_day + timedelta(days=plan.payment_term_days)
+            invoice_model.create({
+                "name": "New",
+                "partner_id": plan.partner_id.id,
+                "billing_plan_id": plan.id,
+                "currency_id": plan.currency_id.id,
+                "vat_rate": plan.vat_rate,
+                "state": "draft",
+                "generation_source": "manual",
+                "invoice_date": str(today),
+                "due_date": str(due),
+                "service_date_from": str(first_day),
+                "service_date_to": str(last_day),
+            })
+
+        return True
 
     @api.constrains("date_start", "date_end")
     def _check_dates(self):
@@ -356,6 +397,66 @@ class SecurityBillingInvoice(models.Model):
         for invoice in self:
             invoice.state = "draft"
 
+    def action_send_invoice_email(self):
+        self.ensure_one()
+        partner = self.partner_id
+        if not partner or not partner.email:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {"title": "No Email", "message": "Client has no email address configured.", "type": "warning"},
+            }
+        try:
+            report = self.env.ref("security_billing.action_report_security_invoice")
+            pdf_content, _ = report._render_qweb_pdf([self.id])
+            attachment = self.env["ir.attachment"].create({
+                "name": f"Invoice_{self.name.replace('/', '_')}.pdf",
+                "type": "binary",
+                "datas": base64.b64encode(pdf_content),
+                "res_model": "security.billing.invoice",
+                "res_id": self.id,
+            })
+            mail = self.env["mail.mail"].create({
+                "subject": f"Invoice {self.name} — DogForce Security Services",
+                "email_to": partner.email,
+                "body_html": f"""
+                    <p>Dear {partner.name},</p>
+                    <p>Please find attached your invoice <strong>{self.name}</strong> for the period {self.service_date_from} to {self.service_date_to}.</p>
+                    <p><strong>Total Amount: {self.currency_id.symbol} {self.total_amount:,.2f}</strong></p>
+                    <p>Payment is due within the agreed payment terms. Please reference invoice number <strong>{self.name}</strong> when making payment.</p>
+                    <p>For queries, please contact us directly.</p>
+                    <p>Regards,<br/>DogForce Security Services</p>
+                """,
+                "attachment_ids": [(4, attachment.id)],
+            })
+            mail.send()
+            self.state = "sent"
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {"title": "Invoice Sent", "message": f"Invoice emailed to {partner.email}.", "type": "success"},
+            }
+        except Exception as e:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {"title": "Send Failed", "message": str(e)[:200], "type": "danger"},
+            }
+
+    def action_create_credit_note(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "security.billing.credit.note",
+            "views": [[False, "form"]],
+            "context": {"default_invoice_id": self.id},
+            "target": "new",
+        }
+
+    def action_print_aging(self):
+        unpaid = self.search([("state", "not in", ["paid", "cancelled"]), ("due_date", "!=", False)])
+        return self.env.ref("security_billing.action_report_security_invoice_aging").report_action(unpaid)
+
 
 class SecurityBillingInvoiceLine(models.Model):
     _name = "security.billing.invoice.line"
@@ -399,3 +500,44 @@ class SecurityBillingInvoiceLine(models.Model):
                 raise ValidationError("Invoice line unit price cannot be negative.")
             if line.guard_count < 0:
                 raise ValidationError("Invoice line guard count cannot be negative.")
+
+
+class SecurityBillingCreditNote(models.Model):
+    _name = "security.billing.credit.note"
+    _description = "Security Billing Credit Note"
+    _order = "date desc, id desc"
+
+    name = fields.Char(compute="_compute_name", store=True)
+    invoice_id = fields.Many2one(
+        "security.billing.invoice",
+        required=True,
+        string="Original Invoice",
+        ondelete="restrict",
+    )
+    partner_id = fields.Many2one(related="invoice_id.partner_id", store=True, readonly=True)
+    currency_id = fields.Many2one(related="invoice_id.currency_id", store=True, readonly=True)
+    date = fields.Date(required=True, default=fields.Date.context_today)
+    amount = fields.Float(required=True, string="Credit Amount")
+    reason = fields.Text(required=True, string="Reason for Credit")
+    state = fields.Selection(
+        [("draft", "Draft"), ("confirmed", "Confirmed"), ("applied", "Applied")],
+        default="draft",
+    )
+
+    @api.depends("invoice_id", "date")
+    def _compute_name(self):
+        for cn in self:
+            invoice = cn.invoice_id.name or "Draft"
+            cn.name = f"CN/{invoice}/{cn.date or ''}"
+
+    def action_confirm(self):
+        for cn in self:
+            cn.state = "confirmed"
+
+    def action_apply(self):
+        for cn in self:
+            cn.state = "applied"
+
+    def action_reset_to_draft(self):
+        for cn in self:
+            cn.state = "draft"

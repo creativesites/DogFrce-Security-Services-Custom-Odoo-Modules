@@ -9,6 +9,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/security_loans_views.xml",
+        "reports/security_loan_statement.xml",
     ],
     "installable": True,
     "application": False,

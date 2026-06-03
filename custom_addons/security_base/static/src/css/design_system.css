@@ -1,0 +1,762 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DogForce Security — Global Design System
+   Philosophy: Clean Corporate Light
+   Goldman Sachs meets modern SaaS — authoritative, calm, refined.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+    /* Canvas */
+    --ds-bg:            #F8FAFC;
+    --ds-surface:       #FFFFFF;
+
+    /* Borders */
+    --ds-border:        #E2E8F0;
+    --ds-border-light:  #EEF1F5;
+
+    /* Typography */
+    --ds-text:          #0D1117;
+    --ds-text-2:        #374151;
+    --ds-text-muted:    #6B7280;
+    --ds-text-subtle:   #94A3B8;
+
+    /* Brand / Accent — deep navy */
+    --ds-accent:        #1B3A6B;
+    --ds-accent-hover:  #142F58;
+    --ds-accent-light:  #EBF1FB;
+    --ds-accent-mid:    #C7D9F4;
+
+    /* Status colours */
+    --ds-success:       #0D7A4E;
+    --ds-success-bg:    #E6F4EE;
+    --ds-warning:       #92400E;
+    --ds-warning-bg:    #FEF3C7;
+    --ds-danger:        #991B1B;
+    --ds-danger-bg:     #FEE2E2;
+    --ds-info:          #1D5FA4;
+    --ds-info-bg:       #E0EEFA;
+
+    /* Surfaces */
+    --ds-slate:         #F1F4F8;
+    --ds-slate-hover:   #E8EDF4;
+
+    /* Radii */
+    --ds-radius-sm:     4px;
+    --ds-radius:        6px;
+    --ds-radius-md:     8px;
+    --ds-radius-lg:     12px;
+
+    /* Shadows */
+    --ds-shadow-sm:     0 1px 3px rgba(15, 23, 42, 0.06);
+    --ds-shadow:        0 2px 8px rgba(15, 23, 42, 0.08);
+    --ds-shadow-md:     0 4px 16px rgba(15, 23, 42, 0.10);
+
+    /* Font */
+    --ds-font:          -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
+    --ds-mono:          "SF Mono", "Fira Code", "Consolas", monospace;
+}
+
+
+/* ── Base application canvas ───────────────────────────────────────────────── */
+
+.o_web_client {
+    background: var(--ds-bg);
+    font-family: var(--ds-font);
+    color: var(--ds-text);
+}
+
+.o_action_manager {
+    background: var(--ds-bg);
+}
+
+
+/* ── Control panel (top bar) ───────────────────────────────────────────────── */
+
+.o_control_panel {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border) !important;
+    box-shadow: var(--ds-shadow-sm) !important;
+    padding: 0 20px !important;
+    min-height: 52px !important;
+}
+
+.o_control_panel .o_breadcrumb {
+    color: var(--ds-text-muted);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.o_control_panel .o_breadcrumb .o_breadcrumb_item:last-child,
+.o_control_panel .o_breadcrumb .active {
+    color: var(--ds-text);
+    font-weight: 600;
+}
+
+.o_control_panel .o_breadcrumb .o_back_button {
+    color: var(--ds-accent);
+    opacity: 0.8;
+}
+
+.o_control_panel .o_breadcrumb .o_back_button:hover {
+    opacity: 1;
+}
+
+.o_control_panel_navigation .o_switch_view.active {
+    color: var(--ds-accent);
+    border-color: var(--ds-accent);
+}
+
+/* Search bar */
+.o_searchview {
+    background: var(--ds-slate) !important;
+    border: 1px solid var(--ds-border) !important;
+    border-radius: var(--ds-radius-md) !important;
+    color: var(--ds-text-2);
+}
+
+.o_searchview:focus-within {
+    border-color: var(--ds-accent-mid) !important;
+    background: var(--ds-surface) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.08) !important;
+}
+
+.o_searchview .o_searchview_input {
+    color: var(--ds-text);
+    font-size: 0.87rem;
+}
+
+.o_searchview .o_searchview_facet {
+    background: var(--ds-accent-light);
+    border: 1px solid var(--ds-accent-mid);
+    border-radius: var(--ds-radius-sm);
+    color: var(--ds-accent);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+
+/* ── Buttons ───────────────────────────────────────────────────────────────── */
+
+/* Primary — deep navy */
+.btn-primary {
+    background-color: var(--ds-accent) !important;
+    border-color: var(--ds-accent) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    font-size: 0.84rem;
+    letter-spacing: 0.1px;
+    border-radius: var(--ds-radius) !important;
+    box-shadow: 0 1px 2px rgba(27, 58, 107, 0.2);
+    transition: background 0.15s, box-shadow 0.15s;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--ds-accent-hover) !important;
+    border-color: var(--ds-accent-hover) !important;
+    box-shadow: 0 2px 6px rgba(27, 58, 107, 0.3) !important;
+}
+
+/* Secondary — slate outline */
+.btn-secondary,
+.btn-outline-secondary {
+    color: var(--ds-text-2) !important;
+    border-color: var(--ds-border) !important;
+    background: var(--ds-surface) !important;
+    font-weight: 500;
+    font-size: 0.84rem;
+    border-radius: var(--ds-radius) !important;
+}
+
+.btn-secondary:hover,
+.btn-outline-secondary:hover {
+    background: var(--ds-slate) !important;
+    border-color: #CBD5E1 !important;
+    color: var(--ds-text) !important;
+}
+
+/* Danger */
+.btn-danger {
+    background-color: var(--ds-danger) !important;
+    border-color: var(--ds-danger) !important;
+    border-radius: var(--ds-radius) !important;
+    font-weight: 600;
+}
+
+/* Success */
+.btn-success {
+    background-color: var(--ds-success) !important;
+    border-color: var(--ds-success) !important;
+    border-radius: var(--ds-radius) !important;
+    font-weight: 600;
+}
+
+
+/* ── Badge / pill system ───────────────────────────────────────────────────── */
+
+.badge {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4px !important;
+    padding: 3px 8px !important;
+    border-radius: 20px !important;
+    text-transform: uppercase;
+}
+
+/* Remap Bootstrap badge colors to our palette */
+.badge.text-bg-success,
+.badge.bg-success {
+    background-color: var(--ds-success-bg) !important;
+    color: var(--ds-success) !important;
+    border: 1px solid #A7F0D0 !important;
+}
+
+.badge.text-bg-danger,
+.badge.bg-danger {
+    background-color: var(--ds-danger-bg) !important;
+    color: var(--ds-danger) !important;
+    border: 1px solid #FCA5A5 !important;
+}
+
+.badge.text-bg-warning,
+.badge.bg-warning {
+    background-color: var(--ds-warning-bg) !important;
+    color: var(--ds-warning) !important;
+    border: 1px solid #FDE68A !important;
+}
+
+.badge.text-bg-info,
+.badge.bg-info {
+    background-color: var(--ds-info-bg) !important;
+    color: var(--ds-info) !important;
+    border: 1px solid #BFDBFE !important;
+}
+
+.badge.text-bg-secondary,
+.badge.bg-secondary {
+    background-color: var(--ds-slate) !important;
+    color: var(--ds-text-2) !important;
+    border: 1px solid var(--ds-border) !important;
+}
+
+.badge.text-bg-primary,
+.badge.bg-primary {
+    background-color: var(--ds-accent-light) !important;
+    color: var(--ds-accent) !important;
+    border: 1px solid var(--ds-accent-mid) !important;
+}
+
+
+/* ── List views ────────────────────────────────────────────────────────────── */
+
+.o_list_view {
+    background: var(--ds-surface);
+}
+
+.o_list_renderer .o_list_table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+/* Column headers */
+.o_list_renderer thead th {
+    background: var(--ds-slate) !important;
+    color: var(--ds-text-muted) !important;
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.55px !important;
+    padding: 10px 12px !important;
+    border-bottom: 2px solid var(--ds-border) !important;
+    border-right: none !important;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.o_list_renderer thead th:hover {
+    background: var(--ds-slate-hover) !important;
+    color: var(--ds-text-2) !important;
+}
+
+/* Data rows */
+.o_list_renderer .o_data_row > td {
+    color: var(--ds-text-2) !important;
+    font-size: 0.87rem !important;
+    padding: 10px 12px !important;
+    border-bottom: 1px solid var(--ds-border-light) !important;
+    vertical-align: middle !important;
+    border-right: none !important;
+}
+
+/* Row hover */
+.o_list_renderer .o_data_row:hover > td {
+    background: var(--ds-accent-light) !important;
+}
+
+/* Selected row */
+.o_list_renderer .o_data_row.o_row_selected > td {
+    background: #D6E4F8 !important;
+}
+
+/* Decorations — Odoo's decoration-danger/warning/success/info/muted */
+.o_list_renderer .o_data_row.text-danger > td {
+    color: var(--ds-danger) !important;
+}
+.o_list_renderer .o_data_row.text-warning > td {
+    color: var(--ds-warning) !important;
+}
+.o_list_renderer .o_data_row.text-success > td {
+    color: var(--ds-success) !important;
+}
+.o_list_renderer .o_data_row.text-muted > td {
+    color: var(--ds-text-subtle) !important;
+}
+.o_list_renderer .o_data_row.text-info > td {
+    color: var(--ds-info) !important;
+}
+
+/* Optional fields column header icon */
+.o_list_renderer thead .o_optional_columns_dropdown_toggle {
+    color: var(--ds-text-subtle);
+}
+
+/* Footer totals row */
+.o_list_renderer tfoot td {
+    background: var(--ds-slate) !important;
+    font-weight: 700 !important;
+    font-size: 0.84rem !important;
+    color: var(--ds-text) !important;
+    border-top: 2px solid var(--ds-border) !important;
+}
+
+/* List action buttons column */
+.o_list_renderer .o_col_muted {
+    color: var(--ds-text-subtle);
+}
+
+
+/* ── Form views ────────────────────────────────────────────────────────────── */
+
+.o_form_view {
+    background: var(--ds-bg);
+}
+
+.o_form_view .o_form_sheet_bg {
+    background: var(--ds-bg);
+    padding: 24px 20px;
+}
+
+.o_form_view .o_form_sheet {
+    background: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    border-radius: var(--ds-radius-lg) !important;
+    box-shadow: var(--ds-shadow-sm) !important;
+    padding: 28px 32px !important;
+    max-width: 1100px;
+}
+
+/* Form title area */
+.o_form_view .oe_title h1 {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: var(--ds-text) !important;
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+}
+
+/* Group labels (string attributes) */
+.o_form_view .o_wrap_label label,
+.o_form_view .o_label {
+    color: var(--ds-text-muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+}
+
+/* Group field values */
+.o_form_view .o_field_widget {
+    color: var(--ds-text-2);
+    font-size: 0.87rem;
+}
+
+/* Section separators */
+.o_horizontal_separator,
+.o_form_view .o_group .o_horizontal_separator {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.7px !important;
+    color: var(--ds-text-subtle) !important;
+    padding-bottom: 8px !important;
+    border-bottom: 1px solid var(--ds-border-light) !important;
+    margin: 20px 0 12px !important;
+}
+
+/* Notebook / tabs */
+.o_form_view .nav-tabs {
+    border-bottom: 2px solid var(--ds-border) !important;
+    background: transparent;
+}
+
+.o_form_view .nav-tabs .nav-link {
+    color: var(--ds-text-muted) !important;
+    font-size: 0.84rem !important;
+    font-weight: 500 !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    margin-bottom: -2px !important;
+    padding: 10px 16px !important;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.o_form_view .nav-tabs .nav-link:hover {
+    color: var(--ds-text) !important;
+    border-bottom-color: var(--ds-border) !important;
+}
+
+.o_form_view .nav-tabs .nav-link.active {
+    color: var(--ds-accent) !important;
+    border-bottom-color: var(--ds-accent) !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+}
+
+
+/* ── Status bar (form header) ──────────────────────────────────────────────── */
+
+.o_statusbar_status {
+    gap: 2px;
+}
+
+.o_statusbar_status button.o_arrow_button {
+    background: var(--ds-slate) !important;
+    color: var(--ds-text-muted) !important;
+    border: 1px solid var(--ds-border) !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    border-radius: var(--ds-radius-sm) !important;
+    transition: all 0.15s;
+}
+
+.o_statusbar_status button.o_arrow_button:hover:not(.o_statusbar_status_current) {
+    background: var(--ds-slate-hover) !important;
+    color: var(--ds-text) !important;
+    border-color: #CBD5E1 !important;
+}
+
+.o_statusbar_status button.o_arrow_button.o_statusbar_status_current {
+    background: var(--ds-accent) !important;
+    color: #FFFFFF !important;
+    border-color: var(--ds-accent) !important;
+    box-shadow: 0 1px 4px rgba(27, 58, 107, 0.25) !important;
+}
+
+
+/* ── Form header action buttons ───────────────────────────────────────────── */
+
+.o_form_view .o_form_buttons_edit .btn,
+.o_form_view header .o_form_buttons_view .btn {
+    border-radius: var(--ds-radius) !important;
+    font-size: 0.84rem !important;
+    font-weight: 600 !important;
+}
+
+/* The main save/edit/discard bar */
+.o_form_view .o_cp_action_menus .btn {
+    font-size: 0.82rem;
+    color: var(--ds-text-muted);
+}
+
+
+/* ── Kanban views ──────────────────────────────────────────────────────────── */
+
+.o_kanban_view {
+    background: var(--ds-bg);
+}
+
+.o_kanban_record {
+    background: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    border-radius: var(--ds-radius-md) !important;
+    box-shadow: var(--ds-shadow-sm) !important;
+    transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.o_kanban_record:hover {
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: var(--ds-shadow) !important;
+}
+
+.o_column_folded .o_kanban_header {
+    background: var(--ds-slate);
+}
+
+.o_kanban_group .o_kanban_header {
+    background: var(--ds-slate);
+    border-radius: var(--ds-radius-md) var(--ds-radius-md) 0 0;
+    border: 1px solid var(--ds-border);
+    border-bottom: none;
+}
+
+.o_kanban_group .o_column_title {
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--ds-text-muted);
+}
+
+
+/* ── Pivot view ────────────────────────────────────────────────────────────── */
+
+.o_pivot {
+    background: var(--ds-surface);
+}
+
+.o_pivot table {
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
+    overflow: hidden;
+}
+
+.o_pivot th {
+    background: var(--ds-slate) !important;
+    color: var(--ds-text-muted) !important;
+    font-size: 0.75rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.3px;
+}
+
+.o_pivot .o_pivot_header_cell_closed,
+.o_pivot .o_pivot_header_cell_opened {
+    color: var(--ds-accent) !important;
+    font-weight: 600 !important;
+}
+
+.o_pivot td.o_pivot_cell_value {
+    font-size: 0.87rem;
+    color: var(--ds-text-2);
+    font-variant-numeric: tabular-nums;
+}
+
+.o_pivot tr:hover td {
+    background: var(--ds-accent-light) !important;
+}
+
+
+/* ── Graph view ────────────────────────────────────────────────────────────── */
+
+.o_graph_view {
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
+}
+
+
+/* ── Empty / no-content state ─────────────────────────────────────────────── */
+
+.o_view_nocontent {
+    color: var(--ds-text-muted);
+}
+
+.o_nocontent_help {
+    padding: 48px 24px;
+}
+
+.o_nocontent_help .o_nocontent_help_title,
+.o_nocontent_help p.o_view_nocontent_smiling_face {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: var(--ds-text-2) !important;
+    margin-bottom: 8px !important;
+}
+
+.o_nocontent_help p:not(.o_view_nocontent_smiling_face) {
+    font-size: 0.87rem !important;
+    color: var(--ds-text-muted) !important;
+    max-width: 400px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+
+/* ── Alert/notification styling ───────────────────────────────────────────── */
+
+.o_notification_manager .o_notification {
+    border-radius: var(--ds-radius-md) !important;
+    box-shadow: var(--ds-shadow-md) !important;
+    border: 1px solid var(--ds-border) !important;
+}
+
+
+/* ── Sidebar / action menu ─────────────────────────────────────────────────── */
+
+.o_action_manager .o_act_window,
+.o_content {
+    background: var(--ds-bg);
+}
+
+/* Search panel (left sidebar filters) */
+.o_search_panel {
+    background: var(--ds-surface) !important;
+    border-right: 1px solid var(--ds-border) !important;
+}
+
+.o_search_panel_section_header {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.6px !important;
+    color: var(--ds-text-subtle) !important;
+}
+
+.o_search_panel_label_title {
+    font-size: 0.84rem !important;
+    color: var(--ds-text-2) !important;
+}
+
+.o_search_panel_label.active .o_search_panel_label_title {
+    color: var(--ds-accent) !important;
+    font-weight: 600 !important;
+}
+
+
+/* ── Stat buttons (smart buttons on form) ─────────────────────────────────── */
+
+.o_form_view .oe_button_box .oe_stat_button {
+    border: 1px solid var(--ds-border) !important;
+    border-radius: var(--ds-radius) !important;
+    background: var(--ds-surface) !important;
+    transition: all 0.15s;
+}
+
+.o_form_view .oe_button_box .oe_stat_button:hover {
+    background: var(--ds-accent-light) !important;
+    border-color: var(--ds-accent-mid) !important;
+}
+
+.o_form_view .oe_button_box .oe_stat_button .o_stat_info .o_stat_value {
+    color: var(--ds-accent) !important;
+    font-weight: 700 !important;
+}
+
+
+/* ── Tags / many2many tags ────────────────────────────────────────────────── */
+
+.o_field_many2many_tags .badge {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    padding: 3px 9px !important;
+    border-radius: 20px !important;
+    background: var(--ds-accent-light) !important;
+    color: var(--ds-accent) !important;
+    border: 1px solid var(--ds-accent-mid) !important;
+}
+
+
+/* ── Dropdown menus ────────────────────────────────────────────────────────── */
+
+.dropdown-menu {
+    border: 1px solid var(--ds-border) !important;
+    border-radius: var(--ds-radius-md) !important;
+    box-shadow: var(--ds-shadow-md) !important;
+    padding: 4px !important;
+}
+
+.dropdown-item {
+    font-size: 0.84rem !important;
+    color: var(--ds-text-2) !important;
+    border-radius: var(--ds-radius-sm);
+    padding: 7px 12px !important;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background: var(--ds-accent-light) !important;
+    color: var(--ds-accent) !important;
+}
+
+.dropdown-divider {
+    border-color: var(--ds-border-light) !important;
+    margin: 4px 0 !important;
+}
+
+
+/* ── Chatter / mail thread ────────────────────────────────────────────────── */
+
+.o_mail_thread {
+    background: var(--ds-bg);
+}
+
+.o_message {
+    background: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border-light) !important;
+    border-radius: var(--ds-radius-md) !important;
+}
+
+.o_message_author {
+    font-weight: 700 !important;
+    color: var(--ds-text) !important;
+    font-size: 0.84rem !important;
+}
+
+.o_message_date {
+    color: var(--ds-text-subtle) !important;
+    font-size: 0.75rem !important;
+}
+
+.o_composer_button_send {
+    background: var(--ds-accent) !important;
+    border-color: var(--ds-accent) !important;
+    border-radius: var(--ds-radius) !important;
+}
+
+
+/* ── Scrollbars (webkit) ───────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+
+/* ── Utility: DS section header (used in custom views) ───────────────────── */
+
+.ds-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.ds-section-bar {
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--ds-accent);
+    flex-shrink: 0;
+}
+
+.ds-section-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--ds-text-subtle);
+}
+
+.ds-kicker {
+    font-size: 0.75rem;
+    color: var(--ds-text-subtle);
+    margin-left: auto;
+}

@@ -9,6 +9,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/security_documents_views.xml",
+        "data/security_documents_cron.xml",
     ],
     "installable": True,
     "application": False,

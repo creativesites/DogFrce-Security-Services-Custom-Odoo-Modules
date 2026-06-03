@@ -5,3 +5,5 @@ access_security_language_user,security.language user,model_security_language,hr.
 access_security_attribute_user,security.attribute user,model_security_attribute,hr.group_hr_user,1,1,1,1
 access_security_disqualification_reason_user,security.disqualification.reason user,model_security_disqualification_reason,hr.group_hr_user,1,1,1,1
 access_security_reliability_adjustment_user,security.reliability.adjustment user,model_security_reliability_adjustment,hr.group_hr_user,1,1,1,1
+access_security_employee_certification,security.employee.certification,model_security_employee_certification,base.group_user,1,1,1,0
+access_security_employee_certification_manager,security.employee.certification manager,model_security_employee_certification,base.group_system,1,1,1,1

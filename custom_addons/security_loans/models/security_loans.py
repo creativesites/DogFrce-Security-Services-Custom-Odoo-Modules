@@ -40,11 +40,23 @@ class SecurityEmployeeLoan(models.Model):
     state = fields.Selection(
         [
             ("draft", "Draft"),
+            ("submitted", "Submitted"),
+            ("approved", "Approved"),
             ("active", "Active"),
             ("closed", "Closed"),
+            ("written_off", "Written Off"),
         ],
         default="draft",
         required=True,
+    )
+    submitted_by_id = fields.Many2one("res.users", readonly=True, string="Submitted By")
+    approved_by_id = fields.Many2one("res.users", readonly=True, string="Approved By")
+    approval_date = fields.Datetime(readonly=True)
+    rejection_reason = fields.Text()
+    deduction_priority = fields.Integer(
+        default=10,
+        string="Deduction Priority",
+        help="Lower number = deducted first when multiple loans are active.",
     )
     deduction_line_ids = fields.One2many(
         "security.loan.deduction",
@@ -87,9 +99,50 @@ class SecurityEmployeeLoan(models.Model):
             if loan.repayment_months <= 0:
                 raise ValidationError("Repayment months must be greater than zero.")
 
+    # ── Workflow actions ──────────────────────────────────────────────────────
+
+    def action_submit(self):
+        for loan in self:
+            if loan.state == "draft":
+                loan.state = "submitted"
+                loan.submitted_by_id = self.env.user.id
+
+    def action_approve(self):
+        for loan in self:
+            if loan.state == "submitted":
+                loan.state = "approved"
+                loan.approved_by_id = self.env.user.id
+                loan.approval_date = fields.Datetime.now()
+
     def action_activate(self):
         for loan in self:
-            loan.state = "active"
+            if loan.state == "approved":
+                loan.state = "active"
+                # Generate deduction schedule if not already done
+                if not loan.deduction_line_ids:
+                    loan._generate_deduction_schedule()
+
+    def action_generate_schedule(self):
+        for loan in self:
+            if not loan.deduction_line_ids:
+                loan._generate_deduction_schedule()
+
+    def _generate_deduction_schedule(self):
+        self.ensure_one()
+        from dateutil.relativedelta import relativedelta
+        start = self.start_date
+        monthly_amount = self.installment_amount
+        for i in range(self.repayment_months):
+            deduction_date = start + relativedelta(months=i)
+            self.env["security.loan.deduction"].create({
+                "loan_id": self.id,
+                "deduction_date": deduction_date,
+                "amount": monthly_amount,
+            })
+
+    def action_write_off(self):
+        for loan in self:
+            loan.state = "written_off"
 
     def action_close(self):
         for loan in self:
@@ -97,7 +150,20 @@ class SecurityEmployeeLoan(models.Model):
 
     def action_reset_to_draft(self):
         for loan in self:
-            loan.state = "draft"
+            if loan.state in ("draft", "submitted", "approved"):
+                loan.state = "draft"
+
+    def action_apply_carry_forward(self):
+        """Called by payroll after capping — adds carry-forward to the next deduction line."""
+        for loan in self:
+            carry = sum(loan.deduction_line_ids.filtered("capped").mapped("carry_forward_amount"))
+            if carry <= 0:
+                continue
+            next_line = loan.deduction_line_ids.filtered(
+                lambda l: not l.payslip_id and not l.capped
+            ).sorted("deduction_date")[:1]
+            if next_line:
+                next_line.amount += carry
 
 
 class SecurityLoanDeduction(models.Model):
@@ -121,6 +187,12 @@ class SecurityLoanDeduction(models.Model):
     deduction_date = fields.Date(required=True)
     amount = fields.Float(required=True)
     note = fields.Text()
+    carry_forward_amount = fields.Float(
+        default=0.0,
+        string="Capped Amount (Carry Forward)",
+        help="Amount that could not be deducted this period due to the net pay floor cap. Will be added to the next period's deduction.",
+    )
+    capped = fields.Boolean(default=False, readonly=True, string="Was Capped This Period")
 
     @api.constrains("amount")
     def _check_amount(self):

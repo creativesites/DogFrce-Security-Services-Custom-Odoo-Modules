@@ -9,6 +9,8 @@
     "data": [
         "security/ir.model.access.csv",
         "views/security_leave_views.xml",
+        "data/security_leave_cron.xml",
+        "data/security_leave_yearend_cron.xml",
     ],
     "installable": True,
     "application": False,

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_scan_document_expiry" model="ir.cron">
+        <field name="name">Security: Scan Document Expiry Notifications</field>
+        <field name="model_id" ref="model_security_notification"/>
+        <field name="state">code</field>
+        <field name="code">model.action_scan_document_expiry()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(hours=7)).strftime('%Y-%m-%d 07:00:00')"/>
+        <field name="active">True</field>
+    </record>
+
+    <record id="ir_cron_scan_overdue_invoices" model="ir.cron">
+        <field name="name">Security: Scan Overdue Invoice Notifications</field>
+        <field name="model_id" ref="model_security_notification"/>
+        <field name="state">code</field>
+        <field name="code">model.action_scan_overdue_invoices()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(hours=8)).strftime('%Y-%m-%d 08:00:00')"/>
+        <field name="active">True</field>
+    </record>
+</odoo>

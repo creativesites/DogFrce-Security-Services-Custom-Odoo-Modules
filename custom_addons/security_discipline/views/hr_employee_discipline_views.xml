@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- G-16: Progressive discipline tab on hr.employee form -->
+    <record id="view_hr_employee_discipline_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.discipline</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Discipline" invisible="not security_guard">
+                    <div class="alert alert-danger" invisible="not security_suspension_recommended">
+                        <strong>Suspension Recommended: </strong>
+                        <field name="security_suspension_reason" readonly="1" nolabel="1"/>
+                    </div>
+                    <field name="incident_ids" readonly="1">
+                        <list>
+                            <field name="incident_date"/>
+                            <field name="incident_type_id"/>
+                            <field name="state"/>
+                            <field name="deduction_amount"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_billing_invoice_wizard_form_standalone" model="ir.ui.view">
+        <field name="name">security.billing.invoice.wizard.form.standalone</field>
+        <field name="model">security.billing.invoice.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Invoice">
+                <group>
+                    <field name="billing_plan_id"/>
+                    <field name="partner_id" readonly="1"/>
+                    <field name="period_month"/>
+                    <field name="generation_source"/>
+                </group>
+                <footer>
+                    <button name="action_generate" type="object" string="Generate Invoice" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

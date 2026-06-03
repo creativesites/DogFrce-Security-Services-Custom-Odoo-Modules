@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<!-- ============================================================
+     ROSTER BOARD — Tier-3 OWL Client Action
+     Layout: Dark Navy Sidebar | Main Grid | Guard Pool Sidebar
+     ============================================================ -->
+<t t-name="security_shift_planner.RosterBoard" owl="1">
+
+<div class="o_action o_roster_board d-flex" style="height:100vh; overflow:hidden; background:#f0f4f8; font-family:'Inter',system-ui,sans-serif;">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         LEFT SIDEBAR — Navigation, Batch Selector, Stats
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="rb-nav-sidebar d-flex flex-column"
+         style="width:240px; flex-shrink:0; background:#1e3a5f; color:#e2e8f0; overflow-y:auto;">
+
+        <!-- Logo / Brand -->
+        <div class="rb-brand px-4 py-3 border-bottom" style="border-color:#2d5490 !important;">
+            <div class="fw-bold" style="font-size:15px; color:#fff; letter-spacing:.3px;">
+                <i class="fa fa-shield me-2" style="color:#60a5fa;"/>DogForce
+            </div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Roster Board</div>
+        </div>
+
+        <!-- Batch Selector -->
+        <div class="px-3 pt-3 pb-2">
+            <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:#94a3b8; margin-bottom:6px;">
+                Roster Batch
+            </div>
+            <select class="form-select form-select-sm rb-select"
+                    style="background:#152d4a; color:#e2e8f0; border-color:#2d5490; font-size:12px;"
+                    t-on-change="onBatchChange">
+                <option value="" style="background:#152d4a;">-- Select Batch --</option>
+                <t t-foreach="state.batches" t-as="batch" t-key="batch.id">
+                    <option t-att-value="batch.id"
+                            t-att-selected="batch.id === state.batchId"
+                            style="background:#152d4a;"
+                            t-esc="batch.name"/>
+                </t>
+            </select>
+        </div>
+
+        <!-- Site Filter -->
+        <div t-if="state.batchId" class="px-3 pb-2">
+            <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:#94a3b8; margin-bottom:6px;">
+                Filter Site
+            </div>
+            <select class="form-select form-select-sm rb-select"
+                    style="background:#152d4a; color:#e2e8f0; border-color:#2d5490; font-size:12px;"
+                    t-on-change="onSiteFilterChange">
+                <option value="" style="background:#152d4a;">All Sites</option>
+                <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                    <option t-att-value="site.id"
+                            t-att-selected="site.id === state.filterSiteId"
+                            style="background:#152d4a;"
+                            t-esc="site.name"/>
+                </t>
+            </select>
+        </div>
+
+        <!-- Divider -->
+        <div t-if="state.batchId" style="border-top:1px solid #2d5490; margin:4px 0;"/>
+
+        <!-- Stats Panel -->
+        <div t-if="state.batchId" class="px-3 py-2">
+            <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:#94a3b8; margin-bottom:8px;">
+                Coverage
+            </div>
+
+            <!-- Progress bar -->
+            <div style="background:#152d4a; border-radius:4px; height:6px; margin-bottom:10px; overflow:hidden;">
+                <div t-att-style="'width:' + assignmentPercent + '%; background:#16a34a; height:100%; border-radius:4px; transition:width .4s;'"/>
+            </div>
+
+            <div class="d-flex flex-column gap-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size:11px; color:#94a3b8;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#16a34a; margin-right:5px;"/>
+                        Assigned
+                    </span>
+                    <span class="fw-semibold" style="font-size:12px; color:#86efac;">
+                        <t t-esc="state.stats.assigned"/>
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size:11px; color:#94a3b8;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#f59e0b; margin-right:5px;"/>
+                        Unassigned
+                    </span>
+                    <span class="fw-semibold" style="font-size:12px; color:#fde68a;">
+                        <t t-esc="state.stats.unassigned"/>
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size:11px; color:#94a3b8;">Coverage</span>
+                    <span class="fw-bold" style="font-size:13px; color:#fff;">
+                        <t t-esc="assignmentPercent"/>%
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spacer -->
+        <div style="flex:1;"/>
+
+        <!-- Date range footer -->
+        <div t-if="state.batchDateFrom" class="px-3 py-2" style="border-top:1px solid #2d5490;">
+            <div style="font-size:10px; color:#64748b;">
+                <i class="fa fa-calendar-o me-1"/>
+                <t t-esc="formatDateShort(state.batchDateFrom)"/>
+                –
+                <t t-esc="formatDateShort(state.batchDateTo)"/>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAIN CONTENT AREA
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="d-flex flex-column" style="flex:1; overflow:hidden;">
+
+        <!-- Top header bar -->
+        <div class="rb-header d-flex align-items-center px-4 py-2"
+             style="background:#fff; border-bottom:1px solid #e2e8f0; flex-shrink:0; min-height:52px; box-shadow:0 1px 4px rgba(0,0,0,.06);">
+            <div style="flex:1;">
+                <div class="fw-bold" style="font-size:16px; color:#1e293b;">
+                    <t t-if="selectedBatchName" t-esc="selectedBatchName"/>
+                    <span t-else="" style="color:#94a3b8;">Select a Roster Batch</span>
+                </div>
+                <div t-if="state.batchDateFrom" style="font-size:11px; color:#64748b;">
+                    <t t-esc="formatDateLong(state.batchDateFrom)"/>
+                    <span class="mx-1">–</span>
+                    <t t-esc="formatDateLong(state.batchDateTo)"/>
+                    <span class="ms-2 text-muted">(<t t-esc="state.dates.length"/> days)</span>
+                </div>
+            </div>
+            <div t-if="state.batchId" class="d-flex gap-2 align-items-center">
+                <button class="rb-btn rb-btn-ghost"
+                        t-on-click="refreshBoard"
+                        t-att-disabled="state.loading">
+                    <i t-att-class="state.loading ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
+                    <span class="ms-1">Refresh</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Grid + Guard Pool wrapper -->
+        <div class="d-flex" style="flex:1; overflow:hidden;">
+
+            <!-- ── Timeline Grid ── -->
+            <div class="rb-timeline" style="flex:1; overflow:auto;">
+
+                <!-- Loading state -->
+                <t t-if="state.loading">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="height:100%; color:#94a3b8;">
+                        <i class="fa fa-spinner fa-spin fa-2x mb-3" style="color:#3b82f6;"/>
+                        <div style="font-size:14px;">Loading roster…</div>
+                    </div>
+                </t>
+
+                <!-- Empty / no batch selected -->
+                <t t-elif="!state.batchId">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="height:100%; color:#94a3b8;">
+                        <i class="fa fa-calendar-o" style="font-size:48px; margin-bottom:16px; color:#cbd5e1;"/>
+                        <div style="font-size:15px; font-weight:600; color:#475569; margin-bottom:6px;">No Batch Selected</div>
+                        <div style="font-size:13px;">Choose a roster batch from the sidebar to view the board.</div>
+                    </div>
+                </t>
+
+                <!-- No slots found -->
+                <t t-elif="visibleSites.length === 0">
+                    <div class="d-flex flex-column align-items-center justify-content-center" style="height:100%; color:#94a3b8;">
+                        <i class="fa fa-inbox" style="font-size:48px; margin-bottom:16px; color:#cbd5e1;"/>
+                        <div style="font-size:14px;">No slots found for this batch.</div>
+                    </div>
+                </t>
+
+                <!-- Roster grid -->
+                <t t-else="">
+                    <table class="rb-grid-table" style="min-width:max-content; border-collapse:separate; border-spacing:0; width:100%;">
+                        <!-- Date header row -->
+                        <thead>
+                            <tr>
+                                <th class="rb-sticky-col rb-th-site"
+                                    style="min-width:160px; position:sticky; left:0; top:0; z-index:3; background:#1e3a5f; color:#e2e8f0; padding:8px 12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; border-right:2px solid #2d5490; border-bottom:2px solid #e2e8f0;">
+                                    Site / Post
+                                </th>
+                                <t t-foreach="state.dates" t-as="d" t-key="d">
+                                    <th class="rb-th-date text-center"
+                                        t-att-style="'min-width:110px; position:sticky; top:0; z-index:2; padding:6px 4px; font-size:11px; border-bottom:2px solid #e2e8f0; border-right:1px solid #e2e8f0; ' + (isToday(d) ? 'background:#eff6ff; color:#1d4ed8;' : isWeekend(d) ? 'background:#fefce8; color:#92400e;' : 'background:#f8fafc; color:#475569;')">
+                                        <div class="fw-semibold" t-esc="formatDateShort(d)"/>
+                                        <div style="font-size:10px; opacity:.7;" t-esc="dayName(d)"/>
+                                        <div t-if="isToday(d)" style="width:4px; height:4px; background:#3b82f6; border-radius:50%; margin:2px auto 0;"/>
+                                    </th>
+                                </t>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="visibleSites" t-as="site" t-key="site.id">
+
+                                <!-- Site header row -->
+                                <tr>
+                                    <td colspan="999"
+                                        style="position:sticky; left:0; background:#e8edf3; color:#1e3a5f; font-size:12px; font-weight:700; padding:5px 12px; border-top:2px solid #cbd5e1; border-bottom:1px solid #d1d5db; letter-spacing:.2px;">
+                                        <i class="fa fa-building me-2" style="color:#3b82f6;"/>
+                                        <t t-esc="site.name"/>
+                                    </td>
+                                </tr>
+
+                                <!-- Post rows for this site -->
+                                <t t-foreach="getPostsForSite(site.id)" t-as="post" t-key="post.id">
+                                    <tr class="rb-post-row">
+                                        <!-- Post label (sticky) -->
+                                        <td style="position:sticky; left:0; z-index:1; background:#fff; border-right:2px solid #e2e8f0; border-bottom:1px solid #f1f5f9; padding:4px 12px 4px 20px; min-width:160px; vertical-align:top;">
+                                            <div style="font-size:11px; color:#64748b; font-weight:500; white-space:nowrap;">
+                                                <i class="fa fa-map-marker me-1" style="color:#94a3b8;"/>
+                                                <t t-esc="post.name"/>
+                                            </div>
+                                        </td>
+
+                                        <!-- Slot cells -->
+                                        <t t-foreach="state.dates" t-as="d" t-key="d">
+                                            <t t-set="slots" t-value="getSlotsForCell(site.id, post.id, d)"/>
+                                            <td style="padding:3px; vertical-align:top; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; min-width:110px;">
+                                                <t t-if="slots.length === 0">
+                                                    <div style="height:30px; display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-size:12px;">—</div>
+                                                </t>
+                                                <t t-foreach="slots" t-as="slot" t-key="slot.id">
+
+                                                    <!-- CANCELLED slot -->
+                                                    <t t-if="slot.state === 'cancelled'">
+                                                        <div style="background:#f8fafc; border-left:3px solid #cbd5e1; border-radius:4px; padding:4px 7px; margin-bottom:2px; opacity:.5; font-size:11px; min-height:30px;">
+                                                            <span style="color:#94a3b8; font-style:italic; font-size:10px;">Cancelled</span>
+                                                        </div>
+                                                    </t>
+
+                                                    <!-- ASSIGNED slot -->
+                                                    <t t-elif="slot.employee_id">
+                                                        <div t-on-click="() => this.selectSlot(slot)"
+                                                             t-att-style="'background:' + (slot.conflict ? '#fee2e2' : '#dcfce7') + '; border-left:3px solid ' + (slot.conflict ? '#dc2626' : '#16a34a') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                            <t t-if="slot.conflict">
+                                                                <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
+                                                            </t>
+                                                            <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.conflict ? '#991b1b' : '#15803d') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
+                                                                 t-esc="slot.employee_name"/>
+                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#86efac; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        </div>
+                                                    </t>
+
+                                                    <!-- UNASSIGNED confirmed slot -->
+                                                    <t t-elif="slot.state === 'confirmed'">
+                                                        <div t-on-click="() => this.selectSlot(slot)"
+                                                             style="background:#fef9c3; border-left:3px solid #ca8a04; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
+                                                            <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
+                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        </div>
+                                                    </t>
+
+                                                    <!-- UNASSIGNED draft slot -->
+                                                    <t t-else="">
+                                                        <div t-on-click="() => this.selectSlot(slot)"
+                                                             style="background:#f1f5f9; border-left:3px solid #94a3b8; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
+                                                            <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
+                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        </div>
+                                                    </t>
+
+                                                </t>
+                                            </td>
+                                        </t>
+                                    </tr>
+                                </t>
+
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
+            </div><!-- /rb-timeline -->
+
+            <!-- ═══════════════════════════════════════════════════
+                 GUARD POOL SIDEBAR
+                 ═══════════════════════════════════════════════════ -->
+            <div t-if="state.selectedSlot"
+                 class="rb-guard-pool"
+                 style="width:320px; flex-shrink:0; background:#fff; border-left:1px solid #e2e8f0; overflow-y:auto; display:flex; flex-direction:column;">
+
+                <!-- Slot info header -->
+                <div style="padding:16px; border-bottom:1px solid #f1f5f9; background:#f8fafc; flex-shrink:0;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#64748b; margin-bottom:3px;">Selected Slot</div>
+                            <div style="font-size:14px; font-weight:700; color:#1e293b;" t-esc="state.selectedSlot.post_name"/>
+                        </div>
+                        <button style="background:none; border:none; color:#94a3b8; cursor:pointer; padding:4px; border-radius:4px; font-size:14px; line-height:1;"
+                                t-on-click="closeSidebar">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+                    <div style="font-size:11px; color:#64748b; margin-bottom:2px;">
+                        <i class="fa fa-calendar me-1"/>
+                        <t t-esc="formatDateLong(state.selectedSlot.shift_date)"/>
+                    </div>
+                    <div t-if="state.selectedSlot.shift_label" style="font-size:11px; color:#64748b; margin-bottom:8px;">
+                        <i class="fa fa-clock-o me-1"/>
+                        <t t-esc="state.selectedSlot.shift_label"/>
+                    </div>
+
+                    <!-- Currently assigned guard -->
+                    <div t-if="state.selectedSlot.employee_name"
+                         style="background:#dcfce7; border:1px solid #86efac; border-radius:6px; padding:8px 10px; margin-bottom:10px;">
+                        <div style="font-size:10px; font-weight:600; color:#166534; text-transform:uppercase; letter-spacing:.5px; margin-bottom:3px;">
+                            <i class="fa fa-user-check me-1"/>Assigned Guard
+                        </div>
+                        <div style="font-size:13px; font-weight:700; color:#15803d;" t-esc="state.selectedSlot.employee_name"/>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div class="d-flex gap-2">
+                        <button t-if="!state.selectedSlot.employee_name and state.selectedSlot.state !== 'cancelled'"
+                                class="rb-btn rb-btn-primary"
+                                style="flex:1;"
+                                t-on-click="loadSuggestions"
+                                t-att-disabled="state.loadingSuggestions">
+                            <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-magic me-1'"/>
+                            <t t-if="state.loadingSuggestions">Loading…</t>
+                            <t t-else="">Suggest Guards</t>
+                        </button>
+                        <button t-if="state.selectedSlot.employee_name"
+                                class="rb-btn rb-btn-danger"
+                                t-on-click="unassignSlot">
+                            <i class="fa fa-user-times me-1"/>Unassign
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Assignment error banner -->
+                <t t-if="state.assignError">
+                    <div style="background:#fef2f2; border-bottom:1px solid #fecaca; padding:10px 14px; display:flex; gap:10px; align-items:flex-start; flex-shrink:0;">
+                        <i class="fa fa-exclamation-triangle" style="color:#ef4444; margin-top:2px; flex-shrink:0;"/>
+                        <div>
+                            <div style="font-size:12px; font-weight:700; color:#991b1b;">
+                                <t t-esc="state.assignError.guardName"/> cannot be assigned
+                            </div>
+                            <div style="font-size:11px; color:#dc2626; margin-top:2px;">
+                                <t t-esc="state.assignError.message"/>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Suggestions list -->
+                <div style="flex:1; padding:12px; overflow-y:auto;">
+
+                    <t t-if="state.loadingSuggestions">
+                        <div class="text-center py-4" style="color:#94a3b8;">
+                            <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>
+                            <div style="font-size:12px;">Scoring guards…</div>
+                        </div>
+                    </t>
+
+                    <t t-elif="state.suggestions.length > 0">
+                        <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#64748b; margin-bottom:10px;">
+                            <i class="fa fa-list-ol me-1"/>
+                            Ranked Suggestions (<t t-esc="state.suggestions.length"/>)
+                        </div>
+
+                        <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
+                            <div class="rb-suggestion-card"
+                                 style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:8px; transition:box-shadow .15s, border-color .15s;">
+
+                                <!-- Rank + Name row -->
+                                <div class="d-flex align-items-start justify-content-between mb-2">
+                                    <div style="flex:1; min-width:0;">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span style="background:#1e3a5f; color:#e2e8f0; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px;">#<t t-esc="sug.rank"/></span>
+                                            <span style="font-size:13px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="sug.employee_name"/>
+                                        </div>
+                                        <div t-if="sug.grade" style="font-size:11px; color:#64748b;">
+                                            <i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/>
+                                        </div>
+                                    </div>
+                                    <div style="text-align:right; flex-shrink:0; margin-left:8px;">
+                                        <div t-att-style="'font-size:18px; font-weight:800; line-height:1; color:' + scoreColor(sug.score)">
+                                            <t t-esc="Math.round(sug.score)"/>
+                                        </div>
+                                        <div style="font-size:9px; color:#94a3b8; text-transform:uppercase;">pts</div>
+                                    </div>
+                                </div>
+
+                                <!-- Score bar -->
+                                <div style="background:#f1f5f9; border-radius:4px; height:5px; margin-bottom:6px; overflow:hidden;">
+                                    <div t-att-style="'height:100%; border-radius:4px; transition:width .3s; width:' + Math.min(100, (sug.score / 150 * 100)) + '%; background:' + scoreBarColor(sug.score) + ';'"/>
+                                </div>
+
+                                <!-- Score breakdown -->
+                                <div t-if="sug.score_breakdown" style="font-size:10px; color:#94a3b8; margin-bottom:8px; line-height:1.4;" t-esc="sug.score_breakdown"/>
+
+                                <!-- Assign button -->
+                                <button class="rb-btn rb-btn-assign w-100"
+                                        t-on-click="() => this.assignGuard(sug)">
+                                    <i class="fa fa-check me-1"/>Assign
+                                </button>
+                            </div>
+                        </t>
+                    </t>
+
+                    <t t-elif="state.suggestionsLoaded and state.suggestions.length === 0">
+                        <div class="text-center py-4" style="color:#94a3b8;">
+                            <i class="fa fa-exclamation-circle d-block mb-2" style="font-size:28px; color:#fbbf24;"/>
+                            <div style="font-size:13px; font-weight:600; color:#475569; margin-bottom:4px;">No Eligible Guards</div>
+                            <div style="font-size:11px;">No guards matched the scoring criteria for this slot.</div>
+                        </div>
+                    </t>
+
+                    <t t-elif="!state.suggestionsLoaded and !state.loadingSuggestions">
+                        <div class="text-center py-4" style="color:#94a3b8;">
+                            <i class="fa fa-magic d-block mb-2" style="font-size:28px; color:#cbd5e1;"/>
+                            <div style="font-size:12px;">Click "Suggest Guards" to run the scoring engine.</div>
+                        </div>
+                    </t>
+
+                </div><!-- /suggestions scroll area -->
+            </div><!-- /rb-guard-pool -->
+
+        </div><!-- /grid + guard pool wrapper -->
+
+    </div><!-- /main content area -->
+
+</div><!-- /o_roster_board -->
+
+</t>
+
+</templates>

@@ -1,0 +1,34 @@
+# Development & local data — never ship these
+.local/
+.env
+*.env
+
+# Version control
+.git/
+.gitignore
+
+# CI / IDE
+.github/
+.claude/
+.vscode/
+.idea/
+
+# Docs and non-runtime files
+docs/
+*.md
+*.docx
+*.pdf
+
+# Mobile app (separate build)
+mobile/
+
+# Scripts that aren't needed at runtime
+scripts/
+
+# Python cache
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Node
+**/node_modules/

@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_payroll_core.PayrollExpenditure">
+    <div class="o_payroll_command_center d-flex h-100 overflow-hidden">
+
+        <!-- ===== LEFT SIDEBAR — PERIOD LIST ===== -->
+        <div class="o_pcc_sidebar d-flex flex-column"
+             style="width:220px; min-width:220px; overflow-y:auto;">
+
+            <div class="px-4 py-4" style="border-bottom: 1px solid rgba(255,255,255,.08);">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="fa fa-calendar" style="color: rgba(255,255,255,.55);"/>
+                    <strong class="text-uppercase" style="font-size: 10.5px; letter-spacing: 0.08em; color: rgba(255,255,255,.45);">Payroll Periods</strong>
+                </div>
+            </div>
+
+            <t t-if="state.periods.length === 0">
+                <div class="text-center p-3 small" style="color: rgba(255,255,255,.4);">
+                    No payroll periods found.
+                </div>
+            </t>
+
+            <div class="d-flex flex-column gap-1 p-2 flex-grow-1">
+                <t t-foreach="state.periods" t-as="period" t-key="period.id">
+                    <div t-att-class="'o_period_item d-flex flex-column gap-1 ' + (state.selectedPeriodId === period.id ? 'is-active' : '')"
+                         t-on-click="() => this.selectPeriod(period.id)"
+                         style="cursor:pointer;">
+                        <div style="font-size: 12.5px; line-height: 1.2;">
+                            <t t-esc="period.name"/>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mt-1">
+                            <span class="pcc-badge badge">
+                                <t t-esc="period.state"/>
+                            </span>
+                        </div>
+                        <div class="small mt-1 text-muted" style="font-size: 11px;">
+                            Net: <t t-esc="formatCurrency(period.total_net_pay)"/>
+                        </div>
+                    </div>
+                </t>
+            </div>
+
+        </div>
+        <!-- END SIDEBAR -->
+
+        <!-- ===== MAIN CONTENT AREA ===== -->
+        <div class="flex-grow-1 d-flex flex-column overflow-hidden">
+
+            <!-- Header -->
+            <div class="o_pcc_header justify-content-between">
+                <div>
+                    <h2 class="mb-0">Payroll Expenditure</h2>
+                    <div style="font-size: 11px; color: var(--pcc-ink-3); margin-top: 2px; font-weight: 500;">
+                        <t t-if="selectedPeriod">
+                            Period: <t t-esc="selectedPeriod.name"/>
+                        </t>
+                        <t t-else="">
+                            Select a period from the left panel
+                        </t>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <t t-if="selectedPeriod">
+                        <button class="pcc-btn"
+                                t-on-click="openPeriod">
+                            <i class="fa fa-external-link me-2"/>Open Period
+                        </button>
+                    </t>
+                </div>
+            </div>
+
+            <!-- Loading spinner -->
+            <t t-if="state.loading">
+                <div class="d-flex justify-content-center align-items-center flex-grow-1">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p style="color: var(--pcc-ink-3); font-size: 13px;">Loading expenditure data...</p>
+                    </div>
+                </div>
+            </t>
+
+            <t t-else="">
+                <div class="flex-grow-1 d-flex flex-column overflow-auto p-4" style="background: var(--pcc-bg);">
+
+                    <!-- ===== STATS BAR — 4 CARDS ===== -->
+                    <div class="d-flex gap-3 mb-4 flex-wrap">
+
+                        <div class="pcc-stat-card text-center flex-fill" style="min-width:140px; border-top: 2.5px solid var(--pcc-navy-mid);">
+                            <div style="font-size: 10px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 6px;">Total Gross</div>
+                            <div style="font-size: 26px; font-weight: 700; color: var(--pcc-ink); letter-spacing: -.5px; line-height: 1;">
+                                <t t-esc="formatCurrency(state.totals.gross)"/>
+                            </div>
+                        </div>
+
+                        <div class="pcc-stat-card text-center flex-fill" style="min-width:140px; border-top: 2.5px solid #16A34A;">
+                            <div style="font-size: 10px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 6px;">Total Net Pay</div>
+                            <div style="font-size: 26px; font-weight: 700; color: #16A34A; letter-spacing: -.5px; line-height: 1;">
+                                <t t-esc="formatCurrency(state.totals.net)"/>
+                            </div>
+                        </div>
+
+                        <div class="pcc-stat-card text-center flex-fill" style="min-width:120px; border-top: 2.5px solid var(--pcc-ink-2);">
+                            <div style="font-size: 10px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 6px;">Normal Hrs</div>
+                            <div style="font-size: 26px; font-weight: 700; color: var(--pcc-ink); letter-spacing: -.5px; line-height: 1;">
+                                <t t-esc="formatHours(state.totals.normal_hrs)"/>
+                            </div>
+                        </div>
+
+                        <div class="pcc-stat-card text-center flex-fill" style="min-width:120px; border-top: 2.5px solid #D97706;">
+                            <div style="font-size: 10px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 6px;">Premium Hrs</div>
+                            <div style="font-size: 26px; font-weight: 700; color: #D97706; letter-spacing: -.5px; line-height: 1;">
+                                <t t-esc="formatHours(state.totals.premium_hrs)"/>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- END STATS BAR -->
+
+                    <!-- ===== TAB BAR ===== -->
+                    <div class="pcc-nav-tabs d-flex mb-4">
+                        <button t-att-class="'nav-link' + (state.activeTab === 'by_employee' ? ' active' : '')"
+                                t-on-click="() => this.setTab('by_employee')">
+                            <i class="fa fa-users me-2"/>By Employee
+                            <span class="badge ms-2" style="background: var(--pcc-surface-soft); color: var(--pcc-ink-2);">
+                                <t t-esc="state.byEmployee.length"/>
+                            </span>
+                        </button>
+                        <button t-att-class="'nav-link' + (state.activeTab === 'summary' ? ' active' : '')"
+                                t-on-click="() => this.setTab('summary')">
+                            <i class="fa fa-th-large me-2"/>Summary
+                        </button>
+                    </div>
+
+                    <!-- ===== BY EMPLOYEE TAB ===== -->
+                    <t t-if="state.activeTab === 'by_employee'">
+                        <div class="pcc-card">
+                            <div class="pcc-card-header d-flex align-items-center justify-content-between">
+                                <strong><i class="fa fa-table me-2" style="color: var(--pcc-ink-3);"/>Employee Payroll Detail</strong>
+                                <span style="font-size: 11px; color: var(--pcc-ink-3); font-weight: 500;">
+                                    <t t-esc="state.byEmployee.length"/> employee(s)
+                                </span>
+                            </div>
+                            <div class="card-body p-0">
+                                <t t-if="state.byEmployee.length === 0">
+                                    <div class="text-center p-5" style="color: var(--pcc-ink-3);">
+                                        <i class="fa fa-file-o fa-3x mb-3 d-block" style="opacity: 0.4;"/>
+                                        No payslips found for this period.
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="table-responsive">
+                                        <table class="pcc-table mb-0 align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th>Employee</th>
+                                                    <th>Grade</th>
+                                                    <th class="text-end">Gross</th>
+                                                    <th class="text-end">Net</th>
+                                                    <th class="text-end">Normal Hrs</th>
+                                                    <th class="text-end">Sat</th>
+                                                    <th class="text-end">Sun</th>
+                                                    <th class="text-end">PH</th>
+                                                    <th class="text-end">Night</th>
+                                                    <th class="text-end">OT</th>
+                                                    <th class="text-center">Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <t t-foreach="state.byEmployee" t-as="emp" t-key="emp_index">
+                                                    <tr>
+                                                        <td class="fw-semibold" style="color: var(--pcc-ink);">
+                                                            <t t-esc="emp.name"/>
+                                                        </td>
+                                                        <td>
+                                                            <t t-esc="emp.grade"/>
+                                                        </td>
+                                                        <td class="text-end fw-semibold" style="color: var(--pcc-navy);">
+                                                            <t t-esc="formatCurrency(emp.gross)"/>
+                                                        </td>
+                                                        <td class="text-end fw-semibold" style="color: #16A34A;">
+                                                            <t t-esc="formatCurrency(emp.net)"/>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <t t-esc="formatHours(emp.normal_hrs)"/>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <t t-esc="formatHours(emp.sat_hrs)"/>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <t t-esc="formatHours(emp.sun_hrs)"/>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <t t-esc="formatHours(emp.ph_hrs)"/>
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <t t-esc="formatHours(emp.night_hrs)"/>
+                                                        </td>
+                                                        <td class="text-end fw-semibold" style="color: #D97706;">
+                                                            <t t-esc="formatHours(emp.ot_hrs)"/>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <span class="pcc-badge" style="background: var(--pcc-surface-soft); color: var(--pcc-ink-2);">
+                                                                <t t-esc="emp.state"/>
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </t>
+                                            </tbody>
+                                            <tfoot class="fw-bold" style="background: var(--pcc-surface-soft);">
+                                                <tr>
+                                                    <td colspan="2" style="font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--pcc-ink-3);">Totals</td>
+                                                    <td class="text-end">
+                                                        <t t-esc="formatCurrency(state.totals.gross)"/>
+                                                    </td>
+                                                    <td class="text-end" style="color: #16A34A;">
+                                                        <t t-esc="formatCurrency(state.totals.net)"/>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <t t-esc="formatHours(state.totals.normal_hrs)"/>
+                                                    </td>
+                                                    <td colspan="4" class="text-end">
+                                                        <span style="color: var(--pcc-ink-3); font-weight: 500; margin-right: 4px;">Premium:</span>
+                                                        <t t-esc="formatHours(state.totals.premium_hrs)"/>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <t t-esc="formatHours(state.totals.overtime_hrs)"/>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </t>
+                    <!-- END BY EMPLOYEE TAB -->
+
+                    <!-- ===== SUMMARY TAB ===== -->
+                    <t t-if="state.activeTab === 'summary'">
+                        <div class="row g-4">
+
+                            <!-- Total Gross card -->
+                            <div class="col-12 col-md-6">
+                                <div class="pcc-card h-100 p-4 d-flex flex-column align-items-center justify-content-center text-center">
+                                    <div style="font-size: 11px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 8px;">
+                                        <i class="fa fa-money me-2"/>Total Gross Earnings
+                                    </div>
+                                    <div style="font-size: 32px; font-weight: 700; color: var(--pcc-navy); letter-spacing: -.5px; line-height: 1; margin-bottom: 12px;">
+                                        <t t-esc="formatCurrency(state.totals.gross)"/>
+                                    </div>
+                                    <t t-if="grossChangePct !== null">
+                                        <span t-att-class="'pcc-badge ' + (grossChangePct >= 0 ? 'bg-success text-white' : 'bg-danger text-white')" style="font-size: 12px; height: 22px;">
+                                            <i t-att-class="'fa me-1 ' + (grossChangePct >= 0 ? 'fa-arrow-up' : 'fa-arrow-down')"/>
+                                            <t t-esc="formatPct(grossChangePct)"/>
+                                        </span>
+                                        <div style="font-size: 11px; color: var(--pcc-ink-3); margin-top: 6px; font-weight: 500;">vs previous period</div>
+                                    </t>
+                                    <t t-else="">
+                                        <span style="font-size: 11px; color: var(--pcc-ink-4); font-weight: 500;">No previous period data</span>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Total Net Pay card -->
+                            <div class="col-12 col-md-6">
+                                <div class="pcc-card h-100 p-4 d-flex flex-column align-items-center justify-content-center text-center">
+                                    <div style="font-size: 11px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 8px;">
+                                        <i class="fa fa-check-circle me-2"/>Total Net Pay
+                                    </div>
+                                    <div style="font-size: 32px; font-weight: 700; color: #16A34A; letter-spacing: -.5px; line-height: 1; margin-bottom: 12px;">
+                                        <t t-esc="formatCurrency(state.totals.net)"/>
+                                    </div>
+                                    <t t-if="netChangePct !== null">
+                                        <span t-att-class="'pcc-badge ' + (netChangePct >= 0 ? 'bg-success text-white' : 'bg-danger text-white')" style="font-size: 12px; height: 22px;">
+                                            <i t-att-class="'fa me-1 ' + (netChangePct >= 0 ? 'fa-arrow-up' : 'fa-arrow-down')"/>
+                                            <t t-esc="formatPct(netChangePct)"/>
+                                        </span>
+                                        <div style="font-size: 11px; color: var(--pcc-ink-3); margin-top: 6px; font-weight: 500;">vs previous period</div>
+                                    </t>
+                                    <t t-else="">
+                                        <span style="font-size: 11px; color: var(--pcc-ink-4); font-weight: 500;">No previous period data</span>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Normal Hours card -->
+                            <div class="col-12 col-md-6">
+                                <div class="pcc-card h-100 p-4 d-flex flex-column align-items-center justify-content-center text-center">
+                                    <div style="font-size: 11px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 8px;">
+                                        <i class="fa fa-clock-o me-2"/>Total Normal Hours
+                                    </div>
+                                    <div style="font-size: 32px; font-weight: 700; color: var(--pcc-ink); letter-spacing: -.5px; line-height: 1; margin-bottom: 8px;">
+                                        <t t-esc="formatHours(state.totals.normal_hrs)"/>
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--pcc-ink-3); font-weight: 500;">Scheduled shift hours</div>
+                                </div>
+                            </div>
+
+                            <!-- Premium + Overtime Hours card -->
+                            <div class="col-12 col-md-6">
+                                <div class="pcc-card h-100 p-4 d-flex flex-column align-items-center justify-content-center text-center">
+                                    <div style="font-size: 11px; color: var(--pcc-ink-3); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 8px;">
+                                        <i class="fa fa-star me-2"/>Premium + Overtime Hours
+                                    </div>
+                                    <div style="font-size: 32px; font-weight: 700; color: #D97706; letter-spacing: -.5px; line-height: 1; margin-bottom: 8px;">
+                                        <t t-esc="formatHours(state.totals.premium_hrs + state.totals.overtime_hrs)"/>
+                                    </div>
+                                    <div style="font-size: 11px; color: var(--pcc-ink-3); font-weight: 500;">
+                                        Premium: <t t-esc="formatHours(state.totals.premium_hrs)"/>
+                                        &amp;nbsp;|&amp;nbsp;
+                                        OT: <t t-esc="formatHours(state.totals.overtime_hrs)"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Previous period comparison table -->
+                        <t t-if="previousPeriod">
+                            <div class="pcc-card mt-4">
+                                <div class="pcc-card-header">
+                                    <strong><i class="fa fa-exchange me-2" style="color: var(--pcc-ink-3);"/>Period-over-Period Comparison</strong>
+                                </div>
+                                <div class="card-body p-0">
+                                    <table class="pcc-table mb-0 align-middle">
+                                        <thead>
+                                            <tr>
+                                                <th>Metric</th>
+                                                <th class="text-end">
+                                                    <t t-esc="selectedPeriod ? selectedPeriod.name : 'Current'"/>
+                                                </th>
+                                                <th class="text-end">
+                                                    <t t-esc="previousPeriod.name"/>
+                                                </th>
+                                                <th class="text-end">Change</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td style="color: var(--pcc-ink-2); font-weight: 500;">Total Gross</td>
+                                                <td class="text-end fw-semibold" style="color: var(--pcc-navy);">
+                                                    <t t-esc="formatCurrency(state.totals.gross)"/>
+                                                </td>
+                                                <td class="text-end" style="color: var(--pcc-ink-3);">
+                                                    <t t-esc="formatCurrency(state.prevTotals.gross)"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-att-class="'pcc-badge ' + (grossChangePct !== null ? (grossChangePct >= 0 ? 'bg-success text-white' : 'bg-danger text-white') : 'bg-secondary text-white')">
+                                                        <t t-esc="formatPct(grossChangePct)"/>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="color: var(--pcc-ink-2); font-weight: 500;">Total Net Pay</td>
+                                                <td class="text-end fw-semibold" style="color: #16A34A;">
+                                                    <t t-esc="formatCurrency(state.totals.net)"/>
+                                                </td>
+                                                <td class="text-end" style="color: var(--pcc-ink-3);">
+                                                    <t t-esc="formatCurrency(state.prevTotals.net)"/>
+                                                </td>
+                                                <td class="text-end">
+                                                    <span t-att-class="'pcc-badge ' + (netChangePct !== null ? (netChangePct >= 0 ? 'bg-success text-white' : 'bg-danger text-white') : 'bg-secondary text-white')">
+                                                        <t t-esc="formatPct(netChangePct)"/>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+
+                    </t>
+                    <!-- END SUMMARY TAB -->
+
+                </div>
+            </t>
+            <!-- END MAIN CONTENT -->
+
+        </div>
+        <!-- END MAIN AREA -->
+
+    </div>
+</t>
+
+</templates>
+

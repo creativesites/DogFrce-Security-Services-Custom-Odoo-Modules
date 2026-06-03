@@ -1,0 +1,55 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# fly.toml — DogForce Security Platform
+# Region: Johannesburg (jnb) — closest to Namibia
+# ─────────────────────────────────────────────────────────────────────────────
+
+app       = "dogforce-security"
+primary_region = "jnb"
+
+# ── Build ──────────────────────────────────────────────────────────────────────
+[build]
+  dockerfile = "Dockerfile"
+
+# ── Non-secret environment variables ──────────────────────────────────────────
+[env]
+  ODOO_PORT              = "8069"
+  ODOO_PROXY_MODE        = "true"
+  # Set DEMO_DATA=true via `fly secrets set` to seed demo records on first boot
+  DEMO_DATA              = "false"
+
+# ── HTTP service ───────────────────────────────────────────────────────────────
+[http_service]
+  internal_port          = 8069
+  force_https            = true
+  auto_stop_machines     = false    # Keep always-on (avoids 90s Odoo cold-start)
+  auto_start_machines    = true
+  min_machines_running   = 1
+
+  [http_service.concurrency]
+    type       = "requests"
+    hard_limit = 30
+    soft_limit = 25
+
+# ── Machine sizing ─────────────────────────────────────────────────────────────
+# shared-cpu-1x @ 2GB ≈ $11.40/month — minimum viable for Odoo
+[[vm]]
+  memory   = "2gb"
+  cpu_kind = "shared"
+  cpus     = 1
+
+# ── Persistent volume (Odoo filestore + attachments) ──────────────────────────
+[[mounts]]
+  source       = "dogforce_filestore"
+  destination  = "/var/lib/odoo"
+  initial_size = "10gb"
+
+# ── Health check ──────────────────────────────────────────────────────────────
+[checks]
+  [checks.odoo_health]
+    grace_period = "120s"    # Odoo takes ~60-90s to start on first boot
+    interval     = "30s"
+    method       = "get"
+    path         = "/web/health"
+    port         = 8069
+    timeout      = "15s"
+    type         = "http"

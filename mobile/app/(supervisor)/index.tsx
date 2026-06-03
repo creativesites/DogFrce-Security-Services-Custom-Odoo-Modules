@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { Text, Searchbar, Button, FAB, ActivityIndicator } from 'react-native-paper';
-import { getTodayPostingSheet, TodayResponse, submitBatch } from '../../src/api/supervisor';
+import { getTodayPostingSheet, TodayResponse, submitBatch, markPresence } from '../../src/api/supervisor';
 import { useAppStore } from '../../src/stores/appStore';
 import { Theme } from '../../src/theme';
 import GuardCard from '../../src/components/GuardCard';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { flushQueue, getQueue } from '../../src/utils/offlineQueue';
 
 export default function SupervisorTodayScreen() {
   const [data, setData] = useState<TodayResponse | null>(null);
@@ -14,7 +15,9 @@ export default function SupervisorTodayScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
+  const [isOfflineBanner, setIsOfflineBanner] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+
   const { searchQuery, setSearchQuery, refreshTrigger, triggerRefresh } = useAppStore();
   const router = useRouter();
 
@@ -24,8 +27,19 @@ export default function SupervisorTodayScreen() {
     try {
       const res = await getTodayPostingSheet();
       setData(res);
+      // Cache the successful response
+      await useAppStore.getState().cacheBatch(res);
+      setIsOfflineBanner(false);
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to load today\'s postings.');
+      // Try the cache
+      const cached = await useAppStore.getState().getCachedBatch();
+      if (cached) {
+        setData(cached);
+        setIsOfflineBanner(true);
+        setErrorMsg('');
+      } else {
+        setErrorMsg(err.message || 'Failed to load today\'s postings. No cached data available.');
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -34,7 +48,17 @@ export default function SupervisorTodayScreen() {
 
   useEffect(() => {
     loadData();
+    getQueue().then(q => setPendingCount(q.length));
   }, [refreshTrigger]);
+
+  const handleFlushQueue = async () => {
+    const result = await flushQueue(async (item) => {
+      await markPresence(item.recordId, item.presence, item.overrideReason, item.checkIn, item.checkOut);
+    });
+    setPendingCount(0);
+    triggerRefresh();
+    alert(`Synced: ${result.synced} marks. Failed: ${result.failed}.`);
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -98,6 +122,20 @@ export default function SupervisorTodayScreen() {
         placeholderTextColor={Theme.colors.placeholder}
         iconColor={Theme.colors.primary}
       />
+
+      {isOfflineBanner && (
+        <View style={styles.offlineBanner}>
+          <MaterialCommunityIcons name="wifi-off" size={16} color="#fff" />
+          <Text style={styles.offlineText}>Offline — showing cached data from last sync</Text>
+        </View>
+      )}
+
+      {pendingCount > 0 && (
+        <TouchableOpacity style={styles.syncChip} onPress={handleFlushQueue}>
+          <MaterialCommunityIcons name="cloud-upload-outline" size={16} color="#fff" />
+          <Text style={styles.syncChipText}>Sync {pendingCount} pending mark{pendingCount !== 1 ? 's' : ''}</Text>
+        </TouchableOpacity>
+      )}
 
       {errorMsg ? (
         <View style={styles.errBox}>
@@ -270,5 +308,35 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: Theme.colors.primary,
+  },
+  offlineBanner: {
+    backgroundColor: '#d97706',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  offlineText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  syncChip: {
+    backgroundColor: Theme.colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 8,
+  },
+  syncChipText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

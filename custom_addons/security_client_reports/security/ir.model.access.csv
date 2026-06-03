@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_client_service_report_user,security.client.service.report user,model_security_client_service_report,hr.group_hr_user,1,1,1,1

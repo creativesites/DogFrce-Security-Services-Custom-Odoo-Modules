@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_license_key_wizard_form" model="ir.ui.view">
+            <field name="name">license.key.wizard.form</field>
+            <field name="model">license.key.wizard</field>
+            <field name="arch" type="xml">
+                <form string="Activate License">
+                    <group>
+                        <field name="license_key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+                        <field name="license_type"/>
+                    </group>
+                    <footer>
+                        <button name="action_apply" type="object" string="Activate" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <act_window
+            id="action_license_key_wizard"
+            name="Activate License Key"
+            res_model="license.key.wizard"
+            view_mode="form"
+            target="new"
+            groups="security_licensing.group_license_admin"
+        />
+    </data>
+</odoo>

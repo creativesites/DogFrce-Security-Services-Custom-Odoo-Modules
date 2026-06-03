@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!--
+        CSV Import Templates
+        Each record stores the column-header row (plus one example row) as base64-encoded text.
+        Users can download these attachments from the Settings > Technical > Attachments menu,
+        fill them in, and upload via the Migration Job form.
+
+        Base64 values were generated from plain UTF-8 CSV strings:
+
+          guards:
+            name,work_email,mobile_phone,grade_code,ssc_number,tax_number,bank_name,bank_account_number
+            John Doe,john@dogforce.na,+264811234567,G1,SSC-001,TAX-001,Bank Windhoek,2100000123
+
+          clients:
+            client_name,client_email,site_name,site_code,site_location
+            Windhoek Mall,info@dogforce.na,Main Entrance,WMALL-01,Windhoek City Centre
+
+          leave_balances:
+            employee_name_or_email,leave_type_name,balance_days,year
+            John Doe,Annual Leave,15.0,2026
+
+          loans:
+            employee_name_or_email,principal_amount,repayment_months,start_date,note
+            John Doe,5000.00,12,2026-06-01,Emergency loan
+    -->
+
+    <!-- Template: Guards / Employees
+         Plaintext (before encoding):
+           name,work_email,mobile_phone,grade_code,ssc_number,tax_number,bank_name,bank_account_number
+           John Doe,john@dogforce.na,+264811234567,G1,SSC-001,TAX-001,Bank Windhoek,2100000123
+    -->
+    <record id="attachment_template_guards" model="ir.attachment">
+        <field name="name">template_guards.csv</field>
+        <field name="mimetype">text/csv</field>
+        <field name="description">CSV import template for Guards/Employees. Columns: name, work_email, mobile_phone, grade_code, ssc_number, tax_number, bank_name, bank_account_number</field>
+        <field name="datas">bmFtZSx3b3JrX2VtYWlsLG1vYmlsZV9waG9uZSxncmFkZV9jb2RlLHNzY19udW1iZXIsdGF4X251bWJlcixiYW5rX25hbWUsYmFua19hY2NvdW50X251bWJlcgpKb2huIERvZSxqb2huQGRvZ2ZvcmNlLm5hLCsyNjQ4MTEyMzQ1NjcsRzEsU1NDLTAwMSxUQVgtMDAxLEJhbmsgV2luZGhvZWssMjEwMDAwMDEyMw==</field>
+    </record>
+
+    <!-- Template: Clients & Sites
+         Plaintext (before encoding):
+           client_name,client_email,site_name,site_code,site_location
+           Windhoek Mall,info@dogforce.na,Main Entrance,WMALL-01,Windhoek City Centre
+    -->
+    <record id="attachment_template_clients" model="ir.attachment">
+        <field name="name">template_clients.csv</field>
+        <field name="mimetype">text/csv</field>
+        <field name="description">CSV import template for Clients and Sites. Columns: client_name, client_email, site_name, site_code, site_location</field>
+        <field name="datas">Y2xpZW50X25hbWUsY2xpZW50X2VtYWlsLHNpdGVfbmFtZSxzaXRlX2NvZGUsc2l0ZV9sb2NhdGlvbgpXaW5kaG9layBNYWxsLGluZm9AZG9nZm9yY2UubmEsTWFpbiBFbnRyYW5jZSxXTUFMTC0wMSxXaW5kaG9layBDaXR5IENlbnRyZQ==</field>
+    </record>
+
+    <!-- Template: Leave Balances
+         Plaintext (before encoding):
+           employee_name_or_email,leave_type_name,balance_days,year
+           John Doe,Annual Leave,15.0,2026
+    -->
+    <record id="attachment_template_leave_balances" model="ir.attachment">
+        <field name="name">template_leave_balances.csv</field>
+        <field name="mimetype">text/csv</field>
+        <field name="description">CSV import template for Leave Balances. Columns: employee_name_or_email, leave_type_name, balance_days, year</field>
+        <field name="datas">ZW1wbG95ZWVfbmFtZV9vcl9lbWFpbCxsZWF2ZV90eXBlX25hbWUsYmFsYW5jZV9kYXlzLHllYXIKSm9obiBEb2UsQW5udWFsIExlYXZlLDE1LjAsMjAyNg==</field>
+    </record>
+
+    <!-- Template: Loan Schedules
+         Plaintext (before encoding):
+           employee_name_or_email,principal_amount,repayment_months,start_date,note
+           John Doe,5000.00,12,2026-06-01,Emergency loan
+    -->
+    <record id="attachment_template_loans" model="ir.attachment">
+        <field name="name">template_loans.csv</field>
+        <field name="mimetype">text/csv</field>
+        <field name="description">CSV import template for Loan Schedules. Columns: employee_name_or_email, principal_amount, repayment_months, start_date, note</field>
+        <field name="datas">ZW1wbG95ZWVfbmFtZV9vcl9lbWFpbCxwcmluY2lwYWxfYW1vdW50LHJlcGF5bWVudF9tb250aHMsc3RhcnRfZGF0ZSxub3RlCkpvaG4gRG9lLDUwMDAuMDAsMTIsMjAyNi0wNi0wMSxFbWVyZ2VuY3kgbG9hbg==</field>
+    </record>
+
+</odoo>

@@ -9,6 +9,7 @@
     "data": [
         "security/ir.model.access.csv",
         "views/security_operations_menu.xml",
+        "views/security_roster_wizard_views.xml",
         "views/security_operations_views.xml",
     ],
     "installable": True,

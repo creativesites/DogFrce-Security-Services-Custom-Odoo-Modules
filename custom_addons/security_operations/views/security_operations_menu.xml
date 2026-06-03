@@ -1,10 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <menuitem
-        id="menu_security_posts"
-        name="Operations"
+        id="menu_security_roster"
+        name="Roster &amp; Scheduling"
+        parent="security_base.menu_security_root"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_workforce"
+        name="Workforce"
         parent="security_base.menu_security_root"
         sequence="20"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_payroll"
+        name="Payroll"
+        parent="security_base.menu_security_root"
+        sequence="30"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_billing_root"
+        name="Clients &amp; Billing"
+        parent="security_base.menu_security_root"
+        sequence="40"
         groups="hr.group_hr_user"
     />
 </odoo>

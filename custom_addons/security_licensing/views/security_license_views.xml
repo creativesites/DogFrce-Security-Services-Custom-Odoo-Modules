@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- List view -->
+        <record id="view_security_license_list" model="ir.ui.view">
+            <field name="name">security.license.list</field>
+            <field name="model">security.license</field>
+            <field name="arch" type="xml">
+                <list string="Licenses" decoration-danger="status == 'expired'"
+                      decoration-warning="status == 'suspended'"
+                      decoration-muted="status == 'preview'">
+                    <field name="license_key"/>
+                    <field name="license_type"/>
+                    <field name="tier" optional="show"/>
+                    <field name="status"/>
+                    <field name="status_label"/>
+                    <field name="remaining_preview_days" optional="show"/>
+                    <field name="last_validated" optional="show"/>
+                </list>
+            </field>
+        </record>
+
+        <!-- Form view -->
+        <record id="view_security_license_form" model="ir.ui.view">
+            <field name="name">security.license.form</field>
+            <field name="model">security.license</field>
+            <field name="arch" type="xml">
+                <form string="License">
+                    <!-- Expired banner -->
+                    <div class="alert alert-danger" role="alert"
+                         invisible="status != 'expired'">
+                        License expired. Subscribe via the billing portal to reactivate.
+                    </div>
+                    <!-- Suspended banner -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="status != 'suspended'">
+                        Account suspended. Contact billing support at billing@deployguard.io.
+                    </div>
+                    <!-- Trial warning banner (≤2 days) -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="status != 'preview' or remaining_preview_days &gt; 2">
+                        Trial expires in
+                        <strong><field name="remaining_preview_days" readonly="1"/></strong>
+                        day(s). Upgrade to keep your data.
+                    </div>
+
+                    <group>
+                        <group string="License Details">
+                            <field name="license_key"/>
+                            <field name="license_type"/>
+                            <field name="tier" invisible="license_type == 'dogforce_special'"/>
+                            <field name="status"/>
+                            <field name="status_label" readonly="1"/>
+                        </group>
+                        <group string="Validity">
+                            <field name="preview_expiry"
+                                   invisible="license_type == 'dogforce_special'"/>
+                            <field name="subscription_expiry"
+                                   invisible="license_type == 'dogforce_special'"/>
+                            <field name="guard_limit"
+                                   invisible="license_type == 'dogforce_special'"/>
+                            <field name="last_validated" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Activity Log">
+                            <field name="log_ids" readonly="1">
+                                <list>
+                                    <field name="changed_at"/>
+                                    <field name="old_status"/>
+                                    <field name="new_status"/>
+                                    <field name="message"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+
+                    <footer>
+                        <button name="action_validate_now" type="object"
+                                string="Validate Now" class="btn-primary"
+                                groups="security_licensing.group_license_admin"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action -->
+        <record id="action_security_license" model="ir.actions.act_window">
+            <field name="name">License</field>
+            <field name="res_model">security.license</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <!-- Menu -->
+        <menuitem id="menu_license_root"
+                  name="License"
+                  sequence="100"
+                  groups="security_licensing.group_license_admin"/>
+
+        <menuitem id="menu_license_main"
+                  name="License Management"
+                  parent="menu_license_root"
+                  action="action_security_license"
+                  sequence="10"/>
+
+        <menuitem id="menu_license_activate"
+                  name="Activate License Key"
+                  parent="menu_license_root"
+                  action="action_license_key_wizard"
+                  sequence="20"/>
+    </data>
+</odoo>

@@ -1,33 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         Home Dashboard
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="action_security_home_dashboard" model="ir.actions.client">
+        <field name="name">Home</field>
+        <field name="tag">security_reporting.executive_dashboard</field>
+    </record>
+
+    <menuitem
+        id="menu_security_home"
+        name="Home"
+        parent="security_base.menu_security_root"
+        action="action_security_home_dashboard"
+        sequence="5"
+        groups="hr.group_hr_user"
+    />
+
     <menuitem
         id="menu_security_reporting"
         name="Reporting"
         parent="security_base.menu_security_root"
-        sequence="90"
+        sequence="80"
         groups="hr.group_hr_user"
     />
 
-    <record id="view_security_roster_slot_reporting_pivot" model="ir.ui.view">
-        <field name="name">security.roster.slot.reporting.pivot</field>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         1. ROSTER COVERAGE
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_roster_list" model="ir.ui.view">
+        <field name="name">reporting.roster.slot.list</field>
         <field name="model">security.roster.slot</field>
         <field name="arch" type="xml">
-            <pivot string="Roster Coverage">
+            <list string="Roster Coverage"
+                  default_order="shift_date desc"
+                  decoration-danger="not employee_id and state == 'confirmed'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="shift_date" string="Date" widget="date"/>
+                <field name="partner_id" string="Client"/>
+                <field name="site_id" string="Site"/>
+                <field name="post_id" string="Post"/>
+                <field name="shift_template_id" string="Shift" optional="show"/>
+                <field name="employee_id" string="Assigned Guard"
+                       decoration-danger="not employee_id"/>
+                <field name="batch_id" string="Batch" optional="show"/>
+                <field name="slot_number" string="#" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'confirmed'"
+                       decoration-info="state == 'draft'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_roster_search" model="ir.ui.view">
+        <field name="name">reporting.roster.slot.search</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <search string="Search Roster">
+                <field name="partner_id" string="Client"/>
+                <field name="site_id" string="Site"/>
+                <field name="employee_id" string="Guard"/>
+                <field name="shift_date" string="Date"/>
+                <separator/>
+                <filter name="unassigned" string="Unassigned Slots"
+                        domain="[('employee_id','=',False),('state','=','confirmed')]"/>
+                <filter name="confirmed" string="Confirmed"
+                        domain="[('state','=','confirmed')]"/>
+                <filter name="draft" string="Draft"
+                        domain="[('state','=','draft')]"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('shift_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="group_client" string="By Client"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_site" string="By Site"
+                        context="{'group_by': 'site_id'}"/>
+                <filter name="group_date" string="By Date"
+                        context="{'group_by': 'shift_date:month'}"/>
+                <filter name="group_state" string="By Status"
+                        context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_roster_pivot" model="ir.ui.view">
+        <field name="name">reporting.roster.slot.pivot</field>
+        <field name="model">security.roster.slot</field>
+        <field name="arch" type="xml">
+            <pivot string="Roster Coverage" disable_linking="0">
                 <field name="partner_id" type="row"/>
                 <field name="site_id" type="row"/>
-                <field name="post_id" type="row"/>
-                <field name="post_type_id" type="row"/>
                 <field name="state" type="col"/>
+                <field name="slot_number" type="measure" string="Slots"/>
             </pivot>
         </field>
     </record>
 
-    <record id="view_security_roster_slot_reporting_graph" model="ir.ui.view">
-        <field name="name">security.roster.slot.reporting.graph</field>
+    <record id="view_reporting_roster_graph" model="ir.ui.view">
+        <field name="name">reporting.roster.slot.graph</field>
         <field name="model">security.roster.slot</field>
         <field name="arch" type="xml">
-            <graph string="Roster Slots By Client" type="bar">
+            <graph string="Roster Slots by Client" type="bar" stacked="1">
                 <field name="site_id"/>
+                <field name="state" type="col"/>
             </graph>
         </field>
     </record>
@@ -35,15 +114,12 @@
     <record id="action_security_roster_reporting" model="ir.actions.act_window">
         <field name="name">Roster Coverage</field>
         <field name="res_model">security.roster.slot</field>
-        <field name="view_mode">pivot,graph,list,form</field>
-        <field name="context">{'group_by': 'partner_id'}</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_reporting_roster_search"/>
+        <field name="context">{'group_by': 'partner_id', 'search_default_confirmed': 1}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Roster Data Found!
-            </p>
-            <p>
-                Roster coverage analysis will appear here once you generate monthly roster batches.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No roster data yet</p>
+            <p>Generate monthly roster batches to see coverage analysis here.</p>
         </field>
     </record>
 
@@ -56,31 +132,106 @@
         groups="hr.group_hr_user"
     />
 
-    <record id="view_security_attendance_reporting_pivot" model="ir.ui.view">
-        <field name="name">security.attendance.record.reporting.pivot</field>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         2. ATTENDANCE ANALYSIS
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_attendance_list" model="ir.ui.view">
+        <field name="name">reporting.attendance.record.list</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
-            <pivot string="Attendance Analysis">
-                <field name="partner_id" type="row"/>
+            <list string="Attendance Analysis"
+                  default_order="shift_date desc"
+                  decoration-danger="status == 'absent' or absence_type == 'awol'"
+                  decoration-warning="late_minutes > 0 or missing_check_out"
+                  decoration-success="status == 'present' and late_minutes == 0 and not missing_check_out">
+                <field name="shift_date" string="Date" widget="date"/>
+                <field name="employee_id" string="Guard"/>
+                <field name="partner_id" string="Client" optional="show"/>
+                <field name="site_id" string="Site"/>
+                <field name="post_id" string="Post" optional="show"/>
+                <field name="status" widget="badge"
+                       decoration-success="status == 'present'"
+                       decoration-danger="status == 'absent'"
+                       decoration-warning="status == 'late'"/>
+                <field name="absence_type" string="Absence" optional="show"
+                       decoration-danger="absence_type == 'awol'"/>
+                <field name="check_in" string="In" widget="datetime" optional="show"/>
+                <field name="check_out" string="Out" widget="datetime" optional="show"/>
+                <field name="late_minutes" string="Late (min)" optional="show"/>
+                <field name="early_departure_minutes" string="Early Dep (min)" optional="hide"/>
+                <field name="worked_hours" string="Hrs Worked" optional="show"/>
+                <field name="valid_hours" string="Hrs Valid" optional="show"/>
+                <field name="missing_check_out" string="No Check-Out" widget="boolean" optional="show" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_attendance_search" model="ir.ui.view">
+        <field name="name">reporting.attendance.record.search</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <search string="Search Attendance">
+                <field name="employee_id" string="Guard"/>
+                <field name="site_id" string="Site"/>
+                <field name="partner_id" string="Client"/>
+                <field name="shift_date" string="Date"/>
+                <separator/>
+                <filter name="today" string="Today"
+                        domain="[('shift_date','=',(context_today()).strftime('%Y-%m-%d'))]"/>
+                <filter name="this_week" string="This Week"
+                        domain="[('shift_date','&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('shift_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="present" string="Present"
+                        domain="[('status','in',['present','late'])]"/>
+                <filter name="absent" string="Absent"
+                        domain="[('status','=','absent'),('absence_type','!=','awol')]"/>
+                <filter name="awol" string="AWOL"
+                        domain="[('absence_type','=','awol')]"/>
+                <filter name="late" string="Late Arrivals"
+                        domain="[('late_minutes','&gt;',0)]"/>
+                <filter name="missing_checkout" string="Missing Check-Out"
+                        domain="[('missing_check_out','=',True)]"/>
+                <separator/>
+                <filter name="group_status" string="By Status"
+                        context="{'group_by': 'status'}"/>
+                <filter name="group_guard" string="By Guard"
+                        context="{'group_by': 'employee_id'}"/>
+                <filter name="group_site" string="By Site"
+                        context="{'group_by': 'site_id'}"/>
+                <filter name="group_date" string="By Date"
+                        context="{'group_by': 'shift_date'}"/>
+                <filter name="group_month" string="By Month"
+                        context="{'group_by': 'shift_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_attendance_pivot" model="ir.ui.view">
+        <field name="name">reporting.attendance.record.pivot</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <pivot string="Attendance Analysis" disable_linking="0">
                 <field name="site_id" type="row"/>
-                <field name="post_id" type="row"/>
+                <field name="employee_id" type="row"/>
                 <field name="status" type="col"/>
-                <field name="scheduled_hours" type="measure"/>
                 <field name="worked_hours" type="measure"/>
                 <field name="valid_hours" type="measure"/>
                 <field name="late_minutes" type="measure"/>
-                <field name="early_departure_minutes" type="measure"/>
             </pivot>
         </field>
     </record>
 
-    <record id="view_security_attendance_reporting_graph" model="ir.ui.view">
-        <field name="name">security.attendance.record.reporting.graph</field>
+    <record id="view_reporting_attendance_graph" model="ir.ui.view">
+        <field name="name">reporting.attendance.record.graph</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
-            <graph string="Attendance Hours" type="bar">
-                <field name="site_id"/>
-                <field name="valid_hours" type="measure"/>
+            <graph string="Attendance by Status" type="bar" stacked="0">
+                <field name="shift_date" type="col" interval="week"/>
+                <field name="status" type="row"/>
             </graph>
         </field>
     </record>
@@ -88,15 +239,12 @@
     <record id="action_security_attendance_reporting" model="ir.actions.act_window">
         <field name="name">Attendance Analysis</field>
         <field name="res_model">security.attendance.record</field>
-        <field name="view_mode">pivot,graph,list,form</field>
-        <field name="context">{'group_by': 'status'}</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_reporting_attendance_search"/>
+        <field name="context">{'search_default_this_month': 1, 'group_by': 'status'}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Attendance Data Found!
-            </p>
-            <p>
-                Attendance analysis will appear here once guards start checking in for their shifts.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No attendance records yet</p>
+            <p>Records appear once guards start checking in for their shifts.</p>
         </field>
     </record>
 
@@ -109,27 +257,92 @@
         groups="hr.group_hr_user"
     />
 
-    <record id="view_security_payslip_reporting_pivot" model="ir.ui.view">
-        <field name="name">security.payslip.reporting.pivot</field>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         3. PAYROLL ANALYSIS
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_payslip_list" model="ir.ui.view">
+        <field name="name">reporting.payslip.list</field>
         <field name="model">security.payslip</field>
         <field name="arch" type="xml">
-            <pivot string="Payroll Analysis">
+            <list string="Payroll Analysis"
+                  default_order="period_id desc, employee_id"
+                  decoration-success="state == 'paid'"
+                  decoration-info="state == 'confirmed'"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-warning="anomaly_score &gt; 0">
+                <field name="period_id" string="Pay Period"/>
+                <field name="employee_id" string="Guard"/>
+                <field name="worked_days" string="Days" optional="show"/>
+                <field name="normal_hours" string="Norm Hrs" optional="show"/>
+                <field name="overtime_hours" string="OT Hrs" optional="show"/>
+                <field name="awol_occurrences" string="AWOL" optional="show"
+                       decoration-danger="awol_occurrences &gt; 0"/>
+                <field name="total_earnings" string="Gross Earnings"/>
+                <field name="total_deductions" string="Deductions" optional="show"/>
+                <field name="net_pay" string="Net Pay"/>
+                <field name="anomaly_score" string="Anomaly" optional="show"
+                       decoration-warning="anomaly_score &gt; 0"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'paid'"
+                       decoration-info="state == 'confirmed'"
+                       decoration-warning="state == 'draft'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_payslip_search" model="ir.ui.view">
+        <field name="name">reporting.payslip.search</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <search string="Search Payroll">
+                <field name="employee_id" string="Guard"/>
+                <field name="period_id" string="Pay Period"/>
+                <separator/>
+                <filter name="draft" string="Draft"
+                        domain="[('state','=','draft')]"/>
+                <filter name="confirmed" string="Confirmed"
+                        domain="[('state','=','confirmed')]"/>
+                <filter name="paid" string="Paid"
+                        domain="[('state','=','paid')]"/>
+                <filter name="anomalies" string="Has Anomalies"
+                        domain="[('anomaly_score','&gt;',0)]"/>
+                <filter name="has_awol" string="Has AWOL"
+                        domain="[('awol_occurrences','&gt;',0)]"/>
+                <separator/>
+                <filter name="group_period" string="By Period"
+                        context="{'group_by': 'period_id'}"/>
+                <filter name="group_guard" string="By Guard"
+                        context="{'group_by': 'employee_id'}"/>
+                <filter name="group_state" string="By Status"
+                        context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_payslip_pivot" model="ir.ui.view">
+        <field name="name">reporting.payslip.pivot</field>
+        <field name="model">security.payslip</field>
+        <field name="arch" type="xml">
+            <pivot string="Payroll Analysis" disable_linking="0">
                 <field name="period_id" type="row"/>
-                <field name="employee_id" type="row"/>
                 <field name="state" type="col"/>
                 <field name="worked_days" type="measure"/>
                 <field name="total_earnings" type="measure"/>
                 <field name="total_deductions" type="measure"/>
                 <field name="net_pay" type="measure"/>
+                <field name="awol_occurrences" type="measure"/>
             </pivot>
         </field>
     </record>
 
-    <record id="view_security_payslip_reporting_graph" model="ir.ui.view">
-        <field name="name">security.payslip.reporting.graph</field>
+    <record id="view_reporting_payslip_graph" model="ir.ui.view">
+        <field name="name">reporting.payslip.graph</field>
         <field name="model">security.payslip</field>
         <field name="arch" type="xml">
-            <graph string="Payroll Cost" type="bar">
+            <graph string="Payroll Cost by Period" type="bar">
                 <field name="period_id"/>
                 <field name="net_pay" type="measure"/>
             </graph>
@@ -139,15 +352,12 @@
     <record id="action_security_payroll_reporting" model="ir.actions.act_window">
         <field name="name">Payroll Analysis</field>
         <field name="res_model">security.payslip</field>
-        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_reporting_payslip_search"/>
         <field name="context">{'group_by': 'period_id'}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Payroll Data Found!
-            </p>
-            <p>
-                Payroll cost analysis will be available once payslips are generated for your guards.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No payroll data yet</p>
+            <p>Payroll analysis is available once payslips have been generated.</p>
         </field>
     </record>
 
@@ -160,11 +370,71 @@
         groups="hr.group_hr_user"
     />
 
-    <record id="view_security_incident_reporting_pivot" model="ir.ui.view">
-        <field name="name">security.incident.reporting.pivot</field>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         4. INCIDENT ANALYSIS
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_incident_list" model="ir.ui.view">
+        <field name="name">reporting.incident.list</field>
         <field name="model">security.incident</field>
         <field name="arch" type="xml">
-            <pivot string="Incident Analysis">
+            <list string="Incident Analysis"
+                  default_order="incident_date desc"
+                  decoration-danger="high_trust_exclusion"
+                  decoration-muted="state == 'resolved'">
+                <field name="incident_date" string="Date" widget="date"/>
+                <field name="employee_id" string="Guard"/>
+                <field name="incident_type_id" string="Type"/>
+                <field name="deduction_amount" string="Deduction (N$)"/>
+                <field name="reliability_score_delta" string="Score Δ"
+                       decoration-danger="reliability_score_delta &lt; 0"/>
+                <field name="high_trust_exclusion" string="High Trust Excl." widget="boolean" optional="show"/>
+                <field name="payslip_id" string="Applied to Payslip" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-warning="state == 'draft'"
+                       decoration-success="state == 'approved'"
+                       decoration-muted="state == 'resolved'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_incident_search" model="ir.ui.view">
+        <field name="name">reporting.incident.search</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <search string="Search Incidents">
+                <field name="employee_id" string="Guard"/>
+                <field name="incident_type_id" string="Incident Type"/>
+                <separator/>
+                <filter name="pending" string="Pending Approval"
+                        domain="[('state','=','draft')]"/>
+                <filter name="approved" string="Approved"
+                        domain="[('state','=','approved')]"/>
+                <filter name="resolved" string="Resolved"
+                        domain="[('state','=','resolved')]"/>
+                <filter name="high_trust" string="High-Trust Exclusion"
+                        domain="[('high_trust_exclusion','=',True)]"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('incident_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="group_type" string="By Type"
+                        context="{'group_by': 'incident_type_id'}"/>
+                <filter name="group_guard" string="By Guard"
+                        context="{'group_by': 'employee_id'}"/>
+                <filter name="group_state" string="By Status"
+                        context="{'group_by': 'state'}"/>
+                <filter name="group_month" string="By Month"
+                        context="{'group_by': 'incident_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_incident_pivot" model="ir.ui.view">
+        <field name="name">reporting.incident.pivot</field>
+        <field name="model">security.incident</field>
+        <field name="arch" type="xml">
+            <pivot string="Incident Analysis" disable_linking="0">
                 <field name="incident_type_id" type="row"/>
                 <field name="state" type="col"/>
                 <field name="deduction_amount" type="measure"/>
@@ -173,11 +443,11 @@
         </field>
     </record>
 
-    <record id="view_security_incident_reporting_graph" model="ir.ui.view">
-        <field name="name">security.incident.reporting.graph</field>
+    <record id="view_reporting_incident_graph" model="ir.ui.view">
+        <field name="name">reporting.incident.graph</field>
         <field name="model">security.incident</field>
         <field name="arch" type="xml">
-            <graph string="Incidents By Type" type="bar">
+            <graph string="Incidents by Type" type="bar">
                 <field name="incident_type_id"/>
                 <field name="deduction_amount" type="measure"/>
             </graph>
@@ -187,15 +457,12 @@
     <record id="action_security_incident_reporting" model="ir.actions.act_window">
         <field name="name">Incident Analysis</field>
         <field name="res_model">security.incident</field>
-        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_reporting_incident_search"/>
         <field name="context">{'group_by': 'incident_type_id'}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Incident Data Found!
-            </p>
-            <p>
-                Behavioral incident trends and deduction amounts will be analyzed here.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No incidents recorded</p>
+            <p>Incident trends and deduction totals will appear here once incidents are logged.</p>
         </field>
     </record>
 
@@ -208,18 +475,105 @@
         groups="hr.group_hr_user"
     />
 
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         5. BILLING ANALYSIS
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_billing_list" model="ir.ui.view">
+        <field name="name">reporting.billing.invoice.list</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <list string="Billing Analysis"
+                  default_order="invoice_date desc"
+                  decoration-danger="state not in ['paid','cancelled'] and due_date and due_date &lt; current_date"
+                  decoration-success="state == 'paid'"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-info="state == 'draft'">
+                <field name="name" string="Invoice Ref"/>
+                <field name="partner_id" string="Client"/>
+                <field name="site_id" string="Site" optional="show"/>
+                <field name="invoice_date" string="Invoiced" widget="date"/>
+                <field name="due_date" string="Due" widget="date"
+                       decoration-danger="state not in ['paid','cancelled'] and due_date and due_date &lt; current_date"/>
+                <field name="subtotal_amount" string="Subtotal" optional="show"/>
+                <field name="vat_amount" string="VAT" optional="show"/>
+                <field name="total_amount" string="Total (N$)"/>
+                <field name="paid_amount" string="Paid" optional="show"/>
+                <field name="balance_amount" string="Outstanding" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'sent'"
+                       decoration-success="state == 'paid'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_billing_search" model="ir.ui.view">
+        <field name="name">reporting.billing.invoice.search</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <search string="Search Billing">
+                <field name="name" string="Invoice Ref"/>
+                <field name="partner_id" string="Client"/>
+                <separator/>
+                <filter name="draft" string="Draft"
+                        domain="[('state','=','draft')]"/>
+                <filter name="sent" string="Sent"
+                        domain="[('state','=','sent')]"/>
+                <filter name="overdue" string="Overdue"
+                        domain="[('state','not in',['paid','cancelled']),('due_date','&lt;',context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="paid" string="Paid"
+                        domain="[('state','=','paid')]"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('invoice_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="group_client" string="By Client"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_state" string="By Status"
+                        context="{'group_by': 'state'}"/>
+                <filter name="group_month" string="By Month"
+                        context="{'group_by': 'invoice_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_billing_pivot" model="ir.ui.view">
+        <field name="name">reporting.billing.invoice.pivot</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <pivot string="Billing Analysis" disable_linking="0">
+                <field name="partner_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="total_amount" type="measure"/>
+                <field name="paid_amount" type="measure"/>
+                <field name="balance_amount" type="measure"/>
+                <field name="vat_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_reporting_billing_graph" model="ir.ui.view">
+        <field name="name">reporting.billing.invoice.graph</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <graph string="Revenue by Client" type="bar" stacked="0">
+                <field name="partner_id"/>
+                <field name="total_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
     <record id="action_security_billing_reporting" model="ir.actions.act_window">
         <field name="name">Billing Analysis</field>
         <field name="res_model">security.billing.invoice</field>
-        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_reporting_billing_search"/>
         <field name="context">{'group_by': 'partner_id'}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Billing Data Found!
-            </p>
-            <p>
-                Invoicing revenue will be visualized here once you generate client bills.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No billing data yet</p>
+            <p>Invoice revenue analysis appears here once client bills have been generated.</p>
         </field>
     </record>
 
@@ -232,18 +586,101 @@
         groups="hr.group_hr_user"
     />
 
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         6. PAYMENT ANALYSIS
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_payment_list" model="ir.ui.view">
+        <field name="name">reporting.client.payment.list</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <list string="Payment Analysis"
+                  default_order="payment_date desc"
+                  decoration-success="reconciliation_status == 'matched'"
+                  decoration-danger="reconciliation_status == 'exception'"
+                  decoration-info="reconciliation_status == 'unmatched'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="reference" string="Reference"/>
+                <field name="partner_id" string="Client"/>
+                <field name="invoice_id" string="Invoice"/>
+                <field name="payment_date" string="Date" widget="date"/>
+                <field name="amount" string="Amount (N$)"/>
+                <field name="payment_method" string="Method" optional="show"/>
+                <field name="bank_reference" string="Bank Ref" optional="show"/>
+                <field name="reconciliation_status" widget="badge"
+                       decoration-success="reconciliation_status == 'matched'"
+                       decoration-danger="reconciliation_status == 'exception'"
+                       decoration-info="reconciliation_status == 'unmatched'"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'posted'"
+                       decoration-warning="state == 'draft'"
+                       decoration-muted="state == 'cancelled'"
+                       optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_payment_search" model="ir.ui.view">
+        <field name="name">reporting.client.payment.search</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <search string="Search Payments">
+                <field name="partner_id" string="Client"/>
+                <field name="reference" string="Reference"/>
+                <field name="bank_reference" string="Bank Reference"/>
+                <separator/>
+                <filter name="unmatched" string="Unmatched"
+                        domain="[('reconciliation_status','=','unmatched')]"/>
+                <filter name="matched" string="Matched"
+                        domain="[('reconciliation_status','=','matched')]"/>
+                <filter name="exceptions" string="Exceptions"
+                        domain="[('reconciliation_status','=','exception')]"/>
+                <filter name="this_month" string="This Month"
+                        domain="[('payment_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="group_client" string="By Client"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_reconciliation" string="By Reconciliation"
+                        context="{'group_by': 'reconciliation_status'}"/>
+                <filter name="group_month" string="By Month"
+                        context="{'group_by': 'payment_date:month'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_payment_pivot" model="ir.ui.view">
+        <field name="name">reporting.client.payment.pivot</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <pivot string="Payment Analysis" disable_linking="0">
+                <field name="partner_id" type="row"/>
+                <field name="reconciliation_status" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_reporting_payment_graph" model="ir.ui.view">
+        <field name="name">reporting.client.payment.graph</field>
+        <field name="model">security.client.payment</field>
+        <field name="arch" type="xml">
+            <graph string="Payments by Client" type="bar">
+                <field name="partner_id"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
     <record id="action_security_payment_reporting" model="ir.actions.act_window">
         <field name="name">Payment Analysis</field>
         <field name="res_model">security.client.payment</field>
-        <field name="view_mode">pivot,graph,list,form</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="search_view_id" ref="view_reporting_payment_search"/>
         <field name="context">{'group_by': 'reconciliation_status'}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Payment Data Found!
-            </p>
-            <p>
-                Client payment reconciliations and received amounts will appear here.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No payments recorded yet</p>
+            <p>Client payment reconciliation analysis appears here once payments are logged.</p>
         </field>
     </record>
 
@@ -256,19 +693,110 @@
         groups="hr.group_hr_user"
     />
 
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         7. INVOICE AGEING
+    ═══════════════════════════════════════════════════════════════════════ -->
+
+    <record id="view_reporting_ageing_list" model="ir.ui.view">
+        <field name="name">reporting.ageing.invoice.list</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <list string="Invoice Ageing"
+                  default_order="days_overdue desc"
+                  decoration-danger="days_overdue &gt; 60"
+                  decoration-warning="days_overdue &gt; 30 and days_overdue &lt;= 60"
+                  decoration-info="days_overdue &gt; 0 and days_overdue &lt;= 30"
+                  decoration-success="payment_status == 'paid'"
+                  decoration-muted="state == 'cancelled'">
+                <field name="name" string="Invoice Ref"/>
+                <field name="partner_id" string="Client"/>
+                <field name="invoice_date" string="Invoiced" widget="date"/>
+                <field name="due_date" string="Due Date" widget="date"/>
+                <field name="days_overdue" string="Days Overdue"
+                       decoration-danger="days_overdue &gt; 60"
+                       decoration-warning="days_overdue &gt; 30"
+                       decoration-info="days_overdue &gt; 0"/>
+                <field name="ageing_bucket" string="Bucket" widget="badge"
+                       decoration-danger="ageing_bucket == '90+'"
+                       decoration-warning="ageing_bucket in ['61-90','31-60']"
+                       decoration-info="ageing_bucket == '1-30'"
+                       decoration-success="ageing_bucket == 'Current'"/>
+                <field name="total_amount" string="Invoice Total"/>
+                <field name="paid_amount" string="Paid" optional="show"/>
+                <field name="balance_amount" string="Outstanding"/>
+                <field name="payment_status" string="Payment Status" widget="badge"
+                       decoration-success="payment_status == 'paid'"
+                       decoration-warning="payment_status == 'partial'"
+                       decoration-danger="payment_status == 'unpaid'"/>
+                <field name="state" optional="show" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_reporting_ageing_search" model="ir.ui.view">
+        <field name="name">reporting.ageing.invoice.search</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <search string="Invoice Ageing">
+                <field name="partner_id" string="Client"/>
+                <field name="name" string="Invoice Ref"/>
+                <separator/>
+                <filter name="current" string="Current (Not Overdue)"
+                        domain="[('days_overdue','=',0),('state','not in',['paid','cancelled'])]"/>
+                <filter name="overdue_1_30" string="1 – 30 Days"
+                        domain="[('days_overdue','&gt;',0),('days_overdue','&lt;=',30)]"/>
+                <filter name="overdue_31_60" string="31 – 60 Days"
+                        domain="[('days_overdue','&gt;',30),('days_overdue','&lt;=',60)]"/>
+                <filter name="overdue_60_plus" string="60+ Days"
+                        domain="[('days_overdue','&gt;',60)]"/>
+                <filter name="exclude_cancelled" string="Exclude Cancelled"
+                        domain="[('state','!=','cancelled')]"/>
+                <separator/>
+                <filter name="group_client" string="By Client"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_bucket" string="By Ageing Bucket"
+                        context="{'group_by': 'ageing_bucket'}"/>
+                <filter name="group_status" string="By Payment Status"
+                        context="{'group_by': 'payment_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_reporting_ageing_pivot" model="ir.ui.view">
+        <field name="name">reporting.ageing.invoice.pivot</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <pivot string="Invoice Ageing" disable_linking="0">
+                <field name="partner_id" type="row"/>
+                <field name="ageing_bucket" type="col"/>
+                <field name="balance_amount" type="measure"/>
+                <field name="total_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_reporting_ageing_graph" model="ir.ui.view">
+        <field name="name">reporting.ageing.invoice.graph</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="arch" type="xml">
+            <graph string="Outstanding by Ageing Bucket" type="bar" stacked="0">
+                <field name="ageing_bucket"/>
+                <field name="balance_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
     <record id="action_security_ageing_reporting" model="ir.actions.act_window">
-        <field name="name">Invoice Ageing Report</field>
+        <field name="name">Invoice Ageing</field>
         <field name="res_model">security.billing.invoice</field>
-        <field name="view_mode">pivot,graph,list,form</field>
-        <field name="domain">[('state', '!=', 'cancelled')]</field>
-        <field name="context">{'group_by': 'ageing_bucket'}</field>
+        <field name="view_mode">list,pivot,graph,form</field>
+        <field name="domain">[('state','!=','cancelled')]</field>
+        <field name="search_view_id" ref="view_reporting_ageing_search"/>
+        <field name="context">{'group_by': 'ageing_bucket', 'search_default_exclude_cancelled': 1}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                No Outstanding Invoices!
-            </p>
-            <p>
-                Your invoice ageing report will show overdue balances grouped by time periods.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No outstanding invoices</p>
+            <p>Your invoice ageing report will show overdue balances grouped by time period.</p>
         </field>
     </record>
 
@@ -280,4 +808,5 @@
         sequence="70"
         groups="hr.group_hr_user"
     />
+
 </odoo>

@@ -7,14 +7,24 @@
         <field name="name">security.employee.loan.list</field>
         <field name="model">security.employee.loan</field>
         <field name="arch" type="xml">
-            <list decoration-info="state == 'draft'" decoration-success="state == 'active'" decoration-muted="state == 'closed'">
+            <list decoration-info="state == 'draft'"
+                  decoration-warning="state == 'submitted'"
+                  decoration-primary="state == 'approved'"
+                  decoration-success="state == 'active'"
+                  decoration-muted="state in ('closed', 'written_off')">
                 <field name="name"/>
                 <field name="employee_id"/>
                 <field name="principal_amount"/>
                 <field name="total_repayment_amount"/>
                 <field name="installment_amount"/>
                 <field name="balance_remaining"/>
-                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-success="state == 'active'"/>
+                <field name="deduction_priority"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'submitted'"
+                       decoration-primary="state == 'approved'"
+                       decoration-success="state == 'active'"
+                       decoration-muted="state in ('closed', 'written_off')"/>
             </list>
         </field>
     </record>
@@ -27,8 +37,11 @@
                 <field name="name"/>
                 <field name="employee_id"/>
                 <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_submitted" string="Submitted" domain="[('state', '=', 'submitted')]"/>
+                <filter name="filter_approved" string="Approved" domain="[('state', '=', 'approved')]"/>
                 <filter name="filter_active" string="Active Loans" domain="[('state', '=', 'active')]"/>
                 <filter name="filter_closed" string="Closed Loans" domain="[('state', '=', 'closed')]"/>
+                <filter name="filter_written_off" string="Written Off" domain="[('state', '=', 'written_off')]"/>
                 <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
                 <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
             </search>
@@ -41,10 +54,20 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_activate" type="object" string="Activate Loan" class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_close" type="object" string="Close Loan" invisible="state == 'closed'"/>
-                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,active,closed"/>
+                    <button name="action_submit" type="object" string="Submit for Approval"
+                            class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_approve" type="object" string="Approve"
+                            class="oe_highlight" invisible="state != 'submitted'"/>
+                    <button name="action_activate" type="object" string="Activate Loan"
+                            class="oe_highlight" invisible="state != 'approved'"/>
+                    <button name="action_close" type="object" string="Close"
+                            invisible="state != 'active'"/>
+                    <button name="action_write_off" type="object" string="Write Off"
+                            invisible="state in ('closed', 'written_off')"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft"
+                            invisible="state not in ('submitted', 'approved')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved,active,closed,written_off"/>
                 </header>
                 <sheet>
                     <div class="oe_title">
@@ -57,6 +80,7 @@
                             <field name="employee_id" placeholder="Select Guard..."/>
                             <field name="currency_id" invisible="1"/>
                             <field name="start_date"/>
+                            <field name="deduction_priority"/>
                         </group>
                         <group>
                             <field name="principal_amount"/>
@@ -73,13 +97,28 @@
                             <field name="balance_remaining" readonly="1"/>
                         </group>
                     </group>
+                    <group string="Approval Details" invisible="state == 'draft'">
+                        <group>
+                            <field name="submitted_by_id" readonly="1"/>
+                            <field name="approved_by_id" readonly="1"/>
+                            <field name="approval_date" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="rejection_reason"/>
+                        </group>
+                    </group>
                     <notebook>
                         <page string="Deduction Schedule">
+                            <button name="action_generate_schedule" type="object"
+                                    string="Generate Schedule" class="btn btn-secondary mb-2"
+                                    invisible="state != 'approved'"/>
                             <field name="deduction_line_ids">
                                 <list editable="bottom">
                                     <field name="deduction_date"/>
                                     <field name="payslip_id"/>
                                     <field name="amount"/>
+                                    <field name="capped" readonly="1"/>
+                                    <field name="carry_forward_amount" readonly="1"/>
                                     <field name="note"/>
                                 </list>
                             </field>
@@ -135,9 +174,9 @@
     <menuitem
         id="menu_security_employee_loan"
         name="Employee Loans"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_payroll"
         action="action_security_employee_loan"
-        sequence="110"
+        sequence="30"
         groups="hr.group_hr_user"
     />
 
@@ -154,6 +193,8 @@
                 <field name="payslip_id"/>
                 <field name="deduction_date"/>
                 <field name="amount"/>
+                <field name="capped" readonly="1"/>
+                <field name="carry_forward_amount" readonly="1"/>
             </list>
         </field>
     </record>
@@ -165,6 +206,7 @@
             <search>
                 <field name="employee_id"/>
                 <field name="loan_id"/>
+                <filter name="filter_capped" string="Capped" domain="[('capped', '=', True)]"/>
                 <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
                 <filter name="group_date" string="Group by Date" context="{'group_by': 'deduction_date'}"/>
             </search>
@@ -185,6 +227,8 @@
                     <group>
                         <field name="deduction_date"/>
                         <field name="amount"/>
+                        <field name="capped" readonly="1"/>
+                        <field name="carry_forward_amount" readonly="1"/>
                     </group>
                     <group>
                         <field name="note" placeholder="Notes..."/>
@@ -212,9 +256,9 @@
     <menuitem
         id="menu_security_loan_deduction"
         name="Loan Deductions"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_payroll"
         action="action_security_loan_deduction"
-        sequence="120"
+        sequence="40"
         groups="hr.group_hr_user"
     />
 </odoo>

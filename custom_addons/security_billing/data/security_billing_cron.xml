@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_auto_invoice" model="ir.cron">
+        <field name="name">Security: Auto-generate Monthly Invoices</field>
+        <field name="model_id" ref="model_security_billing_plan"/>
+        <field name="state">code</field>
+        <field name="code">model.action_auto_invoice_all()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">months</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

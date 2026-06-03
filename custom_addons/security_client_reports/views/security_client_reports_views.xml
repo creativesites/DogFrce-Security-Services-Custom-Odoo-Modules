@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_client_service_report_list" model="ir.ui.view">
+        <field name="name">security.client.service.report.list</field>
+        <field name="model">security.client.service.report</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'" decoration-success="state == 'sent'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="scheduled_shift_count"/>
+                <field name="attended_shift_count"/>
+                <field name="absent_shift_count"/>
+                <field name="awol_count"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_client_service_report_form" model="ir.ui.view">
+        <field name="name">security.client.service.report.form</field>
+        <field name="model">security.client.service.report</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_generate" type="object" string="Generate Report" class="oe_highlight" invisible="state == 'sent'"/>
+                    <button name="action_mark_sent" type="object" string="Mark Sent" invisible="state != 'generated'"/>
+                    <button name="action_export_csv" type="object" string="Export CSV" invisible="state == 'draft'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="site_id"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                        </group>
+                        <group>
+                            <field name="prepared_by_id" readonly="1"/>
+                            <field name="scheduled_shift_count" readonly="1"/>
+                            <field name="attended_shift_count" readonly="1"/>
+                            <field name="absent_shift_count" readonly="1"/>
+                            <field name="awol_count" readonly="1"/>
+                            <field name="incident_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Hours">
+                        <field name="total_scheduled_hours" readonly="1"/>
+                        <field name="total_payable_hours" readonly="1"/>
+                        <field name="total_unpaid_hours" readonly="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Attendance Lines">
+                            <field name="attendance_record_ids">
+                                <list>
+                                    <field name="shift_date"/>
+                                    <field name="employee_id"/>
+                                    <field name="post_id"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="status"/>
+                                    <field name="absence_type"/>
+                                    <field name="scheduled_hours"/>
+                                    <field name="payable_hours"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Roster Lines">
+                            <field name="roster_slot_ids" widget="many2many_tags"/>
+                        </page>
+                    </notebook>
+                    <group>
+                        <field name="include_guard_names"/>
+                    </group>
+                    <group>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_client_service_report_pivot" model="ir.ui.view">
+        <field name="name">security.client.service.report.pivot</field>
+        <field name="model">security.client.service.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Client Service Reports">
+                <field name="partner_id" type="row"/>
+                <field name="state" type="col"/>
+                <field name="scheduled_shift_count" type="measure"/>
+                <field name="attended_shift_count" type="measure"/>
+                <field name="absent_shift_count" type="measure"/>
+                <field name="total_payable_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_security_client_service_report" model="ir.actions.act_window">
+        <field name="name">Client Service Reports</field>
+        <field name="res_model">security.client.service.report</field>
+        <field name="view_mode">list,form,pivot</field>
+    </record>
+
+    <menuitem
+        id="menu_security_client_service_report"
+        name="Client Service Reports"
+        parent="security_reporting.menu_security_reporting"
+        action="action_security_client_service_report"
+        sequence="80"
+        groups="hr.group_hr_user"
+    />
+</odoo>

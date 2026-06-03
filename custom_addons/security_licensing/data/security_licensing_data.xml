@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default feature tier map stored as a system parameter -->
+        <record id="param_feature_tier_map" model="ir.config_parameter">
+            <field name="key">security_licensing.feature_tier_map</field>
+            <field name="value">{
+  "basic_roster":       ["starter", "professional", "enterprise"],
+  "shift_planner_ai":   ["professional", "enterprise"],
+  "fleet_module":       ["professional", "enterprise"],
+  "advanced_reporting": ["professional", "enterprise"],
+  "api_access":         ["enterprise"]
+}</field>
+        </record>
+
+        <!-- Placeholder — admin sets the real URL after Firebase is deployed -->
+        <record id="param_validation_endpoint" model="ir.config_parameter">
+            <field name="key">security_licensing.validation_endpoint</field>
+            <field name="value"></field>
+        </record>
+    </data>
+</odoo>

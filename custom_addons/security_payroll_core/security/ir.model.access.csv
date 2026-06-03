@@ -3,3 +3,4 @@ access_security_payroll_period_user,security.payroll.period user,model_security_
 access_security_payslip_user,security.payslip user,model_security_payslip,hr.group_hr_user,1,1,1,1
 access_security_payslip_earning_line_user,security.payslip.earning.line user,model_security_payslip_earning_line,hr.group_hr_user,1,1,1,1
 access_security_payslip_deduction_line_user,security.payslip.deduction.line user,model_security_payslip_deduction_line,hr.group_hr_user,1,1,1,1
+access_security_payroll_period_wizard,security.payroll.period.wizard,model_security_payroll_period_wizard,base.group_user,1,1,1,1

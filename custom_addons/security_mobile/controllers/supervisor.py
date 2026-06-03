@@ -44,7 +44,7 @@ def _serialize_record(rec):
         "shift": slot.shift_template_id.name if slot else None,
         "shift_start": slot.shift_template_id.start_hour if slot else None,
         "shift_end": slot.shift_template_id.end_hour if slot else None,
-        "status": rec.state if hasattr(rec, "state") else "scheduled",
+        "status": rec.status if hasattr(rec, "status") else "scheduled",
         "manual_presence": rec.manual_presence or "not_marked",
         "check_in": _fmt_dt(rec.check_in),
         "check_out": _fmt_dt(rec.check_out),
@@ -289,3 +289,75 @@ class SupervisorController(http.Controller):
             return _json_err(str(exc), status=500)
 
         return _json_ok({"batch_id": batch.id, "new_state": batch.state})
+
+    # ── GET /api/security/mobile/supervisor/history ────────────────────────
+    @http.route(
+        "/api/security/mobile/supervisor/history",
+        auth="user",
+        methods=["GET"],
+        type="http",
+        csrf=False,
+    )
+    @require_group(GROUP_SUPERVISOR)
+    def supervisor_history(self, **kw):
+        """
+        Return past posting sheet batches for the logged-in supervisor.
+
+        Query params:
+          ?limit=20  (default 20)
+          ?offset=0  (default 0)
+        """
+        limit = min(int(kw.get("limit", 20)), 100)
+        offset = int(kw.get("offset", 0))
+
+        env = request.env
+        employee = _employee_for_user()
+        if not employee:
+            return _json_err("No employee record linked to your user account.")
+
+        sites = env["security.client.site"].sudo().search(
+            [("supervisor_id", "=", employee.id), ("active", "=", True)]
+        )
+
+        batches = env["security.attendance.batch"].sudo().search(
+            [("site_id", "in", sites.ids)],
+            order="attendance_date desc",
+            limit=limit,
+            offset=offset,
+        )
+
+        total = env["security.attendance.batch"].sudo().search_count(
+            [("site_id", "in", sites.ids)]
+        )
+
+        results = []
+        for batch in batches:
+            records = env["security.attendance.record"].sudo().search(
+                [("batch_id", "=", batch.id)]
+            )
+            present = len(records.filtered(lambda r: r.manual_presence == "present"))
+            late = len(records.filtered(lambda r: r.manual_presence == "present" and r.late_minutes > 0))
+            absent = len(records.filtered(lambda r: r.manual_presence == "absent"))
+            awol = len(records.filtered(lambda r: r.manual_presence == "awol"))
+            total_recs = len(records)
+
+            site = batch.site_id
+            results.append({
+                "batch_id": batch.id,
+                "date": str(batch.attendance_date),
+                "site": {"id": site.id, "name": site.name} if site else None,
+                "state": batch.state,
+                "summary": {
+                    "total": total_recs,
+                    "present": present,
+                    "late": late,
+                    "absent": absent,
+                    "awol": awol,
+                    "attendance_rate": round(present / total_recs * 100, 1) if total_recs else 0,
+                },
+            })
+
+        return _json_ok({
+            "batches": results,
+            "pagination": {"limit": limit, "offset": offset, "total": total},
+        })

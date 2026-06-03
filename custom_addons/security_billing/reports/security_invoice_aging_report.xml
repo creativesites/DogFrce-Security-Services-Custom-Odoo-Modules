@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_security_invoice_aging" model="ir.actions.report">
+        <field name="name">Invoice Aging Report</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_billing.report_security_invoice_aging</field>
+        <field name="report_file">security_billing.report_security_invoice_aging</field>
+    </record>
+
+    <template id="report_security_invoice_aging">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <h2>Invoice Aging Report</h2>
+                    <p>Generated: <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/></p>
+                    <table class="table table-sm table-bordered">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Client</th>
+                                <th>Invoice</th>
+                                <th>Date</th>
+                                <th>Due Date</th>
+                                <th class="text-end">Amount (NAD)</th>
+                                <th>Current</th>
+                                <th>1-30 Days</th>
+                                <th>31-60 Days</th>
+                                <th>61-90 Days</th>
+                                <th>90+ Days</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs" t-as="inv">
+                                <t t-set="today" t-value="datetime.date.today()"/>
+                                <t t-set="days_overdue" t-value="(today - inv.due_date).days if inv.due_date else 0"/>
+                                <tr>
+                                    <td><t t-esc="inv.partner_id.name"/></td>
+                                    <td><t t-esc="inv.name"/></td>
+                                    <td><t t-esc="inv.invoice_date"/></td>
+                                    <td><t t-esc="inv.due_date"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if days_overdue &lt;= 0 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if 1 &lt;= days_overdue &lt;= 30 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if 31 &lt;= days_overdue &lt;= 60 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if 61 &lt;= days_overdue &lt;= 90 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if days_overdue &gt; 90 else '0.00'"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                    <p class="text-muted small">DogForce Security Services — Confidential</p>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,20 @@
+{
+    'name': 'DeployGuard Licensing',
+    'version': '19.0.1.0.0',
+    'summary': 'License enforcement and entitlement management for DeployGuard OS',
+    'category': 'Administration',
+    'author': 'DogForce Security Services',
+    'license': 'OPL-1',
+    'depends': ['base', 'mail', 'web'],
+    'data': [
+        'security/security_licensing_security.xml',
+        'data/security_licensing_data.xml',
+        'data/security_licensing_cron.xml',
+        'wizard/license_key_wizard_views.xml',
+        'views/security_license_views.xml',
+        'views/res_config_settings_views.xml',
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}

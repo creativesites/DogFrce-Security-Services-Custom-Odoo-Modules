@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_document_expiry_check" model="ir.cron">
+        <field name="name">Security: Document Expiry Warning</field>
+        <field name="model_id" ref="security_documents.model_security_employee_document"/>
+        <field name="state">code</field>
+        <field name="code">model.action_cron_expiry_warnings()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="priority">10</field>
+    </record>
+</odoo>

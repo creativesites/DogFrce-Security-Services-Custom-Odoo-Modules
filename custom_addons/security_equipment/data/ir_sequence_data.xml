@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="seq_security_equipment_allocation" model="ir.sequence">
+        <field name="name">Security Equipment Allocation Sequence</field>
+        <field name="code">security.equipment.allocation</field>
+        <field name="prefix">EQP/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_security_equipment_damage" model="ir.sequence">
+        <field name="name">Security Equipment Loss/Damage Sequence</field>
+        <field name="code">security.equipment.damage</field>
+        <field name="prefix">DMG/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="number_next">1</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+    </record>
+</odoo>

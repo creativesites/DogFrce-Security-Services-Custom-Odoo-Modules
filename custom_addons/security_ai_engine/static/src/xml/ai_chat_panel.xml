@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     Main Chat Panel
+     Registered in main_components so it renders on every backend page.
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiChatPanel">
+
+    <!-- ── Floating toggle button ── -->
+    <button t-att-class="'o_ai_chat_toggle' + (state.isOpen ? ' is-open' : '')"
+            t-on-click="togglePanel"
+            title="DogForce AI Assistant">
+        <i t-att-class="state.isOpen ? 'fa fa-times' : 'fa fa-comment'"/>
+        <span t-if="state.unreadCount > 0 and not state.isOpen"
+              class="o_ai_chat_badge">
+            <t t-esc="state.unreadCount"/>
+        </span>
+    </button>
+
+    <!-- ── Side panel ── -->
+    <div t-att-class="'o_ai_chat_panel' + (state.isOpen ? ' is-open' : '')">
+
+        <!-- HEADER -->
+        <div class="o_ai_chat_header">
+            <div class="o_ai_chat_header_left">
+                <div class="o_ai_chat_avatar">
+                    <i class="fa fa-shield"/>
+                </div>
+                <div>
+                    <div class="o_ai_chat_title">DogForce Assistant</div>
+                    <div class="o_ai_chat_subtitle">
+                        <span class="o_ai_chat_status_dot"/>
+                        <t t-esc="contextLabel"/>
+                    </div>
+                </div>
+            </div>
+            <div class="o_ai_chat_header_actions">
+                <button class="o_ai_chat_icon_btn" t-on-click="newChat" title="New chat">
+                    <i class="fa fa-plus"/>
+                </button>
+                <button class="o_ai_chat_icon_btn" t-on-click="togglePanel" title="Close">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+        </div>
+
+        <!-- MESSAGES -->
+        <div class="o_ai_chat_messages" t-ref="messages">
+
+            <!-- Empty / greeting state -->
+            <t t-if="state.messages.length === 0 and not state.loading">
+                <div class="o_ai_chat_greeting">
+                    <div class="o_ai_chat_greeting_icon">
+                        <i class="fa fa-shield"/>
+                    </div>
+                    <div class="o_ai_chat_greeting_title">How can I help?</div>
+                    <div class="o_ai_chat_greeting_sub">
+                        Ask me anything about your guards, sites, payroll, or billing.
+                        I can find information, navigate to records, and take actions
+                        after your confirmation.
+                    </div>
+                    <div class="o_ai_chat_suggestions">
+                        <t t-foreach="greetings" t-as="g" t-key="g_index">
+                            <button class="o_ai_chat_suggestion"
+                                    t-on-click="() => this.sendMessage(g)">
+                                <t t-esc="g"/>
+                            </button>
+                        </t>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Message list -->
+            <t t-foreach="state.messages" t-as="msg" t-key="msg_index">
+
+                <!-- User message -->
+                <t t-if="msg.role === 'user'">
+                    <div class="o_ai_chat_message o_ai_chat_msg_user">
+                        <div class="o_ai_chat_bubble o_ai_chat_bubble_user">
+                            <t t-esc="msg.content"/>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Assistant message -->
+                <t t-elif="msg.role === 'assistant'">
+                    <div class="o_ai_chat_message o_ai_chat_msg_assistant">
+                        <div class="o_ai_chat_assistant_icon">
+                            <i class="fa fa-shield"/>
+                        </div>
+                        <div class="o_ai_chat_bubble o_ai_chat_bubble_assistant">
+                            <t t-if="msg.components and msg.components.length">
+                                <AiComponentRenderer
+                                    components="msg.components"
+                                    onQuickReply="(q) => this.sendQuickReply(q)"
+                                    onConfirmAction="(tok) => this.confirmAction(tok)"
+                                />
+                            </t>
+                            <t t-elif="msg.content">
+                                <span style="font-size:0.87rem; color:#334155; line-height:1.6;">
+                                    <t t-esc="msg.content"/>
+                                </span>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+            </t>
+
+            <!-- Typing indicator -->
+            <t t-if="state.loading">
+                <div class="o_ai_chat_message o_ai_chat_msg_assistant">
+                    <div class="o_ai_chat_assistant_icon">
+                        <i class="fa fa-shield"/>
+                    </div>
+                    <div class="o_ai_chat_bubble o_ai_chat_bubble_assistant o_ai_chat_typing">
+                        <span class="o_ai_typing_dot"/>
+                        <span class="o_ai_typing_dot"/>
+                        <span class="o_ai_typing_dot"/>
+                    </div>
+                </div>
+            </t>
+
+        </div>
+        <!-- END MESSAGES -->
+
+        <!-- INPUT BAR — uncontrolled textarea; value read via DOM ref on send -->
+        <div class="o_ai_chat_input_bar">
+            <textarea
+                class="o_ai_chat_input"
+                t-ref="input"
+                placeholder="Ask anything… (Enter to send, Shift+Enter for newline)"
+                rows="1"
+                t-on-input="onInputChange"
+                t-on-keydown="onInputKeydown"
+                t-att-disabled="state.loading"
+            />
+            <button t-att-class="'o_ai_chat_send_btn' + (state.hasInput ? ' is-active' : '')"
+                    t-on-click="() => this.sendMessage()"
+                    t-att-disabled="state.loading or not state.hasInput">
+                <i t-att-class="state.loading ? 'fa fa-circle-o-notch fa-spin' : 'fa fa-paper-plane'"/>
+            </button>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="o_ai_chat_footer">
+            <span>DogForce AI — Actions require your confirmation</span>
+        </div>
+
+    </div>
+    <!-- END PANEL -->
+
+</t>
+
+</templates>

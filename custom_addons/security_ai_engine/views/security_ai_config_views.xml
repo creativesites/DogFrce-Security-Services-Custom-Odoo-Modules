@@ -1,0 +1,842 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         AI Config — form view
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_ai_config_form" model="ir.ui.view">
+        <field name="name">security.ai.config.form</field>
+        <field name="model">security.ai.config</field>
+        <field name="arch" type="xml">
+            <form string="AI Engine Configuration">
+                <header>
+                    <button name="action_test_connection" type="object"
+                            string="Test Connection" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+
+                    <group string="Provider">
+                        <field name="active_provider"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Claude (Anthropic)" invisible="active_provider != 'claude'">
+                            <group>
+                                <field name="claude_api_key" password="True"/>
+                                <field name="claude_model"/>
+                            </group>
+                        </page>
+                        <page string="OpenAI" invisible="active_provider != 'openai'">
+                            <group>
+                                <field name="openai_api_key" password="True"/>
+                                <field name="openai_model"/>
+                            </group>
+                        </page>
+                        <page string="Google Gemini" invisible="active_provider != 'gemini'">
+                            <group>
+                                <field name="gemini_api_key" password="True"/>
+                                <field name="gemini_model"/>
+                            </group>
+                        </page>
+                        <page string="Parameters">
+                            <group>
+                                <field name="max_tokens"/>
+                                <field name="temperature"/>
+                            </group>
+                        </page>
+                        <page string="Feature Toggles">
+                            <group string="Existing Features">
+                                <field name="feature_attendance_anomaly"/>
+                                <field name="feature_risk_profiling"/>
+                                <field name="feature_billing_auditor"/>
+                                <field name="feature_roster_optimizer"/>
+                            </group>
+                            <group string="Operations &amp; Workforce">
+                                <field name="feature_shift_fill"/>
+                                <field name="feature_incident_advisor"/>
+                                <field name="feature_leave_coverage"/>
+                            </group>
+                            <group string="HR &amp; Payroll">
+                                <field name="feature_doc_renewal_letter"/>
+                                <field name="feature_performance_review"/>
+                                <field name="feature_payslip_explain"/>
+                            </group>
+                        </page>
+                        <page string="Cache &amp; Fallback">
+                            <group string="Response Caching">
+                                <field name="enable_response_cache"/>
+                                <field name="cache_ttl_hours" invisible="not enable_response_cache"/>
+                            </group>
+                            <group string="Multi-Provider Fallback">
+                                <field name="fallback_provider"/>
+                            </group>
+                            <div class="d-flex gap-2 mt-2">
+                                <button name="action_clear_cache" type="object"
+                                        string="Clear Response Cache"
+                                        class="btn btn-sm btn-outline-warning"/>
+                            </div>
+                        </page>
+                        <page string="Usage &amp; Cost">
+                            <group string="All-Time Calls">
+                                <field name="total_calls" readonly="1"/>
+                                <field name="successful_calls" readonly="1"/>
+                                <field name="failed_calls" readonly="1"/>
+                            </group>
+                            <group string="Month-to-Date">
+                                <field name="monthly_tokens_in" readonly="1" string="Input Tokens (MTD)"/>
+                                <field name="monthly_tokens_out" readonly="1" string="Output Tokens (MTD)"/>
+                                <field name="monthly_cost_usd" readonly="1" string="Estimated Cost USD (MTD)"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- AI Config — list view -->
+    <record id="view_security_ai_config_list" model="ir.ui.view">
+        <field name="name">security.ai.config.list</field>
+        <field name="model">security.ai.config</field>
+        <field name="arch" type="xml">
+            <list string="AI Configurations">
+                <field name="name"/>
+                <field name="active_provider"/>
+                <field name="total_calls"/>
+                <field name="successful_calls"/>
+                <field name="failed_calls"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- AI Config — action -->
+    <record id="action_security_ai_config" model="ir.actions.act_window">
+        <field name="name">AI Engine Configuration</field>
+        <field name="res_model">security.ai.config</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         AI Log — list + form views
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_ai_log_list" model="ir.ui.view">
+        <field name="name">security.ai.log.list</field>
+        <field name="model">security.ai.log</field>
+        <field name="arch" type="xml">
+            <list string="AI Call Logs" create="0" delete="0">
+                <field name="call_date"/>
+                <field name="feature"/>
+                <field name="provider"/>
+                <field name="model_name"/>
+                <field name="user_id"/>
+                <field name="duration_ms" string="ms"/>
+                <field name="tokens_in" string="In Tokens" optional="show"/>
+                <field name="tokens_out" string="Out Tokens" optional="show"/>
+                <field name="estimated_cost_usd" string="Cost (USD)" optional="show"/>
+                <field name="prompt_version" string="Prompt Ver." optional="hide"/>
+                <field name="cache_hit" string="Cached" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'error'"
+                       decoration-success="state == 'success'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_ai_log_form" model="ir.ui.view">
+        <field name="name">security.ai.log.form</field>
+        <field name="model">security.ai.log</field>
+        <field name="arch" type="xml">
+            <form string="AI Call Log" create="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="call_date"/>
+                            <field name="feature"/>
+                            <field name="provider"/>
+                            <field name="model_name"/>
+                            <field name="user_id"/>
+                            <field name="duration_ms" string="Duration (ms)"/>
+                            <field name="state" widget="badge"
+                                   decoration-success="state == 'success'"
+                                   decoration-danger="state == 'error'"/>
+                        </group>
+                        <group string="Token Usage &amp; Cost">
+                            <field name="config_id"/>
+                            <field name="tokens_in" string="Input Tokens"/>
+                            <field name="tokens_out" string="Output Tokens"/>
+                            <field name="estimated_cost_usd" string="Estimated Cost (USD)"/>
+                            <field name="prompt_version" string="Prompt Version"/>
+                            <field name="cache_hit" string="Served from Cache" widget="boolean_toggle" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Request Preview">
+                        <field name="request_preview" nolabel="1"/>
+                    </group>
+                    <group string="Response Preview">
+                        <field name="response_preview" nolabel="1"/>
+                    </group>
+                    <group string="Error Detail" invisible="state != 'error'">
+                        <field name="error_message" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_ai_log_search" model="ir.ui.view">
+        <field name="name">security.ai.log.search</field>
+        <field name="model">security.ai.log</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="feature"/>
+                <field name="provider"/>
+                <field name="user_id"/>
+                <filter string="Errors" name="errors" domain="[('state','=','error')]"/>
+                <filter string="Today" name="today" domain="[('call_date','>=', (context_today()).strftime('%Y-%m-%d'))]"/>
+                <filter string="By Feature" name="group_feature" context="{'group_by': 'feature'}"/>
+                <filter string="By Provider" name="group_provider" context="{'group_by': 'provider'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_ai_log" model="ir.actions.act_window">
+        <field name="name">AI Call Logs</field>
+        <field name="res_model">security.ai.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Payslip — AI Anomaly Analysis tab
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_payslip_ai_inherit" model="ir.ui.view">
+        <field name="name">security.payslip.form.ai</field>
+        <field name="model">security.payslip</field>
+        <field name="inherit_id" ref="security_payroll_core.view_security_payslip_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_detect_anomalies" type="object"
+                        string="AI Anomaly Scan"
+                        class="btn-secondary"
+                        invisible="state not in ['draft','confirmed']"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="AI Analysis">
+
+                    <!-- Empty state -->
+                    <div invisible="ai_anomaly_narrative"
+                         class="alert alert-info o_form_no_bottom" role="alert"
+                         style="margin:16px;">
+                        <i class="fa fa-info-circle me-2"/>
+                        No analysis has been run yet. Click <strong>AI Anomaly Scan</strong>
+                        in the header to analyse this payslip's attendance records.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_anomaly_narrative" style="padding:12px 16px;">
+                        <group>
+                            <field name="ai_anomaly_date" string="Analysis Run" readonly="1"/>
+                            <field name="ai_anomaly_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_anomaly_feedback == 'accepted'"
+                                   decoration-danger="ai_anomaly_feedback == 'rejected'"
+                                   decoration-warning="ai_anomaly_feedback == 'flagged'"
+                                   decoration-secondary="ai_anomaly_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_anomaly_narrative" widget="ai_output" readonly="1" nolabel="1"/>
+                        <!-- Feedback controls -->
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_anomaly_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_anomaly_feedback == 'accepted'"/>
+                            <button name="action_ai_anomaly_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_anomaly_feedback == 'rejected'"/>
+                            <button name="action_ai_anomaly_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_anomaly_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Employee — AI Risk Profile tab
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_hr_employee_ai_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.ai</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="AI Risk Profile" invisible="not security_guard">
+
+                    <div style="padding:12px 16px 0; display:flex; align-items:center; gap:10px;">
+                        <button name="action_ai_risk_profile" type="object"
+                                string="Run AI Risk Analysis"
+                                class="btn btn-secondary btn-sm"/>
+                    </div>
+
+                    <!-- Empty state -->
+                    <div invisible="ai_risk_level"
+                         class="alert alert-info o_form_no_bottom" role="alert"
+                         style="margin:16px;">
+                        <i class="fa fa-shield me-2"/>
+                        No risk profile has been generated yet. Click
+                        <strong>Run AI Risk Analysis</strong> above to generate a profile
+                        based on the last 90 days of operational data.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_risk_level" style="padding:12px 16px;">
+                        <group>
+                            <field name="ai_risk_level" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_risk_level == 'low'"
+                                   decoration-warning="ai_risk_level == 'medium'"
+                                   decoration-danger="ai_risk_level in ('high', 'critical')"/>
+                            <field name="ai_risk_date" string="Analysis Date" readonly="1"/>
+                            <field name="ai_risk_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_risk_feedback == 'accepted'"
+                                   decoration-danger="ai_risk_feedback == 'rejected'"
+                                   decoration-warning="ai_risk_feedback == 'flagged'"
+                                   decoration-secondary="ai_risk_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_risk_narrative" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_risk_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_risk_feedback == 'accepted'"/>
+                            <button name="action_ai_risk_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_risk_feedback == 'rejected'"/>
+                            <button name="action_ai_risk_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_risk_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Billing Invoice — AI Audit tab
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_billing_invoice_ai_inherit" model="ir.ui.view">
+        <field name="name">security.billing.invoice.form.ai</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_audit_billing" type="object"
+                        string="AI Billing Audit"
+                        class="btn-secondary"
+                        invisible="state == 'cancelled'"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="AI Audit">
+
+                    <!-- Empty state -->
+                    <div invisible="ai_audit_notes"
+                         class="alert alert-info o_form_no_bottom" role="alert"
+                         style="margin:16px;">
+                        <i class="fa fa-search me-2"/>
+                        No audit has been run yet. Click <strong>AI Billing Audit</strong>
+                        in the header to cross-check invoice lines against actual attendance.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_audit_notes" style="padding:12px 16px;">
+                        <group>
+                            <field name="ai_audit_date" string="Audit Run" readonly="1"/>
+                            <field name="ai_audit_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_audit_feedback == 'accepted'"
+                                   decoration-danger="ai_audit_feedback == 'rejected'"
+                                   decoration-warning="ai_audit_feedback == 'flagged'"
+                                   decoration-secondary="ai_audit_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_audit_notes" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_audit_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_audit_feedback == 'accepted'"/>
+                            <button name="action_ai_audit_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_audit_feedback == 'rejected'"/>
+                            <button name="action_ai_audit_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_audit_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Roster Batch — AI Optimizer tab
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_roster_batch_ai_inherit" model="ir.ui.view">
+        <field name="name">security.roster.batch.form.ai</field>
+        <field name="model">security.roster.batch</field>
+        <field name="inherit_id" ref="security_operations.view_security_roster_batch_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_optimize_roster" type="object"
+                        string="AI Optimize Roster"
+                        class="btn-secondary"
+                        invisible="state == 'draft'"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="AI Recommendations">
+
+                    <!-- Empty state -->
+                    <div invisible="ai_roster_notes"
+                         class="alert alert-info o_form_no_bottom" role="alert"
+                         style="margin:16px;">
+                        <i class="fa fa-magic me-2"/>
+                        No recommendations yet. Generate or confirm the roster first,
+                        then click <strong>AI Optimize Roster</strong> in the header
+                        to get AI-powered guard assignment suggestions.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_roster_notes" style="padding:12px 16px;">
+                        <group>
+                            <field name="ai_roster_date" string="Analysis Run" readonly="1"/>
+                            <field name="ai_roster_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_roster_feedback == 'accepted'"
+                                   decoration-danger="ai_roster_feedback == 'rejected'"
+                                   decoration-warning="ai_roster_feedback == 'flagged'"
+                                   decoration-secondary="ai_roster_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_roster_notes" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_roster_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_roster_feedback == 'accepted'"/>
+                            <button name="action_ai_roster_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_roster_feedback == 'rejected'"/>
+                            <button name="action_ai_roster_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_roster_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Attendance Record — Smart Shift Fill section
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_attendance_record_ai_inherit" model="ir.ui.view">
+        <field name="name">security.attendance.record.form.ai</field>
+        <field name="model">security.attendance.record</field>
+        <field name="inherit_id" ref="security_attendance.view_security_attendance_record_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_ai_find_replacement" type="object"
+                            string="AI Find Replacement"
+                            class="btn-secondary"
+                            invisible="status == 'present'"/>
+                </header>
+            </xpath>
+            <xpath expr="//form/sheet" position="inside">
+                <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:16px;"
+                     invisible="status == 'present'">
+                    <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#94a3b8; margin-bottom:12px;">
+                        <i class="fa fa-magic me-1"/>AI Replacement Advisor
+                    </div>
+
+                    <!-- Empty state -->
+                    <div invisible="ai_replacement_suggestion"
+                         class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle me-2"/>
+                        This guard is absent or AWOL. Click <strong>AI Find Replacement</strong>
+                        above to get AI-ranked replacement suggestions from the available guard pool.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_replacement_suggestion">
+                        <group>
+                            <field name="ai_replacement_date" string="Analysis Run" readonly="1"/>
+                            <field name="ai_replacement_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_replacement_feedback == 'accepted'"
+                                   decoration-danger="ai_replacement_feedback == 'rejected'"
+                                   decoration-warning="ai_replacement_feedback == 'flagged'"
+                                   decoration-secondary="ai_replacement_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_replacement_suggestion" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_replacement_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_replacement_feedback == 'accepted'"/>
+                            <button name="action_ai_replacement_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_replacement_feedback == 'rejected'"/>
+                            <button name="action_ai_replacement_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_replacement_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Behavioral Incident — Consequence Advisor section
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_incident_ai_inherit" model="ir.ui.view">
+        <field name="name">security.incident.form.ai</field>
+        <field name="model">security.incident</field>
+        <field name="inherit_id" ref="security_discipline.view_security_incident_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_consequence_advisor" type="object"
+                        string="AI Consequence Advisor"
+                        class="btn-secondary"
+                        invisible="state == 'resolved'"/>
+            </xpath>
+            <xpath expr="//form/sheet" position="inside">
+                <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                    <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#94a3b8; margin-bottom:12px;">
+                        <i class="fa fa-gavel me-1"/>AI Consequence Advisor
+                    </div>
+
+                    <!-- Empty state -->
+                    <div invisible="ai_consequence_recommendation"
+                         class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle me-2"/>
+                        Click <strong>AI Consequence Advisor</strong> above to get an AI-powered
+                        disciplinary recommendation based on this incident and the guard's 12-month
+                        history.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_consequence_recommendation">
+                        <group>
+                            <field name="ai_consequence_date" string="Analysis Run" readonly="1"/>
+                            <field name="ai_consequence_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_consequence_feedback == 'accepted'"
+                                   decoration-danger="ai_consequence_feedback == 'rejected'"
+                                   decoration-warning="ai_consequence_feedback == 'flagged'"
+                                   decoration-secondary="ai_consequence_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_consequence_recommendation" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_consequence_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_consequence_feedback == 'accepted'"/>
+                            <button name="action_ai_consequence_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_consequence_feedback == 'rejected'"/>
+                            <button name="action_ai_consequence_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_consequence_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Leave Request — Coverage Check section
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_leave_request_ai_inherit" model="ir.ui.view">
+        <field name="name">security.leave.request.form.ai</field>
+        <field name="model">security.leave.request</field>
+        <field name="inherit_id" ref="security_leave.view_security_leave_request_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_coverage_check" type="object"
+                        string="AI Coverage Check"
+                        class="btn-secondary"
+                        invisible="state != 'draft'"/>
+            </xpath>
+            <xpath expr="//form/sheet" position="inside">
+                <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:16px;"
+                     invisible="state == 'refused'">
+                    <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#94a3b8; margin-bottom:12px;">
+                        <i class="fa fa-calendar-check-o me-1"/>AI Coverage Impact
+                    </div>
+
+                    <!-- Empty state (draft, not yet run) -->
+                    <div invisible="ai_coverage_assessment or state != 'draft'"
+                         class="alert alert-info" role="alert">
+                        <i class="fa fa-info-circle me-2"/>
+                        Before approving, click <strong>AI Coverage Check</strong> above to assess
+                        whether this leave creates roster gaps at the guard's assigned sites.
+                    </div>
+
+                    <!-- Result -->
+                    <div invisible="not ai_coverage_assessment">
+                        <group>
+                            <field name="ai_coverage_date" string="Assessment Run" readonly="1"/>
+                            <field name="ai_coverage_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_coverage_feedback == 'accepted'"
+                                   decoration-danger="ai_coverage_feedback == 'rejected'"
+                                   decoration-warning="ai_coverage_feedback == 'flagged'"
+                                   decoration-secondary="ai_coverage_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_coverage_assessment" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_coverage_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_coverage_feedback == 'accepted'"/>
+                            <button name="action_ai_coverage_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_coverage_feedback == 'rejected'"/>
+                            <button name="action_ai_coverage_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_coverage_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Employee Document — Renewal Letter section
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_employee_document_ai_inherit" model="ir.ui.view">
+        <field name="name">security.employee.document.form.ai</field>
+        <field name="model">security.employee.document</field>
+        <field name="inherit_id" ref="security_documents.view_security_employee_document_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_generate_renewal_letter" type="object"
+                        string="Generate Renewal Letter"
+                        class="btn-secondary"
+                        invisible="expiry_status not in ['expiring', 'expired']"/>
+            </xpath>
+            <xpath expr="//form/sheet" position="inside">
+                <div style="margin-top:20px; border-top:1px solid #e2e8f0; padding-top:16px;"
+                     invisible="expiry_status not in ['expiring', 'expired']">
+                    <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; color:#94a3b8; margin-bottom:12px;">
+                        <i class="fa fa-envelope me-1"/>AI Renewal Letter
+                    </div>
+
+                    <div invisible="ai_renewal_letter"
+                         class="alert alert-warning" role="alert">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        This document is expiring or has expired. Click
+                        <strong>Generate Renewal Letter</strong> above to draft a professional
+                        renewal notice for the guard.
+                    </div>
+
+                    <div invisible="not ai_renewal_letter">
+                        <group>
+                            <field name="ai_renewal_letter_date" string="Generated" readonly="1"/>
+                            <field name="ai_renewal_letter_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_renewal_letter_feedback == 'accepted'"
+                                   decoration-danger="ai_renewal_letter_feedback == 'rejected'"
+                                   decoration-warning="ai_renewal_letter_feedback == 'flagged'"
+                                   decoration-secondary="ai_renewal_letter_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_renewal_letter" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_renewal_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_renewal_letter_feedback == 'accepted'"/>
+                            <button name="action_ai_renewal_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_renewal_letter_feedback == 'rejected'"/>
+                            <button name="action_ai_renewal_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_renewal_letter_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Employee — Guard Performance Review tab
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_hr_employee_ai_performance_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.form.ai.performance</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="AI Performance Review" invisible="not security_guard">
+
+                    <div style="padding:12px 16px 0; display:flex; align-items:center; gap:10px;">
+                        <button name="action_ai_performance_review" type="object"
+                                string="Generate Performance Review"
+                                class="btn btn-secondary btn-sm"/>
+                        <span class="text-muted small">Based on last 90 days of operational data.</span>
+                    </div>
+
+                    <div invisible="ai_performance_review"
+                         class="alert alert-info o_form_no_bottom" role="alert"
+                         style="margin:16px;">
+                        <i class="fa fa-star me-2"/>
+                        No performance review has been generated yet. Click
+                        <strong>Generate Performance Review</strong> above to create a formal
+                        quarterly review based on attendance, discipline, and compliance data.
+                    </div>
+
+                    <div invisible="not ai_performance_review" style="padding:12px 16px;">
+                        <group>
+                            <field name="ai_performance_review_date" string="Review Date" readonly="1"/>
+                            <field name="ai_performance_review_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_performance_review_feedback == 'accepted'"
+                                   decoration-danger="ai_performance_review_feedback == 'rejected'"
+                                   decoration-warning="ai_performance_review_feedback == 'flagged'"
+                                   decoration-secondary="ai_performance_review_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_performance_review" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_performance_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_performance_review_feedback == 'accepted'"/>
+                            <button name="action_ai_performance_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_performance_review_feedback == 'rejected'"/>
+                            <button name="action_ai_performance_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_performance_review_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ════════════════════════════════════════════════════════════════════
+         Inherit: Payslip — Plain-English Explanation tab
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <record id="view_security_payslip_ai_explain_inherit" model="ir.ui.view">
+        <field name="name">security.payslip.form.ai.explain</field>
+        <field name="model">security.payslip</field>
+        <field name="inherit_id" ref="security_payroll_core.view_security_payslip_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_ai_explain_payslip" type="object"
+                        string="Explain My Payslip"
+                        class="btn-secondary"
+                        invisible="state == 'cancelled'"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Plain-English Explanation">
+
+                    <div invisible="ai_payslip_explanation"
+                         class="alert alert-info o_form_no_bottom" role="alert"
+                         style="margin:16px;">
+                        <i class="fa fa-language me-2"/>
+                        Click <strong>Explain My Payslip</strong> above to generate a plain-English
+                        breakdown of every earning and deduction on this payslip.
+                    </div>
+
+                    <div invisible="not ai_payslip_explanation" style="padding:12px 16px;">
+                        <group>
+                            <field name="ai_payslip_explanation_date" string="Generated" readonly="1"/>
+                            <field name="ai_payslip_explanation_feedback" string="Your Feedback" readonly="1"
+                                   widget="badge"
+                                   decoration-success="ai_payslip_explanation_feedback == 'accepted'"
+                                   decoration-danger="ai_payslip_explanation_feedback == 'rejected'"
+                                   decoration-warning="ai_payslip_explanation_feedback == 'flagged'"
+                                   decoration-secondary="ai_payslip_explanation_feedback == 'pending'"/>
+                        </group>
+                        <field name="ai_payslip_explanation" widget="ai_output" readonly="1" nolabel="1"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
+                            <span class="text-muted small align-self-center me-1">Feedback:</span>
+                            <button name="action_ai_explain_accept" type="object"
+                                    string="Accept" class="btn btn-sm btn-success"
+                                    invisible="ai_payslip_explanation_feedback == 'accepted'"/>
+                            <button name="action_ai_explain_reject" type="object"
+                                    string="Reject" class="btn btn-sm btn-outline-danger"
+                                    invisible="ai_payslip_explanation_feedback == 'rejected'"/>
+                            <button name="action_ai_explain_flag" type="object"
+                                    string="Flag for Review" class="btn btn-sm btn-outline-warning"
+                                    invisible="ai_payslip_explanation_feedback == 'flagged'"/>
+                        </div>
+                    </div>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Cache admin view -->
+    <record id="view_security_ai_cache_list" model="ir.ui.view">
+        <field name="name">security.ai.cache.list</field>
+        <field name="model">security.ai.cache</field>
+        <field name="arch" type="xml">
+            <list string="AI Response Cache" create="0" delete="1">
+                <field name="created_at"/>
+                <field name="feature"/>
+                <field name="hit_count" string="Hits"/>
+                <field name="cache_key" string="Cache Key (hash)"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_security_ai_cache" model="ir.actions.act_window">
+        <field name="name">AI Response Cache</field>
+        <field name="res_model">security.ai.cache</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_security_ai_cache"
+              name="Response Cache"
+              parent="security_ai_engine.menu_security_ai_engine_root"
+              action="action_security_ai_cache"
+              sequence="3"/>
+
+    <!-- Menuitem under Configuration -->
+    <menuitem id="menu_security_ai_engine_root"
+              name="AI Engine"
+              parent="security_base.menu_security_configuration"
+              sequence="99"/>
+
+    <menuitem id="menu_security_ai_config"
+              name="Configuration"
+              parent="menu_security_ai_engine_root"
+              action="action_security_ai_config"
+              sequence="1"/>
+
+    <menuitem id="menu_security_ai_log"
+              name="Call Logs"
+              parent="menu_security_ai_engine_root"
+              action="action_security_ai_log"
+              sequence="2"/>
+
+
+</odoo>

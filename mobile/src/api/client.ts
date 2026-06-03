@@ -31,9 +31,14 @@ client.interceptors.request.use(async (config) => {
   return Promise.reject(error);
 });
 
+// Module-level offline state flag — avoids circular imports with the Zustand store
+export let isOffline = false;
+
 // Intercept responses to automatically capture or handle auth expiration
 client.interceptors.response.use(
   (response) => {
+    // Mark as online on successful response
+    isOffline = false;
     // If Odoo returns a JSON response containing an error or status=403, we handle it
     if (response.data && response.data.error) {
       console.warn('API returned logic error:', response.data.error);
@@ -41,6 +46,10 @@ client.interceptors.response.use(
     return response;
   },
   async (error) => {
+    if (!error.response) {
+      // Network error — no HTTP response received, mark as offline
+      isOffline = true;
+    }
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       console.warn('Session expired or unauthorized. Cleared storage.');
       await SecureStore.deleteItemAsync('odoo_session_id');

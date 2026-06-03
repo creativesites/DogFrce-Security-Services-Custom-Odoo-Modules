@@ -52,6 +52,7 @@
                             <field name="default_validity_months"/>
                             <field name="required_for_active_guard"/>
                             <field name="required_for_firearm_post"/>
+                            <field name="is_firearm_cert"/>
                             <field name="active"/>
                         </group>
                     </group>
@@ -116,9 +117,13 @@
                 <filter name="filter_expiring" string="Expiring Soon" domain="[('expiry_status', '=', 'expiring')]"/>
                 <filter name="filter_expired" string="Expired" domain="[('expiry_status', '=', 'expired')]"/>
                 <filter name="filter_rejected" string="Rejected" domain="[('state', '=', 'rejected')]"/>
+                <filter string="Expiring in 30 Days" name="expiring_soon"
+                        domain="[('expiry_status', '=', 'expiring')]"/>
                 <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
                 <filter name="group_type" string="Group by Document Type" context="{'group_by': 'document_type_id'}"/>
                 <filter name="group_status" string="Group by Expiry Status" context="{'group_by': 'expiry_status'}"/>
+                <filter string="By Document Type" name="group_document_type"
+                        context="{'group_by': 'document_type_id'}"/>
             </search>
         </field>
     </record>
@@ -161,6 +166,15 @@
                             <field name="verified_by_id" readonly="1"/>
                             <field name="verified_date" readonly="1"/>
                         </group>
+                    </group>
+                    <group string="Firearm Certificate Details"
+                           invisible="not is_firearm_cert">
+                        <field name="is_firearm_cert" invisible="1"/>
+                        <field name="firearm_weapon_type"/>
+                        <field name="firearm_calibre"/>
+                        <field name="firearm_licence_number"/>
+                        <field name="firearm_issuing_authority"/>
+                        <field name="firearm_next_inspection_date"/>
                     </group>
                     <group>
                         <field name="note"/>
@@ -227,18 +241,18 @@
     <menuitem
         id="menu_security_employee_document"
         name="Employee Documents"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_workforce"
         action="action_security_employee_document"
-        sequence="180"
+        sequence="60"
         groups="hr.group_hr_user"
     />
 
     <menuitem
         id="menu_security_expiring_document"
         name="Expiring Documents"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_workforce"
         action="action_security_expiring_document"
-        sequence="181"
+        sequence="70"
         groups="hr.group_hr_user"
     />
 
@@ -263,4 +277,43 @@
             </xpath>
         </field>
     </record>
+
+    <!-- G-17: Add required document types to post type form -->
+    <record id="view_security_post_type_form_documents" model="ir.ui.view">
+        <field name="name">security.post.type.form.documents</field>
+        <field name="model">security.post.type</field>
+        <field name="inherit_id" ref="security_operations.view_security_post_type_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='required_attribute_ids']" position="after">
+                <field name="required_document_type_ids" widget="many2many_tags" placeholder="Required Document Types..."/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- G-19: Compliance Dashboard -->
+    <record id="action_security_compliance_dashboard" model="ir.actions.act_window">
+        <field name="name">Compliance Dashboard — Expiring Documents</field>
+        <field name="res_model">security.employee.document</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="domain">[('expiry_date', '!=', False), ('state', 'not in', ['expired', 'rejected'])]</field>
+        <field name="context">{'search_default_expiring_soon': 1}</field>
+        <field name="search_view_id" ref="view_security_employee_document_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                All documents are compliant!
+            </p>
+            <p>
+                Documents expiring within 30 days appear here. Use this dashboard to proactively request renewals.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_compliance_dashboard"
+        name="Compliance Dashboard"
+        parent="security_operations.menu_security_workforce"
+        action="action_security_compliance_dashboard"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
 </odoo>

@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_security_vehicle_kanban" model="ir.ui.view">
+        <field name="name">security.vehicle.kanban</field>
+        <field name="model">security.vehicle</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="plate_number"/>
+                <field name="make"/>
+                <field name="model"/>
+                <field name="capacity"/>
+                <field name="odometer"/>
+                <field name="state"/>
+                <field name="assigned_driver_id"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click p-3 rounded shadow-sm">
+                            <div class="row align-items-center">
+                                <div class="col-8">
+                                    <h5 class="fw-bold mb-0"><field name="plate_number"/></h5>
+                                    <div class="text-muted small"><field name="make"/> <field name="model"/></div>
+                                    <div class="text-muted small mt-1">Driver: <field name="assigned_driver_id"/></div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <div class="badge bg-secondary text-white small"><field name="capacity"/> seats</div>
+                                    <div class="text-muted small mt-1"><field name="odometer"/> km</div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_vehicle_tree" model="ir.ui.view">
+        <field name="name">security.vehicle.tree</field>
+        <field name="model">security.vehicle</field>
+        <field name="arch" type="xml">
+            <list string="Fleet Register" decoration-success="state == 'available'" decoration-warning="state == 'in_transit'" decoration-danger="state in ('in_service', 'scrapped')">
+                <field name="plate_number" class="fw-bold"/>
+                <field name="make"/>
+                <field name="model"/>
+                <field name="year"/>
+                <field name="colour" optional="show"/>
+                <field name="capacity"/>
+                <field name="odometer"/>
+                <field name="assigned_driver_id"/>
+                <field name="state" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_vehicle_form" model="ir.ui.view">
+        <field name="name">security.vehicle.form</field>
+        <field name="model">security.vehicle</field>
+        <field name="arch" type="xml">
+            <form string="Fleet Vehicle">
+                <header>
+                    <button name="action_send_to_service" string="Send to Service" type="object" class="btn-warning" invisible="state != 'available'"/>
+                    <button name="action_mark_available" string="Mark Available" type="object" class="btn-success" invisible="state != 'in_service'"/>
+                    <button name="action_decommission" string="Decommission" type="object" class="btn-danger" invisible="state == 'scrapped'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="available,in_transit,in_service"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-road" type="object" name="action_view_runs">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="run_count"/></span>
+                                <span class="o_stat_text">Shuttle Runs</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-tint" type="object" name="action_view_fuel_logs">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="fuel_log_count"/></span>
+                                <span class="o_stat_text">Fuel Logs</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-wrench" type="object" name="action_view_service_logs">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="service_log_count"/></span>
+                                <span class="o_stat_text">Services</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-clipboard-check" type="object" name="action_view_inspections">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="inspection_count"/></span>
+                                <span class="o_stat_text">Inspections</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-exclamation-triangle" type="object" name="action_view_incidents">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="incident_count"/></span>
+                                <span class="o_stat_text">Incidents</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="plate_number"/>
+                        <h1><field name="plate_number" placeholder="ABC 123 N"/></h1>
+                    </div>
+                    <group>
+                        <group string="Vehicle Details">
+                            <field name="make"/>
+                            <field name="model"/>
+                            <field name="year"/>
+                            <field name="colour"/>
+                            <field name="capacity"/>
+                        </group>
+                        <group string="Operations">
+                            <field name="assigned_driver_id"/>
+                            <field name="odometer"/>
+                            <field name="total_fuel_cost" widget="monetary"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="notes" string="Notes">
+                            <field name="notes" placeholder="Additional notes, insurance details, tracker info..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="view_security_shuttle_route_tree" model="ir.ui.view">
+        <field name="name">security.shuttle.route.tree</field>
+        <field name="model">security.shuttle.route</field>
+        <field name="arch" type="xml">
+            <list string="Shuttle Routes">
+                <field name="name" class="fw-bold"/>
+                <field name="route_type"/>
+                <field name="total_stops"/>
+                <field name="estimated_duration_mins" string="Est. Duration (mins)"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_shuttle_route_form" model="ir.ui.view">
+        <field name="name">security.shuttle.route.form</field>
+        <field name="model">security.shuttle.route</field>
+        <field name="arch" type="xml">
+            <form string="Shuttle Route">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Morning Northern Circuit"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="route_type"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="total_stops"/>
+                            <field name="estimated_duration_mins" string="Est. Total Duration (mins)"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="stops" string="Route Stops (in order)">
+                            <field name="stop_ids" widget="one2many_list">
+                                <list editable="bottom" sequence="sequence">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="stop_label"/>
+                                    <field name="stop_type"/>
+                                    <field name="site_id" optional="show"/>
+                                    <field name="cumulative_duration_mins" string="ETA from Depot (mins)"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="notes" string="Notes">
+                            <field name="notes" placeholder="Special instructions, road conditions, peak hour notes..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="view_security_shuttle_run_kanban" model="ir.ui.view">
+        <field name="name">security.shuttle.run.kanban</field>
+        <field name="model">security.shuttle.run</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id"/>
+                <field name="route_id"/>
+                <field name="shift_date"/>
+                <field name="total_passengers"/>
+                <field name="no_show_count"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click p-3">
+                            <div class="fw-bold"><field name="name"/></div>
+                            <div class="text-muted small"><field name="route_id"/></div>
+                            <div class="text-muted small">Driver: <field name="driver_id"/></div>
+                            <div class="text-muted small">Vehicle: <field name="vehicle_id"/></div>
+                            <div class="row mt-2">
+                                <div class="col-6 text-center">
+                                    <span class="badge bg-success"><field name="total_passengers"/> Guards</span>
+                                </div>
+                                <div class="col-6 text-center" invisible="no_show_count == 0">
+                                    <span class="badge bg-danger"><field name="no_show_count"/> No-Show</span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_shuttle_run_tree" model="ir.ui.view">
+        <field name="name">security.shuttle.run.tree</field>
+        <field name="model">security.shuttle.run</field>
+        <field name="arch" type="xml">
+            <list string="Shuttle Runs" decoration-info="state == 'draft'" decoration-warning="state == 'boarding'" decoration-success="state == 'completed'" decoration-danger="state == 'cancelled'">
+                <field name="name" class="fw-bold"/>
+                <field name="shift_date"/>
+                <field name="run_type"/>
+                <field name="vehicle_id"/>
+                <field name="driver_id"/>
+                <field name="route_id"/>
+                <field name="total_passengers" string="Guards"/>
+                <field name="boarded_count" string="Boarded" decoration-success="boarded_count == total_passengers"/>
+                <field name="no_show_count" string="No-Show" decoration-danger="no_show_count &gt; 0"/>
+                <field name="km_driven" string="KM Driven"/>
+                <field name="state" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_shuttle_run_form" model="ir.ui.view">
+        <field name="name">security.shuttle.run.form</field>
+        <field name="model">security.shuttle.run</field>
+        <field name="arch" type="xml">
+            <form string="Shuttle Run">
+                <header>
+                    <button name="action_start_boarding" string="▶ Start Boarding" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_depart" string="🚐 Depart" type="object" class="btn-success" invisible="state != 'boarding'"/>
+                    <button name="action_complete" string="✓ Complete Trip" type="object" class="btn-success" invisible="state != 'in_transit'"/>
+                    <button name="action_cancel" string="✗ Cancel Run" type="object" class="btn-danger" invisible="state in ('completed', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,boarding,in_transit,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-users" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="total_passengers"/></span>
+                                <span class="o_stat_text">Passengers</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-check-circle" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="boarded_count"/></span>
+                                <span class="o_stat_text">Boarded</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-times-circle" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="no_show_count"/></span>
+                                <span class="o_stat_text">No-Shows</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-road" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="km_driven"/></span>
+                                <span class="o_stat_text">KM Driven</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Transport Details">
+                            <field name="shift_date"/>
+                            <field name="route_id"/>
+                            <field name="run_type" readonly="1"/>
+                            <field name="vehicle_id"/>
+                            <field name="driver_id"/>
+                        </group>
+                        <group string="Timing &amp; Odometer">
+                            <field name="scheduled_departure"/>
+                            <field name="actual_departure" readonly="1"/>
+                            <field name="actual_arrival" readonly="1"/>
+                            <field name="odometer_start"/>
+                            <field name="odometer_end"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="manifest" string="🧑‍✈️ Passenger Boarding Manifest">
+                            <field name="passenger_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="employee_id"/>
+                                    <field name="boarding_stop_id"/>
+                                    <field name="status" widget="badge" decoration-success="status in ('boarded', 'dropped_off')" decoration-danger="status == 'no_show'" decoration-info="status == 'expected'"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page name="notes" string="Notes">
+                            <field name="notes" placeholder="Incident notes, route deviations, passenger issues..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="view_security_shuttle_run_pivot" model="ir.ui.view">
+        <field name="name">security.shuttle.run.pivot</field>
+        <field name="model">security.shuttle.run</field>
+        <field name="arch" type="xml">
+            <pivot string="Shuttle Run Analytics" sample="1">
+                <field name="shift_date" type="row" interval="month"/>
+                <field name="vehicle_id" type="row"/>
+                <field name="km_driven" type="measure"/>
+                <field name="total_passengers" type="measure"/>
+                <field name="no_show_count" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_shuttle_run_graph" model="ir.ui.view">
+        <field name="name">security.shuttle.run.graph</field>
+        <field name="model">security.shuttle.run</field>
+        <field name="arch" type="xml">
+            <graph string="Monthly KM by Vehicle" type="bar" sample="1">
+                <field name="vehicle_id"/>
+                <field name="km_driven" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    
+    <record id="view_security_vehicle_fuel_log_tree" model="ir.ui.view">
+        <field name="name">security.vehicle.fuel.log.tree</field>
+        <field name="model">security.vehicle.fuel.log</field>
+        <field name="arch" type="xml">
+            <list string="Fuel Logs">
+                <field name="fuel_date"/>
+                <field name="vehicle_id" class="fw-bold"/>
+                <field name="fueled_by_id"/>
+                <field name="fuel_station"/>
+                <field name="liters" sum="Total Liters"/>
+                <field name="cost_per_liter"/>
+                <field name="total_cost" sum="Total Cost" widget="monetary" class="fw-bold"/>
+                <field name="odometer_reading"/>
+                <field name="receipt_reference" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_vehicle_fuel_log_form" model="ir.ui.view">
+        <field name="name">security.vehicle.fuel.log.form</field>
+        <field name="model">security.vehicle.fuel.log</field>
+        <field name="arch" type="xml">
+            <form string="Fuel Log Entry">
+                <sheet>
+                    <group>
+                        <group string="Fueling Details">
+                            <field name="vehicle_id"/>
+                            <field name="fuel_date"/>
+                            <field name="fueled_by_id"/>
+                            <field name="fuel_station"/>
+                        </group>
+                        <group string="Quantities &amp; Cost">
+                            <field name="liters"/>
+                            <field name="cost_per_liter"/>
+                            <field name="total_cost" widget="monetary" readonly="1"/>
+                            <field name="odometer_reading"/>
+                            <field name="receipt_reference"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Additional notes..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_vehicle_fuel_log_pivot" model="ir.ui.view">
+        <field name="name">security.vehicle.fuel.log.pivot</field>
+        <field name="model">security.vehicle.fuel.log</field>
+        <field name="arch" type="xml">
+            <pivot string="Fuel Cost Analysis" sample="1">
+                <field name="fuel_date" type="row" interval="month"/>
+                <field name="vehicle_id" type="row"/>
+                <field name="liters" type="measure"/>
+                <field name="total_cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    
+    <record id="view_security_vehicle_inspection_tree" model="ir.ui.view">
+        <field name="name">security.vehicle.inspection.tree</field>
+        <field name="model">security.vehicle.inspection</field>
+        <field name="arch" type="xml">
+            <list string="Pre-Departure Inspections" decoration-success="overall_result == 'pass'" decoration-danger="overall_result == 'fail'">
+                <field name="inspection_date"/>
+                <field name="vehicle_id" class="fw-bold"/>
+                <field name="inspected_by_id"/>
+                <field name="check_tyres"/>
+                <field name="check_lights"/>
+                <field name="check_brakes"/>
+                <field name="check_fluids"/>
+                <field name="overall_result" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_vehicle_inspection_form" model="ir.ui.view">
+        <field name="name">security.vehicle.inspection.form</field>
+        <field name="model">security.vehicle.inspection</field>
+        <field name="arch" type="xml">
+            <form string="Pre-Departure Safety Check">
+                <sheet>
+                    <div class="alert alert-danger" invisible="overall_result != 'fail'" role="alert">
+                        <i class="fa fa-exclamation-triangle"/> <strong>VEHICLE GROUNDED</strong> — One or more safety checks failed. This vehicle has been placed in maintenance.
+                    </div>
+                    <div class="alert alert-success" invisible="overall_result != 'pass'" role="alert">
+                        <i class="fa fa-check-circle"/> Vehicle cleared for departure.
+                    </div>
+                    <group>
+                        <group string="Inspection Info">
+                            <field name="vehicle_id"/>
+                            <field name="inspected_by_id"/>
+                            <field name="inspection_date"/>
+                            <field name="linked_run_id"/>
+                            <field name="odometer_reading"/>
+                        </group>
+                        <group string="Overall Result">
+                            <field name="overall_result" widget="badge" decoration-success="overall_result == 'pass'" decoration-danger="overall_result == 'fail'"/>
+                        </group>
+                    </group>
+                    <separator string="Safety Checklist"/>
+                    <group>
+                        <group>
+                            <field name="check_tyres" widget="radio" options="{'horizontal': true}"/>
+                            <field name="check_lights" widget="radio" options="{'horizontal': true}"/>
+                            <field name="check_brakes" widget="radio" options="{'horizontal': true}"/>
+                            <field name="check_fluids" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                        <group>
+                            <field name="check_bodywork" widget="radio" options="{'horizontal': true}"/>
+                            <field name="check_first_aid" widget="radio" options="{'horizontal': true}"/>
+                            <field name="check_fire_ext" widget="radio" options="{'horizontal': true}"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Describe any defects, damage, or concerns found during inspection..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="view_security_vehicle_service_log_tree" model="ir.ui.view">
+        <field name="name">security.vehicle.service.log.tree</field>
+        <field name="model">security.vehicle.service.log</field>
+        <field name="arch" type="xml">
+            <list string="Service Records" decoration-warning="state == 'open'" decoration-success="state == 'completed'">
+                <field name="vehicle_id" class="fw-bold"/>
+                <field name="service_provider"/>
+                <field name="date_in"/>
+                <field name="date_out"/>
+                <field name="description"/>
+                <field name="cost" sum="Total Service Cost" widget="monetary"/>
+                <field name="odometer_at_service"/>
+                <field name="state" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_vehicle_service_log_form" model="ir.ui.view">
+        <field name="name">security.vehicle.service.log.form</field>
+        <field name="model">security.vehicle.service.log</field>
+        <field name="arch" type="xml">
+            <form string="Service / Repair Record">
+                <header>
+                    <button name="action_complete_service" string="✓ Service Completed — Return Vehicle" type="object" class="btn-success" invisible="state != 'open'"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Service Details">
+                            <field name="vehicle_id"/>
+                            <field name="service_provider"/>
+                            <field name="date_in"/>
+                            <field name="date_out" readonly="1"/>
+                            <field name="invoice_reference"/>
+                        </group>
+                        <group string="Cost &amp; Odometer">
+                            <field name="cost" widget="monetary"/>
+                            <field name="odometer_at_service"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Work done, parts replaced, repairs carried out..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="action_security_vehicle" model="ir.actions.act_window">
+        <field name="name">Fleet Vehicles</field>
+        <field name="res_model">security.vehicle</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Register your first fleet vehicle!</p></field>
+    </record>
+
+    <record id="action_security_shuttle_route" model="ir.actions.act_window">
+        <field name="name">Shuttle Routes</field>
+        <field name="res_model">security.shuttle.route</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Create a prearranged shuttle route!</p></field>
+    </record>
+
+    <record id="action_security_shuttle_run" model="ir.actions.act_window">
+        <field name="name">Transport Runs</field>
+        <field name="res_model">security.shuttle.run</field>
+        <field name="view_mode">list,kanban,form,pivot,graph</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Log a guard transport run!</p></field>
+    </record>
+
+    <record id="action_security_vehicle_fuel_log" model="ir.actions.act_window">
+        <field name="name">Fuel Logs</field>
+        <field name="res_model">security.vehicle.fuel.log</field>
+        <field name="view_mode">list,form,pivot</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Record a fuel slip!</p></field>
+    </record>
+
+    <record id="action_security_vehicle_inspection" model="ir.actions.act_window">
+        <field name="name">Pre-Departure Inspections</field>
+        <field name="res_model">security.vehicle.inspection</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Log a pre-departure vehicle inspection!</p></field>
+    </record>
+
+    <record id="action_security_vehicle_service_log" model="ir.actions.act_window">
+        <field name="name">Service Records</field>
+        <field name="res_model">security.vehicle.service.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Log a vehicle service or repair!</p></field>
+    </record>
+
+    
+    <menuitem id="menu_security_fleet_root"
+              name="Fleet &amp; Transport"
+              parent="security_base.menu_security_root"
+              sequence="60"
+              groups="hr.group_hr_user"/>
+
+    <menuitem id="menu_security_fleet_runs"
+              name="Transport Runs"
+              parent="menu_security_fleet_root"
+              action="action_security_shuttle_run"
+              sequence="10"/>
+
+    <menuitem id="menu_security_fleet_inspections"
+              name="Pre-Departure Checks"
+              parent="menu_security_fleet_root"
+              action="action_security_vehicle_inspection"
+              sequence="20"/>
+
+    <menuitem id="menu_security_fleet_fuel"
+              name="Fuel Logs"
+              parent="menu_security_fleet_root"
+              action="action_security_vehicle_fuel_log"
+              sequence="30"/>
+
+    <menuitem id="menu_security_fleet_service"
+              name="Service Records"
+              parent="menu_security_fleet_root"
+              action="action_security_vehicle_service_log"
+              sequence="40"/>
+
+    <menuitem id="menu_security_fleet_config"
+              name="Configuration"
+              parent="menu_security_fleet_root"
+              sequence="90"/>
+
+    <menuitem id="menu_security_fleet_vehicles"
+              name="Vehicles"
+              parent="menu_security_fleet_config"
+              action="action_security_vehicle"
+              sequence="10"/>
+
+    <menuitem id="menu_security_fleet_routes"
+              name="Shuttle Routes"
+              parent="menu_security_fleet_config"
+              action="action_security_shuttle_route"
+              sequence="20"/>
+</odoo>

@@ -1,0 +1,570 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <record id="view_security_equipment_category_tree" model="ir.ui.view">
+        <field name="name">security.equipment.category.tree</field>
+        <field name="model">security.equipment.category</field>
+        <field name="arch" type="xml">
+            <list string="Equipment Categories" class="o_list_flat">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="description"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_category_form" model="ir.ui.view">
+        <field name="name">security.equipment.category.form</field>
+        <field name="model">security.equipment.category</field>
+        <field name="arch" type="xml">
+            <form string="Equipment Category">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Uniforms, Firearms, Communications"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. UNIF, FIRE, COMM"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="description" placeholder="Notes or regulations mapping this category..."/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="view_security_equipment_type_tree" model="ir.ui.view">
+        <field name="name">security.equipment.type.tree</field>
+        <field name="model">security.equipment.type</field>
+        <field name="arch" type="xml">
+            <list string="Equipment Inventory Types" decoration-warning="qty_available &lt;= 2" decoration-danger="qty_available == 0">
+                <field name="name"/>
+                <field name="category_id"/>
+                <field name="is_serialized" widget="boolean_toggle"/>
+                <field name="qty_total" string="Stock Count"/>
+                <field name="qty_issued" string="Issued Count" decoration-info="qty_issued &gt; 0"/>
+                <field name="qty_available" string="Available Stock" class="fw-bold"/>
+                <field name="unit_cost" widget="monetary"/>
+                <field name="avg_lifespan_days"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_type_form" model="ir.ui.view">
+        <field name="name">security.equipment.type.form</field>
+        <field name="model">security.equipment.type</field>
+        <field name="arch" type="xml">
+            <form string="Equipment Inventory Profile">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        
+                        <button class="oe_stat_button" icon="fa-cubes" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="qty_total"/></span>
+                                <span class="o_stat_text">Total Inventory</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-exchange" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="qty_issued"/></span>
+                                <span class="o_stat_text">Issued to Guards</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-check-circle" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="qty_available"/></span>
+                                <span class="o_stat_text">Available Stock</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1><field name="name" placeholder="e.g. Tactical Combat Trousers, 9mm Pistol"/></h1>
+                    </div>
+                    <group>
+                        <group string="Inventory Classification">
+                            <field name="category_id"/>
+                            <field name="is_serialized" widget="boolean_toggle"/>
+                            <field name="requires_license" widget="boolean_toggle" invisible="not is_serialized"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Cost &amp; Longevity">
+                            <field name="qty_total" string="Stock Quantity" readonly="is_serialized"/>
+                            <field name="unit_cost"/>
+                            <field name="avg_lifespan_days"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_type_pivot" model="ir.ui.view">
+        <field name="name">security.equipment.type.pivot</field>
+        <field name="model">security.equipment.type</field>
+        <field name="arch" type="xml">
+            <pivot string="Equipment Stock Level Matrix" sample="1">
+                <field name="category_id" type="row"/>
+                <field name="qty_total" type="measure"/>
+                <field name="qty_issued" type="measure"/>
+                <field name="qty_available" type="measure"/>
+                <field name="unit_cost" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_type_graph" model="ir.ui.view">
+        <field name="name">security.equipment.type.graph</field>
+        <field name="model">security.equipment.type</field>
+        <field name="arch" type="xml">
+            <graph string="Equipment Cost distributions" type="bar" sample="1">
+                <field name="name"/>
+                <field name="qty_total" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    
+    <record id="view_security_equipment_item_kanban" model="ir.ui.view">
+        <field name="name">security.equipment.item.kanban</field>
+        <field name="model">security.equipment.item</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="type_id"/>
+                <field name="serial_number"/>
+                <field name="condition"/>
+                <field name="status"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click p-3 rounded shadow-sm border-start border-4">
+                            <div class="row">
+                                <div class="col-8">
+                                    <h5 class="fw-bold mb-1"><field name="serial_number"/></h5>
+                                    <div class="text-muted small"><field name="type_id"/></div>
+                                </div>
+                                <div class="col-4 text-end">
+                                    
+                                    <span t-if="record.condition.raw_value == 'excellent'" class="badge bg-success text-white">Excellent</span>
+                                    <span t-if="record.condition.raw_value == 'good'" class="badge bg-info text-white">Good</span>
+                                    <span t-if="record.condition.raw_value == 'worn'" class="badge bg-warning text-dark">Worn</span>
+                                    <span t-if="record.condition.raw_value == 'damaged'" class="badge bg-danger text-white">Damaged</span>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_item_tree" model="ir.ui.view">
+        <field name="name">security.equipment.item.tree</field>
+        <field name="model">security.equipment.item</field>
+        <field name="arch" type="xml">
+            <list string="Serialized Trackable Items" decoration-success="status == 'available'" decoration-warning="status == 'issued'" decoration-danger="status in ('lost', 'scrapped')">
+                <field name="serial_number"/>
+                <field name="type_id"/>
+                <field name="license_number" optional="show"/>
+                <field name="license_expiry" optional="show"/>
+                <field name="condition" class="fw-bold"/>
+                <field name="status" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_item_form" model="ir.ui.view">
+        <field name="name">security.equipment.item.form</field>
+        <field name="model">security.equipment.item</field>
+        <field name="arch" type="xml">
+            <form string="Serialized Asset Registry">
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="available,issued,maintenance,lost,scrapped"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="serial_number" class="oe_edit_only"/>
+                        <h1><field name="serial_number" placeholder="Unique Serial/Chassis Number..."/></h1>
+                    </div>
+                    <group>
+                        <group string="Configuration mapping">
+                            <field name="type_id"/>
+                            <field name="condition"/>
+                        </group>
+                        <group string="Security/Legal Licensing">
+                            <field name="license_number" placeholder="e.g. FIREARM-LIC-329"/>
+                            <field name="license_expiry"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ========= RETURN WIZARD ========= -->
+
+    <record id="view_security_equipment_return_wizard_form" model="ir.ui.view">
+        <field name="name">security.equipment.return.wizard.form</field>
+        <field name="model">security.equipment.return.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Return Equipment">
+                <group>
+                    <field name="allocation_id" readonly="1"/>
+                    <field name="return_date"/>
+                    <field name="condition"/>
+                    <field name="notes"/>
+                </group>
+                <footer>
+                    <button name="action_confirm_return" type="object" string="Confirm Return" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_equipment_return_wizard" model="ir.actions.act_window">
+        <field name="name">Return Equipment</field>
+        <field name="res_model">security.equipment.return.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========= ALLOCATION VIEWS ========= -->
+
+    <record id="view_security_equipment_allocation_kanban" model="ir.ui.view">
+        <field name="name">security.equipment.allocation.kanban</field>
+        <field name="model">security.equipment.allocation</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="equipment_type_id"/>
+                <field name="issue_date"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_global_click p-3 rounded shadow-sm border-start border-4">
+                            <div class="fw-bold"><field name="name"/></div>
+                            <div class="text-muted small"><field name="employee_id"/></div>
+                            <div class="text-info font-monospace my-1"><field name="equipment_type_id"/></div>
+                            <div class="text-muted small text-end"><field name="issue_date"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_allocation_tree" model="ir.ui.view">
+        <field name="name">security.equipment.allocation.tree</field>
+        <field name="model">security.equipment.allocation</field>
+        <field name="arch" type="xml">
+            <list string="Equipment Allocations" decoration-info="state == 'draft'" decoration-success="state == 'returned'" decoration-warning="state == 'issued'" decoration-danger="state in ('lost', 'damaged')">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="equipment_type_id"/>
+                <field name="equipment_item_id"/>
+                <field name="quantity" sum="Total Allocations"/>
+                <field name="issue_date"/>
+                <field name="expected_return_date" optional="show"/>
+                <field name="state" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_allocation_form" model="ir.ui.view">
+        <field name="name">security.equipment.allocation.form</field>
+        <field name="model">security.equipment.allocation</field>
+        <field name="arch" type="xml">
+            <form string="Allocation Record">
+                <header>
+                    <button name="action_issue" string="Issue Equipment" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_acknowledge" string="Acknowledge Receipt" type="object" class="btn-info" invisible="state != 'issued'"/>
+                    <button name="action_open_return_wizard" string="Process Return" type="object" class="btn-success" invisible="state not in ('issued', 'acknowledged')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,issued,acknowledged,returned"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Primary details">
+                            <field name="employee_id"/>
+                            <field name="equipment_type_id"/>
+                            <field name="is_serialized" invisible="1"/>
+                            <field name="equipment_item_id" invisible="not is_serialized" required="is_serialized"/>
+                            <field name="quantity" readonly="is_serialized"/>
+                        </group>
+                        <group string="Timing &amp; Signoff controls">
+                            <field name="issue_date"/>
+                            <field name="expected_return_date"/>
+                            <field name="issued_by_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Status audits on issue">
+                            <field name="condition_on_issue"/>
+                        </group>
+                        <group string="Acknowledgment" invisible="state not in ('acknowledged', 'returned')">
+                            <field name="acknowledged_date"/>
+                            <field name="acknowledged_by_id"/>
+                        </group>
+                    </group>
+                    <group string="Return Details" invisible="state != 'returned'">
+                        <group>
+                            <field name="return_date"/>
+                            <field name="actual_return_date"/>
+                            <field name="return_condition"/>
+                            <field name="condition_on_return"/>
+                        </group>
+                        <group>
+                            <field name="return_notes"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="notes" string="Internal Logs/Audits">
+                            <field name="notes" placeholder="Specify size details, condition anomalies, or guard agreements..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    
+    <record id="view_security_equipment_damage_tree" model="ir.ui.view">
+        <field name="name">security.equipment.damage.tree</field>
+        <field name="model">security.equipment.damage</field>
+        <field name="arch" type="xml">
+            <list string="Loss &amp; Damages register" decoration-info="state == 'draft'" decoration-warning="state == 'investigation'" decoration-success="state == 'deducted'" decoration-danger="state == 'rejected'">
+                <field name="name"/>
+                <field name="allocation_id"/>
+                <field name="employee_id"/>
+                <field name="equipment_type_id"/>
+                <field name="incident_type" class="fw-bold"/>
+                <field name="cost_repair_replace" sum="Total replacement costs" widget="monetary"/>
+                <field name="deduction_amount" sum="Total guard deductions" widget="monetary" class="fw-bold"/>
+                <field name="state" class="fw-bold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_damage_form" model="ir.ui.view">
+        <field name="name">security.equipment.damage.form</field>
+        <field name="model">security.equipment.damage</field>
+        <field name="arch" type="xml">
+            <form string="Loss / Damage Incident Record">
+                <header>
+                    <button name="action_investigate" string="Start Investigation" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve Deduction" type="object" class="btn-success" invisible="state != 'investigation'"/>
+                    <button name="action_reject" string="Reject Incident" type="object" class="btn-danger" invisible="state != 'investigation'"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object" class="btn-secondary" invisible="state not in ('approved', 'rejected')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,investigation,approved,deducted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Incident allocation mapping">
+                            <field name="allocation_id"/>
+                            <field name="employee_id"/>
+                            <field name="equipment_type_id"/>
+                            <field name="equipment_item_id"/>
+                            <field name="occurrence_date"/>
+                            <field name="incident_type"/>
+                        </group>
+                        <group string="Financial Adjustments &amp; Payroll Deductions">
+                            <field name="cost_repair_replace"/>
+                            <field name="deduction_amount"/>
+                            <field name="deduction_repayment_months"/>
+                            <field name="approved_by_id"/>
+                            <field name="payslip_id" invisible="state != 'deducted'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page name="notes" string="Investigation notes">
+                            <field name="description" placeholder="Specify loss detail, evidence gathered, or guard explanations..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_damage_pivot" model="ir.ui.view">
+        <field name="name">security.equipment.damage.pivot</field>
+        <field name="model">security.equipment.damage</field>
+        <field name="arch" type="xml">
+            <pivot string="Loss and Damage Metrics Matrix" sample="1">
+                <field name="incident_type" type="row"/>
+                <field name="cost_repair_replace" type="measure"/>
+                <field name="deduction_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_security_equipment_damage_graph" model="ir.ui.view">
+        <field name="name">security.equipment.damage.graph</field>
+        <field name="model">security.equipment.damage</field>
+        <field name="arch" type="xml">
+            <graph string="Deduction costs per Guard" type="bar" sample="1">
+                <field name="employee_id"/>
+                <field name="deduction_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    
+    <!-- ========= EQUIPMENT ITEM SEARCH VIEW (H-11) ========= -->
+
+    <record id="view_security_equipment_item_search" model="ir.ui.view">
+        <field name="name">security.equipment.item.search</field>
+        <field name="model">security.equipment.item</field>
+        <field name="arch" type="xml">
+            <search string="Search Serialized Items">
+                <field name="name"/>
+                <field name="serial_number"/>
+                <field name="type_id"/>
+                <filter string="Available" name="filter_available" domain="[('status', '=', 'available')]"/>
+                <filter string="Issued / Allocated" name="filter_issued" domain="[('status', 'in', ['issued'])]"/>
+                <separator/>
+                <filter string="By Type" name="group_by_type" context="{'group_by': 'type_id'}"/>
+                <filter string="By Condition" name="group_by_condition" context="{'group_by': 'condition'}"/>
+                <filter string="By Status" name="group_by_status" context="{'group_by': 'status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- ========= EQUIPMENT INVENTORY ACTION (H-11) ========= -->
+
+    <record id="action_security_equipment_inventory" model="ir.actions.act_window">
+        <field name="name">Equipment Inventory</field>
+        <field name="res_model">security.equipment.item</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="context">{'search_default_group_by_type': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No serialized items found. Register trackable assets to see the inventory.
+            </p>
+        </field>
+    </record>
+
+    <!-- ========= ACTIONS ========= -->
+
+    <record id="action_security_equipment_category" model="ir.actions.act_window">
+        <field name="name">Equipment Categories</field>
+        <field name="res_model">security.equipment.category</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a new equipment category!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_security_equipment_type" model="ir.actions.act_window">
+        <field name="name">Equipment &amp; Uniform Stock</field>
+        <field name="res_model">security.equipment.type</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register a new inventory equipment profile!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_security_equipment_item" model="ir.actions.act_window">
+        <field name="name">Serialized Pistol &amp; Radio Items</field>
+        <field name="res_model">security.equipment.item</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Register trackable, unique serialized assets (e.g. pistols, radios)!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_security_equipment_allocation" model="ir.actions.act_window">
+        <field name="name">Guard Allocations register</field>
+        <field name="res_model">security.equipment.allocation</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Issue uniforms or radios to guards!
+            </p>
+        </field>
+    </record>
+
+    <record id="action_security_equipment_damage" model="ir.actions.act_window">
+        <field name="name">Loss &amp; Damage Incidents</field>
+        <field name="res_model">security.equipment.damage</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record equipment damage or loss with deductions!
+            </p>
+        </field>
+    </record>
+
+    
+    <menuitem id="menu_security_equipment_root"
+              name="Equipment &amp; Assets"
+              parent="security_base.menu_security_root"
+              sequence="55"
+              groups="hr.group_hr_user"/>
+
+    <menuitem id="menu_security_equipment_allocations"
+              name="Guard Allocations"
+              parent="menu_security_equipment_root"
+              action="action_security_equipment_allocation"
+              sequence="10"/>
+
+    <menuitem id="menu_security_equipment_damages"
+              name="Loss &amp; Damages"
+              parent="menu_security_equipment_root"
+              action="action_security_equipment_damage"
+              sequence="20"/>
+
+    <menuitem id="menu_security_equipment_inventory_root"
+              name="Inventory Control"
+              parent="menu_security_equipment_root"
+              sequence="30"/>
+
+    <menuitem id="menu_security_equipment_types"
+              name="Equipment Inventory"
+              parent="menu_security_equipment_inventory_root"
+              action="action_security_equipment_type"
+              sequence="10"/>
+
+    <menuitem id="menu_security_equipment_items"
+              name="Serialized Assets"
+              parent="menu_security_equipment_inventory_root"
+              action="action_security_equipment_item"
+              sequence="20"/>
+
+    <menuitem id="menu_security_equipment_inventory_count"
+              name="Inventory Count"
+              parent="menu_security_equipment_inventory_root"
+              action="action_security_equipment_inventory"
+              sequence="50"/>
+
+    <menuitem id="menu_security_equipment_config_root"
+              name="Configuration"
+              parent="menu_security_equipment_root"
+              sequence="90"/>
+
+    <menuitem id="menu_security_equipment_categories"
+              name="Equipment Categories"
+              parent="menu_security_equipment_config_root"
+              action="action_security_equipment_category"
+              sequence="10"/>
+</odoo>

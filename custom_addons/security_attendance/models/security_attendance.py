@@ -2,6 +2,7 @@ from datetime import datetime, time, timedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from odoo.addons.security_attendance.utils.shift_split import split_shift_by_boundaries
 
 
 class SecurityAttendanceBatch(models.Model):
@@ -73,8 +74,22 @@ class SecurityAttendanceBatch(models.Model):
                 domain.append(("partner_id", "=", batch.partner_id.id))
             slots = slot_model.search(domain)
             if not slots:
-                raise ValidationError("No roster slots found for this posting sheet batch.")
+                return {
+                    "type": "ir.actions.client",
+                    "tag": "display_notification",
+                    "params": {
+                        "title": "No Roster Slots Found",
+                        "message": (
+                            f"No roster slots exist for {batch.attendance_date} "
+                            f"at {batch.site_id.name or 'this site'}. "
+                            "Create a roster batch with slots for this date and site first."
+                        ),
+                        "type": "warning",
+                        "sticky": False,
+                    },
+                }
             created_count = 0
+            skipped_count = 0
             for slot in slots:
                 existing = record_model.search_count(
                     [
@@ -83,6 +98,7 @@ class SecurityAttendanceBatch(models.Model):
                     ]
                 )
                 if existing:
+                    skipped_count += 1
                     continue
                 record_model.create(
                     {
@@ -93,7 +109,29 @@ class SecurityAttendanceBatch(models.Model):
                 created_count += 1
             batch.state = "captured"
             if not created_count:
-                raise ValidationError("Attendance records already exist for the matching roster slots.")
+                return {
+                    "type": "ir.actions.client",
+                    "tag": "display_notification",
+                    "params": {
+                        "title": "Already Generated",
+                        "message": (
+                            f"All {skipped_count} roster slot(s) already have attendance records. "
+                            "No new records were created."
+                        ),
+                        "type": "info",
+                        "sticky": False,
+                    },
+                }
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "Roster Generated",
+                    "message": f"{created_count} attendance record(s) generated from roster.",
+                    "type": "success",
+                    "sticky": False,
+                },
+            }
 
     def action_review(self):
         for batch in self:
@@ -111,6 +149,38 @@ class SecurityAttendanceBatch(models.Model):
     def action_reset_to_draft(self):
         for batch in self:
             batch.state = "draft"
+
+    def action_bulk_mark_attendance(self, records_data):
+        """
+        Bulk update attendance records from the Posting Console OWL client action.
+        records_data: list of {record_id, manual_presence, check_in, check_out}
+        """
+        self.ensure_one()
+        record_model = self.env["security.attendance.record"]
+        for item in records_data:
+            record = record_model.browse(item.get("record_id"))
+            if not record.exists():
+                continue
+            vals = {"manual_presence": item.get("manual_presence", "not_marked")}
+            if item.get("check_in"):
+                vals["check_in"] = item["check_in"]
+            if item.get("check_out"):
+                vals["check_out"] = item["check_out"]
+            record.write(vals)
+        if self.state == "draft":
+            self.state = "captured"
+
+    def action_open_posting_console(self):
+        return {
+            "type": "ir.actions.client",
+            "tag": "security_attendance.posting_console",
+            "target": "current",
+            "context": {
+                "default_batch_id": self.id,
+                "default_date": str(self.attendance_date) if self.attendance_date else False,
+                "default_site_id": self.site_id.id if self.site_id else False,
+            },
+        }
 
 
 class SecurityAttendanceRecord(models.Model):
@@ -213,19 +283,36 @@ class SecurityAttendanceRecord(models.Model):
         compute="_compute_calendar_flags",
         store=True,
     )
+    is_saturday = fields.Boolean(
+        compute="_compute_calendar_flags",
+        store=True,
+    )
     is_public_holiday = fields.Boolean(
         compute="_compute_calendar_flags",
+        store=True,
+    )
+    is_night_shift = fields.Boolean(
+        compute="_compute_shift_buckets",
         store=True,
     )
     premium_category = fields.Selection(
         [
             ("normal", "Normal"),
+            ("saturday", "Saturday"),
             ("sunday", "Sunday"),
             ("public_holiday", "Public Holiday"),
         ],
         compute="_compute_calendar_flags",
         store=True,
     )
+    # Hour buckets — split by pay category using split_shift_by_boundaries().
+    # Payroll reads these fields; the old premium_category + payable_hours
+    # approach only handled three categories and ignored night/saturday.
+    normal_hours = fields.Float(compute="_compute_shift_buckets", store=True)
+    sunday_hours = fields.Float(compute="_compute_shift_buckets", store=True)
+    public_holiday_hours = fields.Float(compute="_compute_shift_buckets", store=True)
+    saturday_hours = fields.Float(compute="_compute_shift_buckets", store=True)
+    night_hours = fields.Float(compute="_compute_shift_buckets", store=True)
     overtime_approved = fields.Boolean(default=False)
     overtime_approved_by_id = fields.Many2one("res.users", string="Overtime Approved By")
     overtime_approval_note = fields.Char()
@@ -358,7 +445,9 @@ class SecurityAttendanceRecord(models.Model):
     @api.depends("shift_date")
     def _compute_calendar_flags(self):
         for record in self:
-            record.is_sunday = bool(record.shift_date and record.shift_date.weekday() == 6)
+            weekday = record.shift_date.weekday() if record.shift_date else -1
+            record.is_sunday = weekday == 6
+            record.is_saturday = weekday == 5
             holiday = False
             if record.shift_date and "security.public.holiday" in self.env:
                 holiday = self.env["security.public.holiday"].search_count(
@@ -372,8 +461,81 @@ class SecurityAttendanceRecord(models.Model):
                 record.premium_category = "public_holiday"
             elif record.is_sunday:
                 record.premium_category = "sunday"
+            elif record.is_saturday:
+                record.premium_category = "saturday"
             else:
                 record.premium_category = "normal"
+
+    @api.depends(
+        "scheduled_start",
+        "scheduled_end",
+        "check_in",
+        "check_out",
+        "manual_presence",
+        "absence_type",
+        "shift_date",
+    )
+    def _compute_shift_buckets(self):
+        """
+        Split payable hours into pay-category buckets using split_shift_by_boundaries.
+        Only runs when an actual payable window can be determined.
+        """
+        for record in self:
+            record.normal_hours = 0.0
+            record.sunday_hours = 0.0
+            record.public_holiday_hours = 0.0
+            record.saturday_hours = 0.0
+            record.night_hours = 0.0
+            record.is_night_shift = False
+
+            if record.manual_presence in ("absent", "awol"):
+                continue
+            if record.absence_type in ("awol", "no_show"):
+                continue
+
+            scheduled_start = fields.Datetime.to_datetime(record.scheduled_start)
+            scheduled_end = fields.Datetime.to_datetime(record.scheduled_end)
+            if not scheduled_start or not scheduled_end:
+                continue
+
+            # Determine the payable time window.
+            if record.check_in and record.check_out:
+                check_in = fields.Datetime.to_datetime(record.check_in)
+                check_out = fields.Datetime.to_datetime(record.check_out)
+                if check_out <= check_in:
+                    continue
+                pay_start = max(scheduled_start, check_in)
+                pay_end = min(scheduled_end, check_out)
+                if pay_end <= pay_start:
+                    continue
+            elif record.manual_presence == "present":
+                pay_start = scheduled_start
+                pay_end = scheduled_end
+            else:
+                continue
+
+            # Fetch public holidays once per record.
+            public_holidays = []
+            if "security.public.holiday" in self.env:
+                from datetime import date as date_type
+                start_date = pay_start.date()
+                end_date = pay_end.date()
+                holidays = self.env["security.public.holiday"].search(
+                    [
+                        ("holiday_date", ">=", start_date),
+                        ("holiday_date", "<=", end_date),
+                        ("active", "=", True),
+                    ]
+                )
+                public_holidays = [h.holiday_date for h in holidays]
+
+            buckets = split_shift_by_boundaries(pay_start, pay_end, public_holidays)
+            record.normal_hours = buckets["normal_hours"]
+            record.sunday_hours = buckets["sunday_hours"]
+            record.public_holiday_hours = buckets["public_holiday_hours"]
+            record.saturday_hours = buckets["saturday_hours"]
+            record.night_hours = buckets["night_hours"]
+            record.is_night_shift = buckets["night_hours"] > 0
 
     @api.onchange("manual_presence")
     def _onchange_manual_presence(self):

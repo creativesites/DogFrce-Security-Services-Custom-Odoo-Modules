@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_security_payroll_command_center" model="ir.actions.client">
+        <field name="name">Payroll Command Center</field>
+        <field name="tag">security_payroll_core.payroll_command_center</field>
+    </record>
+
+    <menuitem
+        id="menu_security_payroll_command_center"
+        name="Payroll Command Center"
+        parent="security_operations.menu_security_payroll"
+        action="action_security_payroll_command_center"
+        sequence="5"
+        groups="hr.group_hr_manager"/>
+</odoo>

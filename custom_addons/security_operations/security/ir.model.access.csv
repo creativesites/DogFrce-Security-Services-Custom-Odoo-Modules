@@ -8,3 +8,5 @@ access_security_site_requirement_user,security.site.requirement user,model_secur
 access_security_guard_exclusion_user,security.guard.exclusion user,model_security_guard_exclusion,hr.group_hr_user,1,1,1,1
 access_security_roster_batch_user,security.roster.batch user,model_security_roster_batch,hr.group_hr_user,1,1,1,1
 access_security_roster_slot_user,security.roster.slot user,model_security_roster_slot,hr.group_hr_user,1,1,1,1
+access_security_roster_generate_wizard,security.roster.generate.wizard,model_security_roster_generate_wizard,hr.group_hr_user,1,1,1,1
+access_security_roster_generate_wizard_preview,security.roster.generate.wizard.preview,model_security_roster_generate_wizard_preview,hr.group_hr_user,1,1,1,1

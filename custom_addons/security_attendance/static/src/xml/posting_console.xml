@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_attendance.PostingConsole" owl="1">
+<div class="o_action o_posting_console"
+     style="min-height:100vh;background:#0f172a;display:flex;flex-direction:column;font-family:'Inter',system-ui,sans-serif;">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         DARK HEADER BAR
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div style="background:linear-gradient(135deg,#0f2d5e 0%,#0e7490 100%);padding:16px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;border-bottom:1px solid #1e3a5f;flex-shrink:0;">
+
+        <!-- Title -->
+        <div style="display:flex;align-items:center;gap:10px;min-width:220px;">
+            <i class="fa fa-shield" style="font-size:22px;color:#38bdf8;"/>
+            <div>
+                <div style="font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:0.01em;">
+                    Attendance Posting Console
+                </div>
+                <div t-if="state.batchName"
+                     style="font-size:11px;color:#94a3b8;margin-top:1px;">
+                    <t t-esc="state.batchName"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date picker -->
+        <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Date</label>
+            <input type="date"
+                   t-att-value="state.date"
+                   t-on-change="onDateChange"
+                   style="background:#1e3a5f;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:5px 10px;font-size:13px;outline:none;cursor:pointer;"/>
+        </div>
+
+        <!-- Site selector -->
+        <div style="display:flex;flex-direction:column;gap:3px;min-width:200px;">
+            <label style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Client Site</label>
+            <select t-on-change="onSiteChange"
+                    style="background:#1e3a5f;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:5px 10px;font-size:13px;outline:none;cursor:pointer;">
+                <option value="">-- Select Site --</option>
+                <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                    <option t-att-value="site.id"
+                            t-att-selected="site.id === state.selectedSiteId">
+                        <t t-esc="site.name"/>
+                    </option>
+                </t>
+            </select>
+        </div>
+
+        <!-- Batch state badge -->
+        <div t-if="state.batchState"
+             style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Status</label>
+            <span t-att-style="'border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700;letter-spacing:0.04em;' + getBatchStateBadgeStyle(state.batchState)">
+                <t t-esc="getBatchStateLabel(state.batchState)"/>
+            </span>
+        </div>
+
+        <!-- Spacer -->
+        <div style="flex:1;"/>
+
+        <!-- Action buttons -->
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;">
+
+            <!-- Generate from Roster: only when batch exists but no records -->
+            <button t-if="state.batchId and state.records.length === 0 and !state.loading"
+                    t-on-click="() => this.generateFromRoster()"
+                    style="background:#0369a1;border:none;color:#e0f2fe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fa fa-magic"/>
+                Generate from Roster
+            </button>
+
+            <!-- Mark All Present -->
+            <button t-if="state.batchId and state.records.length > 0"
+                    t-on-click="() => this.markAllPresent()"
+                    style="background:#064e3b;border:1px solid #065f46;color:#6ee7b7;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fa fa-check-double"/>
+                Mark All Present
+            </button>
+
+            <!-- Save Changes -->
+            <button t-if="state.batchId"
+                    t-on-click="() => this.saveAll()"
+                    t-att-disabled="state.saving or state.dirtyIds.size === 0"
+                    style="background:#1d4ed8;border:none;color:#dbeafe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;">
+                <i t-att-class="state.saving ? 'fa fa-spinner fa-spin' : 'fa fa-save'"/>
+                Save Changes
+                <span t-if="state.dirtyIds.size > 0"
+                      style="background:#f97316;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;font-weight:700;margin-left:2px;">
+                    <t t-esc="state.dirtyIds.size"/>
+                </span>
+            </button>
+
+            <!-- Submit Batch -->
+            <button t-if="canSubmit"
+                    t-on-click="() => this.submitBatch()"
+                    style="background:#7c3aed;border:none;color:#ede9fe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                <i class="fa fa-paper-plane"/>
+                Submit Batch
+            </button>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         STATS STRIP
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div t-if="state.batchId and !state.loading and state.records.length > 0"
+         style="background:#1e293b;border-bottom:1px solid #334155;padding:10px 24px;display:flex;flex-wrap:wrap;gap:0;flex-shrink:0;">
+
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 20px 4px 0;border-right:1px solid #334155;margin-right:20px;">
+            <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Total</span>
+            <span style="font-size:18px;font-weight:700;color:#e2e8f0;"><t t-esc="stats.total"/></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 20px 4px 0;border-right:1px solid #334155;margin-right:20px;">
+            <i class="fa fa-check-circle" style="color:#22c55e;font-size:14px;"/>
+            <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Present</span>
+            <span style="font-size:18px;font-weight:700;color:#22c55e;"><t t-esc="stats.present"/></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 20px 4px 0;border-right:1px solid #334155;margin-right:20px;">
+            <i class="fa fa-times-circle" style="color:#f59e0b;font-size:14px;"/>
+            <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Absent</span>
+            <span style="font-size:18px;font-weight:700;color:#f59e0b;"><t t-esc="stats.absent"/></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 20px 4px 0;border-right:1px solid #334155;margin-right:20px;">
+            <i class="fa fa-exclamation-triangle" style="color:#ef4444;font-size:14px;"/>
+            <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">AWOL</span>
+            <span style="font-size:18px;font-weight:700;color:#ef4444;"><t t-esc="stats.awol"/></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 20px 4px 0;border-right:1px solid #334155;margin-right:20px;">
+            <i class="fa fa-question-circle" style="color:#64748b;font-size:14px;"/>
+            <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Not Marked</span>
+            <span style="font-size:18px;font-weight:700;color:#64748b;"><t t-esc="stats.notMarked"/></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 0;">
+            <i class="fa fa-clock-o" style="color:#f97316;font-size:14px;"/>
+            <span style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Late</span>
+            <span style="font-size:18px;font-weight:700;color:#f97316;"><t t-esc="stats.lateCount"/></span>
+        </div>
+
+        <!-- Unsaved indicator (right-aligned) -->
+        <div t-if="state.dirtyIds.size > 0"
+             style="margin-left:auto;display:flex;align-items:center;gap:8px;animation:pulse 2s infinite;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#f97316;display:inline-block;"/>
+            <span style="font-size:12px;color:#f97316;font-weight:600;">
+                <t t-esc="state.dirtyIds.size"/> unsaved change(s)
+            </span>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         FILTER PILLS
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div t-if="state.batchId and !state.loading and state.records.length > 0"
+         style="background:#1e293b;border-bottom:1px solid #0f172a;padding:8px 24px;display:flex;gap:8px;flex-shrink:0;">
+        <button t-on-click="() => this.setFilter('all')"
+                t-att-style="'border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;' + (state.filter === 'all' ? 'background:#1d4ed8;color:#dbeafe;border-color:#1d4ed8;' : 'background:transparent;color:#94a3b8;')">
+            All (<t t-esc="stats.total"/>)
+        </button>
+        <button t-on-click="() => this.setFilter('not_marked')"
+                t-att-style="'border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;' + (state.filter === 'not_marked' ? 'background:#334155;color:#e2e8f0;border-color:#64748b;' : 'background:transparent;color:#94a3b8;')">
+            Not Marked (<t t-esc="stats.notMarked"/>)
+        </button>
+        <button t-on-click="() => this.setFilter('present')"
+                t-att-style="'border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;' + (state.filter === 'present' ? 'background:#166534;color:#bbf7d0;border-color:#166534;' : 'background:transparent;color:#94a3b8;')">
+            Present (<t t-esc="stats.present"/>)
+        </button>
+        <button t-on-click="() => this.setFilter('absent')"
+                t-att-style="'border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;' + (state.filter === 'absent' ? 'background:#92400e;color:#fde68a;border-color:#92400e;' : 'background:transparent;color:#94a3b8;')">
+            Absent (<t t-esc="stats.absent"/>)
+        </button>
+        <button t-on-click="() => this.setFilter('awol')"
+                t-att-style="'border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #334155;' + (state.filter === 'awol' ? 'background:#7f1d1d;color:#fecaca;border-color:#7f1d1d;' : 'background:transparent;color:#94a3b8;')">
+            AWOL (<t t-esc="stats.awol"/>)
+        </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         MAIN BODY
+    ═══════════════════════════════════════════════════════════════════ -->
+    <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+
+        <!-- ── Loading spinner ─────────────────────────────────────── -->
+        <t t-if="state.loading">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;">
+                <i class="fa fa-spinner fa-spin" style="font-size:36px;color:#38bdf8;"/>
+                <span style="color:#94a3b8;font-size:14px;">Loading posting sheet…</span>
+            </div>
+        </t>
+
+        <!-- ── No date or site selected ───────────────────────────── -->
+        <t t-elif="!state.date or !state.selectedSiteId">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:16px;text-align:center;">
+                <i class="fa fa-calendar-o" style="font-size:52px;color:#334155;"/>
+                <div style="color:#64748b;font-size:15px;max-width:380px;">
+                    Select a <strong style="color:#94a3b8;">date</strong> and
+                    <strong style="color:#94a3b8;">client site</strong> above to load the posting sheet.
+                </div>
+            </div>
+        </t>
+
+        <!-- ── Site selected but no batch ────────────────────────── -->
+        <t t-elif="!state.batchId">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:20px;text-align:center;">
+                <i class="fa fa-clipboard" style="font-size:52px;color:#334155;"/>
+                <div>
+                    <div style="color:#e2e8f0;font-size:16px;font-weight:600;margin-bottom:8px;">No Posting Sheet Found</div>
+                    <div style="color:#64748b;font-size:13px;max-width:360px;">
+                        There is no posting sheet for this date and site. Create one and generate records from the roster.
+                    </div>
+                </div>
+                <button t-on-click="() => this.createBatch()"
+                        style="background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border:none;color:#fff;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                    <i class="fa fa-magic"/>
+                    Create Batch &amp; Generate from Roster
+                </button>
+            </div>
+        </t>
+
+        <!-- ── Batch exists but no records ───────────────────────── -->
+        <t t-elif="state.records.length === 0">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:20px;text-align:center;">
+                <i class="fa fa-users" style="font-size:52px;color:#334155;"/>
+                <div>
+                    <div style="color:#e2e8f0;font-size:16px;font-weight:600;margin-bottom:8px;">No Attendance Records</div>
+                    <div style="color:#64748b;font-size:13px;max-width:360px;">
+                        This posting sheet has no records yet. Generate them from the roster.
+                    </div>
+                </div>
+                <button t-on-click="() => this.generateFromRoster()"
+                        style="background:#0369a1;border:none;color:#e0f2fe;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                    <i class="fa fa-magic"/>
+                    Generate Records from Roster
+                </button>
+            </div>
+        </t>
+
+        <!-- ── Guard card grid ────────────────────────────────────── -->
+        <t t-else="">
+
+            <!-- Empty filter result -->
+            <t t-if="visibleRecords.length === 0">
+                <div style="text-align:center;padding:40px 0;color:#64748b;font-size:14px;">
+                    No records match the current filter.
+                </div>
+            </t>
+
+            <!-- Card grid -->
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+                <t t-foreach="visibleRecords" t-as="rec" t-key="rec.id">
+
+                    <!-- Guard card -->
+                    <div t-att-class="'pc-guard-card ' + getCardClass(rec)"
+                         style="background:#1e293b;border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow 0.15s;position:relative;">
+
+                        <!-- Dirty dot (top-right corner) -->
+                        <div t-if="state.dirtyIds.has(rec.id)"
+                             style="position:absolute;top:10px;right:10px;width:9px;height:9px;border-radius:50%;background:#f97316;box-shadow:0 0 0 2px #1e293b;z-index:2;"/>
+
+                        <!-- Card header: avatar + name + status badge -->
+                        <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 10px;">
+                            <div style="flex-shrink:0;">
+                                <i class="fa fa-user-circle fa-2x"
+                                   t-att-style="'color:' + getAvatarColor(rec) + ';font-size:34px;'"/>
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-weight:700;font-size:14px;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    <t t-esc="rec.employee_id ? rec.employee_id[1] : '— Unassigned —'"/>
+                                </div>
+                                <div style="font-size:11px;color:#64748b;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    <t t-if="rec.post_id"><t t-esc="rec.post_id[1]"/></t>
+                                    <t t-if="rec.post_id and rec.shift_template_id"> · </t>
+                                    <t t-if="rec.shift_template_id"><t t-esc="rec.shift_template_id[1]"/></t>
+                                    <t t-if="!rec.post_id and !rec.shift_template_id">No post assigned</t>
+                                </div>
+                            </div>
+                            <!-- Computed status badge -->
+                            <span t-att-class="'pc-status-badge ' + getStatusClass(rec)"
+                                  style="flex-shrink:0;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">
+                                <t t-esc="getStatusLabel(rec)"/>
+                            </span>
+                        </div>
+
+                        <!-- Presence buttons row -->
+                        <div style="display:flex;gap:6px;padding:0 14px 10px;">
+                            <button t-on-click="() => this.setPresence(rec, 'present')"
+                                    t-att-style="'flex:1;border-radius:6px;padding:6px 4px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.1s;' + (rec.manual_presence === 'present' ? 'background:#16a34a;border-color:#16a34a;color:#fff;' : 'background:transparent;border-color:#334155;color:#64748b;')">
+                                ✓ Present
+                            </button>
+                            <button t-on-click="() => this.setPresence(rec, 'absent')"
+                                    t-att-style="'flex:1;border-radius:6px;padding:6px 4px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.1s;' + (rec.manual_presence === 'absent' ? 'background:#d97706;border-color:#d97706;color:#fff;' : 'background:transparent;border-color:#334155;color:#64748b;')">
+                                ✗ Absent
+                            </button>
+                            <button t-on-click="() => this.setPresence(rec, 'awol')"
+                                    t-att-style="'flex:1;border-radius:6px;padding:6px 4px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;transition:all 0.1s;' + (rec.manual_presence === 'awol' ? 'background:#dc2626;border-color:#dc2626;color:#fff;' : 'background:transparent;border-color:#334155;color:#64748b;')">
+                                ⚠ AWOL
+                            </button>
+                        </div>
+
+                        <!-- Time inputs — only visible when present -->
+                        <div t-if="rec.manual_presence === 'present'"
+                             style="display:flex;gap:8px;padding:0 14px 12px;">
+                            <div style="flex:1;">
+                                <label style="font-size:10px;color:#64748b;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">Check In</label>
+                                <input type="time"
+                                       t-att-value="toTimeInput(rec.check_in)"
+                                       t-on-change="(ev) => this.onCheckInChange(rec, ev)"
+                                       style="width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:5px;padding:5px 8px;font-size:13px;outline:none;box-sizing:border-box;"/>
+                            </div>
+                            <div style="flex:1;">
+                                <label style="font-size:10px;color:#64748b;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">Check Out</label>
+                                <input type="time"
+                                       t-att-value="toTimeInput(rec.check_out)"
+                                       t-on-change="(ev) => this.onCheckOutChange(rec, ev)"
+                                       style="width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:5px;padding:5px 8px;font-size:13px;outline:none;box-sizing:border-box;"/>
+                            </div>
+                        </div>
+
+                        <!-- Late / worked metrics row (present only) -->
+                        <div t-if="rec.manual_presence === 'present' and (rec.late_minutes > 0 or rec.worked_hours)"
+                             style="display:flex;gap:8px;padding:0 14px 12px;">
+                            <span t-if="rec.worked_hours"
+                                  style="background:#0f172a;border:1px solid #334155;border-radius:5px;padding:3px 8px;font-size:11px;color:#94a3b8;">
+                                <i class="fa fa-clock-o"/> <t t-esc="rec.worked_hours.toFixed ? rec.worked_hours.toFixed(1) : rec.worked_hours"/>h worked
+                            </span>
+                            <span t-if="rec.late_minutes > 0"
+                                  style="background:#431407;border:1px solid #c2410c;border-radius:5px;padding:3px 8px;font-size:11px;color:#fdba74;font-weight:600;">
+                                <i class="fa fa-exclamation-circle"/> <t t-esc="rec.late_minutes"/>m late
+                            </span>
+                            <span t-if="rec.early_departure_minutes > 0"
+                                  style="background:#312e81;border:1px solid #4338ca;border-radius:5px;padding:3px 8px;font-size:11px;color:#c7d2fe;font-weight:600;">
+                                <i class="fa fa-sign-out"/> <t t-esc="rec.early_departure_minutes"/>m early
+                            </span>
+                        </div>
+
+                        <!-- Left-border accent (coloured by presence via CSS class on parent) -->
+                    </div>
+
+                </t>
+            </div>
+        </t>
+
+    </div>
+
+</div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     INLINE STYLES  (scoped to .o_posting_console)
+     Status-badge colours, card left-border accents, CSS animations.
+════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_attendance.PostingConsoleStyles" owl="1">
+    <!-- styles injected at render time via a separate owl template is not
+         supported — use a real CSS file or style tag below for scoped rules -->
+</t>
+
+</templates>
+
+<!--
+    CSS companion rules (add to a .scss asset or backend_style asset if available).
+    Inline here as a comment so editors can see intent; these rules should be
+    placed in a dedicated .css / .scss file listed in __manifest__.py assets.
+
+    .o_posting_console .pc-guard-card {
+        border-left: 4px solid #334155;
+    }
+    .o_posting_console .pc-card-present  { border-left-color: #16a34a; }
+    .o_posting_console .pc-card-absent   { border-left-color: #d97706; }
+    .o_posting_console .pc-card-awol     { border-left-color: #dc2626; }
+    .o_posting_console .pc-card-unmarked { border-left-color: #334155; }
+    .o_posting_console .pc-card-dirty    { background: #1f2d1a !important; }
+
+    .o_posting_console .pc-status-badge.pc-badge-present    { background:#166534;  color:#bbf7d0; }
+    .o_posting_console .pc-status-badge.pc-badge-late       { background:#92400e;  color:#fde68a; }
+    .o_posting_console .pc-status-badge.pc-badge-early      { background:#312e81;  color:#c7d2fe; }
+    .o_posting_console .pc-status-badge.pc-badge-absent     { background:#7f1d1d;  color:#fca5a5; }
+    .o_posting_console .pc-status-badge.pc-badge-incomplete { background:#4c1d95;  color:#ddd6fe; }
+    .o_posting_console .pc-status-badge.pc-badge-scheduled  { background:#1e293b;  color:#64748b; }
+
+    @keyframes pulse {
+        0%,100% { opacity:1; }
+        50%      { opacity:0.5; }
+    }
+-->

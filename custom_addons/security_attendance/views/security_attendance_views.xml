@@ -131,9 +131,9 @@
     <menuitem
         id="menu_security_attendance_record"
         name="Attendance Records"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_workforce"
         action="action_security_attendance_record"
-        sequence="60"
+        sequence="10"
         groups="hr.group_hr_user"
     />
 </odoo>

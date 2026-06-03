@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form view -->
+    <record id="view_security_migration_job_form" model="ir.ui.view">
+        <field name="name">security.migration.job.form</field>
+        <field name="model">security.migration.job</field>
+        <field name="arch" type="xml">
+            <form string="Migration Job">
+                <header>
+                    <button
+                        name="action_run_import"
+                        string="Run Import"
+                        type="object"
+                        class="btn-primary"
+                        invisible="state != 'draft'"
+                    />
+                    <button
+                        name="action_reset_to_draft"
+                        string="Reset"
+                        type="object"
+                        invisible="state == 'draft'"
+                    />
+                    <field name="state" widget="statusbar" statusbar_visible="draft,running,done,error"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. Initial Guard Import May 2026"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Import Settings">
+                            <field name="migration_type" required="1"/>
+                            <field name="csv_file" widget="binary" filename="csv_filename"/>
+                            <field name="csv_filename" invisible="1"/>
+                        </group>
+                        <group string="Results" readonly="1">
+                            <field name="imported_count"/>
+                            <field name="error_count"/>
+                            <field name="line_count" string="Total Processed"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Import Log">
+                            <field name="log_text" widget="text" readonly="1" nolabel="1"
+                                   placeholder="Import log will appear here after running…"/>
+                        </page>
+                        <page string="Error Detail" invisible="error_count == 0">
+                            <field name="error_detail" widget="text" readonly="1" nolabel="1"
+                                   placeholder="No errors."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List view -->
+    <record id="view_security_migration_job_list" model="ir.ui.view">
+        <field name="name">security.migration.job.list</field>
+        <field name="model">security.migration.job</field>
+        <field name="arch" type="xml">
+            <list string="Migration Jobs">
+                <field name="name"/>
+                <field name="migration_type"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'done'"
+                       decoration-warning="state == 'running'"
+                       decoration-danger="state == 'error'"
+                       decoration-muted="state == 'draft'"
+                />
+                <field name="imported_count"/>
+                <field name="error_count"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Window action -->
+    <record id="action_security_migration_job" model="ir.actions.act_window">
+        <field name="name">Migration Jobs</field>
+        <field name="res_model">security.migration.job</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Root menu under security_base root at sequence 98 -->
+    <menuitem
+        id="menu_security_migration_root"
+        name="Migration Tools"
+        parent="security_base.menu_security_root"
+        sequence="98"
+    />
+
+    <menuitem
+        id="menu_security_migration_jobs"
+        name="Import Jobs"
+        parent="menu_security_migration_root"
+        action="action_security_migration_job"
+        sequence="10"
+    />
+
+</odoo>

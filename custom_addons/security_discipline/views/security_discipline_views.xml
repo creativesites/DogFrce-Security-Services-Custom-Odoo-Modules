@@ -10,6 +10,7 @@
             <list decoration-muted="not active">
                 <field name="name"/>
                 <field name="code"/>
+                <field name="severity"/>
                 <field name="deduction_amount"/>
                 <field name="reliability_score_delta"/>
                 <field name="high_trust_exclusion"/>
@@ -49,6 +50,7 @@
                             <field name="active" invisible="1"/>
                         </group>
                         <group>
+                            <field name="severity"/>
                             <field name="deduction_amount"/>
                             <field name="reliability_score_delta"/>
                             <field name="high_trust_exclusion"/>
@@ -148,6 +150,20 @@
                     <button name="action_approve" type="object" string="Approve" class="oe_highlight" invisible="state != 'draft'"/>
                     <button name="action_resolve" type="object" string="Resolve" class="btn-danger" invisible="state == 'resolved'"/>
                     <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
+                    <!-- G-14: acknowledge button -->
+                    <button name="action_mark_acknowledged" type="object"
+                            string="Mark Acknowledged"
+                            class="btn-secondary"
+                            invisible="acknowledged or state != 'approved'"/>
+                    <!-- G-15: appeal buttons -->
+                    <button name="action_appeal" type="object" string="Lodge Appeal"
+                            class="btn-secondary" invisible="state != 'approved' or appeal_state != 'none'"/>
+                    <button name="action_uphold_appeal" type="object" string="Uphold Appeal"
+                            class="btn-secondary" invisible="appeal_state != 'appealed'"
+                            groups="base.group_system"/>
+                    <button name="action_overturn_appeal" type="object" string="Overturn Appeal"
+                            class="btn-warning" invisible="appeal_state != 'appealed'"
+                            groups="base.group_system"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,approved,resolved"/>
                 </header>
                 <sheet>
@@ -171,7 +187,22 @@
                         <field name="approved_by_id" readonly="1"/>
                         <field name="note" placeholder="Provide full details of the incident..."/>
                     </group>
+                    <!-- G-14: acknowledgment section -->
+                    <group string="Acknowledgment" invisible="not acknowledged">
+                        <field name="acknowledged" readonly="1"/>
+                        <field name="acknowledged_date" readonly="1"/>
+                        <field name="acknowledged_by_id" readonly="1"/>
+                    </group>
+                    <!-- G-15: appeal section -->
+                    <group string="Appeal" invisible="state != 'approved'">
+                        <field name="appeal_state" readonly="appeal_state not in ('none', 'appealed')"/>
+                        <field name="appeal_reason" invisible="appeal_state == 'none'"/>
+                        <field name="appeal_reviewed_by_id" readonly="1" invisible="appeal_state in ('none', 'appealed')"/>
+                        <field name="appeal_review_date" readonly="1" invisible="appeal_state in ('none', 'appealed')"/>
+                    </group>
                 </sheet>
+                <!-- G-13: chatter -->
+                <chatter/>
             </form>
         </field>
     </record>
@@ -194,9 +225,9 @@
     <menuitem
         id="menu_security_incident"
         name="Behavioral Incidents"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_workforce"
         action="action_security_incident"
-        sequence="130"
+        sequence="50"
         groups="hr.group_hr_user"
     />
 </odoo>

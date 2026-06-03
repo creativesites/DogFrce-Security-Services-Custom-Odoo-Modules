@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_attendance_posting_console" model="ir.actions.client">
+        <field name="name">Posting Console</field>
+        <field name="tag">security_attendance.posting_console</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_attendance_posting_console"
+        name="Posting Console"
+        parent="security_operations.menu_security_workforce"
+        action="action_attendance_posting_console"
+        sequence="5"
+        groups="hr.group_hr_user"
+    />
+</odoo>

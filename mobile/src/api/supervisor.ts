@@ -102,3 +102,33 @@ export const submitBatch = async (batchId: number): Promise<{ batch_id: number; 
   }
   throw new Error(response.data?.error || 'Failed to submit batch');
 };
+
+export interface HistoryBatch {
+  batch_id: number;
+  date: string;
+  site: { id: number; name: string } | null;
+  state: string;
+  summary: {
+    total: number;
+    present: number;
+    late: number;
+    absent: number;
+    awol: number;
+    attendance_rate: number;
+  };
+}
+
+export interface HistoryResponse {
+  batches: HistoryBatch[];
+  pagination: { limit: number; offset: number; total: number };
+}
+
+export const getHistory = async (limit = 20, offset = 0): Promise<HistoryResponse> => {
+  const response = await client.get('/api/security/mobile/supervisor/history', {
+    params: { limit, offset },
+  });
+  if (response.data && response.data.success) {
+    return response.data.data;
+  }
+  throw new Error(response.data?.error || 'Failed to fetch history');
+};

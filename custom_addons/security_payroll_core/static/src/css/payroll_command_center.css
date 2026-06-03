@@ -1,0 +1,265 @@
+/* ═══════════════════════════════════════════════════════════
+   DEPLOYGUARD — PAYROLL COMMAND CENTER (Light Corporate)
+   Fonts: Instrument Serif (display) · Instrument Sans (UI)
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap');
+
+/* ── Design tokens ── */
+.o_payroll_command_center {
+    --pcc-bg:          #f5f6f8;
+    --pcc-surface:     #ffffff;
+    --pcc-surface-soft:   #f0f2f5;
+    --pcc-border:      #e3e6ea;
+    --pcc-border-em:   #cdd1d8;
+
+    --pcc-ink:         #0f1923;
+    --pcc-ink-2:       #4a5568;
+    --pcc-ink-3:       #8c97a8;
+    --pcc-ink-4:       #b8c0cb;
+
+    --pcc-navy:        #1a3a5c;
+    --pcc-navy-mid:    #2a5282;
+    --pcc-navy-soft:   #eaf0f7;
+
+    --pcc-shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --pcc-shadow:    0 4px 8px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+    --pcc-shadow-md: 0 8px 16px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+    
+    --pcc-r:    6px;
+    --pcc-r-lg: 10px;
+    --pcc-r-xl: 12px;
+
+    height: 100%;
+    background: var(--pcc-bg);
+    color: var(--pcc-ink);
+    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.o_payroll_command_center * {
+    box-sizing: border-box;
+}
+
+.o_payroll_command_center h1, 
+.o_payroll_command_center h2, 
+.o_payroll_command_center h3,
+.o_payroll_command_center h4,
+.o_payroll_command_center h5,
+.o_payroll_command_center h6 {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    color: var(--pcc-ink);
+    letter-spacing: -.2px;
+}
+
+/* Sidebar */
+.o_pcc_sidebar {
+    background: var(--pcc-navy);
+    color: #fff;
+    border-right: none;
+    z-index: 10;
+}
+
+.o_period_item {
+    transition: all 0.14s ease;
+    border-left: 3px solid transparent;
+    padding: 8px 10px;
+    border-radius: var(--pcc-r);
+    color: rgba(255,255,255,.55) !important;
+}
+
+.o_period_item:hover:not(.is-active) {
+    background: rgba(255,255,255,.07) !important;
+    color: rgba(255,255,255,.88) !important;
+}
+
+.o_period_item.is-active {
+    background: rgba(255,255,255,.14) !important;
+    border-left-color: #fff;
+    color: #fff !important;
+    font-weight: 600;
+}
+
+.o_period_item.is-active .badge {
+    background: #fff !important;
+    color: var(--pcc-navy) !important;
+}
+
+.o_period_item.is-active .text-muted,
+.o_period_item.is-active .text-white-50 {
+    color: rgba(255,255,255,.8) !important;
+}
+
+.o_period_item .text-muted,
+.o_period_item .text-white-50 {
+    color: rgba(255,255,255,.4) !important;
+}
+
+.o_period_item .badge {
+    background: rgba(255,255,255,.1) !important;
+    color: rgba(255,255,255,.8) !important;
+}
+
+/* Header */
+.o_pcc_header {
+    background: var(--pcc-surface) !important;
+    border-bottom: 1px solid var(--pcc-border) !important;
+    z-index: 5;
+    height: 60px;
+    padding: 0 28px !important;
+    display: flex;
+    align-items: center;
+}
+
+/* Cards */
+.pcc-stat-card {
+    background: var(--pcc-surface);
+    border: 1px solid var(--pcc-border);
+    border-radius: var(--pcc-r-lg);
+    box-shadow: var(--pcc-shadow-sm);
+    transition: all 0.16s ease;
+    padding: 16px;
+}
+
+.pcc-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--pcc-shadow);
+    border-color: var(--pcc-border-em);
+}
+
+.pcc-card {
+    background: var(--pcc-surface);
+    border: 1px solid var(--pcc-border);
+    border-radius: var(--pcc-r-xl);
+    box-shadow: var(--pcc-shadow-sm);
+    overflow: hidden;
+}
+
+.pcc-card-header {
+    background: var(--pcc-surface);
+    border-bottom: 1px solid var(--pcc-border);
+    padding: 14px 16px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pcc-ink);
+}
+
+.pcc-card-header strong {
+    font-weight: 700;
+}
+
+/* Tabs */
+.pcc-nav-tabs {
+    border-bottom: 1px solid var(--pcc-border);
+    gap: 2px;
+    padding: 0 16px;
+}
+
+.pcc-nav-tabs .nav-link {
+    color: var(--pcc-ink-3);
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.13s ease;
+    background: transparent;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+}
+
+.pcc-nav-tabs .nav-link:hover {
+    color: var(--pcc-ink-2);
+    border-color: transparent;
+    background: var(--pcc-surface-soft);
+    border-radius: var(--pcc-r) var(--pcc-r) 0 0;
+}
+
+.pcc-nav-tabs .nav-link.active {
+    color: var(--pcc-ink);
+    border-bottom-color: var(--pcc-navy);
+    background: transparent;
+    border-radius: 0;
+}
+
+/* Tables */
+.pcc-table {
+    font-size: 12px;
+    width: 100%;
+}
+
+.pcc-table th {
+    background: var(--pcc-surface-soft);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    color: var(--pcc-ink-3);
+    padding: 9px 13px;
+    border-bottom: 1px solid var(--pcc-border);
+    text-align: left;
+}
+
+.pcc-table td {
+    padding: 10px 13px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--pcc-border);
+    color: var(--pcc-ink-2);
+}
+
+.pcc-table tr:hover td {
+    background: var(--pcc-surface-soft);
+    color: var(--pcc-ink);
+}
+
+.pcc-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Buttons */
+.pcc-btn {
+    border-radius: var(--pcc-r);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 0 14px;
+    height: 33px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.13s ease;
+    background: var(--pcc-surface);
+    color: var(--pcc-ink-2);
+    border: 1px solid var(--pcc-border-em);
+    font-family: inherit;
+}
+
+.pcc-btn:hover {
+    background: var(--pcc-surface-soft);
+    border-color: var(--pcc-border-em);
+}
+
+.pcc-btn-primary, .btn-primary.pcc-btn {
+    background: var(--pcc-navy) !important;
+    color: #fff !important;
+    border-color: var(--pcc-navy) !important;
+}
+
+.pcc-btn-primary:hover, .btn-primary.pcc-btn:hover {
+    background: var(--pcc-navy-mid) !important;
+    border-color: var(--pcc-navy-mid) !important;
+}
+
+/* Badges */
+.pcc-badge {
+    border-radius: 4px;
+    padding: 0 7px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+

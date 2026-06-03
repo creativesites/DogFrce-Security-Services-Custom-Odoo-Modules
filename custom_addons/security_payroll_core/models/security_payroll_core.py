@@ -1,3 +1,5 @@
+import base64
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -91,6 +93,23 @@ class SecurityPayrollPeriod(models.Model):
                 payslip.action_compute_from_sources()
             period.state = "processed"
 
+    def action_recompute_payslips(self):
+        self.action_generate_payslips()
+
+    def action_confirm_payslips(self):
+        for period in self:
+            period.payslip_ids.filtered(lambda payslip: payslip.state == "draft").action_confirm()
+
+    def action_mark_payslips_paid(self):
+        for period in self:
+            period.payslip_ids.filtered(lambda payslip: payslip.state == "confirmed").action_mark_paid()
+
+    def action_print_payslips(self):
+        self.ensure_one()
+        if not self.payslip_ids:
+            raise ValidationError("There are no payslips in this period to print.")
+        return self.env.ref("security_payroll_core.action_report_security_payslip").report_action(self.payslip_ids)
+
     def action_close(self):
         for period in self:
             period.state = "closed"
@@ -98,6 +117,95 @@ class SecurityPayrollPeriod(models.Model):
     def action_reset_to_draft(self):
         for period in self:
             period.state = "draft"
+
+    def action_email_payslips(self):
+        self.ensure_one()
+        sent = 0
+        failed = 0
+        for payslip in self.payslip_ids.filtered(lambda p: p.state in ("confirmed", "paid")):
+            employee = payslip.employee_id
+            email_to = employee.work_email
+            if not email_to:
+                failed += 1
+                continue
+            try:
+                report = self.env.ref("security_payroll_core.action_report_security_payslip")
+                pdf_content, _ = report._render_qweb_pdf([payslip.id])
+                attachment = self.env["ir.attachment"].create({
+                    "name": f"Payslip_{payslip.name.replace('/', '_')}.pdf",
+                    "type": "binary",
+                    "datas": base64.b64encode(pdf_content),
+                    "res_model": "security.payslip",
+                    "res_id": payslip.id,
+                })
+                mail = self.env["mail.mail"].create({
+                    "subject": f"Your Payslip — {payslip.name}",
+                    "email_to": email_to,
+                    "body_html": f"<p>Dear {employee.name},</p><p>Please find your payslip for {payslip.name} attached.</p><p>DogForce Security Services</p>",
+                    "attachment_ids": [(4, attachment.id)],
+                })
+                mail.send()
+                sent += 1
+            except Exception:
+                failed += 1
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Payslips Emailed",
+                "message": f"{sent} sent, {failed} failed (no email address).",
+                "type": "success" if not failed else "warning",
+            },
+        }
+
+    def action_export_payroll_register(self):
+        self.ensure_one()
+        import io
+        import csv
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            "Employee", "SSC Number", "Tax Number",
+            "Normal Hrs", "Sat Hrs", "Sun Hrs", "PH Hrs", "Night Hrs", "OT Hrs",
+            "Gross Pay", "SSC Deduction", "PAYE Deduction",
+            "Loan Deductions", "Incident Deductions", "Net Pay", "State",
+        ])
+        for ps in self.payslip_ids.sorted(key=lambda p: p.employee_id.name):
+            ssc = sum(ps.deduction_line_ids.filtered(lambda l: l.code == "SSC").mapped("amount"))
+            paye = sum(ps.deduction_line_ids.filtered(lambda l: l.code == "PAYE").mapped("amount"))
+            loans = sum(ps.deduction_line_ids.filtered(lambda l: l.code == "LOAN").mapped("amount"))
+            incidents = sum(ps.deduction_line_ids.filtered(lambda l: l.code == "INCIDENT").mapped("amount"))
+            writer.writerow([
+                ps.employee_id.name,
+                ps.employee_id.security_ssc_number or "",
+                ps.employee_id.security_tax_number or "",
+                round(ps.normal_hours, 2),
+                round(ps.saturday_hours, 2),
+                round(ps.sunday_hours, 2),
+                round(ps.public_holiday_hours, 2),
+                round(ps.night_hours, 2),
+                round(ps.overtime_hours, 2),
+                round(ps.total_earnings, 2),
+                round(ssc, 2),
+                round(paye, 2),
+                round(loans, 2),
+                round(incidents, 2),
+                round(ps.net_pay, 2),
+                ps.state,
+            ])
+        csv_bytes = base64.b64encode(output.getvalue().encode("utf-8"))
+        attachment = self.env["ir.attachment"].create({
+            "name": f"Payroll_Register_{self.name.replace('/', '_')}.csv",
+            "type": "binary",
+            "datas": csv_bytes,
+            "res_model": "security.payroll.period",
+            "res_id": self.id,
+        })
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/{attachment.id}?download=true",
+            "target": "self",
+        }
 
 
 class SecurityPayslip(models.Model):
@@ -188,10 +296,14 @@ class SecurityPayslip(models.Model):
     normal_hours = fields.Float(compute="_compute_period_metrics", store=True)
     sunday_hours = fields.Float(compute="_compute_period_metrics", store=True)
     public_holiday_hours = fields.Float(compute="_compute_period_metrics", store=True)
+    saturday_hours = fields.Float(compute="_compute_period_metrics", store=True)
+    night_hours = fields.Float(compute="_compute_period_metrics", store=True)
     overtime_hours = fields.Float(compute="_compute_period_metrics", store=True)
     unpaid_hours = fields.Float(compute="_compute_period_metrics", store=True)
     awol_occurrences = fields.Integer(compute="_compute_period_metrics", store=True)
     hourly_rate = fields.Float(compute="_compute_hourly_rate", store=True)
+    anomaly_flags = fields.Text(readonly=True)
+    anomaly_score = fields.Integer(default=0, readonly=True)
     note = fields.Text()
 
     @api.depends("employee_id", "period_id")
@@ -203,10 +315,13 @@ class SecurityPayslip(models.Model):
 
     @api.depends(
         "attendance_record_ids.status",
-        "attendance_record_ids.payable_hours",
+        "attendance_record_ids.normal_hours",
+        "attendance_record_ids.sunday_hours",
+        "attendance_record_ids.public_holiday_hours",
+        "attendance_record_ids.saturday_hours",
+        "attendance_record_ids.night_hours",
         "attendance_record_ids.overtime_hours",
         "attendance_record_ids.unpaid_hours",
-        "attendance_record_ids.premium_category",
         "attendance_record_ids.absence_type",
         "leave_request_ids.requested_days",
         "leave_request_ids.leave_type_id",
@@ -221,6 +336,8 @@ class SecurityPayslip(models.Model):
             normal_hours = 0.0
             sunday_hours = 0.0
             public_holiday_hours = 0.0
+            saturday_hours = 0.0
+            night_hours = 0.0
             overtime_hours = 0.0
             unpaid_hours = 0.0
             awol_occurrences = 0
@@ -232,12 +349,11 @@ class SecurityPayslip(models.Model):
                     late += 1
                 if attendance.status == "early_leave":
                     early += 1
-                if attendance.premium_category == "public_holiday":
-                    public_holiday_hours += attendance.payable_hours
-                elif attendance.premium_category == "sunday":
-                    sunday_hours += attendance.payable_hours
-                else:
-                    normal_hours += attendance.payable_hours
+                normal_hours += attendance.normal_hours
+                sunday_hours += attendance.sunday_hours
+                public_holiday_hours += attendance.public_holiday_hours
+                saturday_hours += attendance.saturday_hours
+                night_hours += attendance.night_hours
                 overtime_hours += attendance.overtime_hours
                 unpaid_hours += attendance.unpaid_hours
                 if attendance.absence_type == "awol":
@@ -257,6 +373,8 @@ class SecurityPayslip(models.Model):
             payslip.normal_hours = normal_hours
             payslip.sunday_hours = sunday_hours
             payslip.public_holiday_hours = public_holiday_hours
+            payslip.saturday_hours = saturday_hours
+            payslip.night_hours = night_hours
             payslip.overtime_hours = overtime_hours
             payslip.unpaid_hours = unpaid_hours
             payslip.awol_occurrences = awol_occurrences
@@ -334,6 +452,24 @@ class SecurityPayslip(models.Model):
                     "rate": holiday_rate,
                     "amount": payslip.public_holiday_hours * holiday_rate,
                 }))
+            if payslip.saturday_hours:
+                saturday_rate = rate * rule_set.saturday_multiplier
+                earning_lines.append((0, 0, {
+                    "name": "Saturday Hours",
+                    "code": "SATURDAY",
+                    "quantity": payslip.saturday_hours,
+                    "rate": saturday_rate,
+                    "amount": payslip.saturday_hours * saturday_rate,
+                }))
+            if payslip.night_hours:
+                night_rate = rate * rule_set.night_shift_multiplier
+                earning_lines.append((0, 0, {
+                    "name": "Night Shift Hours",
+                    "code": "NIGHT",
+                    "quantity": payslip.night_hours,
+                    "rate": night_rate,
+                    "amount": payslip.night_hours * night_rate,
+                }))
             if payslip.overtime_hours:
                 overtime_rate = rate * rule_set.overtime_multiplier
                 earning_lines.append((0, 0, {
@@ -345,6 +481,9 @@ class SecurityPayslip(models.Model):
                 }))
             payslip.earning_line_ids = earning_lines
 
+            # Calculate gross earnings from earning lines to use in statutory computations
+            gross_earnings = sum(line[2]["amount"] for line in earning_lines)
+
             deduction_lines = []
             if payslip.unpaid_hours:
                 deduction_lines.append((0, 0, {
@@ -354,6 +493,54 @@ class SecurityPayslip(models.Model):
                     "rate": rate,
                     "amount": payslip.unpaid_hours * rate,
                 }))
+
+            # 1. Social Security Commission (SSC) Deduction Calculation (Namibia)
+            # SSC is calculated on basic wage/salary (Normal + Sunday + Public Holiday hours)
+            basic_ssc_base = sum(
+                line[2]["amount"]
+                for line in earning_lines
+                if line[2]["code"] in ("NORMAL", "SUNDAY", "PUBLIC_HOLIDAY", "SATURDAY", "NIGHT")
+            )
+            ssc_rate = rule_set.employee_ssc_rate or 0.009
+            ssc_cap = rule_set.ssc_salary_cap or 9000.0
+            ssc_deduction = min(basic_ssc_base, ssc_cap) * ssc_rate
+            if ssc_deduction > 0:
+                deduction_lines.append((0, 0, {
+                    "name": "Social Security Commission (SSC)",
+                    "code": "SSC",
+                    "quantity": 1.0,
+                    "rate": ssc_deduction,
+                    "amount": ssc_deduction,
+                }))
+
+            # 2. Pay As You Earn (PAYE) Deduction Calculation (Namibia)
+            # SSC is tax-deductible in Namibia
+            taxable_monthly = max(gross_earnings - ssc_deduction, 0.0)
+            annual_taxable_income = taxable_monthly * 12.0
+
+            brackets = self.env["security.tax.bracket"].search(
+                [("rule_set_id", "=", rule_set.id)], order="lower_bound"
+            )
+            paye_deduction = 0.0
+            for bracket in brackets:
+                upper = bracket.upper_bound or float("inf")
+                if bracket.lower_bound <= annual_taxable_income <= upper:
+                    lower = int(bracket.lower_bound)
+                    annual_tax = bracket.fixed_amount + (
+                        (annual_taxable_income - lower) * bracket.rate
+                    )
+                    paye_deduction = max(annual_tax / 12.0, 0.0)
+                    break
+
+            if paye_deduction > 0:
+                deduction_lines.append((0, 0, {
+                    "name": "Pay As You Earn (PAYE)",
+                    "code": "PAYE",
+                    "quantity": 1.0,
+                    "rate": paye_deduction,
+                    "amount": paye_deduction,
+                }))
+
             if loan_model:
                 active_loans = loan_model.search(
                     [
@@ -392,6 +579,65 @@ class SecurityPayslip(models.Model):
                     }))
             payslip.deduction_line_ids = deduction_lines
 
+            # Deduction cap: ensure net pay stays above the configured floor
+            floor_pct = rule_set.deduction_floor_pct if rule_set else 0.30
+            min_net = payslip.total_earnings * floor_pct
+            if payslip.total_deductions > payslip.total_earnings - min_net:
+                excess = payslip.total_deductions - (payslip.total_earnings - min_net)
+                # Remove excess from the last (lowest-priority) deduction line
+                # Sort so LOAN/INCIDENT lines come last (reduced first)
+                ded_lines = payslip.deduction_line_ids.sorted(key=lambda l: (l.code not in ('LOAN', 'INCIDENT'), l.id))
+                for line in reversed(list(ded_lines)):
+                    if excess <= 0:
+                        break
+                    remove = min(line.amount, excess)
+                    line.carry_forward_amount = remove
+                    line.amount -= remove
+                    line.capped = True
+                    excess -= remove
+                    if line.amount <= 0:
+                        line.unlink()
+
+            # Anomaly detection — surface patterns that warrant review.
+            flags = []
+            score = 0
+            if payslip.awol_occurrences >= 2:
+                flags.append(f"AWOL x{payslip.awol_occurrences} — repeated unauthorised absences")
+                score += payslip.awol_occurrences * 3
+            if payslip.late_occurrences >= 3:
+                flags.append(f"Late arrivals x{payslip.late_occurrences}")
+                score += payslip.late_occurrences
+            missing_checkouts = sum(
+                1 for rec in attendance_records if rec.missing_check_out
+            )
+            if missing_checkouts >= 2:
+                flags.append(f"Missing check-out x{missing_checkouts}")
+                score += missing_checkouts * 2
+            total_payable = (
+                payslip.normal_hours
+                + payslip.sunday_hours
+                + payslip.public_holiday_hours
+                + payslip.saturday_hours
+                + payslip.night_hours
+            )
+            if total_payable > 0 and payslip.unpaid_hours / total_payable > 0.35:
+                pct = round(payslip.unpaid_hours / total_payable * 100)
+                flags.append(f"High no-work-no-pay ratio: {pct}% of scheduled hours unpaid")
+                score += 5
+            payslip.anomaly_flags = "\n".join(flags) if flags else False
+            payslip.anomaly_score = score
+
+    def action_print_payslip(self):
+        return self.env.ref("security_payroll_core.action_report_security_payslip").report_action(self)
+
+    def action_preview_payslip(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/report/html/security_payroll_core.report_security_payslip/{self.id}",
+            "target": "new",
+        }
+
 
 class SecurityPayslipEarningLine(models.Model):
     _name = "security.payslip.earning.line"
@@ -427,3 +673,32 @@ class SecurityPayslipDeductionLine(models.Model):
     quantity = fields.Float(default=1.0)
     rate = fields.Float(default=0.0)
     amount = fields.Float(required=True, default=0.0)
+    capped = fields.Boolean(default=False, readonly=True, string="Capped by Floor")
+    carry_forward_amount = fields.Float(default=0.0, string="Carry Forward Amount")
+
+
+class HrEmployee(models.Model):
+    _inherit = "hr.employee"
+
+    security_ssc_number = fields.Char(string="SSC Number")
+    security_tax_number = fields.Char(string="Income Tax / PAYE Number")
+    security_bank_name = fields.Char(string="Bank Name")
+    security_bank_branch = fields.Char(string="Bank Branch Code")
+    security_bank_account_number = fields.Char(string="Bank Account Number")
+
+    # H-14: payslip history on employee form
+    payslip_ids = fields.One2many(
+        "security.payslip",
+        "employee_id",
+        string="Payslips",
+    )
+    payslip_count = fields.Integer(
+        compute="_compute_employee_payslip_count",
+        string="Payslip Count",
+    )
+
+    def _compute_employee_payslip_count(self):
+        for emp in self:
+            emp.payslip_count = self.env["security.payslip"].search_count(
+                [("employee_id", "=", emp.id)]
+            )

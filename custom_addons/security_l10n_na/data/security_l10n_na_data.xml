@@ -51,21 +51,200 @@
         <field name="rate">0.37</field>
     </record>
 
-    <record id="security_public_holiday_na_new_year" model="security.public.holiday">
+    <!-- ================================================================ -->
+    <!-- Namibian Public Holidays — 2024                                  -->
+    <!-- Source: Public Holidays Act 26 of 1990 (as amended)             -->
+    <!-- Note: Verify substitute dates against annual government gazette  -->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_na_2024_new_year" model="security.public.holiday">
         <field name="name">New Year's Day</field>
         <field name="country_code">NA</field>
         <field name="holiday_date">2024-01-01</field>
     </record>
-
-    <record id="security_public_holiday_na_independence" model="security.public.holiday">
+    <record id="security_public_holiday_na_2024_independence" model="security.public.holiday">
         <field name="name">Independence Day</field>
         <field name="country_code">NA</field>
         <field name="holiday_date">2024-03-21</field>
     </record>
-
-    <record id="security_public_holiday_na_christmas" model="security.public.holiday">
+    <record id="security_public_holiday_na_2024_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-03-29</field>
+    </record>
+    <record id="security_public_holiday_na_2024_easter_monday" model="security.public.holiday">
+        <field name="name">Easter Monday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-04-01</field>
+    </record>
+    <record id="security_public_holiday_na_2024_workers_day" model="security.public.holiday">
+        <field name="name">Workers' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-05-01</field>
+    </record>
+    <record id="security_public_holiday_na_2024_cassinga_day" model="security.public.holiday">
+        <field name="name">Cassinga Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-05-04</field>
+    </record>
+    <record id="security_public_holiday_na_2024_ascension" model="security.public.holiday">
+        <field name="name">Ascension Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-05-09</field>
+    </record>
+    <record id="security_public_holiday_na_2024_africa_day" model="security.public.holiday">
+        <field name="name">Africa Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-05-25</field>
+    </record>
+    <record id="security_public_holiday_na_2024_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-08-26</field>
+    </record>
+    <record id="security_public_holiday_na_2024_human_rights_day" model="security.public.holiday">
+        <field name="name">Human Rights Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-12-10</field>
+    </record>
+    <record id="security_public_holiday_na_2024_christmas" model="security.public.holiday">
         <field name="name">Christmas Day</field>
         <field name="country_code">NA</field>
         <field name="holiday_date">2024-12-25</field>
+    </record>
+    <record id="security_public_holiday_na_2024_family_day" model="security.public.holiday">
+        <field name="name">Family Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2024-12-26</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Namibian Public Holidays — 2025                                  -->
+    <!-- Cassinga Day (4 May) falls on Sunday → observed Mon 5 May        -->
+    <!-- Africa Day (25 May) falls on Sunday → observed Mon 26 May        -->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_na_2025_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-01-01</field>
+    </record>
+    <record id="security_public_holiday_na_2025_independence" model="security.public.holiday">
+        <field name="name">Independence Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-03-21</field>
+    </record>
+    <record id="security_public_holiday_na_2025_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-04-18</field>
+    </record>
+    <record id="security_public_holiday_na_2025_easter_monday" model="security.public.holiday">
+        <field name="name">Easter Monday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-04-21</field>
+    </record>
+    <record id="security_public_holiday_na_2025_workers_day" model="security.public.holiday">
+        <field name="name">Workers' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-05-01</field>
+    </record>
+    <record id="security_public_holiday_na_2025_cassinga_day_observed" model="security.public.holiday">
+        <field name="name">Cassinga Day (observed)</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-05-05</field>
+    </record>
+    <record id="security_public_holiday_na_2025_ascension" model="security.public.holiday">
+        <field name="name">Ascension Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-05-29</field>
+    </record>
+    <record id="security_public_holiday_na_2025_africa_day_observed" model="security.public.holiday">
+        <field name="name">Africa Day (observed)</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-05-26</field>
+    </record>
+    <record id="security_public_holiday_na_2025_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-08-26</field>
+    </record>
+    <record id="security_public_holiday_na_2025_human_rights_day" model="security.public.holiday">
+        <field name="name">Human Rights Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-12-10</field>
+    </record>
+    <record id="security_public_holiday_na_2025_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-12-25</field>
+    </record>
+    <record id="security_public_holiday_na_2025_family_day" model="security.public.holiday">
+        <field name="name">Family Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2025-12-26</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Namibian Public Holidays — 2026                                  -->
+    <!-- Independence Day (21 Mar) falls on Saturday → observed Mon 23 Mar-->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_na_2026_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-01-01</field>
+    </record>
+    <record id="security_public_holiday_na_2026_independence_observed" model="security.public.holiday">
+        <field name="name">Independence Day (observed)</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-03-23</field>
+    </record>
+    <record id="security_public_holiday_na_2026_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-04-03</field>
+    </record>
+    <record id="security_public_holiday_na_2026_easter_monday" model="security.public.holiday">
+        <field name="name">Easter Monday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-04-06</field>
+    </record>
+    <record id="security_public_holiday_na_2026_workers_day" model="security.public.holiday">
+        <field name="name">Workers' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-05-01</field>
+    </record>
+    <record id="security_public_holiday_na_2026_cassinga_day" model="security.public.holiday">
+        <field name="name">Cassinga Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-05-04</field>
+    </record>
+    <record id="security_public_holiday_na_2026_ascension" model="security.public.holiday">
+        <field name="name">Ascension Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-05-14</field>
+    </record>
+    <record id="security_public_holiday_na_2026_africa_day" model="security.public.holiday">
+        <field name="name">Africa Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-05-25</field>
+    </record>
+    <record id="security_public_holiday_na_2026_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-08-26</field>
+    </record>
+    <record id="security_public_holiday_na_2026_human_rights_day" model="security.public.holiday">
+        <field name="name">Human Rights Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-12-10</field>
+    </record>
+    <record id="security_public_holiday_na_2026_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-12-25</field>
+    </record>
+    <record id="security_public_holiday_na_2026_family_day" model="security.public.holiday">
+        <field name="name">Family Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2026-12-26</field>
     </record>
 </odoo>

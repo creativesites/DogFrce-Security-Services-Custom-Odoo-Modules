@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_security_ai_admin" model="ir.actions.client">
+        <field name="name">AI Engine Dashboard</field>
+        <field name="tag">security_ai_engine.ai_admin</field>
+    </record>
+
+    <menuitem id="menu_security_ai_dashboard"
+              name="AI Dashboard"
+              parent="security_ai_engine.menu_security_ai_engine_root"
+              action="action_security_ai_admin"
+              sequence="10"/>
+</odoo>

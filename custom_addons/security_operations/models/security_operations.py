@@ -317,6 +317,8 @@ class SecurityRosterBatch(models.Model):
         [
             ("draft", "Draft"),
             ("generated", "Generated"),
+            ("submitted", "Submitted"),
+            ("approved", "Approved"),
             ("confirmed", "Confirmed"),
             ("cancelled", "Cancelled"),
         ],
@@ -325,6 +327,9 @@ class SecurityRosterBatch(models.Model):
     )
     slot_ids = fields.One2many("security.roster.slot", "batch_id", string="Roster Slots")
     generated_slot_count = fields.Integer(compute="_compute_generated_slot_count")
+    submitted_by_id = fields.Many2one("res.users", readonly=True, string="Submitted By")
+    approved_by_id = fields.Many2one("res.users", readonly=True, string="Approved By")
+    rejection_reason = fields.Text(string="Rejection Reason")
     note = fields.Text()
 
     @api.depends("date_from", "date_to", "partner_id", "site_id")
@@ -410,6 +415,81 @@ class SecurityRosterBatch(models.Model):
     def action_reset_to_draft(self):
         for batch in self:
             batch.state = "draft"
+
+    def action_submit(self):
+        for batch in self:
+            batch.state = "submitted"
+            batch.submitted_by_id = self.env.user.id
+            if "security.notification" in self.env:
+                self.env["security.notification"].sudo().create({
+                    "title": f"Roster Submitted: {batch.name}",
+                    "body": (
+                        f"Roster batch '{batch.name}' has been submitted for approval"
+                        f" by {self.env.user.name}."
+                    ),
+                    "notification_type": "roster_gap",
+                    "severity": "info",
+                })
+
+    def action_approve(self):
+        for batch in self:
+            batch.state = "approved"
+            batch.approved_by_id = self.env.user.id
+
+    def action_reject(self):
+        for batch in self:
+            batch.state = "draft"
+
+    def action_copy_from_previous_month(self):
+        """Copy all confirmed slots from the most recent previous batch."""
+        self.ensure_one()
+        from dateutil.relativedelta import relativedelta
+
+        prev_batch = self.search(
+            [("id", "!=", self.id), ("date_from", "<", self.date_from)],
+            order="date_from desc",
+            limit=1,
+        )
+        if not prev_batch:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Previous Roster",
+                    "message": "No previous roster batch found.",
+                    "type": "warning",
+                },
+            }
+        month_diff = (
+            (self.date_from.year - prev_batch.date_from.year) * 12
+            + (self.date_from.month - prev_batch.date_from.month)
+        )
+        created = 0
+        for slot in prev_batch.slot_ids.filtered(lambda s: s.state == "confirmed"):
+            new_date = slot.shift_date + relativedelta(months=month_diff)
+            if self.date_from <= new_date <= self.date_to:
+                if not slot.post_id or not slot.shift_template_id:
+                    continue
+                slot_vals = {
+                    "batch_id": self.id,
+                    "post_id": slot.post_id.id,
+                    "shift_date": new_date,
+                    "shift_template_id": slot.shift_template_id.id,
+                    "state": "draft",
+                }
+                if slot.employee_id:
+                    slot_vals["employee_id"] = slot.employee_id.id
+                self.env["security.roster.slot"].create(slot_vals)
+                created += 1
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Roster Copied",
+                "message": f"{created} slots copied from {prev_batch.name}.",
+                "type": "success",
+            },
+        }
 
 
 class SecurityRosterSlot(models.Model):
@@ -544,6 +624,23 @@ class SecurityRosterSlot(models.Model):
                 raise ValidationError(
                     "The assigned guard is missing required certifications for this post type."
                 )
+
+            # Check that no required certification has an expired linked document.
+            if hasattr(employee, "get_expired_certification_ids"):
+                expired_cert_ids = employee.get_expired_certification_ids()
+                if expired_cert_ids:
+                    required_cert_ids = set(post_type.required_certification_ids.ids)
+                    if requirement:
+                        required_cert_ids |= set(requirement.required_certification_ids.ids)
+                    expired_required = required_cert_ids & expired_cert_ids
+                    if expired_required:
+                        cert_names = self.env["security.certification"].browse(
+                            list(expired_required)
+                        ).mapped("name")
+                        raise ValidationError(
+                            "The following required certifications have expired: %s"
+                            % ", ".join(cert_names)
+                        )
             if post_type.required_language_ids - employee.security_language_ids:
                 raise ValidationError(
                     "The assigned guard is missing required languages for this post type."

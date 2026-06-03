@@ -62,6 +62,16 @@ class SecurityBillingInvoice(models.Model):
             else:
                 invoice.payment_status = "paid"
 
+    def action_open_record_payment(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "security.record.payment.wizard",
+            "views": [[False, "form"]],
+            "context": {"default_invoice_id": self.id},
+            "target": "new",
+        }
+
     @api.depends("due_date", "state", "payment_status")
     def _compute_ageing(self):
         today = fields.Date.context_today(self)
@@ -180,3 +190,93 @@ class SecurityClientPayment(models.Model):
         for payment in self:
             payment.state = "cancelled"
             payment.invoice_id._compute_payment_status()
+
+
+class SecurityRecordPaymentWizard(models.TransientModel):
+    _name = "security.record.payment.wizard"
+    _description = "Record Payment Wizard"
+
+    invoice_id = fields.Many2one("security.billing.invoice", required=True, readonly=True)
+    partner_id = fields.Many2one(related="invoice_id.partner_id", readonly=True)
+    invoice_total = fields.Float(related="invoice_id.total_amount", readonly=True, string="Invoice Total")
+    outstanding = fields.Float(compute="_compute_outstanding", string="Amount Outstanding")
+    amount = fields.Float(required=True, string="Payment Amount")
+    payment_date = fields.Date(required=True, default=fields.Date.context_today)
+    payment_method = fields.Selection(
+        [
+            ("bank_transfer", "Bank Transfer"),
+            ("cash", "Cash"),
+            ("cheque", "Cheque"),
+            ("mobile_money", "Mobile Money"),
+            ("other", "Other"),
+        ],
+        default="bank_transfer",
+        required=True,
+    )
+    bank_reference = fields.Char(string="Bank Reference / Transaction ID")
+    note = fields.Text()
+
+    @api.depends("invoice_id")
+    def _compute_outstanding(self):
+        for wiz in self:
+            invoice = wiz.invoice_id
+            if invoice:
+                paid = sum(
+                    invoice.payment_ids.filtered(lambda p: p.state == "posted").mapped("amount")
+                ) if hasattr(invoice, "payment_ids") else 0.0
+                wiz.outstanding = max(0, invoice.total_amount - paid)
+            else:
+                wiz.outstanding = 0.0
+
+    @api.onchange("invoice_id")
+    def _onchange_invoice(self):
+        if self.invoice_id:
+            self.amount = self.outstanding or self.invoice_id.total_amount
+
+    def action_record_payment(self):
+        self.ensure_one()
+        payment = self.env["security.client.payment"].create({
+            "invoice_id": self.invoice_id.id,
+            "amount": self.amount,
+            "payment_date": self.payment_date,
+            "payment_method": self.payment_method,
+            "bank_reference": self.bank_reference or False,
+            "note": self.note or False,
+        })
+        payment.action_post()
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Payment Recorded",
+                "message": f"Payment of N$ {self.amount:,.2f} recorded for {self.invoice_id.name}.",
+                "type": "success",
+            },
+        }
+
+
+class ResPartner(models.Model):
+    _inherit = "res.partner"
+
+    security_invoice_outstanding = fields.Float(
+        compute="_compute_invoice_outstanding",
+        string="Outstanding (Security)",
+    )
+    security_invoice_count = fields.Integer(
+        compute="_compute_invoice_outstanding",
+        string="Security Invoices",
+    )
+
+    def _compute_invoice_outstanding(self):
+        invoice_model = self.env.get("security.billing.invoice")
+        for partner in self:
+            if invoice_model is not None:
+                unpaid = invoice_model.search([
+                    ("partner_id", "=", partner.id),
+                    ("state", "not in", ["paid", "cancelled"]),
+                ])
+                partner.security_invoice_outstanding = sum(unpaid.mapped("total_amount"))
+                partner.security_invoice_count = len(unpaid)
+            else:
+                partner.security_invoice_outstanding = 0
+                partner.security_invoice_count = 0

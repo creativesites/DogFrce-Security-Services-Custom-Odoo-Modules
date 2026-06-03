@@ -44,6 +44,84 @@
         </field>
     </record>
 
+    <!-- Record Payment Wizard -->
+    <record id="view_security_record_payment_wizard_form" model="ir.ui.view">
+        <field name="name">security.record.payment.wizard.form</field>
+        <field name="model">security.record.payment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Record Payment">
+                <group>
+                    <group string="Invoice">
+                        <field name="invoice_id" readonly="1"/>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="invoice_total" readonly="1"/>
+                        <field name="outstanding" readonly="1"/>
+                    </group>
+                    <group string="Payment Details">
+                        <field name="amount"/>
+                        <field name="payment_date"/>
+                        <field name="payment_method"/>
+                        <field name="bank_reference"/>
+                    </group>
+                </group>
+                <group>
+                    <field name="note" placeholder="Optional payment notes..."/>
+                </group>
+                <footer>
+                    <button name="action_record_payment" type="object" string="Record Payment" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_record_payment_wizard" model="ir.actions.act_window">
+        <field name="name">Record Payment</field>
+        <field name="res_model">security.record.payment.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- "Record Payment" button on the billing invoice form -->
+    <record id="view_security_billing_invoice_payment_btn" model="ir.ui.view">
+        <field name="name">security.billing.invoice.form.payment.btn</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_open_record_payment" type="object"
+                        string="Record Payment"
+                        class="oe_highlight"
+                        invisible="state not in ['sent','paid']"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- I-9: Outstanding security invoices smart button on res.partner form -->
+    <record id="action_security_billing_invoice_by_partner" model="ir.actions.act_window">
+        <field name="name">Security Invoices</field>
+        <field name="res_model">security.billing.invoice</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('partner_id','=',active_id),('state','not in',['paid','cancelled'])]</field>
+    </record>
+
+    <record id="view_res_partner_security_invoices" model="ir.ui.view">
+        <field name="name">res.partner.form.security.invoices</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('oe_button_box')]" position="inside">
+                <button name="%(security_accounting_controls.action_security_billing_invoice_by_partner)d"
+                        type="action"
+                        class="oe_stat_button"
+                        icon="fa-file-text-o"
+                        invisible="security_invoice_count == 0">
+                    <field name="security_invoice_count" widget="statinfo" string="Invoices"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
     <record id="view_security_client_payment_list" model="ir.ui.view">
         <field name="name">security.client.payment.list</field>
         <field name="model">security.client.payment</field>
@@ -179,18 +257,18 @@
     <menuitem
         id="menu_security_client_payment"
         name="Client Payments"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_billing_root"
         action="action_security_client_payment"
-        sequence="160"
+        sequence="30"
         groups="hr.group_hr_user"
     />
 
     <menuitem
         id="menu_security_invoice_ageing"
         name="Invoice Ageing"
-        parent="security_operations.menu_security_posts"
+        parent="security_operations.menu_security_billing_root"
         action="action_security_invoice_ageing"
-        sequence="170"
+        sequence="40"
         groups="hr.group_hr_user"
     />
 </odoo>

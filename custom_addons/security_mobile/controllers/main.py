@@ -63,3 +63,78 @@ def _employee_for_user(user=None):
         [("user_id", "=", user.id)], limit=1
     )
     return employee or request.env["hr.employee"]
+
+
+class PinController(http.Controller):
+
+    @http.route(
+        "/api/security/mobile/auth/pin",
+        auth="public",
+        methods=["POST"],
+        type="http",
+        csrf=False,
+    )
+    def pin_auth(self, **kw):
+        """
+        Authenticate using a PIN hash.
+
+        Body: { db, employee_id, pin_hash }
+        Returns: session info on success, error on failure.
+        """
+        body = _parse_body()
+        employee_id = body.get("employee_id")
+        pin_hash = body.get("pin_hash")
+        db = body.get("db") or request.db
+
+        if not employee_id or not pin_hash:
+            return _json_err("employee_id and pin_hash are required.")
+
+        env = request.env(su=True)
+        employee = env["hr.employee"].browse(int(employee_id))
+
+        if not employee.exists():
+            return _json_err("Employee not found.", status=404)
+
+        stored_hash = getattr(employee, "security_mobile_pin_hash", None)
+        if not stored_hash:
+            return _json_err("PIN not configured for this employee.", status=401)
+
+        if stored_hash != pin_hash:
+            return _json_err("Invalid PIN.", status=401)
+
+        # Authenticate the linked user
+        user = employee.user_id
+        if not user:
+            return _json_err("No Odoo user linked to this employee.", status=401)
+
+        # Create a new session
+        request.session.authenticate(db, user.login, user._crypt_context().hash(pin_hash))
+
+        return _json_ok({
+            "uid": user.id,
+            "name": user.name,
+            "employee_id": employee.id,
+            "employee_name": employee.name,
+            "session_id": request.session.sid,
+        })
+
+    @http.route(
+        "/api/security/mobile/auth/pin/set",
+        auth="user",
+        methods=["POST"],
+        type="http",
+        csrf=False,
+    )
+    def pin_set(self, **kw):
+        """Set or update the employee's mobile PIN hash."""
+        body = _parse_body()
+        pin_hash = body.get("pin_hash")
+        if not pin_hash or len(pin_hash) < 8:
+            return _json_err("pin_hash must be at least 8 characters (SHA-256 recommended).")
+
+        employee = _employee_for_user()
+        if not employee:
+            return _json_err("No employee record linked to your account.")
+
+        employee.sudo().write({"security_mobile_pin_hash": pin_hash})
+        return _json_ok({"message": "PIN updated successfully."})

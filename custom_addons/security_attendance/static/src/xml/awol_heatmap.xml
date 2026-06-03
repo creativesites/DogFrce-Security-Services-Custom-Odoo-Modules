@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+<t t-name="security_attendance.AWOLHeatmap">
+<div style="display:flex; flex-direction:column; height:100%; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+
+    <!-- Header -->
+    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 100%); padding:16px 24px; display:flex; align-items:center; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:12px;">
+            <i class="fa fa-th fa-2x" style="color:rgba(255,255,255,0.9);"/>
+            <div>
+                <h3 style="margin:0;color:white;font-weight:700;">Attendance Heatmap</h3>
+                <span style="color:rgba(255,255,255,0.7);font-size:12px;">Last 30 days — AWOL and absence overview</span>
+            </div>
+        </div>
+        <!-- Site filter -->
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span style="color:rgba(255,255,255,0.7);font-size:12px;">Filter by site:</span>
+            <select style="border-radius:8px;padding:4px 8px;font-size:13px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;"
+                    t-on-change="(e) => this.setFilterSite(parseInt(e.target.value) || null)">
+                <option value="">All Sites</option>
+                <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                    <option t-att-value="site.id"><t t-esc="site.name"/></option>
+                </t>
+            </select>
+        </div>
+    </div>
+
+    <!-- Legend + summary -->
+    <div style="background:white;padding:8px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <span style="width:14px;height:14px;border-radius:3px;background:#16a34a;display:inline-block;"/>Present
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <span style="width:14px;height:14px;border-radius:3px;background:#d97706;display:inline-block;"/>Absent
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <span style="width:14px;height:14px;border-radius:3px;background:#dc2626;display:inline-block;"/>AWOL
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <span style="width:14px;height:14px;border-radius:3px;background:#e2e8f0;border:1px solid #cbd5e1;display:inline-block;"/>No Record
+        </div>
+        <div style="margin-left:auto;font-size:12px;color:#64748b;">
+            <t t-esc="visibleGuards.length"/> guards shown
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <t t-if="state.loading">
+        <div style="display:flex;justify-content:center;align-items:center;flex:1;">
+            <div class="spinner-border text-primary" role="status"/>
+        </div>
+    </t>
+
+    <!-- Grid -->
+    <t t-else="">
+        <div style="flex:1;overflow:auto;padding:16px;">
+            <t t-if="visibleGuards.length === 0">
+                <div style="text-align:center;color:#64748b;padding:40px;">No guards found.</div>
+            </t>
+            <t t-else="">
+            <table style="border-collapse:collapse;font-size:11px;min-width:100%;">
+                <thead>
+                    <tr>
+                        <th style="position:sticky;left:0;background:white;z-index:2;padding:4px 8px;text-align:left;min-width:160px;border-bottom:2px solid #e2e8f0;color:#64748b;font-weight:600;">Guard</th>
+                        <t t-foreach="dateHeaders" t-as="dh" t-key="dh.date">
+                            <th style="padding:2px 1px;text-align:center;min-width:20px;border-bottom:2px solid #e2e8f0;color:#94a3b8;font-weight:500;white-space:nowrap;font-size:10px;">
+                                <t t-esc="dh.label"/>
+                            </th>
+                        </t>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="visibleGuards" t-as="guard" t-key="guard.id">
+                        <tr>
+                            <td style="position:sticky;left:0;background:white;z-index:1;padding:3px 8px;white-space:nowrap;border-bottom:1px solid #f1f5f9;font-weight:500;color:#1e293b;">
+                                <t t-esc="guard.name"/>
+                            </td>
+                            <t t-foreach="state.days" t-as="day" t-key="day">
+                                <td t-att-title="getCellTooltip(guard.id, day)"
+                                    t-on-click="() => this.openRecord(guard.id, day)"
+                                    t-att-style="'width:20px;height:20px;border-radius:3px;cursor:pointer;background:' + getCellColor(guard.id, day) + ';border-bottom:1px solid #f1f5f9;'">
+                                </td>
+                            </t>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+            </t>
+        </div>
+    </t>
+</div>
+</t>
+</templates>

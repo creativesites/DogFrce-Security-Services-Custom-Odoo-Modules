@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_ai_config_manager,security.ai.config manager,model_security_ai_config,base.group_system,1,1,1,1
+access_security_ai_config_user,security.ai.config user,model_security_ai_config,base.group_user,1,0,0,0
+access_security_ai_log_manager,security.ai.log manager,model_security_ai_log,base.group_system,1,1,1,1
+access_security_ai_log_user,security.ai.log user,model_security_ai_log,base.group_user,1,0,0,0
+access_security_ai_cache_manager,security.ai.cache manager,model_security_ai_cache,base.group_system,1,1,1,1
+access_security_ai_cache_user,security.ai.cache user,model_security_ai_cache,base.group_user,1,0,0,0
+access_security_ai_chat_session_user,security.ai.chat.session user,model_security_ai_chat_session,base.group_user,1,1,1,1
+access_security_ai_chat_message_user,security.ai.chat.message user,model_security_ai_chat_message,base.group_user,1,1,1,1

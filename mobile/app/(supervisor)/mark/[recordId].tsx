@@ -4,6 +4,8 @@ import { Text, Button, TextInput, RadioButton, ActivityIndicator, Avatar } from 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getTodayPostingSheet, markPresence, quickCheckIn, AttendanceRecord } from '../../../src/api/supervisor';
 import { useAppStore } from '../../../src/stores/appStore';
+import { enqueuePresenceMark } from '../../../src/utils/offlineQueue';
+import { isOffline } from '../../../src/api/client';
 import { Theme } from '../../../src/theme';
 import CheckInButton from '../../../src/components/CheckInButton';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -60,7 +62,18 @@ export default function MarkGuardScreen() {
       triggerRefresh();
       router.back();
     } catch (err: any) {
-      alert(err.message || 'Failed to update attendance.');
+      if (isOffline) {
+        // Queue for later sync
+        await enqueuePresenceMark({
+          recordId: Number(recordId),
+          presence,
+          overrideReason: note || undefined,
+        });
+        alert('Offline: mark queued for sync when connection is restored.');
+        router.back();
+      } else {
+        alert(err.message || 'Failed to update attendance.');
+      }
     } finally {
       setSaving(false);
     }

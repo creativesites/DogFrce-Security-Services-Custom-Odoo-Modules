@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_security_awol_heatmap" model="ir.actions.client">
+        <field name="name">Attendance Heatmap</field>
+        <field name="tag">security_attendance.awol_heatmap</field>
+    </record>
+
+    <menuitem id="menu_security_awol_heatmap"
+              name="Attendance Heatmap"
+              parent="security_operations.menu_security_workforce"
+              action="action_security_awol_heatmap"
+              sequence="25"/>
+</odoo>

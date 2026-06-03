@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_security_payslip" model="ir.actions.report">
+        <field name="name">Security Payslip</field>
+        <field name="model">security.payslip</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_payroll_core.report_security_payslip</field>
+        <field name="report_file">security_payroll_core.report_security_payslip</field>
+        <field name="binding_model_id" ref="model_security_payslip"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_security_payslip">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; font-size: 13px; line-height: 1.4;">
+                        
+                        <!-- Header Title -->
+                        <div class="row border-bottom pb-3 mb-4">
+                            <div class="col-6">
+                                <h3 class="text-primary fw-bold mb-1" style="color: #1e3d59;">DOGFORCE SECURITY SERVICES</h3>
+                                <p class="text-muted small mb-0">Professional Guarding &amp; Tactical Operations</p>
+                                <p class="text-muted small mb-0">Windhoek, Namibia</p>
+                            </div>
+                            <div class="col-6 text-end">
+                                <h2 class="fw-bold mb-1" style="color: #1e3d59; letter-spacing: 1px;">SALARY ADVICE</h2>
+                                <span class="badge bg-success text-uppercase p-2" style="font-size: 11px;"><t t-esc="doc.state"/></span>
+                            </div>
+                        </div>
+
+                        <!-- Employee & Period Info Grid -->
+                        <div class="card border-0 mb-4 bg-light p-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <h5 class="text-secondary border-bottom pb-1 mb-2 fw-bold" style="color: #ff6e40;">Employee Details</h5>
+                                    <table class="table table-borderless table-sm mb-0 small">
+                                        <tr>
+                                            <td style="width: 35%;" class="text-muted py-1">Guard Name:</td>
+                                            <td class="fw-bold py-1"><span t-field="doc.employee_id.name"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted py-1">Security Grade:</td>
+                                            <td class="py-1">
+                                                <span t-field="doc.employee_id.security_grade_id.name"/>
+                                                <span t-if="not doc.employee_id.security_grade_id" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted py-1">SSC Number:</td>
+                                            <td class="py-1">
+                                                <span t-field="doc.employee_id.security_ssc_number"/>
+                                                <span t-if="not doc.employee_id.security_ssc_number" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted py-1">Income Tax (PAYE) No:</td>
+                                            <td class="py-1">
+                                                <span t-field="doc.employee_id.security_tax_number"/>
+                                                <span t-if="not doc.employee_id.security_tax_number" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="text-secondary border-bottom pb-1 mb-2 fw-bold" style="color: #ff6e40;">Payment &amp; Period Details</h5>
+                                    <table class="table table-borderless table-sm mb-0 small">
+                                        <tr>
+                                            <td style="width: 35%;" class="text-muted py-1">Pay Period:</td>
+                                            <td class="fw-bold py-1"><span t-field="doc.period_id.name"/></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted py-1">Bank Name:</td>
+                                            <td class="py-1">
+                                                <span t-field="doc.employee_id.security_bank_name"/>
+                                                <span t-if="not doc.employee_id.security_bank_name" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted py-1">Bank Branch Code:</td>
+                                            <td class="py-1">
+                                                <span t-field="doc.employee_id.security_bank_branch"/>
+                                                <span t-if="not doc.employee_id.security_bank_branch" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted py-1">Account Number:</td>
+                                            <td class="py-1">
+                                                <span t-field="doc.employee_id.security_bank_account_number"/>
+                                                <span t-if="not doc.employee_id.security_bank_account_number" class="text-muted">-</span>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Worked Time summary bar -->
+                        <h5 class="text-dark fw-bold mb-2">Time and Attendance Summary</h5>
+                        <table class="table table-bordered table-sm mb-4 text-center small">
+                            <thead class="bg-secondary text-white">
+                                <tr>
+                                    <th class="py-2">Days</th>
+                                    <th class="py-2">Normal</th>
+                                    <th class="py-2">Saturday</th>
+                                    <th class="py-2">Sunday</th>
+                                    <th class="py-2">Public Hol.</th>
+                                    <th class="py-2">Night</th>
+                                    <th class="py-2">Overtime</th>
+                                    <th class="py-2">Unpaid</th>
+                                    <th class="py-2">AWOL</th>
+                                    <th class="py-2">Rate (NAD)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-white">
+                                    <td class="py-2 fw-bold"><span t-field="doc.worked_days"/></td>
+                                    <td class="py-2"><span t-field="doc.normal_hours"/></td>
+                                    <td class="py-2"><span t-field="doc.saturday_hours"/></td>
+                                    <td class="py-2"><span t-field="doc.sunday_hours"/></td>
+                                    <td class="py-2"><span t-field="doc.public_holiday_hours"/></td>
+                                    <td class="py-2"><span t-field="doc.night_hours"/></td>
+                                    <td class="py-2 fw-bold text-success"><span t-field="doc.overtime_hours"/></td>
+                                    <td class="py-2 text-danger"><span t-field="doc.unpaid_hours"/></td>
+                                    <td class="py-2 text-danger fw-bold"><span t-field="doc.awol_occurrences"/></td>
+                                    <td class="py-2 fw-bold text-dark"><span t-field="doc.hourly_rate"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Earnings vs Deductions Side by Side Ledger -->
+                        <div class="row mb-4">
+                            <!-- Earnings Column -->
+                            <div class="col-6 pr-2">
+                                <div class="border rounded p-3 bg-white" style="min-height: 250px;">
+                                    <h5 class="border-bottom pb-2 mb-3 fw-bold text-success">
+                                        <i class="fa fa-plus-circle me-1"/> Earnings (NAD)
+                                    </h5>
+                                    <table class="table table-sm table-borderless mb-0 small">
+                                        <thead>
+                                            <tr class="border-bottom">
+                                                <th class="pb-2">Description</th>
+                                                <th class="text-end pb-2">Qty</th>
+                                                <th class="text-end pb-2">Rate</th>
+                                                <th class="text-end pb-2">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="doc.earning_line_ids" t-as="line">
+                                                <td class="py-2"><span t-field="line.name"/></td>
+                                                <td class="text-end py-2"><span t-field="line.quantity"/></td>
+                                                <td class="text-end py-2"><span t-field="line.rate"/></td>
+                                                <td class="text-end py-2 fw-bold"><span t-field="line.amount"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Deductions Column -->
+                            <div class="col-6 pl-2">
+                                <div class="border rounded p-3 bg-white" style="min-height: 250px;">
+                                    <h5 class="border-bottom pb-2 mb-3 fw-bold text-danger">
+                                        <i class="fa fa-minus-circle me-1"/> Deductions (NAD)
+                                    </h5>
+                                    <table class="table table-sm table-borderless mb-0 small">
+                                        <thead>
+                                            <tr class="border-bottom">
+                                                <th class="pb-2">Description</th>
+                                                <th class="text-end pb-2">Qty</th>
+                                                <th class="text-end pb-2">Rate</th>
+                                                <th class="text-end pb-2">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr t-foreach="doc.deduction_line_ids" t-as="line">
+                                                <td class="py-2"><span t-field="line.name"/></td>
+                                                <td class="text-end py-2"><span t-field="line.quantity"/></td>
+                                                <td class="text-end py-2"><span t-field="line.rate"/></td>
+                                                <td class="text-end py-2 fw-bold" style="color: #b80d0d;"><span t-field="line.amount"/></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Financial Summary & Net Pay -->
+                        <div class="row align-items-center mb-5">
+                            <div class="col-6">
+                                <div class="card border-0 bg-light p-3 small">
+                                    <div class="row py-1">
+                                        <div class="col-7 text-muted">Gross Earnings:</div>
+                                        <div class="col-5 text-end fw-bold text-success"><span t-field="doc.total_earnings"/> NAD</div>
+                                    </div>
+                                    <div class="row py-1 border-bottom">
+                                        <div class="col-7 text-muted">Total Deductions:</div>
+                                        <div class="col-5 text-end fw-bold text-danger"><span t-field="doc.total_deductions"/> NAD</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 text-end">
+                                <div class="p-3 border rounded shadow-sm d-inline-block bg-success text-white text-start" style="min-width: 250px; background-color: #2b7a78 !important;">
+                                    <div class="small text-uppercase opacity-75">Net Take-Home Pay</div>
+                                    <h3 class="fw-bold mb-0 mt-1" style="font-size: 24px;"><span t-field="doc.net_pay"/> NAD</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sign-off Block -->
+                        <div class="row mt-5 pt-4 border-top text-center small text-muted">
+                            <div class="col-4">
+                                <p class="mb-4">Prepared By (DogForce Admin)</p>
+                                <div class="border-top pt-2">Authorized Signature</div>
+                            </div>
+                            <div class="col-4 offset-4">
+                                <p class="mb-4">Received By (Employee)</p>
+                                <div class="border-top pt-2">Guard Signature</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

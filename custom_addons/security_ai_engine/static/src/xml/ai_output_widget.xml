@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiConfidence — 5-dot confidence indicator
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiConfidence">
+    <span class="d-inline-flex align-items-center gap-1" title="AI confidence score">
+        <t t-foreach="dots" t-as="filled" t-key="filled_index">
+            <span t-att-style="'width:8px; height:8px; border-radius:50%; display:inline-block; background:' + (filled ? '#2563eb' : '#e2e8f0') + ';'"/>
+        </t>
+        <span style="font-size:0.7rem; color:#94a3b8; margin-left:2px;"><t t-esc="score"/>/5</span>
+    </span>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiSummaryBar — header strip showing status + summary + confidence
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiSummaryBar">
+    <div t-att-style="'display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; border-radius:10px; margin-bottom:12px; border-left:4px solid ' + statusBorder + '; background:' + statusBg + ';'">
+        <div class="d-flex align-items-center gap-2" style="min-width:0;">
+            <span t-att-style="'font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; padding:2px 8px; border-radius:20px; white-space:nowrap; background:' + statusBorder + '; color:white;'">
+                <t t-esc="statusLabel"/>
+            </span>
+            <span t-att-style="'font-size:0.85rem; color:' + statusText + '; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;'"
+                  t-esc="parsed.summary"/>
+        </div>
+        <AiConfidence score="parsed.confidence or 0"/>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiAlert
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiAlert">
+    <div t-att-style="'display:flex; gap:12px; padding:12px 14px; border-radius:10px; margin-bottom:10px; border:1px solid ' + border + '40; background:' + bg + ';'">
+        <div t-att-style="'flex-shrink:0; margin-top:1px; color:' + border + ';'">
+            <i t-att-class="'fa fa-fw ' + icon"/>
+        </div>
+        <div>
+            <div t-if="c.title" t-att-style="'font-weight:700; font-size:0.88rem; color:' + text + '; margin-bottom:2px;'" t-esc="c.title"/>
+            <div t-if="c.message" t-att-style="'font-size:0.84rem; color:' + text + '; opacity:0.9;'" t-esc="c.message"/>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiMetricRow
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiMetricRow">
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <t t-foreach="c.metrics or []" t-as="m" t-key="m_index">
+            <div style="flex:1; min-width:120px; background:white; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px;">
+                <div t-att-style="'font-size:1.4rem; font-weight:800; line-height:1.1; color:' + valueColor(m) + '; display:flex; align-items:center; gap:6px;'">
+                    <t t-esc="m.value"/>
+                    <i t-if="m.trend and m.trend !== 'stable'"
+                       t-att-class="'fa fa-sm ' + trendIcon(m)"
+                       t-att-style="'font-size:0.8rem; color:' + valueColor(m) + ';'"/>
+                </div>
+                <div style="font-size:0.72rem; color:#94a3b8; margin-top:3px; text-transform:uppercase; letter-spacing:0.5px;" t-esc="m.label"/>
+            </div>
+        </t>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiFinding
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiFinding">
+    <div t-att-style="'background:white; border:1px solid #e2e8f0; border-left:4px solid ' + borderColor + '; border-radius:10px; margin-bottom:10px; overflow:hidden;'">
+        <div style="padding:12px 14px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <span t-att-style="'font-size:0.68rem; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; padding:2px 8px; border-radius:20px; background:' + badgeBg + '; color:' + badgeText + ';'"
+                      t-esc="c.severity"/>
+                <span style="font-weight:700; font-size:0.88rem; color:#1e293b;" t-esc="c.title"/>
+            </div>
+            <p t-if="c.detail" style="font-size:0.84rem; color:#475569; margin:0 0 8px; line-height:1.5;" t-esc="c.detail"/>
+            <div t-if="c.recommendation"
+                 style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:7px; padding:8px 12px; display:flex; gap:8px; align-items:flex-start;">
+                <i class="fa fa-lightbulb-o" style="color:#0284c7; flex-shrink:0; margin-top:2px; font-size:0.85rem;"/>
+                <span style="font-size:0.82rem; color:#0c4a6e;" t-esc="c.recommendation"/>
+            </div>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiRecommendation
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiRecommendation">
+    <div style="background:white; border:1px solid #e2e8f0; border-left:4px solid #7c3aed; border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+        <div style="display:flex; align-items:flex-start; gap:10px;">
+            <div style="background:#ede9fe; border-radius:8px; padding:8px; flex-shrink:0;">
+                <i class="fa fa-magic" style="color:#7c3aed; font-size:0.9rem;"/>
+            </div>
+            <div style="min-width:0;">
+                <div style="font-weight:700; font-size:0.88rem; color:#1e293b; margin-bottom:4px;" t-esc="c.action"/>
+                <div t-if="c.reason" style="font-size:0.82rem; color:#64748b; margin-bottom:8px;" t-esc="c.reason"/>
+                <div t-if="meta.length" style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <t t-foreach="meta" t-as="m" t-key="m_index">
+                        <span style="font-size:0.75rem; color:#475569; display:flex; align-items:center; gap:4px;">
+                            <i t-att-class="'fa ' + m.icon" style="color:#94a3b8;"/>
+                            <t t-esc="m.label"/>
+                        </span>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiTable
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiTable">
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; margin-bottom:10px;">
+        <div t-if="c.title" style="padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0; font-weight:700; font-size:0.84rem; color:#1e293b;" t-esc="c.title"/>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.84rem;">
+                <thead>
+                    <tr>
+                        <t t-foreach="c.headers or []" t-as="h" t-key="h_index">
+                            <th style="padding:8px 14px; text-align:left; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; background:#f8fafc; border-bottom:1px solid #e2e8f0; white-space:nowrap;"
+                                t-esc="h"/>
+                        </t>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="c.rows or []" t-as="row" t-key="row_index">
+                        <tr t-att-style="'border-bottom:1px solid #f1f5f9;' + (row_index % 2 === 0 ? '' : 'background:#fafafa;')">
+                            <t t-foreach="row" t-as="cell" t-key="cell_index">
+                                <td style="padding:9px 14px; color:#334155;" t-esc="cell"/>
+                            </t>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiSection
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiSection">
+    <div style="margin-bottom:10px;">
+        <div t-if="c.title" style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:#94a3b8; margin-bottom:6px;" t-esc="c.title"/>
+        <p style="font-size:0.85rem; color:#475569; line-height:1.6; margin:0;" t-esc="c.body"/>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiBulletList
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiBulletList">
+    <div style="margin-bottom:10px;">
+        <div t-if="c.title" style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:#94a3b8; margin-bottom:6px;" t-esc="c.title"/>
+        <ul style="margin:0; padding-left:18px;">
+            <t t-foreach="c.items or []" t-as="item" t-key="item_index">
+                <li style="font-size:0.84rem; color:#475569; margin-bottom:4px; line-height:1.5;" t-esc="item"/>
+            </t>
+        </ul>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiOutputWidget — main field widget
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiOutputWidget">
+    <div class="o_ai_output_widget" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+
+        <!-- Empty -->
+        <t t-if="isEmpty">
+            <div style="color:#94a3b8; font-size:0.84rem; font-style:italic; padding:8px 0;">
+                No AI analysis yet.
+            </div>
+        </t>
+
+        <!-- Structured JSON output -->
+        <t t-elif="isStructured">
+            <div style="padding:4px 0;">
+
+                <!-- Collapse / expand toggle -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:#94a3b8;">AI Analysis</span>
+                    <button t-on-click="toggleExpand"
+                            style="background:none; border:1px solid #e2e8f0; border-radius:6px; padding:2px 8px; font-size:0.72rem; color:#64748b; cursor:pointer;">
+                        <i t-att-class="'fa fa-chevron-' + (state.expanded ? 'up' : 'down')"/>
+                        <t t-esc="state.expanded ? 'Collapse' : 'Expand'"/>
+                    </button>
+                </div>
+
+                <!-- Summary bar always shown -->
+                <AiSummaryBar parsed="parsed"/>
+
+                <!-- Component tree (collapsible) -->
+                <t t-if="state.expanded">
+                    <t t-foreach="components" t-as="comp" t-key="comp_index">
+
+                        <t t-if="comp.type === 'alert'">
+                            <AiAlert c="comp"/>
+                        </t>
+                        <t t-elif="comp.type === 'metric_row'">
+                            <AiMetricRow c="comp"/>
+                        </t>
+                        <t t-elif="comp.type === 'finding'">
+                            <AiFinding c="comp"/>
+                        </t>
+                        <t t-elif="comp.type === 'recommendation'">
+                            <AiRecommendation c="comp"/>
+                        </t>
+                        <t t-elif="comp.type === 'table'">
+                            <AiTable c="comp"/>
+                        </t>
+                        <t t-elif="comp.type === 'section'">
+                            <AiSection c="comp"/>
+                        </t>
+                        <t t-elif="comp.type === 'bullet_list'">
+                            <AiBulletList c="comp"/>
+                        </t>
+                        <!-- Unknown component type — show raw JSON gracefully -->
+                        <t t-else="">
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:10px; font-size:0.8rem; color:#94a3b8;">
+                                [Unknown component: <t t-esc="comp.type"/>]
+                            </div>
+                        </t>
+
+                    </t>
+                </t>
+
+            </div>
+        </t>
+
+        <!-- Truncated / missing components — JSON parsed but incomplete -->
+        <t t-elif="isTruncated">
+            <div style="border-radius:10px; overflow:hidden; border:1px solid #fde68a;">
+                <div style="background:#fef3c7; padding:12px 14px; display:flex; gap:10px; align-items:flex-start;">
+                    <i class="fa fa-exclamation-triangle" style="color:#d97706; flex-shrink:0; margin-top:2px;"/>
+                    <div>
+                        <div style="font-weight:700; font-size:0.85rem; color:#92400e; margin-bottom:3px;">
+                            Response Truncated
+                            <t t-if="wasRepaired"> — Partially Repaired</t>
+                        </div>
+                        <div style="font-size:0.82rem; color:#78350f; line-height:1.5;">
+                            The AI response was cut off before the component list could be completed.
+                            Re-run the analysis to get a full result. If this keeps happening, increase
+                            <strong>Max Tokens</strong> in Configuration → AI Engine (recommended: 4096+).
+                        </div>
+                        <t t-if="partialSummary">
+                            <div style="margin-top:8px; padding:8px 10px; background:#fffbeb; border-radius:6px; font-size:0.8rem; color:#92400e;">
+                                <strong>Partial summary:</strong> <t t-esc="partialSummary"/>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+
+        <!-- Plain text fallback (non-JSON or truly unparseable) -->
+        <t t-elif="isRaw">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; white-space:pre-line; font-size:0.84rem; color:#475569; line-height:1.6;">
+                <t t-esc="rawValue"/>
+            </div>
+        </t>
+
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiDataTable — clickable table rows
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiDataTable">
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; margin-bottom:10px;">
+        <div t-if="c.title" style="padding:10px 14px; background:#f8fafc; border-bottom:1px solid #e2e8f0; font-weight:700; font-size:0.84rem; color:#1e293b;" t-esc="c.title"/>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.83rem;">
+                <thead>
+                    <tr>
+                        <t t-foreach="c.headers or []" t-as="h" t-key="h_index">
+                            <th style="padding:8px 12px; text-align:left; font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#64748b; background:#f8fafc; border-bottom:1px solid #e2e8f0; white-space:nowrap;" t-esc="h"/>
+                        </t>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="c.rows or []" t-as="row" t-key="row_index">
+                        <tr t-att-style="'border-bottom:1px solid #f1f5f9; transition:background 0.1s;' + (row.model ? 'cursor:pointer;' : '') + (row_index % 2 !== 0 ? 'background:#fafafa;' : '')"
+                            t-on-click="row.model ? () => this.openRow(row) : undefined">
+                            <t t-foreach="row.values or []" t-as="cell" t-key="cell_index">
+                                <td style="padding:9px 12px; color:#334155;" t-esc="cell"/>
+                            </t>
+                            <td t-if="row.model" style="padding:9px 12px; color:#94a3b8; font-size:0.75rem; text-align:right;">↗</td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiRecordCard
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiRecordCard">
+    <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:flex-start; gap:12px;">
+        <div style="flex-grow:1; min-width:0;">
+            <div style="font-weight:700; font-size:0.9rem; color:#1e293b;" t-esc="c.title"/>
+            <div t-if="c.subtitle" style="font-size:0.78rem; color:#64748b; margin-bottom:8px;" t-esc="c.subtitle"/>
+            <div t-if="c.fields" class="d-flex flex-wrap gap-3 mt-1">
+                <t t-foreach="c.fields or []" t-as="f" t-key="f_index">
+                    <div>
+                        <div style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.5px; color:#94a3b8;" t-esc="f.label"/>
+                        <div style="font-size:0.84rem; font-weight:600; color:#334155;" t-esc="f.value"/>
+                    </div>
+                </t>
+            </div>
+        </div>
+        <button t-if="c.model and c.id"
+                t-on-click="openRecord"
+                style="flex-shrink:0; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:8px; padding:6px 12px; font-size:0.78rem; font-weight:600; cursor:pointer; white-space:nowrap;">
+            Open ↗
+        </button>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiNavigate — clickable navigation chip
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiNavigate">
+    <div style="margin-bottom:8px;">
+        <button t-on-click="go"
+                style="background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb; border-radius:20px; padding:6px 14px; font-size:0.82rem; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; gap:6px; transition:all 0.15s;">
+            <i class="fa fa-external-link" style="font-size:0.75rem;"/>
+            <t t-esc="c.label"/>
+        </button>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiStatComparison
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiStatComparison">
+    <div style="margin-bottom:10px;">
+        <div t-if="c.title" style="font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.7px; color:#94a3b8; margin-bottom:8px;" t-esc="c.title"/>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <t t-foreach="c.items or []" t-as="item" t-key="item_index">
+                <div style="flex:1; min-width:130px; background:white; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px;">
+                    <div t-att-style="'font-size:1.2rem; font-weight:800; color:' + itemColor(item) + '; display:flex; align-items:center; gap:6px;'">
+                        <t t-esc="item.value"/>
+                        <span t-if="item.pct_change" t-att-style="'font-size:0.75rem; font-weight:600; color:' + itemColor(item) + ';'">
+                            <i t-att-class="'fa fa-sm ' + itemTrend(item)"/>
+                            <t t-esc="Math.abs(item.pct_change)"/>%
+                        </span>
+                    </div>
+                    <div style="font-size:0.72rem; color:#94a3b8; margin-top:3px; text-transform:uppercase; letter-spacing:0.5px;" t-esc="item.label"/>
+                </div>
+            </t>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiActionConfirm — proposed action card (chat-only)
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiActionConfirm">
+    <div t-att-style="'background:white; border:2px solid ' + (c.danger ? '#fecaca' : '#bfdbfe') + '; border-radius:12px; padding:14px 16px; margin-bottom:10px;'">
+        <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:10px;">
+            <div t-att-style="'border-radius:8px; padding:7px 9px; flex-shrink:0; background:' + (c.danger ? '#fee2e2' : '#eff6ff') + ';'">
+                <i t-att-class="'fa ' + (c.danger ? 'fa-exclamation-triangle' : 'fa-bolt')"
+                   t-att-style="'color:' + (c.danger ? '#dc2626' : '#2563eb') + ';'"/>
+            </div>
+            <div>
+                <div style="font-weight:700; font-size:0.88rem; color:#1e293b; margin-bottom:3px;" t-esc="c.title"/>
+                <div style="font-size:0.83rem; color:#475569; line-height:1.5;" t-esc="c.description"/>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button t-on-click="confirm"
+                    t-att-style="'background:' + (c.danger ? '#dc2626' : '#2563eb') + '; color:white; border:none; border-radius:8px; padding:7px 18px; font-size:0.83rem; font-weight:600; cursor:pointer;'">
+                <i class="fa fa-check me-1"/>Confirm
+            </button>
+            <button style="background:white; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:7px 16px; font-size:0.83rem; cursor:pointer;">
+                Cancel
+            </button>
+        </div>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiQuickReplies — suggested follow-ups (chat-only)
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiQuickReplies">
+    <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; margin-bottom:6px;">
+        <t t-foreach="c.suggestions or []" t-as="s" t-key="s_index">
+            <button t-on-click="() => this.reply(s)"
+                    style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:5px 12px; font-size:0.78rem; color:#334155; cursor:pointer; transition:all 0.15s;">
+                <t t-esc="s"/>
+            </button>
+        </t>
+    </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     AiComponentRenderer — standalone renderer (used by chat panel)
+═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_ai_engine.AiComponentRenderer">
+    <div class="o_ai_component_renderer">
+        <t t-foreach="comps" t-as="comp" t-key="comp_index">
+
+            <t t-if="comp.type === 'alert'">          <AiAlert c="comp"/></t>
+            <t t-elif="comp.type === 'metric_row'">   <AiMetricRow c="comp"/></t>
+            <t t-elif="comp.type === 'finding'">      <AiFinding c="comp"/></t>
+            <t t-elif="comp.type === 'recommendation'"><AiRecommendation c="comp"/></t>
+            <t t-elif="comp.type === 'table'">        <AiTable c="comp"/></t>
+            <t t-elif="comp.type === 'section'">      <AiSection c="comp"/></t>
+            <t t-elif="comp.type === 'bullet_list'">  <AiBulletList c="comp"/></t>
+            <t t-elif="comp.type === 'data_table'">   <AiDataTable c="comp"/></t>
+            <t t-elif="comp.type === 'record_card'">  <AiRecordCard c="comp"/></t>
+            <t t-elif="comp.type === 'navigate' or comp.type === 'navigate_list'">
+                <AiNavigate c="comp"/>
+            </t>
+            <t t-elif="comp.type === 'stat_comparison'"><AiStatComparison c="comp"/></t>
+            <t t-elif="comp.type === 'action_confirm'">
+                <AiActionConfirm c="comp" onConfirmAction="props.onConfirmAction"/>
+            </t>
+            <t t-elif="comp.type === 'quick_replies'">
+                <AiQuickReplies c="comp" onQuickReply="props.onQuickReply"/>
+            </t>
+
+        </t>
+    </div>
+</t>
+
+</templates>

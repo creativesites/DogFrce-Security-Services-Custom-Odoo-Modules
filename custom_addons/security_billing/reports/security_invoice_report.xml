@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_security_invoice" model="ir.actions.report">
+        <field name="name">Security Invoice</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_billing.report_security_invoice</field>
+        <field name="report_file">security_billing.report_security_invoice</field>
+        <field name="binding_model_id" ref="model_security_billing_invoice"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <template id="report_security_invoice">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Tax Invoice</h2>
+                        <p>
+                            <strong>Invoice:</strong> <span t-field="doc.name"/>
+                            <br/>
+                            <strong>Client:</strong> <span t-field="doc.partner_id"/>
+                            <br/>
+                            <strong>Site:</strong> <span t-field="doc.site_id"/>
+                            <br/>
+                            <strong>Service Period:</strong> <span t-field="doc.service_date_from"/> to <span t-field="doc.service_date_to"/>
+                            <br/>
+                            <strong>Invoice Date:</strong> <span t-field="doc.invoice_date"/>
+                            <br/>
+                            <strong>Due Date:</strong> <span t-field="doc.due_date"/>
+                        </p>
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Post</th>
+                                    <th>Shift</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Rate</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.line_ids" t-as="line">
+                                    <td><span t-field="line.name"/></td>
+                                    <td><span t-field="line.post_id"/></td>
+                                    <td><span t-field="line.shift_template_id"/></td>
+                                    <td class="text-end"><span t-field="line.quantity"/></td>
+                                    <td class="text-end"><span t-field="line.unit_price"/></td>
+                                    <td class="text-end"><span t-field="line.subtotal"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr><td>Subtotal</td><td class="text-end"><span t-field="doc.subtotal_amount"/></td></tr>
+                                <tr><td>VAT</td><td class="text-end"><span t-field="doc.vat_amount"/></td></tr>
+                                <tr><td><strong>Total</strong></td><td class="text-end"><strong><span t-field="doc.total_amount"/></strong></td></tr>
+                                <tr><td>Amount In Words</td><td class="text-end"><span t-field="doc.amount_in_words"/></td></tr>
+                            </tbody>
+                        </table>
+                        <p t-if="doc.note">
+                            <strong>Notes:</strong>
+                            <br/>
+                            <span t-field="doc.note"/>
+                        </p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_ai_engine.AIAdminDashboard">
+    <div class="o_action o_ai_admin_dashboard">
+
+        <!-- Loading -->
+        <t t-if="state.loading">
+            <div class="o_loading_screen d-flex align-items-center justify-content-center" style="height:400px">
+                <div class="spinner-border text-primary" role="status"/>
+            </div>
+        </t>
+
+        <t t-else="">
+            <!-- Header -->
+            <div class="o_control_panel_main_buttons d-flex align-items-center gap-2 p-3 border-bottom">
+                <h3 class="m-0 me-auto">AI Engine Dashboard</h3>
+                <button class="btn btn-secondary" t-on-click="openConfig">
+                    <i class="fa fa-cog me-1"/>Settings
+                </button>
+                <button class="btn btn-secondary" t-on-click="openLogs">
+                    <i class="fa fa-list me-1"/>All Logs
+                </button>
+                <button class="btn btn-primary" t-on-click="testConnection"
+                        t-att-disabled="state.testingConnection">
+                    <t t-if="state.testingConnection">
+                        <span class="spinner-border spinner-border-sm me-1"/>Testing…
+                    </t>
+                    <t t-else="">
+                        <i class="fa fa-plug me-1"/>Test Connection
+                    </t>
+                </button>
+            </div>
+
+            <!-- No config warning -->
+            <t t-if="!state.config">
+                <div class="alert alert-warning m-4">
+                    <strong>No active AI configuration found.</strong>
+                    Go to <strong>Operations → AI Engine → Configuration</strong> to add your API key.
+                </div>
+            </t>
+
+            <t t-else="">
+                <!-- Stats row -->
+                <div class="d-flex gap-3 p-3 border-bottom flex-wrap">
+                    <div class="card flex-fill text-center p-3" style="min-width:140px">
+                        <div class="h1 text-primary m-0"><t t-esc="state.stats.total"/></div>
+                        <div class="text-muted small">Total API Calls</div>
+                    </div>
+                    <div class="card flex-fill text-center p-3" style="min-width:140px">
+                        <div class="h1 text-success m-0"><t t-esc="state.stats.success"/></div>
+                        <div class="text-muted small">Successful</div>
+                    </div>
+                    <div class="card flex-fill text-center p-3" style="min-width:140px">
+                        <div class="h1 text-danger m-0"><t t-esc="state.stats.error"/></div>
+                        <div class="text-muted small">Errors</div>
+                    </div>
+                    <div class="card flex-fill text-center p-3" style="min-width:140px">
+                        <div class="h1 text-info m-0"><t t-esc="successRate"/></div>
+                        <div class="text-muted small">Success Rate</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs px-3 pt-2">
+                    <li class="nav-item">
+                        <a class="nav-link" t-att-class="state.activeTab === 'overview' ? 'active' : ''"
+                           t-on-click="() => this.setTab('overview')" href="#">Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" t-att-class="state.activeTab === 'logs' ? 'active' : ''"
+                           t-on-click="() => this.setTab('logs')" href="#">Recent Logs</a>
+                    </li>
+                </ul>
+
+                <!-- Overview tab -->
+                <div class="p-3" t-if="state.activeTab === 'overview'">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header fw-bold">Provider</div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-5">Active Provider</dt>
+                                        <dd class="col-sm-7">
+                                            <span class="badge bg-primary fs-6"><t t-esc="providerLabel"/></span>
+                                        </dd>
+                                        <dt class="col-sm-5">Max Tokens</dt>
+                                        <dd class="col-sm-7"><t t-esc="state.config.max_tokens"/></dd>
+                                        <dt class="col-sm-5">Temperature</dt>
+                                        <dd class="col-sm-7"><t t-esc="state.config.temperature"/></dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3">
+                                <div class="card-header fw-bold">Feature Toggles</div>
+                                <ul class="list-group list-group-flush">
+                                    <t t-foreach="featureList" t-as="feat" t-key="feat.key">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span><t t-esc="feat.label"/></span>
+                                            <span t-att-class="feat.enabled ? 'badge bg-success' : 'badge bg-secondary'">
+                                                <t t-esc="feat.enabled ? 'ON' : 'OFF'"/>
+                                            </span>
+                                        </li>
+                                    </t>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs tab -->
+                <div class="p-3" t-if="state.activeTab === 'logs'">
+                    <t t-if="!recentLogs.length">
+                        <div class="text-muted text-center py-4">No AI calls logged yet.</div>
+                    </t>
+                    <t t-else="">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Feature</th>
+                                    <th>Provider</th>
+                                    <th>Model</th>
+                                    <th>Duration</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="recentLogs" t-as="log" t-key="log.id">
+                                    <tr>
+                                        <td class="text-nowrap small"><t t-esc="log.call_date"/></td>
+                                        <td><t t-esc="log.feature"/></td>
+                                        <td><t t-esc="log.provider"/></td>
+                                        <td class="small text-muted"><t t-esc="log.model_name || '—'"/></td>
+                                        <td class="text-end"><t t-esc="log.duration_ms ? log.duration_ms + 'ms' : '—'"/></td>
+                                        <td>
+                                            <span t-att-class="log.state === 'success' ? 'badge bg-success' : 'badge bg-danger'">
+                                                <t t-esc="log.state"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr t-if="log.state === 'error' and log.error_message">
+                                        <td colspan="6" class="text-danger small ps-4">
+                                            <t t-esc="log.error_message"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </div>
+</t>
+
+</templates>

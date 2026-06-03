@@ -1,0 +1,57 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# fly-deploy.yml — Auto-deploy DogForce to Fly.io on push to main
+#
+# Required GitHub secret:
+#   FLY_API_TOKEN  →  run `fly tokens create deploy` and paste the output
+#
+# One-time setup (run locally once):
+#   fly launch --no-deploy            # creates the app from fly.toml
+#   fly postgres create --name dogforce-db --region jnb --vm-size shared-cpu-1x --volume-size 10
+#   fly postgres attach dogforce-db   # injects DATABASE_URL secret
+#   fly secrets set ODOO_MASTER_PASSWORD="<strong-random-password>"
+#   fly secrets set ADMIN_PASSWORD="<demo-login-password>"
+#   fly volumes create dogforce_filestore --region jnb --size 10
+#   fly deploy                        # first manual deploy
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:        # allow manual trigger from GitHub Actions UI
+
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: true  # if two pushes happen fast, only deploy the latest
+
+jobs:
+  deploy:
+    name: Build & Deploy to Fly.io
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy to Fly.io
+        run: |
+          flyctl deploy \
+            --remote-only \
+            --wait-timeout 600 \
+            --strategy rolling
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Verify deployment health
+        run: |
+          sleep 10
+          flyctl status --app dogforce-security
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        continue-on-error: true

@@ -10,6 +10,8 @@
         "security/ir.model.access.csv",
         "data/security_l10n_na_data.xml",
         "views/security_l10n_na_views.xml",
+        "reports/security_paye_report.xml",
+        "reports/security_ssc_report.xml",
     ],
     "installable": True,
     "application": False,

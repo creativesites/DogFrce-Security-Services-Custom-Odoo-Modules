@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_base.ReliabilityGauge" owl="1">
+    <div class="o_reliability_gauge d-inline-flex flex-column align-items-center"
+         style="user-select: none;">
+        <svg viewBox="0 0 100 100" width="72" height="72" aria-hidden="true">
+            <!-- Track -->
+            <circle cx="50" cy="50" r="40"
+                    fill="none" stroke="#e9ecef" stroke-width="12"/>
+            <!-- Progress arc -->
+            <circle cx="50" cy="50" r="40"
+                    fill="none"
+                    t-att-stroke="color"
+                    stroke-width="12"
+                    stroke-linecap="round"
+                    t-att-stroke-dasharray="circumference"
+                    t-att-stroke-dashoffset="dashoffset"
+                    transform="rotate(-90 50 50)"
+                    style="transition: stroke-dashoffset 0.4s ease;"/>
+            <!-- Score number -->
+            <text x="50" y="48"
+                  text-anchor="middle" dominant-baseline="central"
+                  font-size="22" font-weight="bold"
+                  t-att-fill="color"
+                  t-esc="score"/>
+            <!-- Label -->
+            <text x="50" y="68"
+                  text-anchor="middle"
+                  font-size="9" fill="#6c757d"
+                  t-esc="label"/>
+        </svg>
+        <span class="small text-muted mt-1">Reliability</span>
+    </div>
+</t>
+
+</templates>

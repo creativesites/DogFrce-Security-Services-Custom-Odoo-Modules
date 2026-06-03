@@ -1,2 +1,3 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_security_client_payment_user,security.client.payment user,model_security_client_payment,hr.group_hr_user,1,1,1,1
+access_security_record_payment_wizard,security.record.payment.wizard,model_security_record_payment_wizard,base.group_user,1,1,1,1

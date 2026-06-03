@@ -1,0 +1,54 @@
+/* Attendance Posting Console — scoped styles for .o_posting_console */
+
+/* ── Guard card left-border accents ─────────────────────────────────── */
+.o_posting_console .pc-guard-card {
+    border-left: 4px solid #334155;
+    transition: box-shadow 0.15s, border-left-color 0.15s;
+}
+.o_posting_console .pc-guard-card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.o_posting_console .pc-card-present  { border-left-color: #16a34a; }
+.o_posting_console .pc-card-absent   { border-left-color: #d97706; }
+.o_posting_console .pc-card-awol     { border-left-color: #dc2626; }
+.o_posting_console .pc-card-unmarked { border-left-color: #334155; }
+.o_posting_console .pc-card-dirty    { background: #1c2a18 !important; }
+
+/* ── Status badge colour variants ────────────────────────────────────── */
+.o_posting_console .pc-status-badge                  { display: inline-block; white-space: nowrap; }
+.o_posting_console .pc-status-badge.pc-badge-present    { background: #166534;  color: #bbf7d0; }
+.o_posting_console .pc-status-badge.pc-badge-late       { background: #92400e;  color: #fde68a; }
+.o_posting_console .pc-status-badge.pc-badge-early      { background: #312e81;  color: #c7d2fe; }
+.o_posting_console .pc-status-badge.pc-badge-absent     { background: #7f1d1d;  color: #fca5a5; }
+.o_posting_console .pc-status-badge.pc-badge-incomplete { background: #4c1d95;  color: #ddd6fe; }
+.o_posting_console .pc-status-badge.pc-badge-scheduled  { background: #1e293b;  color: #64748b; border: 1px solid #334155; }
+
+/* ── Pulse animation for unsaved-changes indicator ───────────────────── */
+@keyframes pc-pulse {
+    0%,  100% { opacity: 1; }
+    50%        { opacity: 0.45; }
+}
+.o_posting_console [style*="animation:pulse"] {
+    animation: pc-pulse 2s ease-in-out infinite;
+}
+
+/* ── Action button hover states ──────────────────────────────────────── */
+.o_posting_console button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+/* ── Time / date input focus ring ────────────────────────────────────── */
+.o_posting_console input[type="time"]:focus,
+.o_posting_console input[type="date"]:focus,
+.o_posting_console select:focus {
+    outline: none;
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+}
+
+/* ── Scrollbar theming (webkit) ──────────────────────────────────────── */
+.o_posting_console ::-webkit-scrollbar        { width: 6px; height: 6px; }
+.o_posting_console ::-webkit-scrollbar-track  { background: #0f172a; }
+.o_posting_console ::-webkit-scrollbar-thumb  { background: #334155; border-radius: 3px; }
+.o_posting_console ::-webkit-scrollbar-thumb:hover { background: #475569; }

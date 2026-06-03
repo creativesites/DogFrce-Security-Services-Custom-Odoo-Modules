@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- H-14: Payslip History tab on employee form — defined here (payroll_core)
+         because security.payslip is not known to security_base at load time. -->
+    <record id="view_hr_employee_payslip_history" model="ir.ui.view">
+        <field name="name">hr.employee.form.payslip.history</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Payslip History" invisible="not security_guard">
+                    <field name="payslip_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="period_id"/>
+                            <field name="state"
+                                   decoration-success="state == 'paid'"
+                                   decoration-warning="state == 'confirmed'"/>
+                            <field name="total_earnings"/>
+                            <field name="total_deductions"/>
+                            <field name="net_pay"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

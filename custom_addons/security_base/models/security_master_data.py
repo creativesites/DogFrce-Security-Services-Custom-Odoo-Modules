@@ -1,4 +1,7 @@
-from odoo import fields, models
+from datetime import date
+
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class SecurityGrade(models.Model):
@@ -90,3 +93,57 @@ class SecurityReliabilityAdjustment(models.Model):
     score_delta = fields.Integer(required=True)
     reason = fields.Char(required=True)
     note = fields.Text()
+
+
+class SecurityEmployeeCertification(models.Model):
+    _name = "security.employee.certification"
+    _description = "Guard Certification Record"
+    _order = "expiry_date, id"
+
+    employee_id = fields.Many2one(
+        "hr.employee",
+        required=True,
+        ondelete="cascade",
+    )
+    certification_id = fields.Many2one(
+        "security.certification",
+        required=True,
+        string="Certification Type",
+    )
+    issue_date = fields.Date(string="Issue Date")
+    expiry_date = fields.Date(string="Expiry Date")
+    verified = fields.Boolean(default=False, string="Verified")
+    document_ref = fields.Char(string="Certificate Reference / Number")
+    note = fields.Text()
+    is_expired = fields.Boolean(
+        compute="_compute_is_expired",
+        store=True,
+        string="Expired",
+    )
+    days_until_expiry = fields.Integer(
+        compute="_compute_is_expired",
+        store=False,
+        string="Days Until Expiry",
+    )
+
+    @api.depends("expiry_date")
+    def _compute_is_expired(self):
+        today = date.today()
+        for cert in self:
+            if cert.expiry_date:
+                delta = (cert.expiry_date - today).days
+                cert.days_until_expiry = delta
+                cert.is_expired = delta < 0
+            else:
+                cert.days_until_expiry = 9999
+                cert.is_expired = False
+
+    @api.constrains("issue_date", "expiry_date")
+    def _check_dates(self):
+        for cert in self:
+            if (
+                cert.issue_date
+                and cert.expiry_date
+                and cert.expiry_date < cert.issue_date
+            ):
+                raise ValidationError("Expiry date cannot be before issue date.")

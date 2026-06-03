@@ -75,7 +75,7 @@ class OwnerController(http.Controller):
         open_incidents = 0
         if "security.incident" in env:
             open_incidents = env["security.incident"].sudo().search_count([
-                ("state", "not in", ("closed", "cancelled")),
+                ("state", "=", "draft"),
             ])
 
         # ── Payroll cost YTD ───────────────────────────────────────────────
@@ -83,22 +83,18 @@ class OwnerController(http.Controller):
         ytd_start = date(today.year, 1, 1)
         if "security.payslip" in env:
             payslips = env["security.payslip"].sudo().search([
-                ("pay_period_start", ">=", ytd_start),
-                ("state", "=", "done"),
+                ("period_id.date_from", ">=", ytd_start),
+                ("state", "in", ["confirmed", "paid"]),
             ])
-            payroll_cost_ytd = sum(
-                getattr(p, "gross_pay", 0) or 0 for p in payslips
-            )
+            payroll_cost_ytd = sum(p.total_earnings for p in payslips)
 
         # ── Outstanding invoices ───────────────────────────────────────────
         outstanding_invoices = 0.0
-        if "account.move" in env:
-            invoices = env["account.move"].sudo().search([
-                ("move_type", "=", "out_invoice"),
-                ("state", "=", "posted"),
-                ("payment_state", "in", ("not_paid", "partial")),
+        if "security.billing.invoice" in env:
+            invoices = env["security.billing.invoice"].sudo().search([
+                ("state", "not in", ["paid", "cancelled"]),
             ])
-            outstanding_invoices = sum(getattr(inv, "amount_residual", 0) or 0 for inv in invoices)
+            outstanding_invoices = sum(inv.total_amount for inv in invoices)
 
         # ── Monthly payroll trend (last 6 months) ─────────────────────────
         monthly_trend = []
@@ -113,12 +109,12 @@ class OwnerController(http.Controller):
             cost = 0.0
             if "security.payslip" in env:
                 slips = env["security.payslip"].sudo().search([
-                    ("pay_period_start", ">=", mo_start),
-                    ("pay_period_start", "<",
+                    ("period_id.date_from", ">=", mo_start),
+                    ("period_id.date_from", "<",
                      date(yr, mo + 1, 1) if mo < 12 else date(yr + 1, 1, 1)),
-                    ("state", "=", "done"),
+                    ("state", "in", ["confirmed", "paid"]),
                 ])
-                cost = sum(getattr(p, "gross_pay", 0) or 0 for p in slips)
+                cost = sum(p.total_earnings for p in slips)
             monthly_trend.append({"month": label, "cost": cost})
 
         # ── Top 5 sites by attendance rate ─────────────────────────────────

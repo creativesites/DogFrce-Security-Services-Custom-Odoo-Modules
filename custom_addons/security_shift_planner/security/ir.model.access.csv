@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_slot_suggestion_user,security.slot.suggestion user,model_security_slot_suggestion,hr.group_hr_user,1,1,1,1

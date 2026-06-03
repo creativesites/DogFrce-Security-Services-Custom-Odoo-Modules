@@ -35,6 +35,12 @@ class SecurityPayrollRuleSet(models.Model):
     vat_rate = fields.Float(default=15.0)
     legal_invoice_text = fields.Text()
 
+    deduction_floor_pct = fields.Float(
+        default=0.30,
+        string="Minimum Net Pay Floor (%)",
+        help="Deductions are capped so net pay never falls below this fraction of gross. E.g. 0.30 means net pay is always at least 30% of gross earnings.",
+    )
+
 
 class SecurityTaxBracket(models.Model):
     _name = "security.tax.bracket"

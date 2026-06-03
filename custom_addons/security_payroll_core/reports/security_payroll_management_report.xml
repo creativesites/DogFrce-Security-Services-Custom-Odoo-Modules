@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- Report Action                                                 -->
+    <!-- ============================================================ -->
+    <record id="action_report_security_payroll_management" model="ir.actions.report">
+        <field name="name">Payroll Management Summary</field>
+        <field name="model">security.payroll.period</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_payroll_core.report_security_payroll_management</field>
+        <field name="report_file">security_payroll_core.report_security_payroll_management</field>
+        <field name="binding_model_id" ref="model_security_payroll_period"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- QWeb Template                                                 -->
+    <!-- ============================================================ -->
+    <template id="report_security_payroll_management">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="period">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #222; font-size: 12px; line-height: 1.5;">
+
+                        <!-- ======== HEADER ======== -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #1e3d59; padding-bottom: 14px; margin-bottom: 20px;">
+                            <div>
+                                <div style="font-size: 22px; font-weight: 800; color: #1e3d59; letter-spacing: 0.5px;">DOGFORCE SECURITY SERVICES</div>
+                                <div style="font-size: 11px; color: #666; margin-top: 2px;">Professional Guarding &amp; Tactical Operations — Windhoek, Namibia</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 18px; font-weight: 700; color: #1e3d59; text-transform: uppercase; letter-spacing: 1px;">Payroll Management Summary</div>
+                                <div style="font-size: 11px; color: #444; margin-top: 4px;">
+                                    Period: <strong><t t-esc="period.name"/></strong>
+                                </div>
+                                <div style="font-size: 11px; color: #444;">
+                                    <t t-esc="period.date_from"/> — <t t-esc="period.date_to"/>
+                                </div>
+                                <div style="margin-top: 4px;">
+                                    <span style="background: #1e3d59; color: #fff; padding: 2px 10px; border-radius: 4px; font-size: 10px; text-transform: uppercase;">
+                                        <t t-esc="period.state"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ======== SECTION 1: PERIOD SUMMARY ======== -->
+                        <div style="margin-bottom: 22px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #1e3d59; border-left: 4px solid #ff6e40; padding-left: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                1. Period Summary
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                <thead>
+                                    <tr style="background: #1e3d59; color: #fff;">
+                                        <th style="padding: 8px 12px; text-align: center; font-weight: 600;">Total Employees</th>
+                                        <th style="padding: 8px 12px; text-align: right; font-weight: 600;">Total Gross Earnings</th>
+                                        <th style="padding: 8px 12px; text-align: right; font-weight: 600;">Total Deductions</th>
+                                        <th style="padding: 8px 12px; text-align: right; font-weight: 600;">Total Net Pay</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="background: #f0f4f8;">
+                                        <td style="padding: 10px 12px; text-align: center; font-size: 15px; font-weight: 700; color: #1e3d59;">
+                                            <t t-esc="len(period.payslip_ids)"/>
+                                        </td>
+                                        <td style="padding: 10px 12px; text-align: right; font-weight: 600;">
+                                            <t t-esc="'%.2f' % period.total_earnings"/>
+                                        </td>
+                                        <td style="padding: 10px 12px; text-align: right; font-weight: 600; color: #c0392b;">
+                                            <t t-esc="'%.2f' % period.total_deductions"/>
+                                        </td>
+                                        <td style="padding: 10px 12px; text-align: right; font-weight: 700; font-size: 14px; color: #1e3d59;">
+                                            <t t-esc="'%.2f' % period.total_net_pay"/>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ======== SECTION 2: PAYSLIP REGISTER ======== -->
+                        <div style="margin-bottom: 22px;">
+                            <div style="font-size: 13px; font-weight: 700; color: #1e3d59; border-left: 4px solid #ff6e40; padding-left: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                2. Payslip Register
+                            </div>
+                            <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                                <thead>
+                                    <tr style="background: #1e3d59; color: #fff;">
+                                        <th style="padding: 6px 5px; text-align: center; width: 3%;">#</th>
+                                        <th style="padding: 6px 5px; text-align: left; width: 18%;">Employee</th>
+                                        <th style="padding: 6px 5px; text-align: left; width: 10%;">Grade</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 7%;">Norm Hrs</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 6%;">Sun Hrs</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 6%;">PH Hrs</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 6%;">Sat Hrs</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 9%;">Gross</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 9%;">Deductions</th>
+                                        <th style="padding: 6px 5px; text-align: right; width: 9%;">Net Pay</th>
+                                        <th style="padding: 6px 5px; text-align: center; width: 7%;">State</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-set="sorted_payslips" t-value="period.payslip_ids.sorted(key=lambda p: p.employee_id.name or '')"/>
+                                    <t t-set="row_index" t-value="0"/>
+                                    <t t-set="sum_normal" t-value="0.0"/>
+                                    <t t-set="sum_sunday" t-value="0.0"/>
+                                    <t t-set="sum_ph" t-value="0.0"/>
+                                    <t t-set="sum_saturday" t-value="0.0"/>
+                                    <t t-set="sum_gross" t-value="0.0"/>
+                                    <t t-set="sum_deductions" t-value="0.0"/>
+                                    <t t-set="sum_net" t-value="0.0"/>
+                                    <t t-foreach="sorted_payslips" t-as="slip">
+                                        <t t-set="row_index" t-value="row_index + 1"/>
+                                        <t t-set="sum_normal" t-value="sum_normal + slip.normal_hours"/>
+                                        <t t-set="sum_sunday" t-value="sum_sunday + slip.sunday_hours"/>
+                                        <t t-set="sum_ph" t-value="sum_ph + slip.public_holiday_hours"/>
+                                        <t t-set="sum_saturday" t-value="sum_saturday + slip.saturday_hours"/>
+                                        <t t-set="sum_gross" t-value="sum_gross + slip.total_earnings"/>
+                                        <t t-set="sum_deductions" t-value="sum_deductions + slip.total_deductions"/>
+                                        <t t-set="sum_net" t-value="sum_net + slip.net_pay"/>
+                                        <tr t-att-style="'background: #f8f9fa;' if row_index % 2 == 0 else 'background: #ffffff;'">
+                                            <td style="padding: 5px; text-align: center; color: #888;">
+                                                <t t-esc="row_index"/>
+                                            </td>
+                                            <td style="padding: 5px; font-weight: 600;">
+                                                <t t-esc="slip.employee_id.name"/>
+                                            </td>
+                                            <td style="padding: 5px; color: #555;">
+                                                <t t-esc="slip.employee_id.security_grade_id.name or '—'"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right;">
+                                                <t t-esc="'%.2f' % slip.normal_hours"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right;">
+                                                <t t-esc="'%.2f' % slip.sunday_hours"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right;">
+                                                <t t-esc="'%.2f' % slip.public_holiday_hours"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right;">
+                                                <t t-esc="'%.2f' % slip.saturday_hours"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right;">
+                                                <t t-esc="'%.2f' % slip.total_earnings"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right; color: #c0392b;">
+                                                <t t-esc="'%.2f' % slip.total_deductions"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: right; font-weight: 600; color: #1e3d59;">
+                                                <t t-esc="'%.2f' % slip.net_pay"/>
+                                            </td>
+                                            <td style="padding: 5px; text-align: center;">
+                                                <span t-att-style="'background: #27ae60; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 9px;' if slip.state == 'paid' else ('background: #f39c12; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 9px;' if slip.state == 'confirmed' else 'background: #95a5a6; color: #fff; padding: 1px 6px; border-radius: 3px; font-size: 9px;')">
+                                                    <t t-esc="slip.state"/>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                                <!-- Footer Totals Row -->
+                                <tfoot>
+                                    <tr style="background: #1e3d59; color: #fff; font-weight: 700;">
+                                        <td style="padding: 7px 5px; text-align: center;" colspan="3">TOTALS</td>
+                                        <td style="padding: 7px 5px; text-align: right;"><t t-esc="'%.2f' % sum_normal"/></td>
+                                        <td style="padding: 7px 5px; text-align: right;"><t t-esc="'%.2f' % sum_sunday"/></td>
+                                        <td style="padding: 7px 5px; text-align: right;"><t t-esc="'%.2f' % sum_ph"/></td>
+                                        <td style="padding: 7px 5px; text-align: right;"><t t-esc="'%.2f' % sum_saturday"/></td>
+                                        <td style="padding: 7px 5px; text-align: right;"><t t-esc="'%.2f' % sum_gross"/></td>
+                                        <td style="padding: 7px 5px; text-align: right;"><t t-esc="'%.2f' % sum_deductions"/></td>
+                                        <td style="padding: 7px 5px; text-align: right; font-size: 12px;"><t t-esc="'%.2f' % sum_net"/></td>
+                                        <td style="padding: 7px 5px;"/>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- ======== SECTION 3: ANOMALY FLAGS ======== -->
+                        <t t-set="flagged_slips" t-value="period.payslip_ids.filtered(lambda p: p.anomaly_score and p.anomaly_score > 0)"/>
+                        <t t-if="flagged_slips">
+                            <div style="margin-bottom: 22px;">
+                                <div style="font-size: 13px; font-weight: 700; color: #c0392b; border-left: 4px solid #c0392b; padding-left: 8px; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    3. Anomaly Flags
+                                </div>
+                                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                    <thead>
+                                        <tr style="background: #c0392b; color: #fff;">
+                                            <th style="padding: 6px 10px; text-align: left; width: 25%;">Employee</th>
+                                            <th style="padding: 6px 10px; text-align: center; width: 10%;">Score</th>
+                                            <th style="padding: 6px 10px; text-align: left;">Flags</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="flagged_slips.sorted(key=lambda p: p.employee_id.name or '')" t-as="fslip">
+                                            <tr style="border-bottom: 1px solid #f5c6cb; background: #fff5f5;">
+                                                <td style="padding: 6px 10px; font-weight: 600;">
+                                                    <t t-esc="fslip.employee_id.name"/>
+                                                </td>
+                                                <td style="padding: 6px 10px; text-align: center; font-weight: 700; color: #c0392b;">
+                                                    <t t-esc="fslip.anomaly_score"/>
+                                                </td>
+                                                <td style="padding: 6px 10px; color: #555;">
+                                                    <t t-esc="fslip.anomaly_flags or '—'"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </t>
+
+                        <!-- ======== PAGE FOOTER ======== -->
+                        <div style="border-top: 2px solid #1e3d59; margin-top: 30px; padding-top: 8px; text-align: center; font-size: 10px; color: #888;">
+                            Generated by DogForce Security Suite | Confidential | <t t-esc="period.name"/>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ============================================================ -->
+    <!-- Inherited Period Form View — adds Management Report button   -->
+    <!-- ============================================================ -->
+    <record id="view_security_payroll_period_form_mgmt_report" model="ir.ui.view">
+        <field name="name">security.payroll.period.form.mgmt.report</field>
+        <field name="model">security.payroll.period</field>
+        <field name="inherit_id" ref="security_payroll_core.view_security_payroll_period_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//button[@name='action_print_payslips']" position="after">
+                <button name="%(action_report_security_payroll_management)d" type="action"
+                        string="Management Report" class="btn-secondary"
+                        invisible="payslip_count == 0"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

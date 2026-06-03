@@ -1,4 +1,5 @@
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import ValidationError
 
 
 class HrEmployee(models.Model):
@@ -70,6 +71,22 @@ class HrEmployee(models.Model):
         copy=False,
     )
 
+    # Emergency contact (H-13)
+    security_emergency_contact_name = fields.Char(string="Emergency Contact Name")
+    security_emergency_contact_relationship = fields.Char(string="Relationship")
+    security_emergency_contact_phone = fields.Char(string="Emergency Contact Phone")
+
+    # Certification records with expiry tracking (H-12)
+    security_certification_detail_ids = fields.One2many(
+        "security.employee.certification",
+        "employee_id",
+        string="Certification Records (with expiry)",
+    )
+    security_expiring_certification_count = fields.Integer(
+        compute="_compute_expiring_certifications",
+        string="Expiring Certs (30d)",
+    )
+
     @api.depends("security_reliability_adjustment_ids.score_delta")
     def _compute_security_reliability_adjustment_total(self):
         for employee in self:
@@ -83,3 +100,16 @@ class HrEmployee(models.Model):
             employee.security_effective_hourly_rate = (
                 employee.security_hourly_rate or employee.security_grade_id.hourly_rate
             )
+
+    @api.depends(
+        "security_certification_detail_ids.is_expired",
+        "security_certification_detail_ids.days_until_expiry",
+    )
+    def _compute_expiring_certifications(self):
+        for emp in self:
+            emp.security_expiring_certification_count = len(
+                emp.security_certification_detail_ids.filtered(
+                    lambda c: 0 <= c.days_until_expiry <= 30
+                )
+            )
+

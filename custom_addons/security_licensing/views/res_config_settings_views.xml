@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_res_config_settings_licensing" model="ir.ui.view">
+            <field name="name">res.config.settings.licensing</field>
+            <field name="model">res.config.settings</field>
+            <field name="inherit_id" ref="base_setup.action_general_configuration"/>
+            <field name="arch" type="xml">
+                <xpath expr="//form" position="inside">
+                    <app string="DeployGuard License" name="security_licensing"
+                         groups="security_licensing.group_license_admin">
+                        <block title="License Activation">
+                            <setting string="License Key"
+                                     help="Enter the license key received after subscribing at deployguard.io.">
+                                <field name="license_key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"/>
+                            </setting>
+                            <setting string="Validation Endpoint"
+                                     help="Firebase HTTPS function URL. Leave blank until Firebase is deployed.">
+                                <field name="license_validation_endpoint"
+                                       placeholder="https://us-central1-project.cloudfunctions.net/validateLicense"/>
+                            </setting>
+                            <setting string="Current License Status">
+                                <field name="license_status_label" readonly="1"/>
+                                <button name="action_validate_license_now" type="object"
+                                        string="Validate Now" class="btn-secondary btn-sm"/>
+                            </setting>
+                        </block>
+                    </app>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

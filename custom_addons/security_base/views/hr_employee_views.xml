@@ -6,37 +6,83 @@
         <field name="inherit_id" ref="hr.view_employee_form"/>
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
-                <page string="Security Profile">
-                    <group>
-                        <group>
-                            <field name="security_guard"/>
-                            <field name="security_grade_id" invisible="not security_guard"/>
-                            <field name="security_hourly_rate" invisible="not security_guard"/>
-                            <field name="security_effective_hourly_rate" readonly="1" invisible="not security_guard"/>
-                            <field name="security_reliability_score" invisible="not security_guard"/>
-                            <field name="security_reliability_adjustment_total" readonly="1" invisible="not security_guard"/>
-                            <field name="security_home_location" invisible="not security_guard"/>
-                            <field name="security_medical_fitness_grade" invisible="not security_guard"/>
-                        </group>
-                        <group>
-                            <field name="security_disqualified" invisible="not security_guard"/>
-                            <field name="security_disqualification_reason_id" invisible="not security_guard or not security_disqualified"/>
-                            <field name="security_disqualification_note" invisible="not security_guard or not security_disqualified"/>
-                        </group>
-                    </group>
-                    <group invisible="not security_guard">
-                        <field name="security_certification_ids" widget="many2many_tags"/>
-                        <field name="security_language_ids" widget="many2many_tags"/>
-                        <field name="security_attribute_ids" widget="many2many_tags"/>
-                    </group>
-                    <field name="security_reliability_adjustment_ids" invisible="not security_guard">
-                        <list editable="bottom">
-                            <field name="adjustment_date"/>
-                            <field name="reason"/>
-                            <field name="score_delta"/>
-                            <field name="note"/>
-                        </list>
-                    </field>
+                <page string="Security Profile" invisible="not security_guard">
+                    <notebook>
+                        <!-- Tab 1: Guard Details -->
+                        <page string="Details">
+                            <group>
+                                <group string="Classification">
+                                    <field name="security_guard"/>
+                                    <field name="security_grade_id"/>
+                                    <field name="security_home_location"/>
+                                    <field name="security_medical_fitness_grade"/>
+                                </group>
+                                <group string="Pay Rate">
+                                    <field name="security_hourly_rate"/>
+                                    <field name="security_effective_hourly_rate" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Disqualification">
+                                <group>
+                                    <field name="security_disqualified"/>
+                                    <field name="security_disqualification_reason_id" invisible="not security_disqualified"/>
+                                </group>
+                                <group>
+                                    <field name="security_disqualification_note" invisible="not security_disqualified"/>
+                                </group>
+                            </group>
+                            <group string="Emergency Contact">
+                                <field name="security_emergency_contact_name"/>
+                                <field name="security_emergency_contact_relationship"/>
+                                <field name="security_emergency_contact_phone"/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 2: Competencies -->
+                        <page string="Competencies">
+                            <group string="Certifications (Quick Tags)">
+                                <field name="security_certification_ids" widget="many2many_tags" nolabel="1"/>
+                            </group>
+                            <group string="Certifications (with Expiry Tracking)">
+                                <field name="security_certification_detail_ids" nolabel="1">
+                                    <list editable="bottom">
+                                        <field name="certification_id"/>
+                                        <field name="issue_date"/>
+                                        <field name="expiry_date"/>
+                                        <field name="document_ref"/>
+                                        <field name="verified"/>
+                                        <field name="is_expired" readonly="1" decoration-danger="is_expired"/>
+                                    </list>
+                                </field>
+                            </group>
+                            <group string="Languages">
+                                <field name="security_language_ids" widget="many2many_tags" nolabel="1"/>
+                            </group>
+                            <group string="Attributes">
+                                <field name="security_attribute_ids" widget="many2many_tags" nolabel="1"/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 3: Reliability -->
+                        <page string="Reliability">
+                            <group>
+                                <group>
+                                    <field name="security_reliability_score" widget="reliability_gauge"/>
+                                    <field name="security_reliability_adjustment_total" readonly="1"/>
+                                </group>
+                            </group>
+                            <field name="security_reliability_adjustment_ids">
+                                <list editable="bottom">
+                                    <field name="adjustment_date"/>
+                                    <field name="reason"/>
+                                    <field name="score_delta"/>
+                                    <field name="note"/>
+                                </list>
+                            </field>
+                        </page>
+
+
+                    </notebook>
                 </page>
             </xpath>
         </field>

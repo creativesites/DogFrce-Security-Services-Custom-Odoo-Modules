@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View -->
+    <record id="view_security_notification_list" model="ir.ui.view">
+        <field name="name">security.notification.list</field>
+        <field name="model">security.notification</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="severity == 'critical'" decoration-warning="severity == 'warning'" decoration-muted="state == 'dismissed'">
+                <field name="title"/>
+                <field name="notification_type"/>
+                <field name="severity"/>
+                <field name="state"/>
+                <field name="create_date" string="Created"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_security_notification_form" model="ir.ui.view">
+        <field name="name">security.notification.form</field>
+        <field name="model">security.notification</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_mark_read" type="object" string="Mark as Read" class="oe_highlight" invisible="state != 'unread'"/>
+                    <button name="action_dismiss" type="object" string="Dismiss" invisible="state == 'dismissed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="unread,read,dismissed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="title"/>
+                            <field name="notification_type"/>
+                            <field name="severity"/>
+                        </group>
+                        <group>
+                            <field name="related_model"/>
+                            <field name="related_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="recipient_ids" widget="many2many_tags"/>
+                    </group>
+                    <group>
+                        <field name="body"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_security_notification_search" model="ir.ui.view">
+        <field name="name">security.notification.search</field>
+        <field name="model">security.notification</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title"/>
+                <field name="notification_type"/>
+                <filter name="filter_unread" string="Unread" domain="[('state', '=', 'unread')]"/>
+                <filter name="filter_critical" string="Critical" domain="[('severity', '=', 'critical')]"/>
+                <filter name="filter_warning" string="Warning" domain="[('severity', '=', 'warning')]"/>
+                <filter name="filter_dismissed" string="Dismissed" domain="[('state', '=', 'dismissed')]"/>
+                <filter name="group_type" string="Group by Type" context="{'group_by': 'notification_type'}"/>
+                <filter name="group_severity" string="Group by Severity" context="{'group_by': 'severity'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_security_notifications" model="ir.actions.act_window">
+        <field name="name">Notifications</field>
+        <field name="res_model">security.notification</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_notification_search"/>
+        <field name="context">{'search_default_filter_unread': 1}</field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem
+        id="menu_security_notifications"
+        name="Notifications"
+        parent="security_base.menu_security_root"
+        action="action_security_notifications"
+        sequence="95"
+    />
+</odoo>
