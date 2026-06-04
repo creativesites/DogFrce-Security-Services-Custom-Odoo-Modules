@@ -52,7 +52,7 @@ admin_passwd = $MASTER_PASSWORD
 list_db      = False
 proxy_mode   = True
 
-xmlrpc_port = 8069
+xmlrpc_port = 8080
 workers     = 0
 max_cron_threads = 1
 
