@@ -22,8 +22,8 @@ services:
       db:
         condition: service_healthy
     ports:
-      - "${ODOO_PORT}:8069"
-      - "${ODOO_LONGPOLLING_PORT}:8072"
+      - "${ODOO_PORT}:8080"
+      - "${ODOO_LONGPOLLING_PORT}:8081"
     environment:
       HOST: db
       USER: ${POSTGRES_USER}
