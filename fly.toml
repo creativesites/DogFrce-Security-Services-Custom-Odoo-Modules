@@ -4,7 +4,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 app            = "deployguard"
-primary_region = "jnb"
+primary_region = "ams"
 
 # ── Build ──────────────────────────────────────────────────────────────────────
 [build]
@@ -15,7 +15,7 @@ primary_region = "jnb"
 # It handles DB install/update (can take 5-15 min) without a health check timer.
 # The main machine then just cold-starts Odoo (~60s) which easily passes health.
 [deploy]
-  release_command = "/fly-entrypoint.sh migrate"
+  release_command = "migrate"
 
 # ── Non-secret environment variables ──────────────────────────────────────────
 [env]

@@ -13,20 +13,23 @@ set -euo pipefail
 MODE="${1:-start}"
 
 # ── Parse DATABASE_URL ─────────────────────────────────────────────────────────
-# Fly sets DATABASE_URL automatically after `fly postgres attach`
+# Fly sets DATABASE_URL automatically after `fly postgres attach`.
+# We also rewrite .flycast → .internal for reliable 6PN DNS inside Fly.
 if [ -n "${DATABASE_URL:-}" ]; then
-    DB_HOST=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.hostname)")
-    DB_PORT=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.port or 5432)")
-    DB_USER=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.username)")
-    DB_PASSWORD=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.password or '')")
-    DB_NAME=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.path.lstrip('/'))")
+    # Swap flycast for internal (more reliable for machine-to-machine)
+    CLEAN_URL="${DATABASE_URL//.flycast/.internal}"
+    DB_HOST=$(python3 -c "import urllib.parse; u=urllib.parse.urlparse('$CLEAN_URL'); print(u.hostname)")
+    DB_PORT=$(python3 -c "import urllib.parse; u=urllib.parse.urlparse('$CLEAN_URL'); print(u.port or 5432)")
+    DB_USER=$(python3 -c "import urllib.parse; u=urllib.parse.urlparse('$CLEAN_URL'); print(u.username)")
+    DB_PASSWORD=$(python3 -c "import urllib.parse; u=urllib.parse.urlparse('$CLEAN_URL'); print(u.password or '')")
+    DB_NAME=$(python3 -c "import urllib.parse; u=urllib.parse.urlparse('$CLEAN_URL'); print(u.path.lstrip('/').split('?')[0])")
 fi
 
 # Fallback to individual env vars (for local/CI testing)
-DB_HOST="${DB_HOST:-${HOST:-localhost}}"
-DB_PORT="${DB_PORT:-${PORT_PG:-5432}}"
-DB_USER="${DB_USER:-${USER_PG:-odoo}}"
-DB_PASSWORD="${DB_PASSWORD:-${PASSWORD_PG:-odoo}}"
+DB_HOST="${DB_HOST:-localhost}"
+DB_PORT="${DB_PORT:-5432}"
+DB_USER="${DB_USER:-odoo}"
+DB_PASSWORD="${DB_PASSWORD:-odoo}"
 DB_NAME="${DB_NAME:-deployguard}"
 MASTER_PASSWORD="${ODOO_MASTER_PASSWORD:-please_change_this_secret}"
 ADMIN_PASSWORD="${ADMIN_PASSWORD:-DeployGuard2026!}"
@@ -34,20 +37,30 @@ ODOO_PORT="8080"   # Must match fly.toml internal_port
 
 echo "==> [DeployGuard] mode=$MODE  db=$DB_HOST:$DB_PORT/$DB_NAME"
 
-# ── Wait for PostgreSQL ────────────────────────────────────────────────────────
-echo "==> Waiting for PostgreSQL..."
+# ── Wait for PostgreSQL using TCP socket (avoids pg_isready/flycast quirks) ───
+echo "==> Waiting for PostgreSQL at $DB_HOST:$DB_PORT ..."
 RETRIES=0
-until PGPASSWORD="$DB_PASSWORD" pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -q 2>/dev/null; do
+until python3 -c "
+import socket, sys
+try:
+    s = socket.create_connection(('$DB_HOST', $DB_PORT), timeout=5)
+    s.close()
+    sys.exit(0)
+except Exception as e:
+    sys.exit(1)
+" 2>/dev/null; do
     RETRIES=$((RETRIES + 1))
-    if [ "$RETRIES" -gt 60 ]; then
-        echo "ERROR: PostgreSQL not ready after 120s. Check DATABASE_URL secret."
+    if [ "$RETRIES" -gt 90 ]; then
+        echo ""
+        echo "ERROR: Cannot reach PostgreSQL at $DB_HOST:$DB_PORT after 180s."
+        echo "       Check that DATABASE_URL secret is set and Postgres is running."
         exit 1
     fi
     printf "."
     sleep 2
 done
 echo ""
-echo "==> PostgreSQL ready."
+echo "==> PostgreSQL is reachable."
 
 # ── Generate runtime odoo.conf ─────────────────────────────────────────────────
 CONF_FILE="/tmp/odoo-fly.conf"
