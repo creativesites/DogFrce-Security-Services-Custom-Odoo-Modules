@@ -2,6 +2,7 @@
 <templates xml:space="preserve">
 
 <t t-name="security_reporting.ExecutiveDashboard">
+   
     <div class="o_df_dashboard">
         <div class="dg-shell">
 

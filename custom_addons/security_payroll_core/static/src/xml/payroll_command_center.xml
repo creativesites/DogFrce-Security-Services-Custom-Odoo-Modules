@@ -2,6 +2,7 @@
 <templates xml:space="preserve">
 
 <t t-name="security_payroll_core.PayrollCommandCenter">
+
     <div class="o_payroll_command_center d-flex h-100 overflow-hidden">
 
         <!-- ===== LEFT SIDEBAR — PERIOD LIST ===== -->

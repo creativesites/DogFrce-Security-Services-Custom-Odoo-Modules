@@ -1,11 +1,19 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────────────────────────
-# DogForce Security — Fly.io Entrypoint
-# Handles: DB wait → first-install → update → start
+# DeployGuard — Fly.io Entrypoint
+#
+# Two modes driven by CMD:
+#   migrate  → run as release_command: DB wait + install/update modules + exit
+#              (takes 5-15 min; no health check timer in this mode)
+#   start    → main machine: brief DB wait + start Odoo on :8080
+#              (fast ~60s; health check fires here)
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-# ── Parse DATABASE_URL (set automatically by `fly postgres attach`) ────────────
+MODE="${1:-start}"
+
+# ── Parse DATABASE_URL ─────────────────────────────────────────────────────────
+# Fly sets DATABASE_URL automatically after `fly postgres attach`
 if [ -n "${DATABASE_URL:-}" ]; then
     DB_HOST=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.hostname)")
     DB_PORT=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.port or 5432)")
@@ -14,21 +22,27 @@ if [ -n "${DATABASE_URL:-}" ]; then
     DB_NAME=$(python3 -c "import urllib.parse,os; u=urllib.parse.urlparse(os.environ['DATABASE_URL']); print(u.path.lstrip('/'))")
 fi
 
-# Fallback to individual env vars (for local testing)
+# Fallback to individual env vars (for local/CI testing)
 DB_HOST="${DB_HOST:-${HOST:-localhost}}"
-DB_PORT="${DB_PORT:-${PORT:-5432}}"
-DB_USER="${DB_USER:-${USER:-odoo}}"
-DB_PASSWORD="${DB_PASSWORD:-${PASSWORD:-odoo}}"
-DB_NAME="${DB_NAME:-dogforce}"
+DB_PORT="${DB_PORT:-${PORT_PG:-5432}}"
+DB_USER="${DB_USER:-${USER_PG:-odoo}}"
+DB_PASSWORD="${DB_PASSWORD:-${PASSWORD_PG:-odoo}}"
+DB_NAME="${DB_NAME:-deployguard}"
 MASTER_PASSWORD="${ODOO_MASTER_PASSWORD:-please_change_this_secret}"
-ADMIN_PASSWORD="${ADMIN_PASSWORD:-DogForce2026!}"
+ADMIN_PASSWORD="${ADMIN_PASSWORD:-DeployGuard2026!}"
+ODOO_PORT="8080"   # Must match fly.toml internal_port
 
-echo "==> [DogForce] Starting entrypoint"
-echo "    DB: $DB_HOST:$DB_PORT/$DB_NAME (user: $DB_USER)"
+echo "==> [DeployGuard] mode=$MODE  db=$DB_HOST:$DB_PORT/$DB_NAME"
 
 # ── Wait for PostgreSQL ────────────────────────────────────────────────────────
 echo "==> Waiting for PostgreSQL..."
+RETRIES=0
 until PGPASSWORD="$DB_PASSWORD" pg_isready -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -q 2>/dev/null; do
+    RETRIES=$((RETRIES + 1))
+    if [ "$RETRIES" -gt 60 ]; then
+        echo "ERROR: PostgreSQL not ready after 120s. Check DATABASE_URL secret."
+        exit 1
+    fi
     printf "."
     sleep 2
 done
@@ -37,6 +51,8 @@ echo "==> PostgreSQL ready."
 
 # ── Generate runtime odoo.conf ─────────────────────────────────────────────────
 CONF_FILE="/tmp/odoo-fly.conf"
+mkdir -p /var/lib/odoo
+
 cat > "$CONF_FILE" << ODOO_CONF
 [options]
 addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
@@ -52,7 +68,7 @@ admin_passwd = $MASTER_PASSWORD
 list_db      = False
 proxy_mode   = True
 
-xmlrpc_port = 8080
+xmlrpc_port = $ODOO_PORT
 workers     = 0
 max_cron_threads = 1
 
@@ -66,7 +82,6 @@ logfile   = False
 ODOO_CONF
 
 # ── Module list ────────────────────────────────────────────────────────────────
-# Ordered by dependency depth — Odoo resolves further, but this helps speed.
 CORE_MODULES="security_base,security_operations,security_l10n_na"
 WORKFORCE_MODULES="security_attendance,security_leave,security_discipline"
 PAYROLL_MODULES="security_payroll_core,security_loans"
@@ -77,61 +92,61 @@ AI_MODULE="security_ai_engine"
 
 MODULES="$CORE_MODULES,$WORKFORCE_MODULES,$PAYROLL_MODULES,$BILLING_MODULES,$OPS_MODULES,$REPORTING_MODULES,$AI_MODULE"
 
-# Include demo data if DEMO_DATA=true (set via fly secrets set DEMO_DATA=true)
 if [ "${DEMO_DATA:-false}" = "true" ]; then
     MODULES="$MODULES,security_demo_data"
     echo "==> Demo data module included."
 fi
 
-# ── Determine if this is a first-time install ──────────────────────────────────
-LOCK_FILE="/var/lib/odoo/.dogforce_deployed"
+# ── MODE: migrate (runs as release_command — no health check pressure) ─────────
+if [ "$MODE" = "migrate" ]; then
+    echo "==> MIGRATE MODE — install or update all modules."
 
-DB_EXISTS=$(PGPASSWORD="$DB_PASSWORD" psql \
-    -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" \
-    -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" 2>/dev/null || echo "0")
+    LOCK_FILE="/var/lib/odoo/.deployguard_installed"
 
-if [ "$DB_EXISTS" != "1" ] || [ ! -f "$LOCK_FILE" ]; then
-    # ── FIRST INSTALL ──────────────────────────────────────────────────────────
-    echo "==> First deployment detected — installing all modules."
-    echo "    Modules: $MODULES"
-    echo "    This takes 3-8 minutes. Please wait..."
+    DB_EXISTS=$(PGPASSWORD="$DB_PASSWORD" psql \
+        -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" \
+        -tAc "SELECT 1 FROM pg_database WHERE datname='$DB_NAME'" 2>/dev/null || echo "0")
 
-    odoo -c "$CONF_FILE" -d "$DB_NAME" \
-        -i "$MODULES" \
-        --without-demo=all \
-        --stop-after-init \
-        --load-language=en_US
+    if [ "$DB_EXISTS" != "1" ] || [ ! -f "$LOCK_FILE" ]; then
+        echo "==> First install detected. Installing: $MODULES"
+        echo "    This takes 5-15 minutes..."
 
-    echo "==> Setting admin password..."
-    PGPASSWORD="$DB_PASSWORD" psql \
-        -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
-        -c "UPDATE res_users SET password='$ADMIN_PASSWORD' WHERE login='admin';" \
-        2>/dev/null || echo "    (Password set via Odoo hash on next login)"
+        odoo -c "$CONF_FILE" -d "$DB_NAME" \
+            -i "$MODULES" \
+            --without-demo=all \
+            --stop-after-init \
+            --load-language=en_US
 
-    touch "$LOCK_FILE"
-    echo "==> Installation complete."
+        # Set a safe admin password
+        PGPASSWORD="$DB_PASSWORD" psql \
+            -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" \
+            -c "UPDATE res_users
+                SET password = crypt('$ADMIN_PASSWORD', gen_salt('bf'))
+                WHERE login = 'admin';" \
+            2>/dev/null || echo "    (Password will be set on first login)"
 
-else
-    # ── UPDATE ─────────────────────────────────────────────────────────────────
-    echo "==> Existing deployment — updating modules."
-    odoo -c "$CONF_FILE" -d "$DB_NAME" \
-        -u "$MODULES" \
-        --stop-after-init 2>/dev/null \
-        && echo "==> Update complete." \
-        || echo "==> Update finished with warnings (non-fatal)."
-fi
+        touch "$LOCK_FILE"
+        echo "==> Install complete."
 
-# ── Handle 'migrate' command (Fly release_command pattern) ────────────────────
-if [ "${1:-}" = "migrate" ]; then
-    echo "==> Migration step done. Exiting."
+    else
+        echo "==> Updating modules: $MODULES"
+        odoo -c "$CONF_FILE" -d "$DB_NAME" \
+            -u "$MODULES" \
+            --stop-after-init \
+            2>&1 | tail -20 \
+            && echo "==> Update complete." \
+            || echo "==> Update finished (check logs if issues persist)."
+    fi
+
+    echo "==> migrate done. Exiting cleanly."
     exit 0
 fi
 
-# ── Start Odoo ─────────────────────────────────────────────────────────────────
-echo "==> Starting Odoo on :8069"
+# ── MODE: start (main machine — just boot Odoo, health check will fire) ────────
+echo "==> START MODE — launching Odoo on :$ODOO_PORT"
+echo "    URL:   https://deployguard.fly.dev"
 echo "    Login: admin / $ADMIN_PASSWORD"
-echo "    Master password is in Fly secrets (ODOO_MASTER_PASSWORD)"
 
 exec odoo -c "$CONF_FILE" \
     -d "$DB_NAME" \
-    --db-filter="^$DB_NAME$"
+    --db-filter="^${DB_NAME}$"
