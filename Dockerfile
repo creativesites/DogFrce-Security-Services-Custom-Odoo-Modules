@@ -24,7 +24,7 @@ COPY --chown=odoo:odoo custom_addons/ /mnt/extra-addons/
 USER odoo
 
 # Odoo uses 8069 by default; longpolling on 8072
-EXPOSE 8080 8072
+EXPOSE 8069 8072
 
 # The official Odoo image already defines a correct ENTRYPOINT + CMD.
 # We do NOT override them – Render will pass its own PORT if you set it,
