@@ -28,7 +28,7 @@ RUN chmod +x /fly-entrypoint.sh
 # ── Drop back to the odoo user ─────────────────────────────────────────────────
 USER odoo
 
-EXPOSE 10000 8072
+EXPOSE 8080 8072
 
 ENTRYPOINT ["/fly-entrypoint.sh"]
 CMD ["start"]
