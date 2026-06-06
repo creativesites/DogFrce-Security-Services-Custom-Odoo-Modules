@@ -1,7 +1,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# DogForce Security Services — Production Dockerfile
+# DogForce Security Services – Production Dockerfile
 # Base: official Odoo 19.0 image
-# Targets: Fly.io (primary), any Docker host
+# Target: Render (any Docker host)
 # ─────────────────────────────────────────────────────────────────────────────
 
 FROM odoo:19.0
@@ -18,17 +18,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Copy custom addons ─────────────────────────────────────────────────────────
-# Copies the entire custom_addons directory into the extra-addons mount point
 COPY --chown=odoo:odoo custom_addons/ /mnt/extra-addons/
-
-# ── Copy Fly.io entrypoint ─────────────────────────────────────────────────────
-COPY deploy/fly-entrypoint.sh /fly-entrypoint.sh
-RUN chmod +x /fly-entrypoint.sh
 
 # ── Drop back to the odoo user ─────────────────────────────────────────────────
 USER odoo
 
+# Odoo uses 8069 by default; longpolling on 8072
 EXPOSE 8080 8072
 
-ENTRYPOINT ["/fly-entrypoint.sh"]
-CMD ["start"]
+# The official Odoo image already defines a correct ENTRYPOINT + CMD.
+# We do NOT override them – Render will pass its own PORT if you set it,
+# but we'll avoid that and let Odoo use its default.
