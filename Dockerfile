@@ -1,9 +1,5 @@
 FROM odoo:19.0
 
-LABEL maintainer="winston@cvmworldwide.com" \
-      org.opencontainers.image.title="DogForce Security Platform" \
-      org.opencontainers.image.description="Custom Odoo 19 ERP for security companies"
-
 USER root
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -12,9 +8,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --chown=odoo:odoo custom_addons/ /mnt/extra-addons/
 COPY --chown=odoo:odoo odoo.conf /etc/odoo/odoo.conf
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 USER odoo
 
 EXPOSE 8069 8072
 
-CMD ["odoo", "--config=/etc/odoo/odoo.conf"]
+CMD ["/entrypoint.sh"]
