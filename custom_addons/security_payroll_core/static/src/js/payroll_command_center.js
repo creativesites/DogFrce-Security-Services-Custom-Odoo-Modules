@@ -6,7 +6,7 @@ import { useService } from "@web/core/utils/hooks";
 
 export class PayrollCommandCenter extends Component {
     static template = "security_payroll_core.PayrollCommandCenter";
-    static props = {};
+    static props = { "*": true };
 
     setup() {
         this.orm = useService("orm");

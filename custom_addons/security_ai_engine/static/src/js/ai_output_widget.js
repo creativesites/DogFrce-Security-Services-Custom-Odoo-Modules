@@ -210,6 +210,7 @@ function trendColor(severity) {
 class AiAlert extends Component {
     static template = "security_ai_engine.AiAlert";
     static props = { c: Object };
+    get c()      { return this.props.c; }
     get bg()     { return variantToBg(this.props.c.variant); }
     get border() { return variantToBorder(this.props.c.variant); }
     get text()   { return variantToText(this.props.c.variant); }
@@ -221,6 +222,7 @@ class AiAlert extends Component {
 class AiMetricRow extends Component {
     static template = "security_ai_engine.AiMetricRow";
     static props = { c: Object };
+    get c() { return this.props.c; }
 
     trendIcon(m) { return trendIcon(m.trend); }
     valueColor(m) { return trendColor(m.severity); }
@@ -231,6 +233,7 @@ class AiMetricRow extends Component {
 class AiFinding extends Component {
     static template = "security_ai_engine.AiFinding";
     static props = { c: Object };
+    get c()            { return this.props.c; }
     get borderColor()  { return severityToBorder(this.props.c.severity); }
     get badgeBg()      { return severityToBadgeBg(this.props.c.severity); }
     get badgeText()    { return severityToBadgeText(this.props.c.severity); }
@@ -241,6 +244,7 @@ class AiFinding extends Component {
 class AiRecommendation extends Component {
     static template = "security_ai_engine.AiRecommendation";
     static props = { c: Object };
+    get c() { return this.props.c; }
 
     get meta() {
         const c = this.props.c;
@@ -257,6 +261,7 @@ class AiRecommendation extends Component {
 class AiTable extends Component {
     static template = "security_ai_engine.AiTable";
     static props = { c: Object };
+    get c() { return this.props.c; }
 }
 
 // ── Component: Section ────────────────────────────────────────────────────────
@@ -264,6 +269,7 @@ class AiTable extends Component {
 class AiSection extends Component {
     static template = "security_ai_engine.AiSection";
     static props = { c: Object };
+    get c() { return this.props.c; }
 }
 
 // ── Component: BulletList ─────────────────────────────────────────────────────
@@ -271,6 +277,7 @@ class AiSection extends Component {
 class AiBulletList extends Component {
     static template = "security_ai_engine.AiBulletList";
     static props = { c: Object };
+    get c() { return this.props.c; }
 }
 
 // ── Component: DataTable (clickable rows → navigate) ─────────────────────────
@@ -278,6 +285,7 @@ class AiBulletList extends Component {
 class AiDataTable extends Component {
     static template = "security_ai_engine.AiDataTable";
     static props = { c: Object };
+    get c() { return this.props.c; }
 
     setup() {
         this.actionService = useService("action");
@@ -312,6 +320,7 @@ class AiDataTable extends Component {
 class AiRecordCard extends Component {
     static template = "security_ai_engine.AiRecordCard";
     static props = { c: Object };
+    get c() { return this.props.c; }
 
     setup() {
         this.actionService = useService("action");
@@ -336,6 +345,7 @@ class AiRecordCard extends Component {
 class AiNavigate extends Component {
     static template = "security_ai_engine.AiNavigate";
     static props = { c: Object };
+    get c() { return this.props.c; }
 
     setup() {
         this.actionService = useService("action");
@@ -374,6 +384,7 @@ const AiNavigateList = AiNavigate;
 class AiStatComparison extends Component {
     static template = "security_ai_engine.AiStatComparison";
     static props = { c: Object };
+    get c() { return this.props.c; }
 
     itemColor(item) { return trendColor(item.severity || "info"); }
     itemTrend(item) { return trendIcon(item.trend); }
@@ -387,6 +398,7 @@ class AiActionConfirm extends Component {
         c: Object,
         onConfirmAction: { type: Function, optional: true },
     };
+    get c() { return this.props.c; }
 
     confirm() {
         if (this.props.onConfirmAction && this.props.c.action_token) {
@@ -403,6 +415,7 @@ class AiQuickReplies extends Component {
         c: Object,
         onQuickReply: { type: Function, optional: true },
     };
+    get c() { return this.props.c; }
 
     reply(s) {
         if (this.props.onQuickReply) this.props.onQuickReply(s);
@@ -414,6 +427,7 @@ class AiQuickReplies extends Component {
 class AiConfidence extends Component {
     static template = "security_ai_engine.AiConfidence";
     static props = { score: Number };
+    get score() { return this.props.score; }
 
     get dots() {
         return Array.from({ length: 5 }, (_, i) => i < (this.props.score || 0));
@@ -426,6 +440,7 @@ class AiSummaryBar extends Component {
     static template = "security_ai_engine.AiSummaryBar";
     static components = { AiConfidence };
     static props = { parsed: Object };
+    get parsed() { return this.props.parsed; }
 
     get statusVariant() {
         return this.props.parsed.status === "clean" ? "success" : "findings" ? "warning" : "info";

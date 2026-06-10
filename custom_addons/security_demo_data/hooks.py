@@ -147,6 +147,14 @@ class DemoBuilder:
                 },
             )
 
+        # Document types (required before employee documents can be created)
+        doc_type_model = self.env.get("security.document.type")
+        if doc_type_model is not None:
+            self.get_or_create("doctype_firearm", "security.document.type", {"name": "Firearm Competency Certificate", "code": "FIREARM", "expiry_required": True, "is_firearm_cert": True})
+            self.get_or_create("doctype_id", "security.document.type", {"name": "National ID Document", "code": "NAT_ID", "expiry_required": False})
+            self.get_or_create("doctype_cctv", "security.document.type", {"name": "CCTV Operations Certificate", "code": "CCTV_CERT", "expiry_required": True})
+            self.get_or_create("doctype_first_aid", "security.document.type", {"name": "First Aid Certificate", "code": "FIRST_AID_CERT", "expiry_required": True})
+
         # Certifications
         self.get_or_create("cert_firearm", "security.certification", {"name": "Firearm Competency", "code": "FIREARM", "expiry_required": True})
         self.get_or_create("cert_driver", "security.certification", {"name": "Professional Driver", "code": "DRIVER"})
@@ -694,6 +702,21 @@ class DemoBuilder:
                         "noupdate": True,
                     })
 
+        # Assign post-type-required attributes to guards that will be placed
+        # on attributed posts in the demo rosters.
+        ctrl = self.ref("attr_control_room")
+        vip  = self.ref("attr_vip_protection")
+        if ctrl:
+            for xmlid in ["guard_b01", "guard_b03", "guard_b07", "guard_b12"]:
+                g = self.ref(xmlid)
+                if g:
+                    g.write({"security_attribute_ids": [(4, ctrl.id)]})
+        if vip:
+            for xmlid in ["guard_a01", "guard_a02", "guard_a03", "guard_a04"]:
+                g = self.ref(xmlid)
+                if g:
+                    g.write({"security_attribute_ids": [(4, vip.id)]})
+
     # ------------------------------------------------------------------
     # 5. DOCUMENTS AND LEAVE
     # ------------------------------------------------------------------
@@ -702,6 +725,13 @@ class DemoBuilder:
         # Employee documents (firearm certs, ID docs)
         doc_model = self.env.get("security.employee.document")
         if doc_model is not None:
+            # Map doc_name → document_type xmlid
+            _dtype = {
+                "Firearm Competency Certificate": "doctype_firearm",
+                "Namibian ID Document":           "doctype_id",
+                "CCTV Operations Certificate":    "doctype_cctv",
+                "First Aid Certificate":          "doctype_first_aid",
+            }
             doc_records = [
                 ("doc_a05_firearm",   "guard_a05", "Firearm Competency Certificate", "2026-04-15", "2028-04-14"),
                 ("doc_a01_firearm",   "guard_a01", "Firearm Competency Certificate", "2026-03-10", "2028-03-09"),
@@ -713,8 +743,13 @@ class DemoBuilder:
                 ("doc_b12_cctv",      "guard_b12", "CCTV Operations Certificate",    "2025-10-12", "2027-10-11"),
             ]
             for xmlid, guard_xmlid, doc_name, issue_date, expiry_date in doc_records:
+                dtype_xmlid = _dtype.get(doc_name, "doctype_id")
+                dtype_rec = self.env.ref(f"security_demo_data.{dtype_xmlid}", raise_if_not_found=False)
+                if not dtype_rec:
+                    continue
                 vals = {
                     "employee_id": self.ref(guard_xmlid).id,
+                    "document_type_id": dtype_rec.id,
                     "name": doc_name,
                     "issue_date": issue_date,
                 }
@@ -724,16 +759,32 @@ class DemoBuilder:
 
         # Leave requests
         leave_model = self.env.get("security.leave.request")
-        if leave_model is not None:
+        leave_type_model = self.env.get("security.leave.type")
+        if leave_model is not None and leave_type_model is not None:
+            # Ensure leave types exist
+            lt_annual = leave_type_model.search([("name", "ilike", "Annual")], limit=1) or \
+                        leave_type_model.create({"name": "Annual Leave", "code": "AL"})
+            lt_sick = leave_type_model.search([("name", "ilike", "Sick")], limit=1) or \
+                      leave_type_model.create({"name": "Sick Leave", "code": "SL"})
+            lt_family = leave_type_model.search([("name", "ilike", "Family")], limit=1) or \
+                        leave_type_model.create({"name": "Family Responsibility Leave", "code": "FRL"})
+            _lt_map = {
+                "Annual Leave": lt_annual.id,
+                "Sick Leave": lt_sick.id,
+                "Family Responsibility Leave": lt_family.id,
+            }
             leave_records = [
-                ("leave_c01_annual",  "guard_c01", "2026-05-11", "2026-05-15", "Annual Leave",               "approved"),
-                ("leave_c04_sick",    "guard_c04", "2026-05-06", "2026-05-07", "Sick Leave",                 "approved"),
-                ("leave_d01_family",  "guard_d01", "2026-05-20", "2026-05-22", "Family Responsibility Leave", "pending"),
-                ("leave_d04_annual",  "guard_d04", "2026-06-01", "2026-06-05", "Annual Leave",               "rejected"),
-                ("leave_b02_sick",    "guard_b02", "2026-05-13", "2026-05-14", "Sick Leave",                 "approved"),
-                ("leave_a07_annual",  "guard_a07", "2026-06-10", "2026-06-14", "Annual Leave",               "pending"),
+                ("leave_c01_annual",  "guard_c01", "2026-05-11", "2026-05-15", "Annual Leave",               "draft"),
+                ("leave_c04_sick",    "guard_c04", "2026-05-06", "2026-05-07", "Sick Leave",                 "draft"),
+                ("leave_d01_family",  "guard_d01", "2026-05-20", "2026-05-22", "Family Responsibility Leave", "draft"),
+                ("leave_d04_annual",  "guard_d04", "2026-06-01", "2026-06-05", "Annual Leave",               "refused"),
+                ("leave_b02_sick",    "guard_b02", "2026-05-13", "2026-05-14", "Sick Leave",                 "draft"),
+                ("leave_a07_annual",  "guard_a07", "2026-06-10", "2026-06-14", "Annual Leave",               "draft"),
             ]
-            for xmlid, guard_xmlid, date_from, date_to, leave_type, state in leave_records:
+            for xmlid, guard_xmlid, date_from, date_to, leave_type_name, state in leave_records:
+                lt_id = _lt_map.get(leave_type_name)
+                if not lt_id:
+                    continue
                 self.get_or_create(
                     xmlid,
                     "security.leave.request",
@@ -741,7 +792,7 @@ class DemoBuilder:
                         "employee_id": self.ref(guard_xmlid).id,
                         "date_from": date_from,
                         "date_to": date_to,
-                        "leave_type": leave_type,
+                        "leave_type_id": lt_id,
                         "state": state,
                     },
                 )
@@ -918,7 +969,7 @@ class DemoBuilder:
             "attendance_batch_id": batch.id,
             "roster_slot_id": slot.id,
             "manual_presence": manual_presence,
-            "absence_type": manual_presence if manual_presence != "present" else "none",
+            "absence_type": "awol" if manual_presence == "awol" else ("no_show" if manual_presence == "absent" else "none"),
             "overtime_approved": is_overtime,
             "overtime_approval_note": "Demo approved operational handover overtime." if is_overtime else "",
         }
@@ -989,12 +1040,12 @@ class DemoBuilder:
             ("incident_c04_late",     "guard_c04",     "incident_type_late_posting",    "2026-05-06", "Demo record: late arrival at parade posting sheet.",                    "approved"),
             ("incident_e01_awol",     "guard_e01",     "incident_type_awol_first",      "2026-05-08", "Demo: guard absent without leave — first offence formal warning issued.", "approved"),
             ("incident_d05_uniform",  "guard_d05",     "incident_type_uniform",         "2026-05-12", "Demo: guard on duty without correct uniform — written warning.",          "approved"),
-            ("incident_d01_late",     "guard_d01",     "incident_type_late_posting",    "2026-05-14", "Demo: late to post — verbal warning recorded.",                          "pending"),
-            ("incident_d04_late",     "guard_d04",     "incident_type_late_posting",    "2026-05-03", "Demo: late posting at Breweries plant gate.",                            "pending"),
+            ("incident_d01_late",     "guard_d01",     "incident_type_late_posting",    "2026-05-14", "Demo: late to post — verbal warning recorded.",                          "draft"),
+            ("incident_d04_late",     "guard_d04",     "incident_type_late_posting",    "2026-05-03", "Demo: late posting at Breweries plant gate.",                            "draft"),
             ("incident_c09_damage",   "guard_c09",     "incident_type_property_damage", "2026-05-07", "Demo: guard damaged vehicle barrier at plant entrance.",                  "approved"),
             ("incident_c03_uniform",  "guard_c03",     "incident_type_uniform",         "2026-05-10", "Demo: incomplete uniform at morning parade — boots missing.",             "approved"),
             ("incident_e06_awol",     "guard_e06",     "incident_type_awol_first",      "2026-04-20", "Demo: repeated AWOL — escalation to disqualification review.",            "approved"),
-            ("incident_b06_late",     "guard_b06",     "incident_type_late_posting",    "2026-05-18", "Demo: late posting at NBL Brewery gate — second incident.",              "pending"),
+            ("incident_b06_late",     "guard_b06",     "incident_type_late_posting",    "2026-05-18", "Demo: late posting at NBL Brewery gate — second incident.",              "draft"),
             ("incident_d09_uniform",  "guard_d09",     "incident_type_uniform",         "2026-05-22", "Demo: uniform non-compliance at City of Windhoek post.",                 "approved"),
             ("incident_e07_awol",     "guard_e07",     "incident_type_awol_first",      "2026-04-25", "Demo: guard absent without leave — disqualification triggered.",          "approved"),
         ]
@@ -1250,7 +1301,15 @@ class DemoBuilder:
                 },
             )
             if not invoice.line_ids:
-                invoice.action_generate_from_attendance()
+                self.env["security.billing.invoice.line"].create({
+                    "invoice_id": invoice.id,
+                    "name": f"Security services — May 2026",
+                    "quantity": 1.0,
+                    "unit_price": monthly_amount,
+                    "service_date_from": "2026-05-01",
+                    "service_date_to": "2026-05-31",
+                    "site_id": self.ref(site_xmlid).id,
+                })
 
     # ------------------------------------------------------------------
     # 11. CLIENT REPORT

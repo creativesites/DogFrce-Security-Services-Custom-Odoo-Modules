@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
         <record id="view_res_config_settings_licensing" model="ir.ui.view">
             <field name="name">res.config.settings.licensing</field>
             <field name="model">res.config.settings</field>
-            <field name="inherit_id" ref="base_setup.action_general_configuration"/>
+            <field name="inherit_id" ref="base.res_config_settings_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//form" position="inside">
                     <app string="DeployGuard License" name="security_licensing"
@@ -29,5 +28,4 @@
                 </xpath>
             </field>
         </record>
-    </data>
 </odoo>

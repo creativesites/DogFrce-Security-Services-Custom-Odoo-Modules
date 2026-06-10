@@ -18,6 +18,7 @@ import { registry } from "@web/core/registry";
  * a display_notification dict (on error) or null (on success).
  */
 class RosterBoard extends Component {
+    static props = { "*": true };
     static template = "security_shift_planner.RosterBoard";
 
     setup() {

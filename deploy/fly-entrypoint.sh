@@ -10,6 +10,13 @@
 #  4. Install modules (first run) or update them (subsequent runs)
 #  5. Kill the keepalive server
 #  6. exec Odoo (takes over port 8080 from here)
+#
+# Control env vars (set via: fly secrets set VAR=value):
+#   FRESH_DB=true         — drop the DB + lock file, reinstall Odoo base only.
+#                           Use to recover from broken installs. Unset after use.
+#   MODULES_OVERRIDE=...  — comma-separated list that REPLACES the default module
+#                           list. Set to empty string ("") to install NO custom
+#                           modules (base Odoo only). Useful for one-by-one setup.
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -89,9 +96,23 @@ logfile   = False
 ODOO_CONF
 
 # ── Module list ────────────────────────────────────────────────────────────────
-MODULES="security_base,security_operations,security_l10n_na,security_attendance,security_leave,security_discipline,security_payroll_core,security_loans,security_billing,security_accounting_controls,security_documents,security_equipment,security_fleet,security_shift_planner,security_notifications,security_reporting,security_client_reports,security_ai_engine"
+# Default full list — override by setting MODULES_OVERRIDE as a Fly secret.
+# Set MODULES_OVERRIDE="" to install NO custom modules (base Odoo only).
+DEFAULT_MODULES="security_base,security_operations,security_l10n_na,security_attendance,security_leave,security_discipline,security_payroll_core,security_loans,security_billing,security_accounting_controls,security_documents,security_equipment,security_fleet,security_shift_planner,security_notifications,security_reporting,security_client_reports,security_ai_engine"
 
-if [ "${DEMO_DATA:-false}" = "true" ]; then
+if [ -n "${MODULES_OVERRIDE+x}" ]; then
+    # MODULES_OVERRIDE is set (even if empty) — use it as-is
+    MODULES="$MODULES_OVERRIDE"
+    if [ -z "$MODULES" ]; then
+        echo "==> MODULES_OVERRIDE is empty — installing base Odoo only (no custom modules)."
+    else
+        echo "==> MODULES_OVERRIDE active: $MODULES"
+    fi
+else
+    MODULES="$DEFAULT_MODULES"
+fi
+
+if [ "${DEMO_DATA:-false}" = "true" ] && [ -n "$MODULES" ]; then
     MODULES="$MODULES,security_demo_data"
     echo "==> Demo data module will be installed."
 fi
@@ -127,9 +148,30 @@ done
 echo ""
 echo "==> PostgreSQL is ready."
 
-# ── First install or update ────────────────────────────────────────────────────
+# ── FRESH_DB: drop database + lock file for a clean reinstall ─────────────────
 LOCK_FILE="/var/lib/odoo/.deployguard_installed"
 
+if [ "${FRESH_DB:-false}" = "true" ]; then
+    echo "==> FRESH_DB=true — dropping database '$DB_NAME' and resetting lock file."
+    echo "    WARNING: All existing data will be lost. Unset FRESH_DB after this deploy."
+    python3 - << PYEOF 2>/dev/null || true
+import psycopg2
+try:
+    conn = psycopg2.connect(host="$DB_HOST", port=$DB_PORT, user="$DB_USER", password="$DB_PASSWORD", database="postgres", connect_timeout=5)
+    conn.autocommit = True
+    cur = conn.cursor()
+    cur.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname=%s AND pid <> pg_backend_pid()", ("$DB_NAME",))
+    cur.execute("DROP DATABASE IF EXISTS \"$DB_NAME\"")
+    conn.close()
+    print("Database dropped.")
+except Exception as e:
+    print(f"Drop failed (may not exist): {e}")
+PYEOF
+    rm -f "$LOCK_FILE"
+    echo "==> Lock file removed. Proceeding with fresh install."
+fi
+
+# ── First install or update ────────────────────────────────────────────────────
 DB_EXISTS=$(python3 - << PYEOF 2>/dev/null
 import psycopg2, sys
 try:
@@ -147,8 +189,15 @@ if [ "$DB_EXISTS" != "1" ] || [ ! -f "$LOCK_FILE" ]; then
     echo "==> First install — installing modules. This takes 10-15 minutes..."
     echo "    (health checks are passing via keepalive server — do not interrupt)"
 
+    if [ -n "$MODULES" ]; then
+        INSTALL_FLAGS="-i $MODULES"
+    else
+        INSTALL_FLAGS="-i base"
+        echo "    No custom modules specified — installing base Odoo only."
+    fi
+
     odoo -c "$CONF_FILE" -d "$DB_NAME" \
-        -i "$MODULES" \
+        $INSTALL_FLAGS \
         --without-demo=all \
         --stop-after-init \
         --load-language=en_US
@@ -168,11 +217,15 @@ PYEOF
     echo "==> Installation complete."
 
 else
-    echo "==> Updating modules..."
-    odoo -c "$CONF_FILE" -d "$DB_NAME" \
-        -u "$MODULES" \
-        --stop-after-init \
-        2>&1 | tail -5 || echo "==> Update finished."
+    if [ -n "$MODULES" ]; then
+        echo "==> Updating modules..."
+        odoo -c "$CONF_FILE" -d "$DB_NAME" \
+            -u "$MODULES" \
+            --stop-after-init \
+            2>&1 | tail -5 || echo "==> Update finished."
+    else
+        echo "==> No custom modules to update — skipping update step."
+    fi
 fi
 
 # ── Kill keepalive, hand off port 8080 to Odoo ─────────────────────────────────

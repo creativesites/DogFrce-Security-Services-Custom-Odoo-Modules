@@ -1,32 +1,38 @@
 /* ═══════════════════════════════════════════════════════════
-   DEPLOYGUARD — PAYROLL COMMAND CENTER (Light Corporate)
-   Fonts: system-ui stack (Google Fonts loaded via template link tag)
+   DOGFORCE — PAYROLL COMMAND CENTER + EXPENDITURE
+   Design system mirrors executive_dashboard.css
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Design tokens ── */
 .o_payroll_command_center {
-    --pcc-bg:          #f5f6f8;
-    --pcc-surface:     #ffffff;
-    --pcc-surface-soft:   #f0f2f5;
-    --pcc-border:      #e3e6ea;
-    --pcc-border-em:   #cdd1d8;
+    /* ── Core surfaces (matches executive dashboard) ── */
+    --pcc-bg:           #f4f6f9;
+    --pcc-surface:      #ffffff;
+    --pcc-surface-soft: #f0f3f7;
+    --pcc-border:       #e5e8ec;
+    --pcc-border-em:    #cbd1d9;
 
-    --pcc-ink:         #0f1923;
-    --pcc-ink-2:       #4a5568;
-    --pcc-ink-3:       #8c97a8;
-    --pcc-ink-4:       #b8c0cb;
+    /* ── Text scale ── */
+    --pcc-ink:   #0d1726;
+    --pcc-ink-2: #475569;
+    --pcc-ink-3: #8b95a5;
+    --pcc-ink-4: #b8bfca;
 
-    --pcc-navy:        #1a3a5c;
-    --pcc-navy-mid:    #2a5282;
-    --pcc-navy-soft:   #eaf0f7;
+    /* ── Brand / nav ── */
+    --pcc-navy:     #1a3a5c;
+    --pcc-navy-mid: #234a77;
+    --pcc-navy-soft:#eaf0f7;
 
-    --pcc-shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-    --pcc-shadow:    0 4px 8px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
-    --pcc-shadow-md: 0 8px 16px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
-    
+    /* ── Semantic colours ── */
+    --pcc-success: #16a34a;
+    --pcc-warning: #d97706;
+    --pcc-danger:  #dc2626;
+
+    /* ── Radius / shadow ── */
     --pcc-r:    6px;
     --pcc-r-lg: 10px;
-    --pcc-r-xl: 12px;
+    --pcc-r-xl: 14px;
+    --pcc-shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+    --pcc-shadow:    0 4px 12px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.04);
 
     height: 100%;
     background: var(--pcc-bg);
@@ -35,89 +41,222 @@
     -webkit-font-smoothing: antialiased;
 }
 
-.o_payroll_command_center * {
-    box-sizing: border-box;
-}
+.o_payroll_command_center * { box-sizing: border-box; }
 
-.o_payroll_command_center h1, 
-.o_payroll_command_center h2, 
+.o_payroll_command_center h1,
+.o_payroll_command_center h2,
 .o_payroll_command_center h3,
 .o_payroll_command_center h4,
-.o_payroll_command_center h5,
-.o_payroll_command_center h6 {
-    font-family: Georgia, "Times New Roman", serif;
-    font-style: italic;
+.o_payroll_command_center h5 {
+    font-style: normal !important;
+    font-family: inherit !important;
     color: var(--pcc-ink);
-    letter-spacing: -.2px;
+    letter-spacing: -.3px;
 }
 
-/* Sidebar */
+/* ── Bootstrap visual overrides (keep layout classes, replace colours) ── */
+.o_payroll_command_center .text-primary  { color: var(--pcc-navy) !important; }
+.o_payroll_command_center .text-success  { color: var(--pcc-success) !important; }
+.o_payroll_command_center .text-danger   { color: var(--pcc-danger) !important; }
+.o_payroll_command_center .text-warning  { color: var(--pcc-warning) !important; }
+.o_payroll_command_center .text-muted    { color: var(--pcc-ink-3) !important; }
+.o_payroll_command_center .text-secondary{ color: var(--pcc-ink-2) !important; }
+.o_payroll_command_center .text-dark     { color: var(--pcc-ink) !important; }
+.o_payroll_command_center .text-info     { color: #0891b2 !important; }
+
+.o_payroll_command_center .badge.bg-primary {
+    background: #eff6ff !important;
+    color: #1e3a8a !important;
+}
+.o_payroll_command_center .badge.bg-success {
+    background: #f0fdf4 !important;
+    color: #14532d !important;
+}
+.o_payroll_command_center .badge.bg-secondary {
+    background: var(--pcc-surface-soft) !important;
+    color: var(--pcc-ink-2) !important;
+}
+.o_payroll_command_center .badge.bg-warning.text-dark {
+    background: #fffbeb !important;
+    color: #78350f !important;
+}
+.o_payroll_command_center .badge.bg-danger {
+    background: #fef2f2 !important;
+    color: #7f1d1d !important;
+}
+.o_payroll_command_center .badge.bg-white.text-primary {
+    background: rgba(255,255,255,.18) !important;
+    color: #fff !important;
+}
+.o_payroll_command_center .badge.bg-white.text-success {
+    background: rgba(255,255,255,.18) !important;
+    color: #fff !important;
+}
+
+.o_payroll_command_center .alert.alert-warning {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #78350f;
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.o_payroll_command_center .table-success { background: #f0fdf4 !important; }
+.o_payroll_command_center .table-warning { background: #fffbeb !important; }
+
+/* Bootstrap button overrides */
+.o_payroll_command_center .btn {
+    border-radius: var(--pcc-r) !important;
+    font-weight: 600 !important;
+    font-size: 12px !important;
+    transition: all .13s ease !important;
+    font-family: inherit !important;
+}
+.o_payroll_command_center .btn.btn-primary,
+.o_payroll_command_center .btn.btn-primary:not(:disabled):not(.disabled) {
+    background: var(--pcc-navy) !important;
+    border-color: var(--pcc-navy) !important;
+    color: #fff !important;
+}
+.o_payroll_command_center .btn.btn-primary:hover {
+    background: var(--pcc-navy-mid) !important;
+    border-color: var(--pcc-navy-mid) !important;
+}
+.o_payroll_command_center .btn.btn-success,
+.o_payroll_command_center .btn.btn-success:not(:disabled):not(.disabled) {
+    background: #16a34a !important;
+    border-color: #16a34a !important;
+    color: #fff !important;
+}
+.o_payroll_command_center .btn.btn-success:hover {
+    background: #15803d !important;
+    border-color: #15803d !important;
+}
+.o_payroll_command_center .btn.btn-outline-secondary {
+    background: var(--pcc-surface) !important;
+    border-color: var(--pcc-border-em) !important;
+    color: var(--pcc-ink-2) !important;
+}
+.o_payroll_command_center .btn.btn-outline-secondary:hover {
+    background: var(--pcc-surface-soft) !important;
+    color: var(--pcc-ink) !important;
+}
+.o_payroll_command_center .btn:disabled,
+.o_payroll_command_center .btn[disabled] {
+    opacity: .4 !important;
+    cursor: not-allowed !important;
+}
+
+/* Bootstrap spinner */
+.o_payroll_command_center .spinner-border.text-primary {
+    color: var(--pcc-navy) !important;
+}
+
+/* ══════════════════════════════════
+   SIDEBAR (period list)
+══════════════════════════════════ */
 .o_pcc_sidebar {
-    background: var(--pcc-navy);
+    background: linear-gradient(160deg, #0a1929 0%, #102238 45%, #1a3a5c 100%);
     color: #fff;
     border-right: none;
     z-index: 10;
+    box-shadow: 2px 0 16px rgba(0,0,0,.2);
 }
 
+/* Sidebar header block */
+.o_pcc_sidebar .px-4.py-4 strong,
+.o_pcc_sidebar .px-4.py-4 .small {
+    color: rgba(255,255,255,.4) !important;
+}
+
+.o_pcc_sidebar .px-4.py-4 i {
+    color: rgba(255,255,255,.4) !important;
+}
+
+/* Period items */
 .o_period_item {
-    transition: all 0.14s ease;
-    border-left: 3px solid transparent;
-    padding: 8px 10px;
-    border-radius: var(--pcc-r);
-    color: rgba(255,255,255,.55) !important;
+    transition: all .14s ease;
+    border-left: 2px solid transparent;
+    padding: 10px 12px;
+    border-radius: 7px;
+    color: rgba(255,255,255,.45) !important;
+    margin: 1px 4px;
 }
 
 .o_period_item:hover:not(.is-active) {
     background: rgba(255,255,255,.07) !important;
-    color: rgba(255,255,255,.88) !important;
+    color: rgba(255,255,255,.85) !important;
 }
 
 .o_period_item.is-active {
-    background: rgba(255,255,255,.14) !important;
-    border-left-color: #fff;
+    background: rgba(96,165,250,.14) !important;
+    border-left-color: #60a5fa;
     color: #fff !important;
-    font-weight: 600;
+    font-weight: 700;
 }
 
-.o_period_item.is-active .badge {
-    background: #fff !important;
-    color: var(--pcc-navy) !important;
+.o_period_item.is-active .badge,
+.o_period_item.is-active .pcc-badge {
+    background: rgba(255,255,255,.15) !important;
+    color: #fff !important;
 }
 
-.o_period_item.is-active .text-muted,
-.o_period_item.is-active .text-white-50 {
-    color: rgba(255,255,255,.8) !important;
+.o_period_item .fw-bold {
+    color: inherit !important;
 }
 
-.o_period_item .text-muted,
-.o_period_item .text-white-50 {
-    color: rgba(255,255,255,.4) !important;
+/* Sidebar label for period sections */
+.o_pcc_sidebar .small.text-muted,
+.o_pcc_sidebar .text-muted {
+    color: rgba(255,255,255,.35) !important;
 }
 
-.o_period_item .badge {
-    background: rgba(255,255,255,.1) !important;
-    color: rgba(255,255,255,.8) !important;
-}
-
-/* Header */
+/* ══════════════════════════════════
+   HEADER BAR
+══════════════════════════════════ */
 .o_pcc_header {
     background: var(--pcc-surface) !important;
-    border-bottom: 1px solid var(--pcc-border) !important;
+    border-bottom: none !important;
+    box-shadow: 0 1px 12px rgba(0,0,0,.06) !important;
     z-index: 5;
     height: 60px;
     padding: 0 28px !important;
-    display: flex;
+    display: flex !important;
     align-items: center;
+    position: relative;
 }
 
-/* Cards */
+.o_pcc_header h4 {
+    font-weight: 800 !important;
+    font-size: 18px !important;
+    letter-spacing: -.45px !important;
+    color: var(--pcc-ink) !important;
+    margin-bottom: 2px !important;
+}
+
+.o_pcc_header h2 {
+    font-weight: 800 !important;
+    font-size: 18px !important;
+    letter-spacing: -.45px !important;
+    color: var(--pcc-ink) !important;
+}
+
+.o_pcc_header .rounded-3 {
+    background: var(--pcc-navy) !important;
+    border-radius: 10px !important;
+}
+
+/* ══════════════════════════════════
+   STAT CARDS (top strip)
+══════════════════════════════════ */
 .pcc-stat-card {
     background: var(--pcc-surface);
     border: 1px solid var(--pcc-border);
-    border-radius: var(--pcc-r-lg);
+    border-radius: var(--pcc-r-xl);
     box-shadow: var(--pcc-shadow-sm);
-    transition: all 0.16s ease;
-    padding: 16px;
+    transition: all .16s ease;
+    padding: 18px 16px;
+    position: relative;
 }
 
 .pcc-stat-card:hover {
@@ -126,6 +265,73 @@
     border-color: var(--pcc-border-em);
 }
 
+/* Override Bootstrap fs utilities inside stat cards */
+.pcc-stat-card .fs-3 {
+    font-size: 34px !important;
+    font-weight: 800 !important;
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px !important;
+}
+
+.pcc-stat-card .fs-5 {
+    font-size: 24px !important;
+    font-weight: 800 !important;
+    letter-spacing: -.5px;
+    line-height: 1;
+    margin-bottom: 4px !important;
+}
+
+.pcc-stat-card .small.fw-bold.text-uppercase.text-muted {
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+    color: var(--pcc-ink-3) !important;
+}
+
+/* ══════════════════════════════════
+   TAB BAR (Bootstrap nav-tabs override)
+══════════════════════════════════ */
+.pcc-nav-tabs {
+    border-bottom: 1px solid var(--pcc-border) !important;
+    gap: 0;
+    padding: 0 4px;
+}
+
+.pcc-nav-tabs .nav-link {
+    color: var(--pcc-ink-3) !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    padding: 10px 16px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    transition: all .13s ease !important;
+    background: transparent !important;
+    text-transform: uppercase !important;
+    letter-spacing: .08em !important;
+    border-radius: 0 !important;
+}
+
+.pcc-nav-tabs .nav-link:hover {
+    color: var(--pcc-ink-2) !important;
+    border-bottom-color: var(--pcc-border-em) !important;
+}
+
+.pcc-nav-tabs .nav-link.active,
+.pcc-nav-tabs .nav-link.active.fw-semibold {
+    color: var(--pcc-ink) !important;
+    border-bottom-color: var(--pcc-navy) !important;
+    font-weight: 700 !important;
+}
+
+.pcc-nav-tabs .nav-link.text-warning {
+    color: var(--pcc-warning) !important;
+}
+
+/* ══════════════════════════════════
+   CONTENT CARDS
+══════════════════════════════════ */
 .pcc-card {
     background: var(--pcc-surface);
     border: 1px solid var(--pcc-border);
@@ -137,70 +343,36 @@
 .pcc-card-header {
     background: var(--pcc-surface);
     border-bottom: 1px solid var(--pcc-border);
-    padding: 14px 16px 12px;
+    padding: 14px 18px 12px;
     font-size: 13px;
     font-weight: 700;
     color: var(--pcc-ink);
 }
 
-.pcc-card-header strong {
-    font-weight: 700;
-}
-
-/* Tabs */
-.pcc-nav-tabs {
-    border-bottom: 1px solid var(--pcc-border);
-    gap: 2px;
-    padding: 0 16px;
-}
-
-.pcc-nav-tabs .nav-link {
-    color: var(--pcc-ink-3);
-    border: none;
-    border-bottom: 2px solid transparent;
-    padding: 12px 16px;
-    font-size: 12px;
-    font-weight: 600;
-    transition: all 0.13s ease;
-    background: transparent;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-}
-
-.pcc-nav-tabs .nav-link:hover {
-    color: var(--pcc-ink-2);
-    border-color: transparent;
-    background: var(--pcc-surface-soft);
-    border-radius: var(--pcc-r) var(--pcc-r) 0 0;
-}
-
-.pcc-nav-tabs .nav-link.active {
-    color: var(--pcc-ink);
-    border-bottom-color: var(--pcc-navy);
-    background: transparent;
-    border-radius: 0;
-}
-
-/* Tables */
+/* ══════════════════════════════════
+   TABLES
+══════════════════════════════════ */
 .pcc-table {
     font-size: 12px;
     width: 100%;
+    border-collapse: collapse;
 }
 
 .pcc-table th {
     background: var(--pcc-surface-soft);
     text-transform: uppercase;
     font-size: 10px;
-    letter-spacing: 0.07em;
+    letter-spacing: .08em;
     font-weight: 700;
     color: var(--pcc-ink-3);
-    padding: 9px 13px;
+    padding: 10px 14px;
     border-bottom: 1px solid var(--pcc-border);
     text-align: left;
+    white-space: nowrap;
 }
 
 .pcc-table td {
-    padding: 10px 13px;
+    padding: 10px 14px;
     vertical-align: middle;
     border-bottom: 1px solid var(--pcc-border);
     color: var(--pcc-ink-2);
@@ -211,11 +383,22 @@
     color: var(--pcc-ink);
 }
 
-.pcc-table tr:last-child td {
+.pcc-table tr:last-child td { border-bottom: none; }
+
+.pcc-table tfoot td {
+    background: var(--pcc-surface-soft);
     border-bottom: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pcc-ink);
 }
 
-/* Buttons */
+.pcc-table .text-end   { text-align: right !important; }
+.pcc-table .text-center{ text-align: center !important; }
+
+/* ══════════════════════════════════
+   BUTTONS (pcc-btn)
+══════════════════════════════════ */
 .pcc-btn {
     border-radius: var(--pcc-r);
     font-weight: 600;
@@ -225,30 +408,28 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.13s ease;
+    gap: 6px;
+    transition: all .13s ease;
     background: var(--pcc-surface);
     color: var(--pcc-ink-2);
     border: 1px solid var(--pcc-border-em);
     font-family: inherit;
+    cursor: pointer;
 }
 
 .pcc-btn:hover {
     background: var(--pcc-surface-soft);
-    border-color: var(--pcc-border-em);
+    color: var(--pcc-ink);
 }
 
-.pcc-btn-primary, .btn-primary.pcc-btn {
-    background: var(--pcc-navy) !important;
-    color: #fff !important;
-    border-color: var(--pcc-navy) !important;
+.pcc-btn:disabled, .pcc-btn[disabled] {
+    opacity: .4;
+    cursor: not-allowed;
 }
 
-.pcc-btn-primary:hover, .btn-primary.pcc-btn:hover {
-    background: var(--pcc-navy-mid) !important;
-    border-color: var(--pcc-navy-mid) !important;
-}
-
-/* Badges */
+/* ══════════════════════════════════
+   BADGES (pcc-badge)
+══════════════════════════════════ */
 .pcc-badge {
     border-radius: 4px;
     padding: 0 7px;
@@ -259,5 +440,42 @@
     font-weight: 700;
     letter-spacing: .04em;
     text-transform: uppercase;
+    background: var(--pcc-surface-soft);
+    color: var(--pcc-ink-2);
 }
 
+/* State-specific badge colours */
+.pcc-badge-draft     { background: var(--pcc-surface-soft); color: var(--pcc-ink-2); }
+.pcc-badge-confirmed { background: #eff6ff; color: #1e3a8a; }
+.pcc-badge-paid      { background: #f0fdf4; color: #14532d; }
+.pcc-badge-open      { background: #fffbeb; color: #78350f; }
+.pcc-badge-closed    { background: var(--pcc-surface-soft); color: var(--pcc-ink-3); }
+
+/* Period state badges inside sidebar items */
+.o_period_item .pcc-badge,
+.o_period_item .badge {
+    background: rgba(255,255,255,.1) !important;
+    color: rgba(255,255,255,.7) !important;
+    font-size: 9px !important;
+    height: 16px !important;
+    padding: 0 5px !important;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+}
+
+/* ══════════════════════════════════
+   EXPENDITURE: summary big cards
+══════════════════════════════════ */
+.pcc-summary-big {
+    background: var(--pcc-surface);
+    border: 1px solid var(--pcc-border);
+    border-radius: var(--pcc-r-xl);
+    box-shadow: var(--pcc-shadow-sm);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}

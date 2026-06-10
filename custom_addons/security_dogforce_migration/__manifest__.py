@@ -5,7 +5,7 @@
     "category": "Security/Migration",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_billing", "security_leave", "security_loans"],
+    "depends": ["security_base", "security_billing", "security_leave", "security_loans"],
     "data": [
         "security/ir.model.access.csv",
         "views/security_migration_views.xml",

@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
         <!-- Category -->
         <record id="module_category_licensing" model="ir.module.category">
             <field name="name">DeployGuard Licensing</field>
             <field name="sequence">100</field>
         </record>
 
+        <!-- Privilege (Odoo 19 intermediate layer) -->
+        <record id="privilege_security_licensing" model="res.groups.privilege">
+            <field name="name">DeployGuard Licensing</field>
+            <field name="category_id" ref="module_category_licensing"/>
+        </record>
+
         <!-- Groups -->
         <record id="group_license_admin" model="res.groups">
             <field name="name">License Administrator</field>
-            <field name="category_id" ref="module_category_licensing"/>
-            <field name="users" eval="[(4, ref('base.user_admin'))]"/>
+            <field name="privilege_id" ref="privilege_security_licensing"/>
+            <field name="user_ids" eval="[(4, ref('base.user_admin'))]"/>
         </record>
 
         <!-- Access: security.license — admins full, internal users read -->
@@ -66,5 +71,4 @@
             <field name="perm_create">1</field>
             <field name="perm_unlink">1</field>
         </record>
-    </data>
 </odoo>

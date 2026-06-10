@@ -1,11 +1,11 @@
 /* =================================================================
    Roster Board — scoped component styles
-   Loaded via web.assets_backend in __manifest__.py
+   Design system mirrors executive_dashboard.css
    ================================================================= */
 
-/* Dark select options on nav sidebar */
+/* Dark sidebar select */
 .rb-select option {
-    background: #152d4a;
+    background: #102238;
 }
 
 /* ── Button base ── */
@@ -13,38 +13,42 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 6px 12px;
+    padding: 6px 13px;
     font-size: 12px;
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: 7px;
     border: none;
     cursor: pointer;
-    transition: background 0.15s, box-shadow 0.15s;
+    transition: background .15s, box-shadow .15s, transform .12s;
     white-space: nowrap;
     line-height: 1.4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
+
 .rb-btn:disabled {
-    opacity: 0.5;
+    opacity: .4;
     cursor: not-allowed;
+    transform: none !important;
 }
 
 /* Primary — dark navy */
 .rb-btn-primary {
-    background: #1e3a5f;
+    background: #1a3a5c;
     color: #fff;
 }
 .rb-btn-primary:hover:not(:disabled) {
-    background: #2d5490;
+    background: #234a77;
+    box-shadow: 0 2px 8px rgba(26,58,92,.3);
 }
 
-/* Danger — red tint */
+/* Danger */
 .rb-btn-danger {
-    background: #fee2e2;
+    background: #fef2f2;
     color: #991b1b;
     border: 1px solid #fecaca;
 }
 .rb-btn-danger:hover:not(:disabled) {
-    background: #fecaca;
+    background: #fee2e2;
 }
 
 /* Ghost — outline */
@@ -55,33 +59,53 @@
 }
 .rb-btn-ghost:hover:not(:disabled) {
     background: #f8fafc;
+    border-color: #cbd5e1;
 }
 
-/* Assign — primary full-width */
+/* Assign — full-width primary */
 .rb-btn-assign {
-    background: #1e3a5f;
+    background: #1a3a5c;
     color: #fff;
-    padding: 7px;
+    padding: 7px 12px;
     font-size: 12px;
     width: 100%;
+    border-radius: 7px;
 }
 .rb-btn-assign:hover:not(:disabled) {
-    background: #2d5490;
+    background: #234a77;
+    box-shadow: 0 2px 8px rgba(26,58,92,.25);
 }
 
-/* ── Slot cards — hover lift ── */
+/* ── Slot cards — hover glow ── */
 .rb-post-row td div:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.14);
+    filter: brightness(0.98);
 }
 
 /* ── Suggestion cards ── */
+.rb-suggestion-card {
+    transition: border-color .15s, box-shadow .15s;
+}
 .rb-suggestion-card:hover {
     border-color: #3b82f6 !important;
-    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.16) !important;
 }
 
-/* ── Grid table: override Bootstrap borders ── */
+/* ── Grid table: remove Bootstrap borders ── */
 .rb-grid-table th,
 .rb-grid-table td {
     border: none;
+}
+
+/* ── Form select (matches sidebar theme) ── */
+.rb-select.form-select {
+    padding: 6px 10px;
+    line-height: 1.4;
+    border-radius: 7px;
+}
+
+.rb-select.form-select:focus {
+    box-shadow: 0 0 0 2px rgba(96,165,250,.25);
+    border-color: #3b82f6 !important;
+    outline: none;
 }

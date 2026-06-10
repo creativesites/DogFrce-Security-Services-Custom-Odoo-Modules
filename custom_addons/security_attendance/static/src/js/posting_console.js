@@ -12,6 +12,7 @@ import { registry } from "@web/core/registry";
  * filter pills, and a single Save All commit.
  */
 class AttendancePostingConsole extends Component {
+    static props = { "*": true };
     static template = "security_attendance.PostingConsole";
 
     setup() {

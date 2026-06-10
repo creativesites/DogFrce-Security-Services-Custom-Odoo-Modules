@@ -7,7 +7,7 @@
      ============================================================ -->
 <t t-name="security_shift_planner.RosterBoard" owl="1">
 
-<div class="o_action o_roster_board d-flex" style="height:100vh; overflow:hidden; background:#f0f4f8; font-family:'Inter',system-ui,sans-serif;">
+<div class="o_roster_board d-flex" style="height:100%; overflow:hidden; background:#f0f4f8; font-family:'Inter',system-ui,sans-serif;">
 
     <!-- ═══════════════════════════════════════════════════════════
          LEFT SIDEBAR — Navigation, Batch Selector, Stats

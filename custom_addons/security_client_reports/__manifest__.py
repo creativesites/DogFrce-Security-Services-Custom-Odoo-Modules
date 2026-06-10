@@ -5,7 +5,7 @@
     "category": "Reporting",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_billing"],
+    "depends": ["security_billing", "security_reporting"],
     "data": [
         "security/ir.model.access.csv",
         "views/security_client_reports_views.xml",

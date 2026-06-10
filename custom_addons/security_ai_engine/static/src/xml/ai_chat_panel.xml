@@ -12,7 +12,7 @@
             t-on-click="togglePanel"
             title="DogForce AI Assistant">
         <i t-att-class="state.isOpen ? 'fa fa-times' : 'fa fa-comment'"/>
-        <span t-if="state.unreadCount > 0 and not state.isOpen"
+        <span t-if="state.unreadCount > 0 &amp;&amp; !state.isOpen"
               class="o_ai_chat_badge">
             <t t-esc="state.unreadCount"/>
         </span>
@@ -49,7 +49,7 @@
         <div class="o_ai_chat_messages" t-ref="messages">
 
             <!-- Empty / greeting state -->
-            <t t-if="state.messages.length === 0 and not state.loading">
+            <t t-if="state.messages.length === 0 &amp;&amp; !state.loading">
                 <div class="o_ai_chat_greeting">
                     <div class="o_ai_chat_greeting_icon">
                         <i class="fa fa-shield"/>
@@ -138,7 +138,7 @@
             />
             <button t-att-class="'o_ai_chat_send_btn' + (state.hasInput ? ' is-active' : '')"
                     t-on-click="() => this.sendMessage()"
-                    t-att-disabled="state.loading or not state.hasInput">
+                    t-att-disabled="state.loading || !state.hasInput">
                 <i t-att-class="state.loading ? 'fa fa-circle-o-notch fa-spin' : 'fa fa-paper-plane'"/>
             </button>
         </div>

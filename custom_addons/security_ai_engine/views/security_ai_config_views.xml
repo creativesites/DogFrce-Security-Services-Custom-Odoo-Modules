@@ -814,17 +814,17 @@
         <field name="view_mode">list</field>
     </record>
 
-    <menuitem id="menu_security_ai_cache"
-              name="Response Cache"
-              parent="security_ai_engine.menu_security_ai_engine_root"
-              action="action_security_ai_cache"
-              sequence="3"/>
-
-    <!-- Menuitem under Configuration -->
+    <!-- Root menu must come before children that reference it -->
     <menuitem id="menu_security_ai_engine_root"
               name="AI Engine"
               parent="security_base.menu_security_configuration"
               sequence="99"/>
+
+    <menuitem id="menu_security_ai_cache"
+              name="Response Cache"
+              parent="menu_security_ai_engine_root"
+              action="action_security_ai_cache"
+              sequence="3"/>
 
     <menuitem id="menu_security_ai_config"
               name="Configuration"

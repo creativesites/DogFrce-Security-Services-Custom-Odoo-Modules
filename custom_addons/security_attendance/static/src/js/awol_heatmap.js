@@ -12,6 +12,7 @@ import { registry } from "@web/core/registry";
  * Red = AWOL, Grey = no scheduled shift recorded.
  */
 class AWOLHeatmap extends Component {
+    static props = { "*": true };
     static template = "security_attendance.AWOLHeatmap";
 
     setup() {

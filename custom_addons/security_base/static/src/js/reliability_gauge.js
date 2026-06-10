@@ -48,4 +48,7 @@ class ReliabilityGauge extends Component {
     }
 }
 
-registry.category("fields").add("reliability_gauge", ReliabilityGauge);
+registry.category("fields").add("reliability_gauge", {
+    component: ReliabilityGauge,
+    supportedTypes: ["integer"],
+});

@@ -85,7 +85,7 @@ class SecurityNotification(models.Model):
             ("state", "!=", "expired"),
         ])
         hr_users = self.env["res.users"].search([
-            ("groups_id", "in", [self.env.ref("base.group_user").id])
+            ("group_ids", "in", [self.env.ref("base.group_user").id])
         ])
         for doc in expiring:
             existing = self.search([
@@ -115,7 +115,7 @@ class SecurityNotification(models.Model):
             ("due_date", "<", str(today)),
         ])
         manager_users = self.env["res.users"].search([
-            ("groups_id", "in", [self.env.ref("base.group_system").id])
+            ("group_ids", "in", [self.env.ref("base.group_system").id])
         ])
         for inv in overdue:
             existing = self.search([

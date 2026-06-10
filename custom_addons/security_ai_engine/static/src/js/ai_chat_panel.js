@@ -3,6 +3,7 @@
 import { Component, onMounted, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { rpc } from "@web/core/network/rpc";
 import { AiComponentRenderer } from "./ai_output_widget";
 
 // ── Greeting suggestions shown when chat is empty ─────────────────────────────
@@ -20,10 +21,9 @@ const _GREETINGS = [
 class SecurityAIChatPanel extends Component {
     static template = "security_ai_engine.AiChatPanel";
     static components = { AiComponentRenderer };
-    static props = {};
+    static props = { "*": true };
 
     setup() {
-        this.rpc = useService("rpc");
         this.action = useService("action");
         this.notification = useService("notification");
 
@@ -101,7 +101,7 @@ class SecurityAIChatPanel extends Component {
         this._scrollToBottom();
 
         try {
-            const result = await this.rpc("/web/ai-chat/message", {
+            const result = await rpc("/web/ai-chat/message", {
                 session_id: this.state.sessionId,
                 message,
                 context: this.currentContext,
@@ -133,7 +133,7 @@ class SecurityAIChatPanel extends Component {
     async confirmAction(actionToken) {
         if (!actionToken) return;
         try {
-            const result = await this.rpc("/web/ai-chat/confirm", {
+            const result = await rpc("/web/ai-chat/confirm", {
                 action_token: actionToken,
             });
             if (result.success) {
@@ -164,7 +164,7 @@ class SecurityAIChatPanel extends Component {
         this.state.historyLoaded = false;
         localStorage.removeItem("dogforce_ai_session");
         try {
-            const r = await this.rpc("/web/ai-chat/new-session", {});
+            const r = await rpc("/web/ai-chat/new-session", {});
             this.state.sessionId = r.session_id;
             localStorage.setItem("dogforce_ai_session", r.session_id);
         } catch (_e) {}
@@ -175,7 +175,7 @@ class SecurityAIChatPanel extends Component {
 
     async _loadHistory(sessionId) {
         try {
-            const r = await this.rpc("/web/ai-chat/history", { session_id: sessionId });
+            const r = await rpc("/web/ai-chat/history", { session_id: sessionId });
             if (r.session_id) {
                 this.state.sessionId = r.session_id;
                 localStorage.setItem("dogforce_ai_session", r.session_id);

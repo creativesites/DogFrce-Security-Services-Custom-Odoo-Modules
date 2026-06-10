@@ -322,16 +322,50 @@ def _claude_chat(messages: list, system: str, config) -> dict:
     resp = requests.post(
         "https://api.anthropic.com/v1/messages",
         headers={
-            "x-api-key": config.claude_api_key,
+            "x-api-key": config.claude_api_key or "",
             "anthropic-version": "2023-06-01",
             "content-type": "application/json",
         },
         json={
             "model": config.claude_model or "claude-sonnet-4-6",
-            "max_tokens": 4096,
+            "max_tokens": config.max_tokens or 4096,
             "system": system,
             "messages": messages,
             "tools": _TOOLS,
+        },
+        timeout=120,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
+# ── Gemini multi-turn call ────────────────────────────────────────────────────
+
+def _tools_to_gemini() -> list:
+    """Convert _TOOLS to Gemini function_declarations format."""
+    decls = []
+    for t in _TOOLS:
+        d = {"name": t["name"], "description": t["description"]}
+        if "input_schema" in t:
+            d["parameters"] = t["input_schema"]
+        decls.append(d)
+    return [{"function_declarations": decls}]
+
+
+def _gemini_chat(messages: list, system: str, config) -> dict:
+    model = config.gemini_model or "gemini-2.5-flash"
+    resp = requests.post(
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+        params={"key": config.gemini_api_key or ""},
+        headers={"content-type": "application/json"},
+        json={
+            "system_instruction": {"parts": [{"text": system}]},
+            "contents": messages,
+            "tools": _tools_to_gemini(),
+            "generationConfig": {
+                "temperature": config.temperature or 0.2,
+                "maxOutputTokens": config.max_tokens or 4096,
+            },
         },
         timeout=120,
     )
@@ -359,33 +393,20 @@ def _parse_components(text: str) -> list:
     return [{"type": "section", "title": "Response", "body": text}]
 
 
-# ── Agentic loop ──────────────────────────────────────────────────────────────
+# ── Agentic loop — Claude ─────────────────────────────────────────────────────
 
-def _run_agent(session, user_message: str, context: dict, env) -> tuple:
-    """
-    Multi-turn tool-calling loop.
-    Returns (components_list, all_tool_calls_list).
-    """
-    try:
-        config = env["security.ai.config"].get_active_config()
-    except Exception:
-        return [{"type": "alert", "variant": "danger", "title": "Not Configured",
-                 "message": "AI Engine is not configured. Go to Configuration → AI Engine to add your API key."}], []
-
+def _run_claude_agent(session, user_message: str, context: dict, config, env) -> tuple:
     system = _build_system_prompt(context)
 
-    # Build message history from session (last 30 exchanges)
     history_msgs = env["security.ai.chat.message"].search(
         [("session_id", "=", session.id), ("role", "in", ("user", "assistant"))],
-        order="id asc",
-        limit=60,
+        order="id asc", limit=60,
     )
     messages = []
     for hm in history_msgs:
         if hm.role == "user":
             messages.append({"role": "user", "content": hm.content or ""})
         elif hm.role == "assistant":
-            # Include compressed summary of previous AI turns
             prev = hm.components_json
             if prev:
                 try:
@@ -396,9 +417,7 @@ def _run_agent(session, user_message: str, context: dict, env) -> tuple:
                 except Exception:
                     pass
 
-    # Append the new user message (not yet in history)
     messages.append({"role": "user", "content": user_message})
-
     all_tool_calls = []
 
     for _round in range(8):
@@ -443,6 +462,104 @@ def _run_agent(session, user_message: str, context: dict, env) -> tuple:
 
     return [{"type": "alert", "variant": "warning", "title": "Limit Reached",
              "message": "The assistant reached the maximum reasoning steps for this query."}], all_tool_calls
+
+
+# ── Agentic loop — Gemini ─────────────────────────────────────────────────────
+
+def _run_gemini_agent(session, user_message: str, context: dict, config, env) -> tuple:
+    system = _build_system_prompt(context)
+
+    history_msgs = env["security.ai.chat.message"].search(
+        [("session_id", "=", session.id), ("role", "in", ("user", "assistant"))],
+        order="id asc", limit=60,
+    )
+    messages = []
+    for hm in history_msgs:
+        if hm.role == "user":
+            messages.append({"role": "user", "parts": [{"text": hm.content or ""}]})
+        elif hm.role == "assistant":
+            prev = hm.components_json
+            if prev:
+                try:
+                    comps = json.loads(prev)
+                    summary = next((c.get("message") or c.get("body") or c.get("summary", "")
+                                    for c in comps if c.get("type") in ("alert", "section")), "")
+                    messages.append({"role": "model", "parts": [{"text": summary[:500] or "[previous response]"}]})
+                except Exception:
+                    pass
+
+    messages.append({"role": "user", "parts": [{"text": user_message}]})
+    all_tool_calls = []
+
+    for _round in range(8):
+        try:
+            response = _gemini_chat(messages, system, config)
+        except requests.HTTPError as exc:
+            return [{"type": "alert", "variant": "danger", "title": "API Error",
+                     "message": f"Gemini returned an error: {exc.response.status_code}"}], all_tool_calls
+        except Exception as exc:
+            return [{"type": "alert", "variant": "danger", "title": "Connection Error",
+                     "message": str(exc)[:200]}], all_tool_calls
+
+        candidates = response.get("candidates", [])
+        if not candidates:
+            return [{"type": "alert", "variant": "danger", "title": "Empty Response",
+                     "message": "Gemini returned no response candidates."}], all_tool_calls
+
+        candidate = candidates[0]
+        parts = candidate.get("content", {}).get("parts", [])
+        finish_reason = candidate.get("finishReason", "STOP")
+
+        func_calls = [p["functionCall"] for p in parts if "functionCall" in p]
+        text = "".join(p.get("text", "") for p in parts if "text" in p)
+
+        if not func_calls:
+            return _parse_components(text), all_tool_calls
+
+        # Process tool calls
+        model_parts = []
+        result_parts = []
+        for fc in func_calls:
+            tool_name = fc["name"]
+            tool_args = fc.get("args", {})
+
+            result = _execute_tool(tool_name, tool_args, session, env)
+            all_tool_calls.append({"tool": tool_name, "input": tool_args, "result": result})
+
+            model_parts.append({"functionCall": {"name": tool_name, "args": tool_args}})
+            result_parts.append({"functionResponse": {"name": tool_name, "response": result}})
+
+        messages.append({"role": "model", "parts": model_parts})
+        messages.append({"role": "user", "parts": result_parts})
+
+        if finish_reason == "STOP":
+            break
+
+    return [{"type": "alert", "variant": "warning", "title": "Limit Reached",
+             "message": "The assistant reached the maximum reasoning steps for this query."}], all_tool_calls
+
+
+# ── Dispatcher ────────────────────────────────────────────────────────────────
+
+def _run_agent(session, user_message: str, context: dict, env) -> tuple:
+    """Resolve config, validate API key, and dispatch to the active provider's agent loop."""
+    try:
+        config = env["security.ai.config"].get_active_config()
+    except Exception:
+        return [{"type": "alert", "variant": "danger", "title": "Not Configured",
+                 "message": "AI Engine is not configured. Go to Configuration → AI Engine to add your API key."}], []
+
+    provider = config.active_provider or "claude"
+    provider_labels = {"claude": "Anthropic Claude", "openai": "OpenAI", "gemini": "Google Gemini"}
+    api_key = getattr(config, f"{provider}_api_key", False)
+    if not api_key:
+        return [{"type": "alert", "variant": "warning", "title": "API Key Missing",
+                 "message": f"No {provider_labels.get(provider, provider)} API key is set. "
+                             f"Go to Configuration → AI Engine and enter your key."}], []
+
+    if provider == "gemini":
+        return _run_gemini_agent(session, user_message, context, config, env)
+    return _run_claude_agent(session, user_message, context, config, env)
 
 
 # ── HTTP Controller ───────────────────────────────────────────────────────────

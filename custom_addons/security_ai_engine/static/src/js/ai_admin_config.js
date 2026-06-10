@@ -5,6 +5,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
 class AIAdminDashboard extends Component {
+    static props = { "*": true };
     static template = "security_ai_engine.AIAdminDashboard";
 
     setup() {
