@@ -14,8 +14,8 @@ class SecurityVehicle(models.Model):
 
     name = fields.Char(compute="_compute_name", store=True)
     plate_number = fields.Char(required=True, string="Registration Plate")
-    make = fields.Char(required=True, string="Make / Brand", placeholder="e.g. Toyota")
-    model = fields.Char(required=True, string="Model", placeholder="e.g. Hilux")
+    make = fields.Char(required=True, string="Make / Brand")
+    model = fields.Char(required=True, string="Model")
     year = fields.Integer(string="Year of Manufacture", default=2020)
     colour = fields.Char()
     capacity = fields.Integer(string="Seating Capacity (excl. driver)", default=8)
@@ -135,7 +135,7 @@ class SecurityShuttleRoute(models.Model):
     _description = "Prearranged Shuttle Route"
     _order = "name"
 
-    name = fields.Char(required=True, placeholder="e.g. Morning Northern Circuit")
+    name = fields.Char(required=True, string="Route Name")
     route_type = fields.Selection(
         [
             ("pickup", "Morning Pick-Up (Depot → Sites)"),
@@ -187,7 +187,7 @@ class SecurityShuttleRouteStop(models.Model):
         ondelete="cascade",
     )
     sequence = fields.Integer(default=10, string="Stop #")
-    stop_label = fields.Char(required=True, string="Stop Name / Address", placeholder="e.g. Katutura Taxi Rank")
+    stop_label = fields.Char(required=True, string="Stop Name / Address")
     site_id = fields.Many2one(
         "security.client.site",
         string="Linked Guard Post / Site",

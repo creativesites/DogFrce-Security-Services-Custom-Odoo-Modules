@@ -6,6 +6,7 @@ import { useService } from "@web/core/utils/hooks";
 
 class SecurityNotificationBell extends Component {
     static template = "security_notifications.NotificationBell";
+    static props = {};
 
     setup() {
         this.orm = useService("orm");

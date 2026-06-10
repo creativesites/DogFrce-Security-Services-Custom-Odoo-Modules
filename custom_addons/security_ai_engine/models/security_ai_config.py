@@ -19,19 +19,19 @@ class SecurityAIConfig(models.Model):
         default="claude",
         required=True,
     )
-    claude_api_key = fields.Char(string="Anthropic API Key", password=True, copy=False)
+    claude_api_key = fields.Char(string="Anthropic API Key", copy=False)
     claude_model = fields.Char(
         string="Claude Model",
         default="claude-sonnet-4-6",
         help="e.g. claude-sonnet-4-6, claude-opus-4-8, claude-haiku-4-5",
     )
-    openai_api_key = fields.Char(string="OpenAI API Key", password=True, copy=False)
+    openai_api_key = fields.Char(string="OpenAI API Key", copy=False)
     openai_model = fields.Char(
         string="OpenAI Model",
         default="gpt-4o",
         help="e.g. gpt-4o, gpt-4o-mini, o1",
     )
-    gemini_api_key = fields.Char(string="Gemini API Key", password=True, copy=False)
+    gemini_api_key = fields.Char(string="Gemini API Key", copy=False)
     gemini_model = fields.Char(
         string="Gemini Model",
         default="gemini-2.5-flash",

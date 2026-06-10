@@ -42,6 +42,7 @@ class PayslipPreviewDialog extends Component {
 class PayslipPreviewAction extends Component {
     static template = "security_payroll_core.PayslipPreviewAction";
     static components = { PayslipPreviewDialog };
+    static props = { "*": true };
 
     setup() {
         this.dialog = useService("dialog");

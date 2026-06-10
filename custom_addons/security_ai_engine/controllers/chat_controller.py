@@ -451,7 +451,7 @@ class AIChatController(http.Controller):
 
     # ── Send a message and get a response ──────────────────────────────────
 
-    @http.route("/web/ai-chat/message", type="json", auth="user", methods=["POST"])
+    @http.route("/web/ai-chat/message", type="jsonrpc", auth="user", methods=["POST"])
     def chat_message(self, session_id=None, message="", context=None):
         env = request.env
         context = context or {}
@@ -497,7 +497,7 @@ class AIChatController(http.Controller):
 
     # ── Confirm a proposed action ──────────────────────────────────────────
 
-    @http.route("/web/ai-chat/confirm", type="json", auth="user", methods=["POST"])
+    @http.route("/web/ai-chat/confirm", type="jsonrpc", auth="user", methods=["POST"])
     def chat_confirm(self, action_token=None):
         env = request.env
         if not action_token:
@@ -552,7 +552,7 @@ class AIChatController(http.Controller):
 
     # ── Load conversation history ───────────────────────────────────────────
 
-    @http.route("/web/ai-chat/history", type="json", auth="user", methods=["POST"])
+    @http.route("/web/ai-chat/history", type="jsonrpc", auth="user", methods=["POST"])
     def chat_history(self, session_id=None):
         env = request.env
 
@@ -590,7 +590,7 @@ class AIChatController(http.Controller):
 
     # ── New chat session ───────────────────────────────────────────────────
 
-    @http.route("/web/ai-chat/new-session", type="json", auth="user", methods=["POST"])
+    @http.route("/web/ai-chat/new-session", type="jsonrpc", auth="user", methods=["POST"])
     def chat_new_session(self):
         env = request.env
         session = env["security.ai.chat.session"].sudo().create({"user_id": env.uid})

@@ -255,10 +255,12 @@ class SecurityLeaveRequest(models.Model):
             if request.date_from and request.date_to and request.date_to >= request.date_from:
                 requested_days = float((request.date_to - request.date_from).days + 1)
                 # G-7: Exclude public holidays from leave consumption
-                if request.date_from and request.date_to:
+                # Guard: security.public.holiday is defined in security_l10n_na which
+                # depends on this module, so it may not be installed in all deployments.
+                if request.date_from and request.date_to and "security.public.holiday" in self.env:
                     public_holidays = self.env["security.public.holiday"].search([
-                        ("date", ">=", request.date_from),
-                        ("date", "<=", request.date_to),
+                        ("holiday_date", ">=", request.date_from),
+                        ("holiday_date", "<=", request.date_to),
                     ])
                     holiday_count = len(public_holidays)
                     requested_days = max(0, requested_days - holiday_count)
