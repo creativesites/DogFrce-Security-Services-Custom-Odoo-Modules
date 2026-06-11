@@ -20,28 +20,28 @@
             <field name="name">Demo Admin</field>
             <field name="login">demo.admin@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('base.group_system')])]"/>
+            <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('base.group_system')])]"/>
         </record>
 
         <record id="demo_user_manager" model="res.users">
             <field name="name">Demo Manager</field>
             <field name="login">demo.manager@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+            <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
         </record>
 
         <record id="demo_user_operator" model="res.users">
             <field name="name">Demo Operator</field>
             <field name="login">demo.operator@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+            <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
         </record>
 
         <record id="demo_user_viewer" model="res.users">
             <field name="name">Demo Viewer</field>
             <field name="login">demo.viewer@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+            <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
         </record>
 
         <!-- Demo panel entries -->
