@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Add branded class and custom header/footer to the login page -->
+    <template id="login_branded" inherit_id="web.login">
+
+        <!-- Add dg_login_branded class to body via a style override on wrapwrap -->
+        <xpath expr="//div[@id='wrapwrap']" position="before">
+            <script type="text/javascript">
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.body.classList.add('dg_login_branded');
+                });
+            </script>
+        </xpath>
+
+        <!-- Inject branded header above the form (logo + platform name) -->
+        <xpath expr="//div[@id='oe_structure_login_top']" position="before">
+            <div class="dg_login_header">
+                <img src="/security_theme/static/src/img/deployguard-w.png"
+                     alt="DeployGuard"
+                     style="max-height:56px; width:auto;"/>
+                <div class="dg_platform_name">DeployGuard Security Platform</div>
+                <div class="dg_platform_tagline">Professional Security Management Suite</div>
+            </div>
+        </xpath>
+
+        <!-- Replace "Powered by Odoo" footer with our own -->
+        <xpath expr="//div[hasclass('text-center') and hasclass('small') and hasclass('mt-4')]"
+               position="replace">
+            <t t-set="login_footer"
+               t-value="request.env['ir.config_parameter'].sudo().get_param('security.theme.login_footer', '© 2026 DogForce Security Services. All rights reserved.')"/>
+            <div class="dg_login_footer">
+                <a href="/web/database/manager">Manage Databases</a>
+                <span class="mx-2">·</span>
+                <t t-out="login_footer"/>
+            </div>
+        </xpath>
+
+    </template>
+</odoo>

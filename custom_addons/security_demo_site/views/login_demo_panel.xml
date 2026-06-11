@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inject demo accounts panel above the login form -->
+    <template id="login_demo_panel" inherit_id="web.login">
+        <xpath expr="//div[@id='oe_structure_login_top']" position="after">
+            <t t-set="demo_enabled"
+               t-value="request.env['ir.config_parameter'].sudo().get_param('security.demo.panel_enabled', 'True')"/>
+            <t t-if="demo_enabled in ('True', '1', 'true')">
+                <t t-set="demo_title"
+                   t-value="request.env['ir.config_parameter'].sudo().get_param('security.demo.panel_title', 'Try the Live Demo')"/>
+                <t t-set="demo_accounts"
+                   t-value="request.env['security.demo.account'].sudo().search_read([('active', '=', True)], ['name', 'login', 'password_hint', 'description'], order='sequence asc')"/>
+                <t t-if="demo_accounts">
+                    <div class="dg_demo_panel">
+                        <div class="dg_demo_title">
+                            <t t-out="demo_title"/>
+                        </div>
+                        <t t-foreach="demo_accounts" t-as="account">
+                            <div class="dg_demo_account"
+                                 t-att-data-login="account['login']"
+                                 t-att-data-password="account['password_hint']"
+                                 title="Click to auto-fill credentials">
+                                <span class="dg_demo_account_role">
+                                    <t t-out="account['name']"/>
+                                </span>
+                                <span class="dg_demo_account_login">
+                                    <t t-out="account['login']"/>
+                                </span>
+                                <span class="dg_demo_account_hint">
+                                    <t t-out="account['password_hint']"/>
+                                </span>
+                            </div>
+                        </t>
+                        <div class="dg_demo_hint">↑ Click any row to auto-fill</div>
+                    </div>
+                </t>
+            </t>
+        </xpath>
+    </template>
+</odoo>

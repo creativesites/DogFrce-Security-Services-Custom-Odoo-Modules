@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- Demo config params -->
+        <record id="security_demo_panel_enabled" model="ir.config_parameter">
+            <field name="key">security.demo.panel_enabled</field>
+            <field name="value">True</field>
+        </record>
+        <record id="security_demo_panel_title" model="ir.config_parameter">
+            <field name="key">security.demo.panel_title</field>
+            <field name="value">Try the Live Demo</field>
+        </record>
+        <record id="security_demo_redirect_url" model="ir.config_parameter">
+            <field name="key">security.demo.redirect_url</field>
+            <field name="value">/odoo/security-suite</field>
+        </record>
+
+        <!-- Demo user accounts -->
+        <record id="demo_user_admin" model="res.users">
+            <field name="name">Demo Admin</field>
+            <field name="login">demo.admin@dogforce.demo</field>
+            <field name="password">Demo2026!</field>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user'), ref('base.group_system')])]"/>
+        </record>
+
+        <record id="demo_user_manager" model="res.users">
+            <field name="name">Demo Manager</field>
+            <field name="login">demo.manager@dogforce.demo</field>
+            <field name="password">Demo2026!</field>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+        </record>
+
+        <record id="demo_user_operator" model="res.users">
+            <field name="name">Demo Operator</field>
+            <field name="login">demo.operator@dogforce.demo</field>
+            <field name="password">Demo2026!</field>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+        </record>
+
+        <record id="demo_user_viewer" model="res.users">
+            <field name="name">Demo Viewer</field>
+            <field name="login">demo.viewer@dogforce.demo</field>
+            <field name="password">Demo2026!</field>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_user')])]"/>
+        </record>
+
+        <!-- Demo panel entries -->
+        <record id="demo_account_admin" model="security.demo.account">
+            <field name="sequence">10</field>
+            <field name="name">Admin</field>
+            <field name="login">demo.admin@dogforce.demo</field>
+            <field name="password_hint">Demo2026!</field>
+            <field name="description">Full system access</field>
+            <field name="user_id" ref="demo_user_admin"/>
+        </record>
+
+        <record id="demo_account_manager" model="security.demo.account">
+            <field name="sequence">20</field>
+            <field name="name">Manager</field>
+            <field name="login">demo.manager@dogforce.demo</field>
+            <field name="password_hint">Demo2026!</field>
+            <field name="description">Operations manager view</field>
+            <field name="user_id" ref="demo_user_manager"/>
+        </record>
+
+        <record id="demo_account_operator" model="security.demo.account">
+            <field name="sequence">30</field>
+            <field name="name">Operator</field>
+            <field name="login">demo.operator@dogforce.demo</field>
+            <field name="password_hint">Demo2026!</field>
+            <field name="description">Day-to-day operations</field>
+            <field name="user_id" ref="demo_user_operator"/>
+        </record>
+
+        <record id="demo_account_viewer" model="security.demo.account">
+            <field name="sequence">40</field>
+            <field name="name">Viewer</field>
+            <field name="login">demo.viewer@dogforce.demo</field>
+            <field name="password_hint">Demo2026!</field>
+            <field name="description">Read-only dashboard access</field>
+            <field name="user_id" ref="demo_user_viewer"/>
+        </record>
+    </data>
+</odoo>

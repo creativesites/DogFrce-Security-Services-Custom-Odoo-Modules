@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_theme" model="ir.ui.view">
+        <field name="name">res.config.settings.view.security.theme</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base_setup.action_general_configuration"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@id='general_settings']" position="before">
+                <div class="app_settings_block" data-string="DogForce Theme" string="DogForce Theme"
+                     data-key="security_theme" id="security_theme_settings">
+                    <h2>White-Label Theme</h2>
+                    <div class="row mt16 o_settings_container">
+
+                        <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">UI Theme Preset</span>
+                                <div class="text-muted">Applies color scheme to the backend navigation.</div>
+                                <div class="content-group mt8">
+                                    <div class="row">
+                                        <label class="col-lg-4 o_light_label" for="security_active_theme">Active Theme</label>
+                                        <field name="security_active_theme" widget="radio"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Login Page</span>
+                                <div class="text-muted">Customise the public-facing login page.</div>
+                                <div class="content-group mt8">
+                                    <div class="row">
+                                        <label class="col-lg-4 o_light_label" for="security_login_footer">Footer Text</label>
+                                        <field name="security_login_footer"/>
+                                    </div>
+                                    <div class="row mt4">
+                                        <label class="col-lg-4 o_light_label" for="security_login_bg_color">Background Color</label>
+                                        <field name="security_login_bg_color" widget="color"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xs-12 col-md-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">PDF Report Theming</span>
+                                <div class="text-muted">Primary color injected into all QWeb report headers and table headings.</div>
+                                <div class="content-group mt8">
+                                    <div class="row">
+                                        <label class="col-lg-4 o_light_label" for="security_report_primary_color">Report Primary Color</label>
+                                        <field name="security_report_primary_color" widget="color"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

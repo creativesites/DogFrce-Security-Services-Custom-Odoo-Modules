@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Inject brand colors into all PDF reports -->
+    <template id="report_brand_styles" name="DogForce Report Brand Styles">
+        <t t-set="brand_color"
+           t-value="request.env['ir.config_parameter'].sudo().get_param('security.theme.report_primary_color', '#1e3a5f')"/>
+        <style type="text/css">
+            .o_report_layout_standard .header,
+            .header { border-bottom: 3px solid <t t-out="brand_color"/>; }
+
+            .o_report_layout_standard .footer,
+            .footer { border-top: 2px solid <t t-out="brand_color"/>; color: #64748b; }
+
+            table thead tr th,
+            .o_report table thead tr th {
+                background-color: <t t-out="brand_color"/> !important;
+                color: #ffffff !important;
+            }
+
+            h2, h3 { color: <t t-out="brand_color"/>; }
+
+            .badge-primary, .label-primary {
+                background-color: <t t-out="brand_color"/>;
+            }
+        </style>
+    </template>
+
+    <!-- Inject into the standard Odoo external layout -->
+    <template id="external_layout_branded" inherit_id="web.external_layout">
+        <xpath expr="//div[hasclass('header')]" position="before">
+            <t t-call="security_theme.report_brand_styles"/>
+        </xpath>
+    </template>
+</odoo>

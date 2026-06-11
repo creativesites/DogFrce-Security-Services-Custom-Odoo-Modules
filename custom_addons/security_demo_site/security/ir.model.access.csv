@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_demo_account_admin,security.demo.account admin,model_security_demo_account,base.group_system,1,1,1,1
+access_security_demo_account_user,security.demo.account user,model_security_demo_account,base.group_user,1,0,0,0

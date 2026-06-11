@@ -1,0 +1,155 @@
+/* =========================================================
+   DogForce Theme Presets
+   Applied via body class: .o_theme_<name>
+   ========================================================= */
+
+/* ── DogForce Navy (default) ─────────────────────────────── */
+.o_theme_dogforce_navy {
+    --dg-primary: #1e3a5f;
+    --dg-primary-light: #2d5a9e;
+    --dg-primary-dark: #0f1f36;
+    --dg-accent: #3b82f6;
+    --dg-surface: #f8fafc;
+    --dg-sidebar-text: #c8d8f0;
+}
+
+.o_theme_dogforce_navy .o_main_navbar {
+    background-color: #1e3a5f !important;
+    border-bottom: 1px solid #0f1f36 !important;
+}
+.o_theme_dogforce_navy .o_main_navbar .o_menu_brand,
+.o_theme_dogforce_navy .o_main_navbar .o_nav_entry,
+.o_theme_dogforce_navy .o_main_navbar a,
+.o_theme_dogforce_navy .o_main_navbar .o_menu_sections > li > a {
+    color: #c8d8f0 !important;
+}
+.o_theme_dogforce_navy .o_main_navbar .o_nav_entry:hover,
+.o_theme_dogforce_navy .o_main_navbar .o_menu_sections > li > a:hover {
+    background-color: #2d5a9e !important;
+    color: #ffffff !important;
+}
+.o_theme_dogforce_navy .btn-primary {
+    background-color: #1e3a5f !important;
+    border-color: #1e3a5f !important;
+}
+.o_theme_dogforce_navy .btn-primary:hover,
+.o_theme_dogforce_navy .btn-primary:focus {
+    background-color: #2d5a9e !important;
+    border-color: #2d5a9e !important;
+}
+.o_theme_dogforce_navy a:not(.btn) { color: #2d5a9e; }
+.o_theme_dogforce_navy .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
+    background-color: #1e3a5f !important;
+}
+
+/* ── Corporate Dark ──────────────────────────────────────── */
+.o_theme_corporate_dark {
+    --dg-primary: #16213e;
+    --dg-primary-light: #e67e22;
+    --dg-accent: #e67e22;
+    --dg-surface: #faf9f7;
+    --dg-sidebar-text: #e8e8e8;
+}
+
+.o_theme_corporate_dark .o_main_navbar {
+    background-color: #16213e !important;
+    border-bottom: 1px solid #0d1117 !important;
+}
+.o_theme_corporate_dark .o_main_navbar .o_menu_brand,
+.o_theme_corporate_dark .o_main_navbar .o_nav_entry,
+.o_theme_corporate_dark .o_main_navbar a,
+.o_theme_corporate_dark .o_main_navbar .o_menu_sections > li > a {
+    color: #e8e8e8 !important;
+}
+.o_theme_corporate_dark .o_main_navbar .o_nav_entry:hover,
+.o_theme_corporate_dark .o_main_navbar .o_menu_sections > li > a:hover {
+    background-color: #e67e22 !important;
+    color: #ffffff !important;
+}
+.o_theme_corporate_dark .btn-primary {
+    background-color: #e67e22 !important;
+    border-color: #e67e22 !important;
+    color: #ffffff !important;
+}
+.o_theme_corporate_dark .btn-primary:hover {
+    background-color: #d35400 !important;
+    border-color: #d35400 !important;
+}
+.o_theme_corporate_dark a:not(.btn) { color: #e67e22; }
+.o_theme_corporate_dark .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
+    background-color: #e67e22 !important;
+}
+
+/* ── Forest Guard ────────────────────────────────────────── */
+.o_theme_forest_guard {
+    --dg-primary: #1a3a2a;
+    --dg-primary-light: #2e7d32;
+    --dg-accent: #4ade80;
+    --dg-surface: #f4f7f4;
+    --dg-sidebar-text: #c8e6c9;
+}
+
+.o_theme_forest_guard .o_main_navbar {
+    background-color: #1a3a2a !important;
+    border-bottom: 1px solid #0d1f15 !important;
+}
+.o_theme_forest_guard .o_main_navbar .o_menu_brand,
+.o_theme_forest_guard .o_main_navbar .o_nav_entry,
+.o_theme_forest_guard .o_main_navbar a,
+.o_theme_forest_guard .o_main_navbar .o_menu_sections > li > a {
+    color: #c8e6c9 !important;
+}
+.o_theme_forest_guard .o_main_navbar .o_nav_entry:hover,
+.o_theme_forest_guard .o_main_navbar .o_menu_sections > li > a:hover {
+    background-color: #2e7d32 !important;
+    color: #ffffff !important;
+}
+.o_theme_forest_guard .btn-primary {
+    background-color: #2e7d32 !important;
+    border-color: #2e7d32 !important;
+}
+.o_theme_forest_guard .btn-primary:hover {
+    background-color: #1b5e20 !important;
+    border-color: #1b5e20 !important;
+}
+.o_theme_forest_guard a:not(.btn) { color: #2e7d32; }
+.o_theme_forest_guard .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
+    background-color: #2e7d32 !important;
+}
+
+/* ── Executive Slate ─────────────────────────────────────── */
+.o_theme_executive_slate {
+    --dg-primary: #1f2937;
+    --dg-primary-light: #4b5563;
+    --dg-accent: #6b7280;
+    --dg-surface: #f9fafb;
+    --dg-sidebar-text: #d1d5db;
+}
+
+.o_theme_executive_slate .o_main_navbar {
+    background-color: #1f2937 !important;
+    border-bottom: 1px solid #111827 !important;
+}
+.o_theme_executive_slate .o_main_navbar .o_menu_brand,
+.o_theme_executive_slate .o_main_navbar .o_nav_entry,
+.o_theme_executive_slate .o_main_navbar a,
+.o_theme_executive_slate .o_main_navbar .o_menu_sections > li > a {
+    color: #d1d5db !important;
+}
+.o_theme_executive_slate .o_main_navbar .o_nav_entry:hover,
+.o_theme_executive_slate .o_main_navbar .o_menu_sections > li > a:hover {
+    background-color: #374151 !important;
+    color: #f9fafb !important;
+}
+.o_theme_executive_slate .btn-primary {
+    background-color: #374151 !important;
+    border-color: #374151 !important;
+}
+.o_theme_executive_slate .btn-primary:hover {
+    background-color: #1f2937 !important;
+    border-color: #1f2937 !important;
+}
+.o_theme_executive_slate a:not(.btn) { color: #374151; }
+.o_theme_executive_slate .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
+    background-color: #374151 !important;
+}

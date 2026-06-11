@@ -1,0 +1,94 @@
+/* =========================================================
+   DogForce Demo Login Panel
+   ========================================================= */
+
+.dg_demo_panel {
+    background: #f0f4f8;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.dg_demo_panel .dg_demo_title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.dg_demo_panel .dg_demo_title::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
+    animation: dg_pulse 2s infinite;
+}
+
+@keyframes dg_pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+.dg_demo_account {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    margin-bottom: 0.25rem;
+    border: 1px solid transparent;
+}
+
+.dg_demo_account:last-child {
+    margin-bottom: 0;
+}
+
+.dg_demo_account:hover {
+    background: #ffffff;
+    border-color: #cbd5e1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.dg_demo_account:active {
+    background: #e8f0fe;
+    border-color: #2d5a9e;
+}
+
+.dg_demo_account_role {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #1e3a5f;
+    min-width: 80px;
+}
+
+.dg_demo_account_login {
+    font-size: 0.75rem;
+    color: #475569;
+    font-family: monospace;
+    flex: 1;
+    margin: 0 0.5rem;
+}
+
+.dg_demo_account_hint {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.dg_demo_panel .dg_demo_hint {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 0.5rem;
+}

@@ -1,0 +1,109 @@
+/* =========================================================
+   DogForce Login Page Branding
+   ========================================================= */
+
+body.dg_login_branded {
+    background-color: var(--dg-login-bg, #1e3a5f);
+    background-image: linear-gradient(135deg, #1e3a5f 0%, #0f1f36 60%, #1a1a2e 100%);
+    min-height: 100vh;
+}
+
+body.dg_login_branded #wrapwrap {
+    background: transparent;
+}
+
+body.dg_login_branded .container {
+    max-width: 440px;
+}
+
+/* Card styling */
+body.dg_login_branded .card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+}
+
+body.dg_login_branded .card-body {
+    padding: 2rem 2.25rem;
+}
+
+/* Logo area */
+body.dg_login_branded .dg_login_header {
+    background: linear-gradient(180deg, #1e3a5f 0%, #2d5a9e 100%);
+    padding: 2rem;
+    text-align: center;
+    margin: -2rem -2.25rem 1.5rem;
+}
+
+body.dg_login_branded .dg_login_header img {
+    max-height: 64px;
+    width: auto;
+}
+
+body.dg_login_branded .dg_login_header .dg_platform_name {
+    color: #ffffff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-top: 0.75rem;
+    letter-spacing: 0.02em;
+}
+
+body.dg_login_branded .dg_login_header .dg_platform_tagline {
+    color: #a8c4e0;
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+}
+
+/* Hide default Odoo company logo (replaced by our header) */
+body.dg_login_branded .text-center.pb-3.border-bottom {
+    display: none;
+}
+
+/* Form inputs */
+body.dg_login_branded .form-control:focus {
+    border-color: #2d5a9e;
+    box-shadow: 0 0 0 0.2rem rgba(45, 90, 158, 0.25);
+}
+
+/* Submit button */
+body.dg_login_branded .btn-primary {
+    background-color: #1e3a5f !important;
+    border-color: #1e3a5f !important;
+    padding: 0.6rem 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+body.dg_login_branded .btn-primary:hover {
+    background-color: #2d5a9e !important;
+    border-color: #2d5a9e !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.4);
+}
+
+/* Footer */
+body.dg_login_branded .dg_login_footer {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    text-align: center;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+body.dg_login_branded .dg_login_footer a {
+    color: #64748b;
+    text-decoration: none;
+}
+
+body.dg_login_branded .dg_login_footer a:hover {
+    color: #1e3a5f;
+}
+
+/* Hide "Powered by Odoo" link */
+body.dg_login_branded a[href*="odoo.com"] {
+    display: none !important;
+}
