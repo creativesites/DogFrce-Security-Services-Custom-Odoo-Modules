@@ -182,7 +182,9 @@ class SecurityAIChatPanel extends Component {
                 this.state.messages = (r.messages || []).map(m => ({
                     role: m.role,
                     content: m.content,
-                    components: m.components,
+                    components: Array.isArray(m.components)
+                        ? m.components.filter(Boolean)
+                        : [],
                 }));
                 this.state.historyLoaded = true;
             }

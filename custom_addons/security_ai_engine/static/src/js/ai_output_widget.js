@@ -209,20 +209,20 @@ function trendColor(severity) {
 
 class AiAlert extends Component {
     static template = "security_ai_engine.AiAlert";
-    static props = { c: Object };
-    get c()      { return this.props.c; }
-    get bg()     { return variantToBg(this.props.c.variant); }
-    get border() { return variantToBorder(this.props.c.variant); }
-    get text()   { return variantToText(this.props.c.variant); }
-    get icon()   { return variantToIcon(this.props.c.variant); }
+    static props = { c: { type: Object, optional: true } };
+    get c()      { return this.props.c || {}; }
+    get bg()     { return variantToBg(this.c.variant); }
+    get border() { return variantToBorder(this.c.variant); }
+    get text()   { return variantToText(this.c.variant); }
+    get icon()   { return variantToIcon(this.c.variant); }
 }
 
 // ── Component: MetricRow ──────────────────────────────────────────────────────
 
 class AiMetricRow extends Component {
     static template = "security_ai_engine.AiMetricRow";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 
     trendIcon(m) { return trendIcon(m.trend); }
     valueColor(m) { return trendColor(m.severity); }
@@ -232,22 +232,22 @@ class AiMetricRow extends Component {
 
 class AiFinding extends Component {
     static template = "security_ai_engine.AiFinding";
-    static props = { c: Object };
-    get c()            { return this.props.c; }
-    get borderColor()  { return severityToBorder(this.props.c.severity); }
-    get badgeBg()      { return severityToBadgeBg(this.props.c.severity); }
-    get badgeText()    { return severityToBadgeText(this.props.c.severity); }
+    static props = { c: { type: Object, optional: true } };
+    get c()            { return this.props.c || {}; }
+    get borderColor()  { return severityToBorder(this.c.severity); }
+    get badgeBg()      { return severityToBadgeBg(this.c.severity); }
+    get badgeText()    { return severityToBadgeText(this.c.severity); }
 }
 
 // ── Component: Recommendation ─────────────────────────────────────────────────
 
 class AiRecommendation extends Component {
     static template = "security_ai_engine.AiRecommendation";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 
     get meta() {
-        const c = this.props.c;
+        const c = this.c;
         const parts = [];
         if (c.guard) parts.push({ icon: "fa-user",      label: c.guard });
         if (c.post)  parts.push({ icon: "fa-map-marker", label: c.post  });
@@ -260,32 +260,32 @@ class AiRecommendation extends Component {
 
 class AiTable extends Component {
     static template = "security_ai_engine.AiTable";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 }
 
 // ── Component: Section ────────────────────────────────────────────────────────
 
 class AiSection extends Component {
     static template = "security_ai_engine.AiSection";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 }
 
 // ── Component: BulletList ─────────────────────────────────────────────────────
 
 class AiBulletList extends Component {
     static template = "security_ai_engine.AiBulletList";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 }
 
 // ── Component: DataTable (clickable rows → navigate) ─────────────────────────
 
 class AiDataTable extends Component {
     static template = "security_ai_engine.AiDataTable";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 
     setup() {
         this.actionService = useService("action");
@@ -319,8 +319,8 @@ class AiDataTable extends Component {
 
 class AiRecordCard extends Component {
     static template = "security_ai_engine.AiRecordCard";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 
     setup() {
         this.actionService = useService("action");
@@ -344,8 +344,8 @@ class AiRecordCard extends Component {
 
 class AiNavigate extends Component {
     static template = "security_ai_engine.AiNavigate";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 
     setup() {
         this.actionService = useService("action");
@@ -383,8 +383,8 @@ const AiNavigateList = AiNavigate;
 
 class AiStatComparison extends Component {
     static template = "security_ai_engine.AiStatComparison";
-    static props = { c: Object };
-    get c() { return this.props.c; }
+    static props = { c: { type: Object, optional: true } };
+    get c() { return this.props.c || {}; }
 
     itemColor(item) { return trendColor(item.severity || "info"); }
     itemTrend(item) { return trendIcon(item.trend); }
@@ -395,10 +395,10 @@ class AiStatComparison extends Component {
 class AiActionConfirm extends Component {
     static template = "security_ai_engine.AiActionConfirm";
     static props = {
-        c: Object,
+        c: { type: Object, optional: true },
         onConfirmAction: { type: Function, optional: true },
     };
-    get c() { return this.props.c; }
+    get c() { return this.props.c || {}; }
 
     confirm() {
         if (this.props.onConfirmAction && this.props.c.action_token) {
@@ -412,10 +412,10 @@ class AiActionConfirm extends Component {
 class AiQuickReplies extends Component {
     static template = "security_ai_engine.AiQuickReplies";
     static props = {
-        c: Object,
+        c: { type: Object, optional: true },
         onQuickReply: { type: Function, optional: true },
     };
-    get c() { return this.props.c; }
+    get c() { return this.props.c || {}; }
 
     reply(s) {
         if (this.props.onQuickReply) this.props.onQuickReply(s);
@@ -508,7 +508,7 @@ export class AiComponentRenderer extends Component {
     }
 
     get comps() {
-        return this._parsed.components || [];
+        return (this._parsed.components || []).filter(Boolean);
     }
 
     componentTag(type) { return _componentTag(type); }
@@ -567,7 +567,7 @@ export class AiOutputWidget extends Component {
     }
 
     get components() {
-        return this.parsed?.components || [];
+        return (this.parsed?.components || []).filter(Boolean);
     }
 
     get partialSummary() {

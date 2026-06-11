@@ -46,48 +46,34 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Settings panel extension -->
+    <!-- Settings panel using Odoo 19 app/block/setting structure -->
     <record id="res_config_settings_view_demo_site" model="ir.ui.view">
         <field name="name">res.config.settings.view.security.demo</field>
         <field name="model">res.config.settings</field>
-        <field name="inherit_id" ref="base_setup.action_general_configuration"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@id='general_settings']" position="before">
-                <div class="app_settings_block" data-string="Demo Site" string="Demo Site"
-                     data-key="security_demo_site" id="security_demo_site_settings">
-                    <h2>Demo Site</h2>
-                    <div class="row mt16 o_settings_container">
+            <xpath expr="//form" position="inside">
+                <app data-string="Demo Site"
+                     string="Demo Site"
+                     name="security_demo_site"
+                     logo="/security_theme/static/src/img/deployguard.png">
 
-                        <div class="col-xs-12 col-md-6 o_setting_box">
-                            <div class="o_setting_left_pane">
-                                <field name="demo_site_enabled"/>
-                            </div>
-                            <div class="o_setting_right_pane">
-                                <label for="demo_site_enabled" class="o_form_label">Show Demo Panel</label>
-                                <div class="text-muted">Display demo account credentials on the login page.</div>
-                            </div>
-                        </div>
+                    <block title="Demo Login Panel" name="security_demo_panel_block">
+                        <setting string="Show Demo Panel"
+                                 help="Display demo account credentials on the login page.">
+                            <field name="demo_site_enabled"/>
+                        </setting>
+                        <setting string="Panel Title"
+                                 help="Heading shown above the demo accounts on the login page.">
+                            <field name="demo_panel_title"/>
+                        </setting>
+                        <setting string="Post-Login Redirect"
+                                 help="Where demo users land after logging in (e.g. /odoo/security-suite).">
+                            <field name="demo_redirect_action"/>
+                        </setting>
+                    </block>
 
-                        <div class="col-xs-12 col-md-6 o_setting_box"
-                             attrs="{'invisible': [('demo_site_enabled', '=', False)]}">
-                            <div class="o_setting_left_pane"/>
-                            <div class="o_setting_right_pane">
-                                <span class="o_form_label">Panel Configuration</span>
-                                <div class="content-group mt8">
-                                    <div class="row">
-                                        <label class="col-lg-4 o_light_label" for="demo_panel_title">Panel Title</label>
-                                        <field name="demo_panel_title"/>
-                                    </div>
-                                    <div class="row mt4">
-                                        <label class="col-lg-4 o_light_label" for="demo_redirect_action">Post-Login Redirect</label>
-                                        <field name="demo_redirect_action"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
+                </app>
             </xpath>
         </field>
     </record>
