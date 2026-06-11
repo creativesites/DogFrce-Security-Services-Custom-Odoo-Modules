@@ -20,6 +20,9 @@
             'security_theme/static/src/css/themes.css',
             'security_theme/static/src/css/login_custom.css',
         ],
+        'web.report_assets_pdf': [
+            'security_theme/static/src/css/report_brand.css',
+        ],
     },
     'installable': True,
     'auto_install': False,
