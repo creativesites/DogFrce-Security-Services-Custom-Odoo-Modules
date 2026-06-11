@@ -341,13 +341,23 @@ def _claude_chat(messages: list, system: str, config) -> dict:
 
 # ── Gemini multi-turn call ────────────────────────────────────────────────────
 
+_GEMINI_SCHEMA_STRIP = {"default", "additionalProperties"}
+
+
+def _clean_gemini_schema(schema):
+    """Recursively remove fields that Gemini function declarations don't accept."""
+    if not isinstance(schema, dict):
+        return schema
+    return {k: _clean_gemini_schema(v) for k, v in schema.items() if k not in _GEMINI_SCHEMA_STRIP}
+
+
 def _tools_to_gemini() -> list:
     """Convert _TOOLS to Gemini function_declarations format."""
     decls = []
     for t in _TOOLS:
         d = {"name": t["name"], "description": t["description"]}
         if "input_schema" in t:
-            d["parameters"] = t["input_schema"]
+            d["parameters"] = _clean_gemini_schema(t["input_schema"])
         decls.append(d)
     return [{"function_declarations": decls}]
 

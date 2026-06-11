@@ -1,39 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Add branded class and custom header/footer to the login page -->
-    <template id="login_branded" inherit_id="web.login">
+    <!-- Inject branded header + body class into the login page -->
+    <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
 
-        <!-- Add dg_login_branded class to body via a style override on wrapwrap -->
-        <xpath expr="//div[@id='wrapwrap']" position="before">
+        <!-- Inject branded header above the login form -->
+        <xpath expr="//div[@id='oe_structure_login_top']" position="before">
             <script type="text/javascript">
                 document.addEventListener('DOMContentLoaded', function() {
                     document.body.classList.add('dg_login_branded');
                 });
             </script>
-        </xpath>
-
-        <!-- Inject branded header above the form (logo + platform name) -->
-        <xpath expr="//div[@id='oe_structure_login_top']" position="before">
-            <div class="dg_login_header">
+            <div class="dg_login_header text-center mb-3">
                 <img src="/security_theme/static/src/img/deployguard-w.png"
                      alt="DeployGuard"
                      style="max-height:56px; width:auto;"/>
-                <div class="dg_platform_name">DeployGuard Security Platform</div>
-                <div class="dg_platform_tagline">Professional Security Management Suite</div>
+                <div class="dg_platform_name fw-bold mt-2" style="font-size:1.15rem; letter-spacing:.03em;">DeployGuard Security Platform</div>
+                <div class="dg_platform_tagline text-muted small">Professional Security Management Suite</div>
             </div>
         </xpath>
 
-        <!-- Replace "Powered by Odoo" footer with our own -->
+    </template>
+
+    <!-- Override the login layout footer separately (it lives in web.login_layout) -->
+    <template id="login_layout_footer" inherit_id="web.login_layout" name="DogForce Login Footer">
         <xpath expr="//div[hasclass('text-center') and hasclass('small') and hasclass('mt-4')]"
                position="replace">
             <t t-set="login_footer"
                t-value="request.env['ir.config_parameter'].sudo().get_param('security.theme.login_footer', '© 2026 DogForce Security Services. All rights reserved.')"/>
-            <div class="dg_login_footer">
-                <a href="/web/database/manager">Manage Databases</a>
-                <span class="mx-2">·</span>
+            <div class="dg_login_footer text-center small mt-4 pt-3 border-top">
+                <a class="border-end pe-2 me-1" href="/web/database/manager">Manage Databases</a>
                 <t t-out="login_footer"/>
             </div>
         </xpath>
-
     </template>
 </odoo>
