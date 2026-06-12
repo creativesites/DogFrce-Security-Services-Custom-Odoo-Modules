@@ -1,13 +1,13 @@
 /* =========================================================
-   DogForce Login Page Branding — single-column card
+   DogForce Login Page Branding - single-column card
    ========================================================= */
 
 body.dg_login_branded {
-    background-color: #1e3a5f;
+    background-color: #f7fbff;
     background-image:
-        radial-gradient(circle at 14% 12%, rgba(59, 130, 246, 0.25) 0, transparent 32%),
-        radial-gradient(circle at 86% 80%, rgba(45, 90, 158, 0.2) 0, transparent 30%),
-        linear-gradient(135deg, #1e3a5f 0%, #0f1f36 60%, #1a1a2e 100%);
+        radial-gradient(circle at 14% 12%, rgba(59, 130, 246, 0.12) 0, transparent 32%),
+        radial-gradient(circle at 86% 80%, rgba(45, 90, 158, 0.08) 0, transparent 30%),
+        linear-gradient(135deg, #f8fbff 0%, #eef5ff 52%, #f7fafc 100%);
     min-height: 100vh;
 }
 
@@ -15,13 +15,19 @@ body.dg_login_branded #wrapwrap {
     background: transparent;
 }
 
-/* Narrow centered container for the single card */
+/* Container — wide enough to give the card room to breathe */
 body.dg_login_branded .container {
     width: 94vw !important;
-    max-width: 500px !important;
+    max-width: 660px !important;
     min-width: 280px;
     padding-top: 2rem;
     padding-bottom: 2rem;
+}
+
+/* Card explicit width — matches container ceiling */
+body.dg_login_branded .card {
+    width: 100%;
+    max-width: 660px;
 }
 
 /* Bootstrap col override — take full container width */
@@ -44,7 +50,7 @@ body.dg_login_branded .card {
     border: none;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 24px 72px rgba(15, 31, 54, 0.16);
     overflow: hidden;
 }
 
@@ -55,8 +61,8 @@ body.dg_login_branded .card-body {
 /* ── Branded header inside card ── */
 body.dg_login_branded .dg_login_header {
     background:
-        radial-gradient(circle at 20% 10%, rgba(96, 165, 250, 0.28) 0, transparent 36%),
-        linear-gradient(145deg, #0b1628 0%, #102238 48%, #1e3a5f 100%);
+        radial-gradient(circle at 20% 10%, rgba(147, 197, 253, 0.26) 0, transparent 36%),
+        linear-gradient(145deg, #183a5f 0%, #214d7c 52%, #2d5a9e 100%);
     padding: 1.75rem 2rem 1.5rem;
     text-align: center;
     position: relative;
@@ -160,7 +166,7 @@ body.dg_login_branded .btn-primary:hover {
     background-color: #2d5a9e !important;
     border-color: #2d5a9e !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.38);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.24);
 }
 
 /* ── Footer ── */

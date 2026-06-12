@@ -9,7 +9,7 @@
                      alt="DeployGuard"
                      style="max-height:56px; width:auto;"/>
                 <div class="dg_platform_name fw-bold mt-2" style="font-size:1.15rem; letter-spacing:.03em;">DeployGuard Security Platform</div>
-                <div class="dg_platform_tagline text-muted small">Professional Security Management Suite</div>
+                <div class="dg_platform_tagline text-muted small" style="color:#fff; opacity:0.7;">Professional Security Management Suite</div>
                 <div class="dg_login_highlights">
                     <span><i class="fa fa-shield"/> Guard Operations</span>
                     <span><i class="fa fa-calendar-check-o"/> Shift Control</span>

@@ -11,11 +11,16 @@
     --dg-accent: #3b82f6;
     --dg-surface: #f8fafc;
     --dg-sidebar-text: #c8d8f0;
-    --dg-gradient-main: linear-gradient(135deg, #0f1f36 0%, #1e3a5f 48%, #2d5a9e 100%);
-    --dg-gradient-shell: radial-gradient(circle at 16% 0%, rgba(59, 130, 246, 0.22) 0, transparent 32%), linear-gradient(135deg, #07111f 0%, #102238 52%, #183a62 100%);
-    --dg-gradient-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(238, 245, 255, 0.96) 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(30, 58, 95, 0.1) 0%, rgba(59, 130, 246, 0.08) 100%);
-    --dg-shadow-deep: 0 18px 48px rgba(15, 31, 54, 0.18);
+    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #eef5ff 58%, #dbeafe 100%);
+    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.13) 0, transparent 34%), linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%);
+    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
+    --dg-gradient-muted: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(30, 58, 95, 0.04) 100%);
+    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(239, 246, 255, 0.96) 100%);
+    --dg-navbar-text: #18304f;
+    --dg-navbar-entry-bg: rgba(30, 58, 95, 0.06);
+    --dg-navbar-entry-hover-bg: rgba(59, 130, 246, 0.12);
+    --dg-heading-text: #143153;
+    --dg-shadow-deep: 0 18px 42px rgba(30, 58, 95, 0.12);
 }
 
 .o_theme_dogforce_navy .o_main_navbar {
@@ -56,11 +61,16 @@
     --dg-accent: #e67e22;
     --dg-surface: #faf9f7;
     --dg-sidebar-text: #e8e8e8;
-    --dg-gradient-main: linear-gradient(135deg, #0d1117 0%, #16213e 54%, #e67e22 130%);
-    --dg-gradient-shell: radial-gradient(circle at 16% 0%, rgba(230, 126, 34, 0.18) 0, transparent 32%), linear-gradient(135deg, #10131a 0%, #16213e 56%, #2a2232 100%);
-    --dg-gradient-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(250, 246, 240, 0.96) 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(22, 33, 62, 0.1) 0%, rgba(230, 126, 34, 0.08) 100%);
-    --dg-shadow-deep: 0 18px 48px rgba(13, 17, 23, 0.18);
+    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #fff7ed 58%, #ffedd5 100%);
+    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(230, 126, 34, 0.12) 0, transparent 34%), linear-gradient(135deg, #fffaf5 0%, #f8fafc 54%, #fff7ed 100%);
+    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #fffaf5 100%);
+    --dg-gradient-muted: linear-gradient(135deg, rgba(230, 126, 34, 0.08) 0%, rgba(22, 33, 62, 0.04) 100%);
+    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 247, 237, 0.96) 100%);
+    --dg-navbar-text: #2d2530;
+    --dg-navbar-entry-bg: rgba(230, 126, 34, 0.08);
+    --dg-navbar-entry-hover-bg: rgba(230, 126, 34, 0.14);
+    --dg-heading-text: #3b2a1d;
+    --dg-shadow-deep: 0 18px 42px rgba(13, 17, 23, 0.11);
 }
 
 .o_theme_corporate_dark .o_main_navbar {
@@ -101,11 +111,16 @@
     --dg-accent: #4ade80;
     --dg-surface: #f4f7f4;
     --dg-sidebar-text: #c8e6c9;
-    --dg-gradient-main: linear-gradient(135deg, #0d1f15 0%, #1a3a2a 52%, #2e7d32 100%);
-    --dg-gradient-shell: radial-gradient(circle at 16% 0%, rgba(74, 222, 128, 0.18) 0, transparent 32%), linear-gradient(135deg, #09150f 0%, #143221 54%, #1f4f34 100%);
-    --dg-gradient-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(241, 249, 243, 0.96) 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(26, 58, 42, 0.1) 0%, rgba(74, 222, 128, 0.08) 100%);
-    --dg-shadow-deep: 0 18px 48px rgba(13, 31, 21, 0.18);
+    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #f0fdf4 58%, #dcfce7 100%);
+    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(74, 222, 128, 0.12) 0, transparent 34%), linear-gradient(135deg, #f8fff9 0%, #f4f7f4 54%, #f0fdf4 100%);
+    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f7fcf8 100%);
+    --dg-gradient-muted: linear-gradient(135deg, rgba(74, 222, 128, 0.08) 0%, rgba(26, 58, 42, 0.04) 100%);
+    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 253, 244, 0.96) 100%);
+    --dg-navbar-text: #173526;
+    --dg-navbar-entry-bg: rgba(46, 125, 50, 0.08);
+    --dg-navbar-entry-hover-bg: rgba(46, 125, 50, 0.14);
+    --dg-heading-text: #173526;
+    --dg-shadow-deep: 0 18px 42px rgba(13, 31, 21, 0.11);
 }
 
 .o_theme_forest_guard .o_main_navbar {
@@ -145,11 +160,16 @@
     --dg-accent: #6b7280;
     --dg-surface: #f9fafb;
     --dg-sidebar-text: #d1d5db;
-    --dg-gradient-main: linear-gradient(135deg, #111827 0%, #1f2937 54%, #4b5563 100%);
-    --dg-gradient-shell: radial-gradient(circle at 16% 0%, rgba(148, 163, 184, 0.18) 0, transparent 32%), linear-gradient(135deg, #0b111c 0%, #1f2937 54%, #334155 100%);
-    --dg-gradient-surface: linear-gradient(145deg, rgba(255, 255, 255, 0.97) 0%, rgba(244, 247, 251, 0.96) 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(31, 41, 55, 0.1) 0%, rgba(107, 114, 128, 0.08) 100%);
-    --dg-shadow-deep: 0 18px 48px rgba(17, 24, 39, 0.18);
+    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #f1f5f9 58%, #e2e8f0 100%);
+    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(148, 163, 184, 0.14) 0, transparent 34%), linear-gradient(135deg, #fbfdff 0%, #f3f6fa 54%, #f8fafc 100%);
+    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+    --dg-gradient-muted: linear-gradient(135deg, rgba(148, 163, 184, 0.1) 0%, rgba(31, 41, 55, 0.04) 100%);
+    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.96) 100%);
+    --dg-navbar-text: #1f2937;
+    --dg-navbar-entry-bg: rgba(31, 41, 55, 0.06);
+    --dg-navbar-entry-hover-bg: rgba(31, 41, 55, 0.11);
+    --dg-heading-text: #1f2937;
+    --dg-shadow-deep: 0 18px 42px rgba(17, 24, 39, 0.11);
 }
 
 .o_theme_executive_slate .o_main_navbar {
@@ -182,8 +202,48 @@
 }
 
 /* ── Premium Gradient App Shell ──────────────────────────── */
+body[class*="o_theme_"] {
+    --NavBar-backgroundColor: transparent;
+    --NavBar-entry-color: var(--dg-navbar-text);
+    --NavBar-entry-backgroundColor: var(--dg-navbar-entry-bg);
+    --NavBar-entry-backgroundColor--hover: var(--dg-navbar-entry-hover-bg);
+    --NavBar-entry-backgroundColor--active: var(--dg-navbar-entry-hover-bg);
+    --NavBar-entry-color--hover: var(--dg-primary);
+    --NavBar-entry-color--active: var(--dg-primary);
+}
+
 body[class*="o_theme_"] .o_web_client {
-    background: var(--dg-gradient-shell, linear-gradient(135deg, #07111f 0%, #102238 52%, #183a62 100%));
+    background: var(--dg-gradient-shell, linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%));
+}
+
+body[class*="o_theme_"] .o_main_navbar {
+    --NavBar-backgroundColor: transparent;
+    --NavBar-entry-color: var(--dg-navbar-text);
+    --NavBar-entry-backgroundColor: var(--dg-navbar-entry-bg);
+    --NavBar-entry-backgroundColor--hover: var(--dg-navbar-entry-hover-bg);
+    --NavBar-entry-backgroundColor--active: var(--dg-navbar-entry-hover-bg);
+    --NavBar-entry-color--hover: var(--dg-primary);
+    --NavBar-entry-color--active: var(--dg-primary);
+    background: var(--dg-navbar-bg) !important;
+    border-bottom: 1px solid rgba(15, 31, 54, 0.08) !important;
+    box-shadow: 0 8px 28px rgba(15, 31, 54, 0.08);
+}
+
+body[class*="o_theme_"] .o_main_navbar .o_menu_brand,
+body[class*="o_theme_"] .o_main_navbar .o_nav_entry,
+body[class*="o_theme_"] .o_main_navbar a,
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li > a {
+    color: var(--dg-navbar-text) !important;
+}
+
+body[class*="o_theme_"] .o_main_navbar .o_nav_entry:hover,
+body[class*="o_theme_"] .o_main_navbar .o_nav_entry:focus,
+body[class*="o_theme_"] .o_main_navbar .o_nav_entry.active,
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li > a:hover,
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li > a:focus,
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li.show > a {
+    background: var(--dg-navbar-entry-hover-bg) !important;
+    color: var(--dg-primary) !important;
 }
 
 body[class*="o_theme_"] .o_action_manager,
@@ -196,8 +256,8 @@ body[class*="o_theme_"] .o_form_view {
 
 body[class*="o_theme_"] .o_action {
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 180px, rgba(255, 255, 255, 0) 360px),
-        var(--dg-gradient-shell, linear-gradient(135deg, #07111f 0%, #102238 52%, #183a62 100%)) !important;
+        linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.28) 180px, rgba(255, 255, 255, 0) 360px),
+        var(--dg-gradient-shell, linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%)) !important;
 }
 
 body[class*="o_theme_"] .o_control_panel {
@@ -213,7 +273,8 @@ body[class*="o_theme_"] .o_control_panel::before {
     content: "";
     display: block;
     height: 3px;
-    background: var(--dg-gradient-main, linear-gradient(135deg, #0f1f36 0%, #1e3a5f 48%, #2d5a9e 100%));
+    background: linear-gradient(90deg, transparent 0%, var(--dg-accent) 18%, var(--dg-primary-light) 82%, transparent 100%);
+    opacity: 0.55;
 }
 
 body[class*="o_theme_"] .o_control_panel .breadcrumb,
@@ -274,21 +335,21 @@ body[class*="o_theme_"] .oe_kanban_global_click:hover {
 }
 
 body[class*="o_theme_"] .o_kanban_group {
-    background: rgba(255, 255, 255, 0.12) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.72) !important;
+    border: 1px solid rgba(15, 31, 54, 0.08);
     border-radius: 12px;
     overflow: hidden;
 }
 
 body[class*="o_theme_"] .o_kanban_group .o_kanban_header,
 body[class*="o_theme_"] .o_column_folded .o_kanban_header {
-    background: var(--dg-gradient-main, linear-gradient(135deg, #0f1f36 0%, #1e3a5f 48%, #2d5a9e 100%)) !important;
-    border: none !important;
-    color: #fff !important;
+    background: var(--dg-gradient-muted, rgba(30, 58, 95, 0.06)) !important;
+    border-bottom: 1px solid rgba(15, 31, 54, 0.08) !important;
+    color: var(--dg-heading-text) !important;
 }
 
 body[class*="o_theme_"] .o_kanban_group .o_column_title {
-    color: rgba(255, 255, 255, 0.9) !important;
+    color: var(--dg-heading-text) !important;
 }
 
 body[class*="o_theme_"] .o_list_view,
@@ -302,8 +363,8 @@ body[class*="o_theme_"] .o_renderer.table-responsive {
 
 body[class*="o_theme_"] .o_list_table thead,
 body[class*="o_theme_"] .o_list_table thead th {
-    background: var(--dg-gradient-main, linear-gradient(135deg, #0f1f36 0%, #1e3a5f 48%, #2d5a9e 100%)) !important;
-    color: #fff !important;
+    background: var(--dg-gradient-muted, rgba(30, 58, 95, 0.06)) !important;
+    color: var(--dg-heading-text) !important;
 }
 
 body[class*="o_theme_"] .o_list_table tbody tr:hover {
@@ -320,12 +381,12 @@ body[class*="o_theme_"] .o_graph_view {
 
 body[class*="o_theme_"] .o_df_dashboard {
     background:
-        radial-gradient(circle at 18% 0%, rgba(255, 255, 255, 0.14) 0, transparent 30%),
-        var(--dg-gradient-shell, linear-gradient(135deg, #07111f 0%, #102238 52%, #183a62 100%));
+        radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.1) 0, transparent 30%),
+        var(--dg-gradient-shell, linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%));
 }
 
 body[class*="o_theme_"] .o_df_dashboard .dg-sidebar {
-    background: var(--dg-gradient-main, linear-gradient(135deg, #0f1f36 0%, #1e3a5f 48%, #2d5a9e 100%));
+    background: linear-gradient(160deg, var(--dg-primary-dark) 0%, var(--dg-primary) 100%);
 }
 
 body[class*="o_theme_"] .o_menu_systray .dropdown-menu,
