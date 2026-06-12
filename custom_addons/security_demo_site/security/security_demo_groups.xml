@@ -3,12 +3,10 @@
     <!-- Assigned to all non-admin demo users: blocks delete on operational models -->
     <record id="group_demo_no_delete" model="res.groups">
         <field name="name">Demo: No Delete</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
     </record>
 
     <!-- Assigned to viewer only: blocks create + write + delete -->
     <record id="group_demo_viewer" model="res.groups">
         <field name="name">Demo: Read-Only Viewer</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
     </record>
 </odoo>
