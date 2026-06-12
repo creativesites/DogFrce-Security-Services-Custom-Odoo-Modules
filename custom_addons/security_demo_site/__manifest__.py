@@ -8,6 +8,7 @@
         'security/ir.model.access.csv',
         'views/login_demo_panel.xml',
         'views/security_demo_config_views.xml',
+        'views/security_demo_menu.xml',
         'data/demo_accounts.xml',
     ],
     'assets': {

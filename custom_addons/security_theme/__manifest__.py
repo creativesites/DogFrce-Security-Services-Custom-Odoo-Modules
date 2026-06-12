@@ -10,6 +10,7 @@
         'views/res_config_settings_views.xml',
         'views/login_template.xml',
         'views/report_layout.xml',
+        'views/security_theme_menu.xml',
     ],
     'assets': {
         'web.assets_backend': [

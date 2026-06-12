@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Opens Settings scrolled to the DogForce Theme section -->
+    <record id="action_theme_settings" model="ir.actions.act_window">
+        <field name="name">Theme Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'security_theme'}</field>
+    </record>
+
+    <menuitem
+        id="menu_security_theme"
+        name="Theme &amp; Branding"
+        parent="security_base.menu_security_configuration"
+        action="action_theme_settings"
+        sequence="80"
+        groups="base.group_system"/>
+</odoo>

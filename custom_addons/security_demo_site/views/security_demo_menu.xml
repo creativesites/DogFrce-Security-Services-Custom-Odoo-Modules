@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Demo Site submenu under Security > Configuration -->
+    <menuitem
+        id="menu_security_demo_root"
+        name="Demo Site"
+        parent="security_base.menu_security_configuration"
+        sequence="85"
+        groups="base.group_system"/>
+
+    <!-- Demo Accounts list -->
+    <menuitem
+        id="menu_security_demo_accounts_cfg"
+        name="Demo Accounts"
+        parent="menu_security_demo_root"
+        action="security_demo_account_action"
+        sequence="10"
+        groups="base.group_system"/>
+
+    <!-- Demo Site settings (opens Settings scrolled to Demo Site section) -->
+    <record id="action_demo_site_settings" model="ir.actions.act_window">
+        <field name="name">Demo Site Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'security_demo_site'}</field>
+    </record>
+
+    <menuitem
+        id="menu_security_demo_settings"
+        name="Settings"
+        parent="menu_security_demo_root"
+        action="action_demo_site_settings"
+        sequence="20"
+        groups="base.group_system"/>
+</odoo>
