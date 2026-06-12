@@ -11,7 +11,7 @@
     <div style="background:linear-gradient(135deg,#0f2d5e 0%,#0e7490 100%);padding:16px 24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;border-bottom:1px solid #1e3a5f;flex-shrink:0;">
 
         <!-- Title -->
-        <div style="display:flex;align-items:center;gap:10px;min-width:220px;">
+        <div class="pc-title-block" style="display:flex;align-items:center;gap:10px;min-width:220px;">
             <i class="fa fa-shield" style="font-size:22px;color:#38bdf8;"/>
             <div>
                 <div style="font-size:17px;font-weight:700;color:#f1f5f9;letter-spacing:0.01em;">
@@ -247,7 +247,7 @@
             </t>
 
             <!-- Card grid -->
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+            <div class="pc-card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
                 <t t-foreach="visibleRecords" t-as="rec" t-key="rec.id">
 
                     <!-- Guard card -->

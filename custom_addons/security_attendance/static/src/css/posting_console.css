@@ -52,3 +52,25 @@
 .o_posting_console ::-webkit-scrollbar-track  { background: #0f172a; }
 .o_posting_console ::-webkit-scrollbar-thumb  { background: #334155; border-radius: 3px; }
 .o_posting_console ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+/* ══════════════════════════════════
+   RESPONSIVE — mobile breakpoints
+══════════════════════════════════ */
+@media (max-width: 640px) {
+    /* Shrink card minimum width so a single column fits on small phones */
+    .pc-card-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)) !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
+    }
+    /* Remove the forced min-width on the title block so it wraps cleanly */
+    .o_posting_console .pc-title-block {
+        min-width: 0 !important;
+    }
+}
+
+@media (max-width: 400px) {
+    .pc-card-grid {
+        grid-template-columns: 1fr !important;
+    }
+}

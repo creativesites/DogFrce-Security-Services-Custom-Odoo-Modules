@@ -1,0 +1,32 @@
+/* AWOL Heatmap — responsive overrides
+   The 30-day table is inherently wide; horizontal scroll in .awh-grid is the
+   correct mobile pattern. These rules fix the header and legend on narrow viewports. */
+
+@media (max-width: 640px) {
+    .awh-header {
+        padding: 10px 14px !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+    .awh-header h3 {
+        font-size: 14px !important;
+    }
+    .awh-header span {
+        font-size: 11px !important;
+    }
+    /* Icon wastes space on small screens */
+    .awh-header .fa-th {
+        display: none !important;
+    }
+    /* Site filter takes full width when header wraps */
+    .awh-header > div:last-child {
+        width: 100% !important;
+    }
+    .awh-legend {
+        padding: 6px 12px !important;
+        gap: 8px !important;
+    }
+    .awh-grid {
+        padding: 8px !important;
+    }
+}

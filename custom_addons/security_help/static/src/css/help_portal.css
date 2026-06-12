@@ -373,3 +373,91 @@
     color: #94a3b8;
     margin-top: 2px;
 }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE — mobile breakpoints
+   At ≤768px the sidebar becomes a horizontal
+   scrollable category chip strip.
+══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .dg-help-portal {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: calc(100dvh - 56px) !important;
+        overflow: auto !important;
+    }
+    .dg-help-sidebar {
+        width: 100% !important;
+        min-width: 0 !important;
+        border-right: none !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        overflow: visible !important;
+    }
+    .dg-help-sidebar-header {
+        padding: 10px 14px 6px !important;
+        border-bottom: none !important;
+    }
+    .dg-help-sidebar-header h1 {
+        font-size: 0.95rem !important;
+        margin-bottom: 4px !important;
+    }
+    .dg-help-search {
+        margin: 0 14px 8px !important;
+    }
+    /* Category list → horizontal scrollable chip strip */
+    .dg-help-cat-list {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        flex: none !important;
+        padding: 6px 10px 10px !important;
+        gap: 6px !important;
+    }
+    .dg-help-cat-item {
+        flex-shrink: 0 !important;
+        flex-direction: row !important;
+        width: auto !important;
+        padding: 5px 12px !important;
+        border-radius: 20px !important;
+        border-left: none !important;
+        gap: 6px !important;
+        border: 1px solid #e2e8f0 !important;
+    }
+    .dg-help-cat-item.active {
+        border-left: none !important;
+        border-color: #2563eb !important;
+        background: #eff6ff !important;
+    }
+    .dg-help-cat-icon {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 0.7rem !important;
+        flex-shrink: 0 !important;
+    }
+    .dg-help-cat-count {
+        display: none !important;
+    }
+    .dg-help-main {
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+    .dg-help-article-detail {
+        padding: 16px !important;
+    }
+    .dg-help-article-list {
+        padding: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .dg-help-article-detail {
+        padding: 12px !important;
+    }
+    .dg-help-article-body {
+        font-size: 0.9rem !important;
+    }
+    .dg-help-article-list-header {
+        padding: 10px 12px !important;
+    }
+}

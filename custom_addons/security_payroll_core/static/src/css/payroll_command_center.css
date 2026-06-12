@@ -479,3 +479,74 @@
     justify-content: center;
     text-align: center;
 }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE — mobile breakpoints
+   At ≤768px the sidebar flips to a horizontal
+   scrollable period-tab strip at the top.
+══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .o_payroll_command_center {
+        flex-direction: column !important;
+    }
+    .o_pcc_sidebar {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        max-height: 80px !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
+        /* Remove the large padding used in vertical layout */
+        padding: 0 !important;
+    }
+    /* Hide the "Payroll Periods" label header — no room in strip mode */
+    .o_pcc_sidebar > .px-4.py-4 {
+        display: none !important;
+    }
+    /* Period items become horizontal chips */
+    .o_period_item {
+        flex-direction: row !important;
+        align-items: center !important;
+        flex-shrink: 0 !important;
+        gap: 6px !important;
+        min-width: max-content !important;
+        padding: 0 14px !important;
+        margin: 0 !important;
+        border-left: none !important;
+        border-bottom: 2px solid transparent !important;
+        border-radius: 0 !important;
+        height: 80px !important;
+    }
+    .o_period_item.is-active {
+        background: rgba(255, 255, 255, .06) !important;
+        border-bottom-color: var(--pcc-accent) !important;
+    }
+    /* Collapse secondary lines (employee count) inside horizontal chips */
+    .o_period_item .small {
+        display: none !important;
+    }
+    .o_period_item .fw-bold {
+        font-size: 11.5px !important;
+    }
+    .o_pcc_header {
+        padding: 10px 14px !important;
+        height: auto !important;
+        min-height: 0 !important;
+    }
+    .o_pcc_main .flex-grow-1.overflow-auto {
+        padding: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .pcc-stat-card {
+        padding: 12px !important;
+        min-width: 120px !important;
+    }
+    .pcc-summary-big {
+        padding: 16px !important;
+    }
+}

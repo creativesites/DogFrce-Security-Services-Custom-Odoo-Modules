@@ -17,6 +17,7 @@
             "security_attendance/static/src/css/posting_console.css",
             "security_attendance/static/src/js/posting_console.js",
             "security_attendance/static/src/xml/posting_console.xml",
+            "security_attendance/static/src/css/awol_heatmap.css",
             "security_attendance/static/src/js/awol_heatmap.js",
             "security_attendance/static/src/xml/awol_heatmap.xml",
         ],

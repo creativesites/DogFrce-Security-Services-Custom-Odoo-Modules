@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates xml:space="preserve">
 <t t-name="security_attendance.AWOLHeatmap">
-<div style="display:flex; flex-direction:column; height:100%; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+<div class="o_awol_heatmap" style="display:flex; flex-direction:column; height:100%; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 100%); padding:16px 24px; display:flex; align-items:center; justify-content:space-between;">
+    <div class="awh-header" style="background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 100%); padding:16px 24px; display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center; gap:12px;">
             <i class="fa fa-th fa-2x" style="color:rgba(255,255,255,0.9);"/>
             <div>
@@ -26,7 +26,7 @@
     </div>
 
     <!-- Legend + summary -->
-    <div style="background:white;padding:8px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;">
+    <div class="awh-legend" style="background:white;padding:8px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
             <span style="width:14px;height:14px;border-radius:3px;background:#16a34a;display:inline-block;"/>Present
         </div>
@@ -53,7 +53,7 @@
 
     <!-- Grid -->
     <t t-else="">
-        <div style="flex:1;overflow:auto;padding:16px;">
+        <div class="awh-grid" style="flex:1;overflow:auto;padding:16px;">
             <t t-if="visibleGuards.length === 0">
                 <div style="text-align:center;color:#64748b;padding:40px;">No guards found.</div>
             </t>
