@@ -11,6 +11,8 @@ class SecurityDemoAccount(models.Model):
     login = fields.Char(required=True, string='Login (Email)')
     password_hint = fields.Char(required=True, string='Password (display)')
     description = fields.Char(string='Short Description')
+    features = fields.Text(string='Access Features', help='One feature per line, shown as bullet points on the login panel')
+    badge_color = fields.Char(string='Badge Color', default='#1e3a5f', help='Hex color for the role badge')
     active = fields.Boolean(default=True)
     user_id = fields.Many2one('res.users', string='Linked User', ondelete='set null')
 
@@ -18,7 +20,7 @@ class SecurityDemoAccount(models.Model):
     def get_demo_accounts(self):
         return self.search_read(
             [('active', '=', True)],
-            ['name', 'login', 'password_hint', 'description'],
+            ['name', 'login', 'password_hint', 'description', 'features', 'badge_color'],
             order='sequence asc',
         )
 

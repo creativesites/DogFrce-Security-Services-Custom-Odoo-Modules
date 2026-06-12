@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, markup } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -61,7 +61,7 @@ class HelpPortal extends Component {
         const [art] = await this.orm.read("security.help.article", [articleId], [
             "id", "title", "summary", "body", "category_id",
         ]);
-        this.state.activeArticle = art;
+        this.state.activeArticle = { ...art, body: markup(art.body || "") };
     }
 
     goBack() {

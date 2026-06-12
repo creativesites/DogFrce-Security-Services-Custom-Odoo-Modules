@@ -1,94 +1,202 @@
 /* =========================================================
-   DogForce Demo Login Panel
+   DogForce Demo Login Panel — v2
    ========================================================= */
 
 .dg_demo_panel {
-    background: #f0f4f8;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.25rem;
+    background: linear-gradient(135deg, #0f1f35 0%, #1a3a5f 100%);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.dg_demo_panel .dg_demo_title {
-    font-size: 0.8rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #64748b;
-    margin-bottom: 0.75rem;
+/* ── Header ── */
+.dg_demo_header {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 8px;
+    margin-bottom: 0.9rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-.dg_demo_panel .dg_demo_title::before {
-    content: '';
-    display: inline-block;
+.dg_demo_live_dot {
     width: 8px;
     height: 8px;
     background: #22c55e;
     border-radius: 50%;
-    box-shadow: 0 0 6px rgba(34, 197, 94, 0.6);
-    animation: dg_pulse 2s infinite;
+    flex-shrink: 0;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+    animation: dg_pulse 2s ease-in-out infinite;
 }
 
 @keyframes dg_pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
 }
 
-.dg_demo_account {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.45rem 0.6rem;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.15s ease;
-    margin-bottom: 0.25rem;
-    border: 1px solid transparent;
-}
-
-.dg_demo_account:last-child {
-    margin-bottom: 0;
-}
-
-.dg_demo_account:hover {
-    background: #ffffff;
-    border-color: #cbd5e1;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.dg_demo_account:active {
-    background: #e8f0fe;
-    border-color: #2d5a9e;
-}
-
-.dg_demo_account_role {
-    font-weight: 600;
+.dg_demo_header_text {
+    font-weight: 700;
     font-size: 0.8rem;
-    color: #1e3a5f;
-    min-width: 80px;
-}
-
-.dg_demo_account_login {
-    font-size: 0.75rem;
-    color: #475569;
-    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #fff;
     flex: 1;
-    margin: 0 0.5rem;
 }
 
-.dg_demo_account_hint {
-    font-size: 0.7rem;
-    color: #94a3b8;
+.dg_demo_header_sub {
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.45);
     white-space: nowrap;
 }
 
-.dg_demo_panel .dg_demo_hint {
-    font-size: 0.7rem;
-    color: #94a3b8;
+/* ── Account cards grid (2 columns) ── */
+.dg_demo_accounts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 0.75rem;
+}
+
+/* ── Individual card ── */
+.dg_demo_card {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.6rem 0.7rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    position: relative;
+    overflow: hidden;
+}
+
+.dg_demo_card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, #60a5fa);
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.dg_demo_card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+}
+
+.dg_demo_card:hover::before {
+    opacity: 1;
+}
+
+.dg_demo_card:active {
+    transform: translateY(0);
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Card top row ── */
+.dg_demo_card_top {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 5px;
+}
+
+.dg_demo_badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+    line-height: 1.6;
+}
+
+.dg_demo_creds {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+}
+
+.dg_demo_email {
+    font-size: 0.67rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dg_demo_pw {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+.dg_demo_arrow {
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    transition: color 0.15s, transform 0.15s;
+}
+
+.dg_demo_card:hover .dg_demo_arrow {
+    color: rgba(255, 255, 255, 0.8);
+    transform: translateX(2px);
+}
+
+/* ── Description ── */
+.dg_demo_desc {
+    font-size: 0.67rem;
+    color: rgba(255, 255, 255, 0.55);
+    line-height: 1.4;
+    margin-bottom: 5px;
+}
+
+/* ── Feature bullets ── */
+.dg_demo_features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dg_demo_features li {
+    font-size: 0.63rem;
+    color: rgba(255, 255, 255, 0.5);
+    padding-left: 10px;
+    position: relative;
+    line-height: 1.4;
+}
+
+.dg_demo_features li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 0.55rem;
+    top: 1px;
+}
+
+/* ── Footer ── */
+.dg_demo_footer {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.35);
     text-align: center;
-    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dg_demo_footer strong {
+    color: rgba(255, 255, 255, 0.6);
 }

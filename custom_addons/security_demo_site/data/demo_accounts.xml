@@ -20,64 +20,103 @@
             <field name="name">Demo Admin</field>
             <field name="login">demo.admin@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="group_ids" eval="[(6, 0, [ref('base.group_user'), ref('base.group_system')])]"/>
+            <field name="group_ids" eval="[(6, 0, [
+                ref('base.group_user'),
+                ref('base.group_system'),
+                ref('hr.group_hr_user'),
+                ref('hr.group_hr_manager'),
+            ])]"/>
         </record>
 
         <record id="demo_user_manager" model="res.users">
             <field name="name">Demo Manager</field>
             <field name="login">demo.manager@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
+            <field name="group_ids" eval="[(6, 0, [
+                ref('base.group_user'),
+                ref('hr.group_hr_user'),
+                ref('hr.group_hr_manager'),
+            ])]"/>
         </record>
 
         <record id="demo_user_operator" model="res.users">
             <field name="name">Demo Operator</field>
             <field name="login">demo.operator@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
+            <field name="group_ids" eval="[(6, 0, [
+                ref('base.group_user'),
+                ref('hr.group_hr_user'),
+            ])]"/>
         </record>
 
         <record id="demo_user_viewer" model="res.users">
             <field name="name">Demo Viewer</field>
             <field name="login">demo.viewer@dogforce.demo</field>
             <field name="password">Demo2026!</field>
-            <field name="group_ids" eval="[(6, 0, [ref('base.group_user')])]"/>
+            <field name="group_ids" eval="[(6, 0, [
+                ref('base.group_user'),
+                ref('hr.group_hr_user'),
+            ])]"/>
         </record>
 
-        <!-- Demo panel entries -->
+        <!-- Demo panel entries with rich feature descriptions -->
         <record id="demo_account_admin" model="security.demo.account">
             <field name="sequence">10</field>
-            <field name="name">Admin</field>
+            <field name="name">System Admin</field>
             <field name="login">demo.admin@dogforce.demo</field>
             <field name="password_hint">Demo2026!</field>
-            <field name="description">Full system access</field>
+            <field name="description">Full platform access — configure and manage everything</field>
+            <field name="badge_color">#dc2626</field>
+            <field name="features">Executive dashboard &amp; KPIs
+AI Assistant with full data access
+Guards, rosters &amp; attendance
+Payroll, leave &amp; billing
+System settings &amp; configuration</field>
             <field name="user_id" ref="demo_user_admin"/>
         </record>
 
         <record id="demo_account_manager" model="security.demo.account">
             <field name="sequence">20</field>
-            <field name="name">Manager</field>
+            <field name="name">Operations Manager</field>
             <field name="login">demo.manager@dogforce.demo</field>
             <field name="password_hint">Demo2026!</field>
-            <field name="description">Operations manager view</field>
+            <field name="description">Oversee guards, rosters, attendance and leave approvals</field>
+            <field name="badge_color">#2563eb</field>
+            <field name="features">Dashboard &amp; reporting
+Roster planning &amp; scheduling
+Attendance &amp; AWOL management
+Leave request approvals
+Client sites &amp; billing overview</field>
             <field name="user_id" ref="demo_user_manager"/>
         </record>
 
         <record id="demo_account_operator" model="security.demo.account">
             <field name="sequence">30</field>
-            <field name="name">Operator</field>
+            <field name="name">Field Operator</field>
             <field name="login">demo.operator@dogforce.demo</field>
             <field name="password_hint">Demo2026!</field>
-            <field name="description">Day-to-day operations</field>
+            <field name="description">Day-to-day guard management, posting and incident logging</field>
+            <field name="badge_color">#16a34a</field>
+            <field name="features">Posting console &amp; daily attendance
+Guard records &amp; documents
+Incident &amp; discipline logging
+Equipment allocation
+Leave submissions</field>
             <field name="user_id" ref="demo_user_operator"/>
         </record>
 
         <record id="demo_account_viewer" model="security.demo.account">
             <field name="sequence">40</field>
-            <field name="name">Viewer</field>
+            <field name="name">Read-Only Viewer</field>
             <field name="login">demo.viewer@dogforce.demo</field>
             <field name="password_hint">Demo2026!</field>
-            <field name="description">Read-only dashboard access</field>
+            <field name="description">View dashboards, reports and records — no edits</field>
+            <field name="badge_color">#7c3aed</field>
+            <field name="features">Executive dashboard
+All reports &amp; analytics
+Guard &amp; roster records
+Attendance history
+Billing &amp; invoice overview</field>
             <field name="user_id" ref="demo_user_viewer"/>
         </record>
     </data>

@@ -27,6 +27,7 @@
                         <group string="Display">
                             <field name="sequence"/>
                             <field name="name"/>
+                            <field name="badge_color" widget="color"/>
                             <field name="description"/>
                         </group>
                         <group string="Credentials">
@@ -34,6 +35,9 @@
                             <field name="password_hint"/>
                             <field name="user_id"/>
                         </group>
+                    </group>
+                    <group string="Feature Highlights">
+                        <field name="features" nolabel="1" placeholder="One feature per line — shown as bullet points on the login panel"/>
                     </group>
                 </sheet>
             </form>

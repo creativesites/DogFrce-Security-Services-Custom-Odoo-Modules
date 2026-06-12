@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Inject demo accounts panel above the login form -->
     <template id="login_demo_panel" inherit_id="web.login">
         <xpath expr="//div[@id='oe_structure_login_top']" position="after">
             <t t-set="demo_enabled"
@@ -9,29 +8,64 @@
                 <t t-set="demo_title"
                    t-value="request.env['ir.config_parameter'].sudo().get_param('security.demo.panel_title', 'Try the Live Demo')"/>
                 <t t-set="demo_accounts"
-                   t-value="request.env['security.demo.account'].sudo().search_read([('active', '=', True)], ['name', 'login', 'password_hint', 'description'], order='sequence asc')"/>
+                   t-value="request.env['security.demo.account'].sudo().search_read(
+                       [('active', '=', True)],
+                       ['name', 'login', 'password_hint', 'description', 'features', 'badge_color'],
+                       order='sequence asc'
+                   )"/>
                 <t t-if="demo_accounts">
                     <div class="dg_demo_panel">
-                        <div class="dg_demo_title">
-                            <t t-out="demo_title"/>
+                        <!-- Header -->
+                        <div class="dg_demo_header">
+                            <span class="dg_demo_live_dot"/>
+                            <span class="dg_demo_header_text"><t t-out="demo_title"/></span>
+                            <span class="dg_demo_header_sub">Click any role to auto-fill</span>
                         </div>
-                        <t t-foreach="demo_accounts" t-as="account">
-                            <div class="dg_demo_account"
-                                 t-att-data-login="account['login']"
-                                 t-att-data-password="account['password_hint']"
-                                 title="Click to auto-fill credentials">
-                                <span class="dg_demo_account_role">
-                                    <t t-out="account['name']"/>
-                                </span>
-                                <span class="dg_demo_account_login">
-                                    <t t-out="account['login']"/>
-                                </span>
-                                <span class="dg_demo_account_hint">
-                                    <t t-out="account['password_hint']"/>
-                                </span>
-                            </div>
-                        </t>
-                        <div class="dg_demo_hint">↑ Click any row to auto-fill</div>
+
+                        <!-- Account cards -->
+                        <div class="dg_demo_accounts">
+                            <t t-foreach="demo_accounts" t-as="acc">
+                                <div class="dg_demo_card"
+                                     t-att-data-login="acc['login']"
+                                     t-att-data-password="acc['password_hint']"
+                                     title="Click to auto-fill credentials">
+
+                                    <!-- Role badge + name -->
+                                    <div class="dg_demo_card_top">
+                                        <span class="dg_demo_badge"
+                                              t-att-style="'background:' + (acc['badge_color'] or '#1e3a5f')">
+                                            <t t-out="acc['name']"/>
+                                        </span>
+                                        <span class="dg_demo_creds">
+                                            <span class="dg_demo_email"><t t-out="acc['login']"/></span>
+                                            <span class="dg_demo_pw"><i class="fa fa-lock"/> <t t-out="acc['password_hint']"/></span>
+                                        </span>
+                                        <span class="dg_demo_arrow"><i class="fa fa-sign-in"/></span>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <t t-if="acc.get('description')">
+                                        <div class="dg_demo_desc"><t t-out="acc['description']"/></div>
+                                    </t>
+
+                                    <!-- Feature list -->
+                                    <t t-if="acc.get('features')">
+                                        <ul class="dg_demo_features">
+                                            <t t-foreach="acc['features'].strip().splitlines()" t-as="feat">
+                                                <t t-if="feat.strip()">
+                                                    <li><t t-out="feat.strip()"/></li>
+                                                </t>
+                                            </t>
+                                        </ul>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+
+                        <div class="dg_demo_footer">
+                            <i class="fa fa-info-circle"/> All demo passwords: <strong>Demo2026!</strong>
+                            &amp;nbsp;·&amp;nbsp; Data resets nightly
+                        </div>
                     </div>
                 </t>
             </t>
