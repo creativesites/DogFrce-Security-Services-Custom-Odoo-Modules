@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Apply branded body class server-side so CSS takes effect on first paint -->
-    <template id="login_branded_body" inherit_id="web.login_layout" name="DogForce Login Body Class">
-        <xpath expr="//body" position="attributes">
-            <attribute name="class" separator=" " add="dg_login_branded"/>
-        </xpath>
-    </template>
-
-    <!-- Inject branded header + highlights above the login form -->
+    <!-- Apply branded body class synchronously on first parse — no FOUC -->
     <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
         <xpath expr="//div[@id='oe_structure_login_top']" position="before">
+            <script>document.body.classList.add('dg_login_branded');</script>
             <div class="dg_login_header text-center mb-3">
                 <img src="/security_theme/static/src/img/deployguard-w.png"
                      alt="DeployGuard"
