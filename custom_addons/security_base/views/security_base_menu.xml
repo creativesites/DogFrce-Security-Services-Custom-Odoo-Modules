@@ -3,7 +3,7 @@
     <menuitem
         id="menu_security_root"
         name="Security"
-        sequence="10"
+        sequence="1"
         groups="hr.group_hr_user"
     />
 

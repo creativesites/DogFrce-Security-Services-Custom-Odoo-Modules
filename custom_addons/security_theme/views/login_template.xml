@@ -1,27 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Inject branded header + body class into the login page -->
-    <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
+    <!-- Apply branded body class server-side so CSS takes effect on first paint -->
+    <template id="login_branded_body" inherit_id="web.login_layout" name="DogForce Login Body Class">
+        <xpath expr="//body" position="attributes">
+            <attribute name="class" separator=" " add="dg_login_branded"/>
+        </xpath>
+    </template>
 
-        <!-- Inject branded header above the login form -->
+    <!-- Inject branded header + highlights above the login form -->
+    <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
         <xpath expr="//div[@id='oe_structure_login_top']" position="before">
-            <script type="text/javascript">
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.body.classList.add('dg_login_branded');
-                });
-            </script>
             <div class="dg_login_header text-center mb-3">
                 <img src="/security_theme/static/src/img/deployguard-w.png"
                      alt="DeployGuard"
                      style="max-height:56px; width:auto;"/>
                 <div class="dg_platform_name fw-bold mt-2" style="font-size:1.15rem; letter-spacing:.03em;">DeployGuard Security Platform</div>
                 <div class="dg_platform_tagline text-muted small">Professional Security Management Suite</div>
+                <div class="dg_login_highlights">
+                    <span><i class="fa fa-shield"/> Guard Operations</span>
+                    <span><i class="fa fa-calendar-check-o"/> Shift Control</span>
+                    <span><i class="fa fa-line-chart"/> Executive Reporting</span>
+                </div>
             </div>
         </xpath>
-
     </template>
 
-    <!-- Override the login layout footer separately (it lives in web.login_layout) -->
+    <!-- Override the login layout footer -->
     <template id="login_layout_footer" inherit_id="web.login_layout" name="DogForce Login Footer">
         <xpath expr="//div[hasclass('text-center') and hasclass('small') and hasclass('mt-4')]"
                position="replace">

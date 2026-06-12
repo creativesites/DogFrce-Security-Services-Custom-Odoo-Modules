@@ -9,13 +9,11 @@ class DemoSiteHome(Home):
     def web_login(self, redirect=None, **kw):
         response = super().web_login(redirect=redirect, **kw)
 
-        # After a successful login, redirect demo users to the configured URL
-        if request.session.uid:
-            redirect_url = request.env['ir.config_parameter'].sudo().get_param(
-                'security.demo.redirect_url', '/odoo/security-suite'
-            )
-            if redirect_url and not redirect:
-                return request.redirect(redirect_url)
+        # After a successful login, redirect to the Security Suite home.
+        # The user's home_action_id (set to the Executive Dashboard by security_reporting's
+        # post_init_hook) takes over from /odoo and opens the correct module automatically.
+        if request.session.uid and not redirect:
+            return request.redirect('/odoo')
 
         return response
 

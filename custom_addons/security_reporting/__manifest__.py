@@ -24,4 +24,5 @@
     },
     "installable": True,
     "application": False,
+    "post_init_hook": "set_security_home_action",
 }
