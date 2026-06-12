@@ -1,5 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Inject Google Font into <head> for server-rendered pages (login, frontend) -->
+    <template id="theme_font_head" inherit_id="web.layout" name="DogForce Font Loader">
+        <xpath expr="//head" position="inside">
+            <t t-set="dg_font" t-value="request.env['ir.config_parameter'].sudo().get_param('security.theme.ui_font', 'inter')"/>
+            <t t-if="dg_font and dg_font != 'system'">
+                <link rel="preconnect" href="https://fonts.googleapis.com"/>
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+                <t t-if="dg_font == 'inter'">
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"/>
+                    <style>:root { --dg-font-family: 'Inter', system-ui, sans-serif; }</style>
+                </t>
+                <t t-elif="dg_font == 'plus_jakarta_sans'">
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"/>
+                    <style>:root { --dg-font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }</style>
+                </t>
+                <t t-elif="dg_font == 'dm_sans'">
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&amp;display=swap"/>
+                    <style>:root { --dg-font-family: 'DM Sans', system-ui, sans-serif; }</style>
+                </t>
+                <t t-elif="dg_font == 'nunito'">
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&amp;display=swap"/>
+                    <style>:root { --dg-font-family: 'Nunito', system-ui, sans-serif; }</style>
+                </t>
+                <t t-elif="dg_font == 'outfit'">
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;display=swap"/>
+                    <style>:root { --dg-font-family: 'Outfit', system-ui, sans-serif; }</style>
+                </t>
+                <t t-elif="dg_font == 'manrope'">
+                    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap"/>
+                    <style>:root { --dg-font-family: 'Manrope', system-ui, sans-serif; }</style>
+                </t>
+            </t>
+        </xpath>
+    </template>
+
     <!-- Apply branded body class synchronously on first parse — no FOUC -->
     <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
         <xpath expr="//div[@id='oe_structure_login_top']" position="before">

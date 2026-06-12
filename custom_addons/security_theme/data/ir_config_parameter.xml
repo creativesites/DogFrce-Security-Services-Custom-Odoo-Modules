@@ -17,5 +17,9 @@
             <field name="key">security.theme.report_primary_color</field>
             <field name="value">#1e3a5f</field>
         </record>
+        <record id="security_theme_ui_font_default" model="ir.config_parameter">
+            <field name="key">security.theme.ui_font</field>
+            <field name="value">inter</field>
+        </record>
     </data>
 </odoo>

@@ -17,6 +17,12 @@
                         </setting>
                     </block>
 
+                    <block title="Typography" name="security_theme_typography">
+                        <setting string="UI Font" help="Google Font applied across the backend and login page. Changes take effect on next page load.">
+                            <field name="security_ui_font" widget="radio" class="o_light_label"/>
+                        </setting>
+                    </block>
+
                     <block title="Login Page" name="security_theme_login">
                         <setting string="Background Color" help="Hex color for the login page background gradient.">
                             <field name="security_login_bg_color"/>

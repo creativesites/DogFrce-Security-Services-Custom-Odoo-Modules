@@ -3,17 +3,16 @@
 
 <!-- ============================================================
      ROSTER BOARD — Tier-3 OWL Client Action
-     Layout: Dark Navy Sidebar | Main Grid | Guard Pool Sidebar
+     Layout: Filter Sidebar | Main Grid | Guard Pool Panel
      ============================================================ -->
 <t t-name="security_shift_planner.RosterBoard" owl="1">
 
-<div class="o_roster_board d-flex" style="height:100%; overflow:hidden; background:#f0f4f8; font-family:'Inter',system-ui,sans-serif;">
+<div class="o_roster_board rb-shell">
 
     <!-- ═══════════════════════════════════════════════════════════
          LEFT SIDEBAR — Navigation, Batch Selector, Stats
          ═══════════════════════════════════════════════════════════ -->
-    <div class="rb-nav-sidebar d-flex flex-column"
-         style="width:240px; flex-shrink:0; background:#1e3a5f; color:#e2e8f0; overflow-y:auto;">
+    <div class="rb-nav-sidebar d-flex flex-column">
 
         <!-- Logo / Brand -->
         <div class="rb-brand px-4 py-3 border-bottom" style="border-color:#2d5490 !important;">
@@ -29,13 +28,11 @@
                 Roster Batch
             </div>
             <select class="form-select form-select-sm rb-select"
-                    style="background:#152d4a; color:#e2e8f0; border-color:#2d5490; font-size:12px;"
                     t-on-change="onBatchChange">
-                <option value="" style="background:#152d4a;">-- Select Batch --</option>
+                <option value="">-- Select Batch --</option>
                 <t t-foreach="state.batches" t-as="batch" t-key="batch.id">
                     <option t-att-value="batch.id"
                             t-att-selected="batch.id === state.batchId"
-                            style="background:#152d4a;"
                             t-esc="batch.name"/>
                 </t>
             </select>
@@ -47,13 +44,11 @@
                 Filter Site
             </div>
             <select class="form-select form-select-sm rb-select"
-                    style="background:#152d4a; color:#e2e8f0; border-color:#2d5490; font-size:12px;"
                     t-on-change="onSiteFilterChange">
-                <option value="" style="background:#152d4a;">All Sites</option>
+                <option value="">All Sites</option>
                 <t t-foreach="state.sites" t-as="site" t-key="site.id">
                     <option t-att-value="site.id"
                             t-att-selected="site.id === state.filterSiteId"
-                            style="background:#152d4a;"
                             t-esc="site.name"/>
                 </t>
             </select>
@@ -118,11 +113,10 @@
     <!-- ═══════════════════════════════════════════════════════════
          MAIN CONTENT AREA
          ═══════════════════════════════════════════════════════════ -->
-    <div class="d-flex flex-column" style="flex:1; overflow:hidden;">
+    <div class="rb-main d-flex flex-column">
 
         <!-- Top header bar -->
-        <div class="rb-header d-flex align-items-center px-4 py-2"
-             style="background:#fff; border-bottom:1px solid #e2e8f0; flex-shrink:0; min-height:52px; box-shadow:0 1px 4px rgba(0,0,0,.06);">
+        <div class="rb-header d-flex align-items-center px-4 py-2">
             <div style="flex:1;">
                 <div class="fw-bold" style="font-size:16px; color:#1e293b;">
                     <t t-if="selectedBatchName" t-esc="selectedBatchName"/>
@@ -146,10 +140,10 @@
         </div>
 
         <!-- Grid + Guard Pool wrapper -->
-        <div class="d-flex" style="flex:1; overflow:hidden;">
+        <div class="rb-workspace d-flex">
 
             <!-- ── Timeline Grid ── -->
-            <div class="rb-timeline" style="flex:1; overflow:auto;">
+            <div class="rb-timeline">
 
                 <!-- Loading state -->
                 <t t-if="state.loading">
@@ -178,7 +172,7 @@
 
                 <!-- Roster grid -->
                 <t t-else="">
-                    <table class="rb-grid-table" style="min-width:max-content; border-collapse:separate; border-spacing:0; width:100%;">
+                    <table class="rb-grid-table">
                         <!-- Date header row -->
                         <thead>
                             <tr>
@@ -282,8 +276,7 @@
                  GUARD POOL SIDEBAR
                  ═══════════════════════════════════════════════════ -->
             <div t-if="state.selectedSlot"
-                 class="rb-guard-pool"
-                 style="width:320px; flex-shrink:0; background:#fff; border-left:1px solid #e2e8f0; overflow-y:auto; display:flex; flex-direction:column;">
+                 class="rb-guard-pool">
 
                 <!-- Slot info header -->
                 <div style="padding:16px; border-bottom:1px solid #f1f5f9; background:#f8fafc; flex-shrink:0;">

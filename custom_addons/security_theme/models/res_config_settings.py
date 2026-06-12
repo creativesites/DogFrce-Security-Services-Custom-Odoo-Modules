@@ -22,6 +22,17 @@ class ResConfigSettings(models.TransientModel):
         default='#1e3a5f',
         config_parameter='security.theme.login_bg_color')
 
+    security_ui_font = fields.Selection([
+        ('inter', 'Inter'),
+        ('plus_jakarta_sans', 'Plus Jakarta Sans'),
+        ('dm_sans', 'DM Sans'),
+        ('nunito', 'Nunito'),
+        ('outfit', 'Outfit'),
+        ('manrope', 'Manrope'),
+        ('system', 'System Default'),
+    ], string='UI Font', default='inter',
+        config_parameter='security.theme.ui_font')
+
     security_report_primary_color = fields.Char(
         string='Report Primary Color',
         default='#1e3a5f',

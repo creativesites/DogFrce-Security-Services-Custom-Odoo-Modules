@@ -3,6 +3,13 @@
    Applied via body class: .o_theme_<name>
    ========================================================= */
 
+/* ── Typography — --dg-font-family set by theme_loader.js (backend)
+      or by <style> injected via QWeb (login/frontend)          ── */
+body[class*="o_theme_"],
+body.dg_login_branded {
+    font-family: var(--dg-font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+}
+
 /* ── DogForce Navy (default) ─────────────────────────────── */
 .o_theme_dogforce_navy {
     --dg-primary: #1e3a5f;
