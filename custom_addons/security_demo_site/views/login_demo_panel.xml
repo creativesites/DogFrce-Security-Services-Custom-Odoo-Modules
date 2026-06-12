@@ -19,7 +19,13 @@
                         <div class="dg_demo_header">
                             <span class="dg_demo_live_dot"/>
                             <span class="dg_demo_header_text"><t t-out="demo_title"/></span>
-                            <span class="dg_demo_header_sub">Click any role to auto-fill</span>
+                            <span class="dg_demo_header_sub">Click a role to auto-fill</span>
+                        </div>
+
+                        <div class="dg_demo_instructions">
+                            <span class="dg_demo_step"><strong>1</strong> Pick a demo role</span>
+                            <span class="dg_demo_step"><strong>2</strong> Sign in</span>
+                            <span class="dg_demo_step"><strong>3</strong> Open <em>Security Suite</em> from the main app menu</span>
                         </div>
 
                         <!-- Account cards -->

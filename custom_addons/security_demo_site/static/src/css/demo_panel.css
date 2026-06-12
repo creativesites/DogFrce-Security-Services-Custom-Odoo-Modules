@@ -51,6 +51,46 @@
     white-space: nowrap;
 }
 
+.dg_demo_instructions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 0.65rem;
+}
+
+.dg_demo_step {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.62rem;
+    line-height: 1.25;
+    padding: 0.4rem 0.45rem;
+}
+
+.dg_demo_step strong {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 0.58rem;
+    flex-shrink: 0;
+}
+
+.dg_demo_step em {
+    color: #fff;
+    font-style: normal;
+    font-weight: 700;
+}
+
 /* ── Account cards grid — 3 columns, falls back to 2 ── */
 .dg_demo_accounts {
     display: grid;
@@ -161,4 +201,10 @@
 
 .dg_demo_footer strong {
     color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 767px) {
+    .dg_demo_instructions {
+        grid-template-columns: 1fr;
+    }
 }

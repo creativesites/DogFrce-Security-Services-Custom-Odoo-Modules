@@ -1,5 +1,5 @@
-// Auto-fill login form when a demo account row is clicked.
-// Plain JS — runs before OWL initialises (login page is server-rendered).
+// Auto-fill login form when a demo account card is clicked.
+// Plain JS: the login page is server-rendered before OWL initializes.
 
 (function () {
     function fillForm(login, password) {
@@ -12,8 +12,8 @@
     }
 
     document.addEventListener('click', function (e) {
-        var row = e.target.closest('.dg_demo_account[data-login]');
-        if (!row) return;
-        fillForm(row.dataset.login, row.dataset.password || 'Demo2026!');
+        var card = e.target.closest('.dg_demo_card[data-login]');
+        if (!card) return;
+        fillForm(card.dataset.login, card.dataset.password || 'Demo2026!');
     });
 })();

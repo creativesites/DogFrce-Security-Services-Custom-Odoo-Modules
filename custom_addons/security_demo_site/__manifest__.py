@@ -5,6 +5,7 @@
     'summary': 'Demo account management, login panel, and post-login redirect to Security Suite',
     'depends': ['web', 'base', 'security_theme', 'security_suite'],
     'data': [
+        'security/security_demo_groups.xml',
         'security/ir.model.access.csv',
         'views/login_demo_panel.xml',
         'views/security_demo_config_views.xml',

@@ -36,6 +36,7 @@
                 ref('base.group_user'),
                 ref('hr.group_hr_user'),
                 ref('hr.group_hr_manager'),
+                ref('security_demo_site.group_demo_no_delete'),
             ])]"/>
         </record>
 
@@ -46,6 +47,7 @@
             <field name="group_ids" eval="[(6, 0, [
                 ref('base.group_user'),
                 ref('hr.group_hr_user'),
+                ref('security_demo_site.group_demo_no_delete'),
             ])]"/>
         </record>
 
@@ -56,6 +58,7 @@
             <field name="group_ids" eval="[(6, 0, [
                 ref('base.group_user'),
                 ref('hr.group_hr_user'),
+                ref('security_demo_site.group_demo_viewer'),
             ])]"/>
         </record>
 
