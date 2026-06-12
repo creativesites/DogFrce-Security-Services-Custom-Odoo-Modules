@@ -482,28 +482,36 @@
 
 /* ══════════════════════════════════════════════════
    RESPONSIVE — mobile breakpoints
+   Compound selectors beat Bootstrap !important utils.
    At ≤768px the sidebar flips to a horizontal
    scrollable period-tab strip at the top.
 ══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-    .o_payroll_command_center {
+    /* Flip outer shell to column (compound selector beats Bootstrap d-flex) */
+    .o_payroll_command_center.d-flex {
         flex-direction: column !important;
+        overflow: visible !important;
+        height: auto !important;
+        min-height: 100% !important;
     }
-    .o_pcc_sidebar {
+    /* Sidebar: full-width horizontal scrollable strip */
+    .o_pcc_sidebar.d-flex {
         width: 100% !important;
+        max-width: 100% !important;
         min-width: 0 !important;
+        flex: 0 0 auto !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
+        height: auto !important;
         max-height: 80px !important;
         overflow-x: auto !important;
         overflow-y: hidden !important;
         border-right: none !important;
         border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
-        /* Remove the large padding used in vertical layout */
         padding: 0 !important;
     }
-    /* Hide the "Payroll Periods" label header — no room in strip mode */
-    .o_pcc_sidebar > .px-4.py-4 {
+    /* Hide the "Payroll Periods" label header — no room in horizontal strip */
+    .o_pcc_sidebar .px-4.py-4:first-child {
         display: none !important;
     }
     /* Period items become horizontal chips */
@@ -524,12 +532,13 @@
         background: rgba(255, 255, 255, .06) !important;
         border-bottom-color: var(--pcc-accent) !important;
     }
-    /* Collapse secondary lines (employee count) inside horizontal chips */
+    /* Hide employee count line inside horizontal chips */
     .o_period_item .small {
         display: none !important;
     }
     .o_period_item .fw-bold {
         font-size: 11.5px !important;
+        white-space: nowrap !important;
     }
     .o_pcc_header {
         padding: 10px 14px !important;

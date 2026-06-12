@@ -893,31 +893,52 @@ button.dg-summary-card:hover {
 }
 
 @media (max-width: 720px) {
-    .dg-shell { display: block; overflow: auto; }
+    .dg-shell { display: flex; flex-direction: column; overflow: auto; }
     .dg-sidebar {
         flex-direction: row;
         height: auto;
-        padding: 0 10px;
+        flex-shrink: 0;
+        padding: 0 6px;
         border-bottom: 1px solid rgba(255,255,255,.08);
         overflow-x: auto;
+        overflow-y: hidden;
         box-shadow: none;
+        align-items: stretch;
     }
-    .dg-brand { border-bottom: none; }
-    .dg-nav { flex-direction: row; gap: 3px; flex: 1; }
+    /* Hide brand and sys badge — no room in mobile tab strip */
+    .dg-brand { display: none !important; }
+    .dg-sys-badge { display: none !important; }
+    .dg-sidebar-foot { display: none !important; }
+    .dg-nav {
+        flex-direction: row;
+        gap: 2px;
+        flex: 1;
+        padding: 0;
+        overflow: visible;
+    }
+    .dg-nav > .dg-nav-label { display: none; }
     .dg-nav-button {
-        width: auto; min-width: 38px; padding: 8px 10px;
-        border-left: none;
-        border-bottom: 2px solid transparent;
-        border-radius: 0;
+        height: auto !important;
+        width: auto !important;
+        min-width: 0 !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        padding: 10px 10px !important;
+        border-left: none !important;
+        border-bottom: 2px solid transparent !important;
+        border-radius: 0 !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
     }
     .dg-nav-button.is-active {
-        border-bottom-color: #60a5fa;
-        border-left-color: transparent;
-        background: rgba(96,165,250,.1);
+        border-bottom-color: #60a5fa !important;
+        border-left-color: transparent !important;
+        background: rgba(96,165,250,.1) !important;
     }
-    .dg-nav-button span { display: inline; }
-    .dg-content { padding: 14px; }
-    .dg-topbar { padding: 0 16px; }
+    .dg-nav-button span { display: inline !important; font-size: 11.5px !important; }
+    .dg-nav-button i { font-size: 12px !important; }
+    .dg-content { padding: 12px; }
+    .dg-topbar { padding: 0 14px; }
     .dg-status-grid, .dg-kpi-grid, .dg-tab-summary { grid-template-columns: 1fr; }
 }
 

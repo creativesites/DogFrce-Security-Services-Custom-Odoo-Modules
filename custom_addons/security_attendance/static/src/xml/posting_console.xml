@@ -220,19 +220,28 @@
 
         <!-- ── Batch exists but no records ───────────────────────── -->
         <t t-elif="state.records.length === 0">
-            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 0;gap:20px;text-align:center;">
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 0;gap:20px;text-align:center;">
                 <i class="fa fa-users" style="font-size:52px;color:#334155;"/>
                 <div>
                     <div style="color:#e2e8f0;font-size:16px;font-weight:600;margin-bottom:8px;">No Attendance Records</div>
-                    <div style="color:#64748b;font-size:13px;max-width:360px;">
-                        This posting sheet has no records yet. Generate them from the roster.
+                    <div style="color:#64748b;font-size:13px;max-width:400px;">
+                        This posting sheet has no records yet.
+                        Generate from the roster if guards are already assigned,
+                        or create a new roster slot below.
                     </div>
                 </div>
-                <button t-on-click="() => this.generateFromRoster()"
-                        style="background:#0369a1;border:none;color:#e0f2fe;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
-                    <i class="fa fa-magic"/>
-                    Generate Records from Roster
-                </button>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+                    <button t-on-click="() => this.generateFromRoster()"
+                            style="background:#0369a1;border:none;color:#e0f2fe;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                        <i class="fa fa-magic"/>
+                        Generate from Roster
+                    </button>
+                    <button t-on-click="() => this.openQuickCreate()"
+                            style="background:#065f46;border:1px solid #047857;color:#6ee7b7;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
+                        <i class="fa fa-plus"/>
+                        Create Roster Slot
+                    </button>
+                </div>
             </div>
         </t>
 
@@ -341,6 +350,107 @@
             </div>
         </t>
 
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         QUICK-CREATE ROSTER SLOT MODAL
+         ═══════════════════════════════════════════════════════════════ -->
+    <div t-if="state.quickCreate.open"
+         style="position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;padding:16px;">
+        <div style="background:#1e293b;border-radius:14px;width:100%;max-width:500px;box-shadow:0 24px 64px rgba(0,0,0,0.5);border:1px solid #334155;overflow:hidden;">
+
+            <!-- Modal header -->
+            <div style="background:#0f172a;padding:16px 20px;border-bottom:1px solid #334155;display:flex;align-items:center;justify-content:space-between;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <i class="fa fa-plus-circle" style="color:#22c55e;font-size:18px;"/>
+                    <div>
+                        <div style="color:#f1f5f9;font-size:15px;font-weight:700;">Create Roster Slot</div>
+                        <div style="color:#64748b;font-size:11px;margin-top:1px;">
+                            Date: <t t-esc="state.date"/>
+                        </div>
+                    </div>
+                </div>
+                <button t-on-click="closeQuickCreate"
+                        style="background:rgba(255,255,255,0.06);border:none;color:#94a3b8;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+
+            <!-- Modal body -->
+            <div style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+
+                <!-- Post -->
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
+                        Post <span style="color:#ef4444;">*</span>
+                    </label>
+                    <select t-on-change="(e) => { this.state.quickCreate.form.post_id = e.target.value; }"
+                            style="width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
+                        <option value="">-- Select Post --</option>
+                        <t t-foreach="state.quickCreate.posts" t-as="post" t-key="post.id">
+                            <option t-att-value="post.id" t-esc="post.name"/>
+                        </t>
+                    </select>
+                </div>
+
+                <!-- Shift Template -->
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
+                        Shift Template <span style="color:#ef4444;">*</span>
+                    </label>
+                    <select t-on-change="(e) => { this.state.quickCreate.form.shift_template_id = e.target.value; }"
+                            style="width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
+                        <option value="">-- Select Shift --</option>
+                        <t t-foreach="state.quickCreate.shiftTemplates" t-as="tmpl" t-key="tmpl.id">
+                            <option t-att-value="tmpl.id" t-esc="tmpl.name"/>
+                        </t>
+                    </select>
+                </div>
+
+                <!-- Employee (optional) -->
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
+                        Assign Guard <span style="color:#475569;">(optional)</span>
+                    </label>
+                    <select t-on-change="(e) => { this.state.quickCreate.form.employee_id = e.target.value; }"
+                            style="width:100%;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
+                        <option value="">-- Assign Later --</option>
+                        <t t-foreach="state.quickCreate.employees" t-as="emp" t-key="emp.id">
+                            <option t-att-value="emp.id" t-esc="emp.name"/>
+                        </t>
+                    </select>
+                </div>
+
+                <!-- Count -->
+                <div>
+                    <label style="display:block;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
+                        Number of Slots
+                    </label>
+                    <input type="number" min="1" max="20"
+                           t-att-value="state.quickCreate.form.count"
+                           t-on-change="(e) => { this.state.quickCreate.form.count = e.target.value; }"
+                           style="width:80px;background:#0f172a;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;"/>
+                    <span style="color:#64748b;font-size:12px;margin-left:8px;">slot(s) to create</span>
+                </div>
+
+            </div>
+
+            <!-- Modal footer -->
+            <div style="padding:14px 20px;background:#0f172a;border-top:1px solid #334155;display:flex;gap:10px;justify-content:flex-end;">
+                <button t-on-click="closeQuickCreate"
+                        style="background:transparent;border:1px solid #334155;color:#94a3b8;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;">
+                    Cancel
+                </button>
+                <button t-on-click="submitQuickCreate"
+                        t-att-disabled="state.quickCreate.saving"
+                        style="background:linear-gradient(135deg,#16a34a,#15803d);border:none;color:#fff;border-radius:6px;padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;">
+                    <i t-att-class="state.quickCreate.saving ? 'fa fa-spinner fa-spin' : 'fa fa-plus'"/>
+                    <t t-if="state.quickCreate.saving">Creating…</t>
+                    <t t-else="">Create &amp; Generate</t>
+                </button>
+            </div>
+
+        </div>
     </div>
 
 </div>

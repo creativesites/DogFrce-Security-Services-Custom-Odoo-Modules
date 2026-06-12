@@ -267,4 +267,48 @@
         padding-left: 12px !important;
         padding-right: 12px !important;
     }
+
+    /* Cancel the tablet stacking rule — guard pool becomes a bottom sheet, not a grid row */
+    .rb-workspace:has(.rb-guard-pool) {
+        grid-template-columns: minmax(0, 1fr) !important;
+        grid-template-rows: minmax(0, 1fr) !important;
+    }
+
+    /* Dim backdrop behind the sheet */
+    .rb-workspace:has(.rb-guard-pool)::after {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1049;
+        pointer-events: none;
+    }
+
+    /* Guard pool as a fixed bottom sheet */
+    .rb-guard-pool {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        width: 100% !important;
+        max-height: 72vh;
+        min-height: 0 !important;
+        border-radius: 18px 18px 0 0 !important;
+        box-shadow: 0 -6px 36px rgba(15, 31, 54, 0.30) !important;
+        z-index: 1050;
+        overflow-y: auto;
+    }
+
+    /* Drag handle visual indicator at top of sheet */
+    .rb-guard-pool::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 2px;
+        margin: 10px auto 0;
+        flex-shrink: 0;
+    }
 }

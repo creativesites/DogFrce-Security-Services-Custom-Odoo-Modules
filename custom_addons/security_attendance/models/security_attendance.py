@@ -72,8 +72,8 @@ class SecurityAttendanceBatch(models.Model):
                 domain.append(("site_id", "=", batch.site_id.id))
             elif batch.partner_id:
                 domain.append(("partner_id", "=", batch.partner_id.id))
-            slots = slot_model.search(domain)
-            if not slots:
+            all_slots = slot_model.search(domain)
+            if not all_slots:
                 return {
                     "type": "ir.actions.client",
                     "tag": "display_notification",
@@ -82,10 +82,29 @@ class SecurityAttendanceBatch(models.Model):
                         "message": (
                             f"No roster slots exist for {batch.attendance_date} "
                             f"at {batch.site_id.name or 'this site'}. "
-                            "Create a roster batch with slots for this date and site first."
+                            "Create roster slots with assigned guards first, "
+                            "then generate the attendance sheet."
                         ),
                         "type": "warning",
-                        "sticky": False,
+                        "sticky": True,
+                    },
+                }
+            slots = all_slots.filtered(lambda s: s.employee_id)
+            unassigned_count = len(all_slots) - len(slots)
+            if not slots:
+                return {
+                    "type": "ir.actions.client",
+                    "tag": "display_notification",
+                    "params": {
+                        "title": "Guards Not Assigned",
+                        "message": (
+                            f"Found {len(all_slots)} roster slot(s) for "
+                            f"{batch.site_id.name or 'this site'} on {batch.attendance_date}, "
+                            "but none have guards assigned. "
+                            "Assign guards in the Roster Board first."
+                        ),
+                        "type": "warning",
+                        "sticky": True,
                     },
                 }
             created_count = 0
@@ -115,19 +134,22 @@ class SecurityAttendanceBatch(models.Model):
                     "params": {
                         "title": "Already Generated",
                         "message": (
-                            f"All {skipped_count} roster slot(s) already have attendance records. "
+                            f"All {skipped_count} assigned slot(s) already have attendance records. "
                             "No new records were created."
                         ),
                         "type": "info",
                         "sticky": False,
                     },
                 }
+            msg = f"{created_count} attendance record(s) generated from roster."
+            if unassigned_count:
+                msg += f" Note: {unassigned_count} unassigned slot(s) were skipped."
             return {
                 "type": "ir.actions.client",
                 "tag": "display_notification",
                 "params": {
                     "title": "Roster Generated",
-                    "message": f"{created_count} attendance record(s) generated from roster.",
+                    "message": msg,
                     "type": "success",
                     "sticky": False,
                 },

@@ -42,6 +42,24 @@ class RosterBoard extends Component {
             loadingSuggestions: false,
             stats: { assigned: 0, unassigned: 0 },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
+            createSlot: {
+                open: false,
+                allSites: [],
+                allPosts: [],
+                shiftTemplates: [],
+                employees: [],
+                form: {
+                    client_id: null,
+                    site_id: null,
+                    post_id: null,
+                    shift_template_id: null,
+                    employee_id: null,
+                    shift_date: null,
+                    count: 1,
+                },
+                saving: false,
+                dataLoaded: false,
+            },
         });
 
         onWillStart(async () => {
@@ -209,6 +227,42 @@ class RosterBoard extends Component {
         if (!this.state.batchId) return "";
         const b = this.state.batches.find((b) => b.id === this.state.batchId);
         return b ? b.name : "";
+    }
+
+    get clientsForCreate() {
+        const seen = new Set();
+        const result = [];
+        for (const s of this.state.createSlot.allSites) {
+            if (!s.partner_id) continue;
+            const pid = Array.isArray(s.partner_id) ? s.partner_id[0] : s.partner_id;
+            if (seen.has(pid)) continue;
+            seen.add(pid);
+            result.push({
+                id: pid,
+                name: Array.isArray(s.partner_id) ? s.partner_id[1] : String(s.partner_id),
+            });
+        }
+        return result.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    get sitesForCreate() {
+        const clientId = this.state.createSlot.form.client_id;
+        if (!clientId) return this.state.createSlot.allSites;
+        return this.state.createSlot.allSites.filter((s) => {
+            if (!s.partner_id) return false;
+            const pid = Array.isArray(s.partner_id) ? s.partner_id[0] : s.partner_id;
+            return pid === parseInt(clientId);
+        });
+    }
+
+    get postsForCreate() {
+        const siteId = this.state.createSlot.form.site_id;
+        if (!siteId) return this.state.createSlot.allPosts;
+        return this.state.createSlot.allPosts.filter((p) => {
+            if (!p.site_id) return false;
+            const sid = Array.isArray(p.site_id) ? p.site_id[0] : p.site_id;
+            return sid === parseInt(siteId);
+        });
     }
 
     getPostsForSite(siteId) {
@@ -383,6 +437,115 @@ class RosterBoard extends Component {
             this.notification.add("Guard unassigned.", { type: "info" });
         } catch (e) {
             this.notification.add("Unassign failed: " + (e.message || e), { type: "danger" });
+        }
+    }
+
+    async openCreateSlot() {
+        if (!this.state.createSlot.dataLoaded) {
+            const [allSites, allPosts, templates, employees] = await Promise.all([
+                this.orm.searchRead(
+                    "security.client.site",
+                    [["active", "=", true]],
+                    ["id", "name", "partner_id"],
+                    { order: "name" }
+                ),
+                this.orm.searchRead(
+                    "security.post",
+                    [["active", "=", true]],
+                    ["id", "name", "site_id"],
+                    { order: "name" }
+                ),
+                this.orm.searchRead(
+                    "security.shift.template",
+                    [],
+                    ["id", "name"],
+                    { order: "name" }
+                ),
+                this.orm.searchRead(
+                    "hr.employee",
+                    [["security_guard", "=", true], ["active", "=", true]],
+                    ["id", "name"],
+                    { order: "name", limit: 300 }
+                ),
+            ]);
+            this.state.createSlot.allSites = allSites;
+            this.state.createSlot.allPosts = allPosts;
+            this.state.createSlot.shiftTemplates = templates;
+            this.state.createSlot.employees = employees;
+            this.state.createSlot.dataLoaded = true;
+        }
+        if (this.state.batchDateFrom) {
+            this.state.createSlot.form.shift_date = this.state.batchDateFrom;
+        }
+        this.state.createSlot.open = true;
+    }
+
+    closeCreateSlot() {
+        this.state.createSlot.open = false;
+        this.state.createSlot.form = {
+            client_id: null,
+            site_id: null,
+            post_id: null,
+            shift_template_id: null,
+            employee_id: null,
+            shift_date: this.state.batchDateFrom || null,
+            count: 1,
+        };
+    }
+
+    onCreateClientChange(ev) {
+        this.state.createSlot.form.client_id = ev.target.value ? parseInt(ev.target.value) : null;
+        this.state.createSlot.form.site_id = null;
+        this.state.createSlot.form.post_id = null;
+    }
+
+    onCreateSiteChange(ev) {
+        this.state.createSlot.form.site_id = ev.target.value ? parseInt(ev.target.value) : null;
+        this.state.createSlot.form.post_id = null;
+    }
+
+    async submitCreateSlot() {
+        const { form } = this.state.createSlot;
+        if (!form.post_id) {
+            this.notification.add("Please select a Post.", { type: "warning" });
+            return;
+        }
+        if (!form.shift_template_id) {
+            this.notification.add("Please select a Shift Template.", { type: "warning" });
+            return;
+        }
+        if (!form.shift_date) {
+            this.notification.add("Please select a Shift Date.", { type: "warning" });
+            return;
+        }
+        const count = Math.max(1, Math.min(20, parseInt(form.count) || 1));
+        this.state.createSlot.saving = true;
+        try {
+            const slotVals = Array.from({ length: count }, () => {
+                const vals = {
+                    shift_date: form.shift_date,
+                    post_id: parseInt(form.post_id),
+                    shift_template_id: parseInt(form.shift_template_id),
+                };
+                if (this.state.batchId) {
+                    vals.batch_id = this.state.batchId;
+                }
+                if (form.employee_id) {
+                    vals.employee_id = parseInt(form.employee_id);
+                    vals.state = "assigned";
+                }
+                return vals;
+            });
+            await this.orm.create("security.roster.slot", slotVals);
+            this.notification.add(count + " slot(s) created.", { type: "success", title: "Slots Created" });
+            this.closeCreateSlot();
+            if (this.state.batchId) {
+                await this.loadSlots(this.state.batchId);
+            }
+        } catch (e) {
+            this.notification.add("Failed to create slot: " + (e.message || e), { type: "danger" });
+        } finally {
+            this.state.createSlot.saving = false;
         }
     }
 

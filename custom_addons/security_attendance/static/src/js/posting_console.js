@@ -34,6 +34,19 @@ class AttendancePostingConsole extends Component {
             dirtyIds: new Set(),
             saving: false,
             filter: "all", // "all" | "not_marked" | "present" | "absent" | "awol"
+            quickCreate: {
+                open: false,
+                posts: [],
+                shiftTemplates: [],
+                employees: [],
+                form: {
+                    post_id: null,
+                    shift_template_id: null,
+                    employee_id: null,
+                    count: 1,
+                },
+                saving: false,
+            },
         });
 
         onWillStart(async () => {
@@ -337,6 +350,76 @@ class AttendancePostingConsole extends Component {
             this.notification.add("Submit failed: " + (e.message || String(e)), { type: "danger" });
         } finally {
             this.state.loading = false;
+        }
+    }
+
+    async openQuickCreate() {
+        if (!this.state.quickCreate.posts.length) {
+            const domain = this.state.selectedSiteId
+                ? [["site_id", "=", this.state.selectedSiteId], ["active", "=", true]]
+                : [["active", "=", true]];
+            const [posts, templates, employees] = await Promise.all([
+                this.orm.searchRead("security.post", domain, ["id", "name"], { order: "name", limit: 100 }),
+                this.orm.searchRead("security.shift.template", [], ["id", "name"], { order: "name" }),
+                this.orm.searchRead(
+                    "hr.employee",
+                    [["security_guard", "=", true], ["active", "=", true]],
+                    ["id", "name"],
+                    { order: "name", limit: 300 }
+                ),
+            ]);
+            this.state.quickCreate.posts = posts;
+            this.state.quickCreate.shiftTemplates = templates;
+            this.state.quickCreate.employees = employees;
+        }
+        this.state.quickCreate.open = true;
+    }
+
+    closeQuickCreate() {
+        this.state.quickCreate.open = false;
+        this.state.quickCreate.form = { post_id: null, shift_template_id: null, employee_id: null, count: 1 };
+    }
+
+    async submitQuickCreate() {
+        const { form } = this.state.quickCreate;
+        if (!form.post_id) {
+            this.notification.add("Please select a Post.", { type: "warning" });
+            return;
+        }
+        if (!form.shift_template_id) {
+            this.notification.add("Please select a Shift Template.", { type: "warning" });
+            return;
+        }
+        const count = Math.max(1, Math.min(20, parseInt(form.count) || 1));
+        this.state.quickCreate.saving = true;
+        try {
+            const slotVals = Array.from({ length: count }, () => {
+                const vals = {
+                    shift_date: this.state.date,
+                    post_id: parseInt(form.post_id),
+                    shift_template_id: parseInt(form.shift_template_id),
+                };
+                if (form.employee_id) {
+                    vals.employee_id = parseInt(form.employee_id);
+                    vals.state = "assigned";
+                }
+                return vals;
+            });
+            await this.orm.create("security.roster.slot", slotVals);
+            this.notification.add(
+                count + " slot(s) created. Generating attendance records…",
+                { type: "success", title: "Slots Created" }
+            );
+            this.closeQuickCreate();
+            if (!this.state.batchId) {
+                await this.createBatch();
+            } else {
+                await this.generateFromRoster();
+            }
+        } catch (e) {
+            this.notification.add("Failed to create slot: " + (e.message || String(e)), { type: "danger" });
+        } finally {
+            this.state.quickCreate.saving = false;
         }
     }
 
