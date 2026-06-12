@@ -13,7 +13,16 @@ body.dg_login_branded #wrapwrap {
 }
 
 body.dg_login_branded .container {
-    max-width: 440px;
+    width: 60%;
+    max-width: 780px;
+    min-width: 320px;
+}
+
+@media (max-width: 767px) {
+    body.dg_login_branded .container {
+        width: 95%;
+        min-width: 0;
+    }
 }
 
 /* Card styling */

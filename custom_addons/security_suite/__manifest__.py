@@ -45,6 +45,7 @@
         'security_licensing',
         'security_dogforce_migration',
         'security_demo_data',
+        'security_help',
     ],
     'data': [],
     'installable': True,

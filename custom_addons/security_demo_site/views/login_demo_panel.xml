@@ -43,21 +43,6 @@
                                         <span class="dg_demo_arrow"><i class="fa fa-sign-in"/></span>
                                     </div>
 
-                                    <!-- Description -->
-                                    <t t-if="acc.get('description')">
-                                        <div class="dg_demo_desc"><t t-out="acc['description']"/></div>
-                                    </t>
-
-                                    <!-- Feature list -->
-                                    <t t-if="acc.get('features')">
-                                        <ul class="dg_demo_features">
-                                            <t t-foreach="acc['features'].strip().splitlines()" t-as="feat">
-                                                <t t-if="feat.strip()">
-                                                    <li><t t-out="feat.strip()"/></li>
-                                                </t>
-                                            </t>
-                                        </ul>
-                                    </t>
                                 </div>
                             </t>
                         </div>
