@@ -52,7 +52,12 @@ _TOOLS = [
             "type": "object",
             "properties": {
                 "model": {"type": "string", "description": "Odoo model name, e.g. 'hr.employee'"},
-                "domain": {"type": "array", "description": "Odoo domain filter (list of triples)", "default": []},
+                "domain": {
+                    "type": "array",
+                    "items": {"type": "array"},
+                    "description": "Odoo domain filter (list of triples)",
+                    "default": [],
+                },
                 "fields": {"type": "array", "items": {"type": "string"}, "description": "Fields to return"},
                 "limit": {"type": "integer", "default": 10, "description": "Max results (max 50)"},
                 "order": {"type": "string", "description": "Sort, e.g. 'name asc'", "default": "id desc"},
@@ -67,7 +72,11 @@ _TOOLS = [
             "type": "object",
             "properties": {
                 "model": {"type": "string"},
-                "domain": {"type": "array", "default": []},
+                "domain": {
+                    "type": "array",
+                    "items": {"type": "array"},
+                    "default": [],
+                },
             },
             "required": ["model"],
         },
@@ -112,7 +121,11 @@ _TOOLS = [
             "properties": {
                 "model": {"type": "string"},
                 "id": {"type": "integer", "description": "Record ID for form view"},
-                "domain": {"type": "array", "description": "Filter for list view"},
+                "domain": {
+                    "type": "array",
+                    "items": {"type": "array"},
+                    "description": "Filter for list view",
+                },
                 "label": {"type": "string", "description": "Link text shown to user"},
             },
             "required": ["model", "label"],
@@ -348,7 +361,10 @@ def _clean_gemini_schema(schema):
     """Recursively remove fields that Gemini function declarations don't accept."""
     if not isinstance(schema, dict):
         return schema
-    return {k: _clean_gemini_schema(v) for k, v in schema.items() if k not in _GEMINI_SCHEMA_STRIP}
+    cleaned = {k: _clean_gemini_schema(v) for k, v in schema.items() if k not in _GEMINI_SCHEMA_STRIP}
+    if cleaned.get("type") == "array" and "items" not in cleaned:
+        cleaned["items"] = {"type": "string"}
+    return cleaned
 
 
 def _tools_to_gemini() -> list:
@@ -427,7 +443,13 @@ def _run_claude_agent(session, user_message: str, context: dict, config, env) ->
                 except Exception:
                     pass
 
-    messages.append({"role": "user", "content": user_message})
+    has_last_user_msg = False
+    if messages and messages[-1]["role"] == "user":
+        if messages[-1].get("content") == user_message:
+            has_last_user_msg = True
+
+    if not has_last_user_msg:
+        messages.append({"role": "user", "content": user_message})
     all_tool_calls = []
 
     for _round in range(8):
@@ -498,7 +520,14 @@ def _run_gemini_agent(session, user_message: str, context: dict, config, env) ->
                 except Exception:
                     pass
 
-    messages.append({"role": "user", "parts": [{"text": user_message}]})
+    has_last_user_msg = False
+    if messages and messages[-1]["role"] == "user":
+        last_parts = messages[-1].get("parts", [])
+        if last_parts and last_parts[0].get("text") == user_message:
+            has_last_user_msg = True
+
+    if not has_last_user_msg:
+        messages.append({"role": "user", "parts": [{"text": user_message}]})
     all_tool_calls = []
 
     for _round in range(8):
