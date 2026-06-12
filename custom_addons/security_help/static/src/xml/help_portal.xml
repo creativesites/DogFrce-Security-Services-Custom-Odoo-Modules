@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_help.HelpPortal">
+    <div class="dg-help-portal">
+        <!-- Sidebar -->
+        <aside class="dg-help-sidebar">
+            <div class="dg-help-sidebar-header">
+                <h1><i class="fa fa-question-circle"/> Help Centre</h1>
+                <div class="dg-help-search">
+                    <i class="fa fa-search dg-help-search-icon"/>
+                    <input
+                        type="text"
+                        placeholder="Search articles…"
+                        t-model="state.searchQuery"
+                        t-on-input="onSearchInput"
+                        t-on-keydown="onSearchKeydown"
+                    />
+                </div>
+            </div>
+            <nav class="dg-help-cat-list">
+                <button
+                    t-foreach="state.categories"
+                    t-as="cat"
+                    t-key="cat.id"
+                    class="dg-help-cat-item"
+                    t-att-class="{ active: state.activeCatId === cat.id }"
+                    t-on-click="() => this.selectCategory(cat.id)"
+                >
+                    <span
+                        class="dg-help-cat-icon"
+                        t-att-style="'background:' + cat.color"
+                    >
+                        <i t-att-class="'fa ' + cat.icon"/>
+                    </span>
+                    <span t-esc="cat.name"/>
+                    <span class="dg-help-cat-count" t-esc="cat.article_count"/>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="dg-help-main">
+
+            <!-- Welcome screen (no category, no search) -->
+            <t t-if="!state.activeCatId and !state.searching and !state.activeArticleId">
+                <div class="dg-help-welcome">
+                    <div class="dg-help-welcome-logo">
+                        <i class="fa fa-shield"/>
+                    </div>
+                    <h2>How can we help you?</h2>
+                    <p>Choose a topic from the sidebar, or search for any topic above. Browse categories below to get started.</p>
+                    <div class="dg-help-cat-grid">
+                        <button
+                            t-foreach="state.categories"
+                            t-as="cat"
+                            t-key="cat.id"
+                            class="dg-help-cat-tile"
+                            t-on-click="() => this.selectCategory(cat.id)"
+                        >
+                            <div class="dg-help-cat-tile-icon" t-att-style="'background:' + cat.color">
+                                <i t-att-class="'fa ' + cat.icon"/>
+                            </div>
+                            <div class="dg-help-cat-tile-name" t-esc="cat.name"/>
+                            <div class="dg-help-cat-tile-count"><t t-esc="cat.article_count"/> articles</div>
+                        </button>
+                    </div>
+                </div>
+            </t>
+
+            <!-- Search results -->
+            <t t-if="state.searching">
+                <div class="dg-help-search-results">
+                    <h2>
+                        <t t-if="state.searchResults.length">
+                            <t t-esc="state.searchResults.length"/> result(s) for "<t t-esc="state.searchQuery"/>"
+                        </t>
+                        <t t-else="">
+                            No results for "<t t-esc="state.searchQuery"/>"
+                        </t>
+                    </h2>
+                    <t t-if="state.searchResults.length">
+                        <button
+                            t-foreach="state.searchResults"
+                            t-as="art"
+                            t-key="art.id"
+                            class="dg-help-article-card"
+                            t-on-click="() => this.openArticle(art.id)"
+                        >
+                            <span class="dg-help-card-arrow"><i class="fa fa-chevron-right"/></span>
+                            <h3 t-esc="art.title"/>
+                            <p t-esc="art.summary"/>
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <div class="dg-help-empty">
+                            <i class="fa fa-search"/>
+                            <span>Try different keywords or browse the categories</span>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+            <!-- Article list for selected category -->
+            <t t-if="state.activeCatId and !state.activeArticleId and !state.searching">
+                <div class="dg-help-article-list">
+                    <div class="dg-help-article-list-header">
+                        <t t-set="activeCat" t-value="state.categories.find(c => c.id === state.activeCatId)"/>
+                        <t t-if="activeCat">
+                            <span class="dg-help-cat-icon" t-att-style="'background:' + activeCat.color">
+                                <i t-att-class="'fa ' + activeCat.icon"/>
+                            </span>
+                            <h2 t-esc="activeCat.name"/>
+                        </t>
+                    </div>
+                    <t t-if="state.articles.length">
+                        <button
+                            t-foreach="state.articles"
+                            t-as="art"
+                            t-key="art.id"
+                            class="dg-help-article-card"
+                            t-on-click="() => this.openArticle(art.id)"
+                        >
+                            <span class="dg-help-card-arrow"><i class="fa fa-chevron-right"/></span>
+                            <h3 t-esc="art.title"/>
+                            <p t-esc="art.summary"/>
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <div class="dg-help-empty">
+                            <i class="fa fa-file-text-o"/>
+                            <span>No articles in this category yet</span>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+            <!-- Article detail -->
+            <t t-if="state.activeArticleId">
+                <div class="dg-help-article-detail">
+                    <button class="dg-help-back-btn" t-on-click="goBack">
+                        <i class="fa fa-arrow-left"/> Back
+                    </button>
+                    <t t-if="state.activeArticle">
+                        <div class="dg-help-article-body" t-out="state.activeArticle.body"/>
+                    </t>
+                    <t t-else="">
+                        <div class="dg-help-empty">
+                            <i class="fa fa-spinner fa-spin"/>
+                            <span>Loading…</span>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+        </main>
+    </div>
+</t>
+
+</templates>

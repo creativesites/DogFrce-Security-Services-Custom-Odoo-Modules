@@ -1,0 +1,1417 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+<!-- ═══════════════════════════════════════════════════════
+     CATEGORIES
+════════════════════════════════════════════════════════ -->
+
+<record id="cat_getting_started" model="security.help.category">
+    <field name="name">Getting Started</field>
+    <field name="icon">fa-rocket</field>
+    <field name="color">#16a34a</field>
+    <field name="sequence">1</field>
+</record>
+
+<record id="cat_guards" model="security.help.category">
+    <field name="name">Guards &amp; Workforce</field>
+    <field name="icon">fa-user</field>
+    <field name="color">#2563eb</field>
+    <field name="sequence">2</field>
+</record>
+
+<record id="cat_roster" model="security.help.category">
+    <field name="name">Roster &amp; Scheduling</field>
+    <field name="icon">fa-calendar</field>
+    <field name="color">#1a3a5c</field>
+    <field name="sequence">3</field>
+</record>
+
+<record id="cat_attendance" model="security.help.category">
+    <field name="name">Attendance</field>
+    <field name="icon">fa-check-square-o</field>
+    <field name="color">#0891b2</field>
+    <field name="sequence">4</field>
+</record>
+
+<record id="cat_payroll" model="security.help.category">
+    <field name="name">Payroll</field>
+    <field name="icon">fa-money</field>
+    <field name="color">#7c3aed</field>
+    <field name="sequence">5</field>
+</record>
+
+<record id="cat_leave" model="security.help.category">
+    <field name="name">Leave Management</field>
+    <field name="icon">fa-plane</field>
+    <field name="color">#d97706</field>
+    <field name="sequence">6</field>
+</record>
+
+<record id="cat_billing" model="security.help.category">
+    <field name="name">Client Billing</field>
+    <field name="icon">fa-file-text</field>
+    <field name="color">#4f46e5</field>
+    <field name="sequence">7</field>
+</record>
+
+<record id="cat_discipline" model="security.help.category">
+    <field name="name">Discipline &amp; Incidents</field>
+    <field name="icon">fa-exclamation-triangle</field>
+    <field name="color">#dc2626</field>
+    <field name="sequence">8</field>
+</record>
+
+<record id="cat_equipment" model="security.help.category">
+    <field name="name">Equipment &amp; Fleet</field>
+    <field name="icon">fa-wrench</field>
+    <field name="color">#64748b</field>
+    <field name="sequence">9</field>
+</record>
+
+<record id="cat_ai" model="security.help.category">
+    <field name="name">AI Assistant</field>
+    <field name="icon">fa-magic</field>
+    <field name="color">#0891b2</field>
+    <field name="sequence">10</field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     GETTING STARTED
+════════════════════════════════════════════════════════ -->
+
+<record id="art_welcome" model="security.help.article">
+    <field name="category_id" ref="cat_getting_started"/>
+    <field name="title">Welcome to DogForce</field>
+    <field name="summary">What DogForce is, who uses it, and how it all fits together</field>
+    <field name="sequence">1</field>
+    <field name="tags">intro overview platform welcome</field>
+    <field name="body"><![CDATA[
+<h2>Welcome to DogForce Security Services Platform</h2>
+<p>DogForce is a complete management system built specifically for security companies in Namibia. It handles every part of running a security business — from scheduling guards to paying them, billing clients, and tracking everything in between.</p>
+
+<h3>Who uses DogForce?</h3>
+<ul>
+  <li><strong>Operations Managers</strong> — Build rosters, review attendance, handle AWOL guards</li>
+  <li><strong>HR / Admin Staff</strong> — Manage guard profiles, documents, leave requests</li>
+  <li><strong>Payroll Officers</strong> — Process monthly pay runs, review payslips</li>
+  <li><strong>Finance / Billing</strong> — Create client invoices, record payments</li>
+  <li><strong>Supervisors</strong> — Post daily attendance, raise incidents</li>
+  <li><strong>Company Directors</strong> — View the executive dashboard for a live overview</li>
+</ul>
+
+<h3>The main areas of the system</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Area</th><th style="padding:8px 12px; text-align:left;">What it does</th></tr></thead>
+  <tbody>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Guards &amp; Workforce</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Guard profiles, grades, certifications, documents</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Roster &amp; Scheduling</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Monthly roster creation, shift assignments, sites and posts</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Attendance</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Daily check-in / check-out, AWOL tracking</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Payroll</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Monthly pay runs, payslips, PAYE and SSC calculations</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Leave</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Leave requests, approvals, leave balances</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Billing</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Client contracts, invoices, payment recording</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Discipline</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Incidents, warnings, reliability scores</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;"><strong>Equipment &amp; Fleet</strong></td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Uniforms, radios, vehicles, shuttle runs</td></tr>
+    <tr><td style="padding:8px 12px;"><strong>AI Assistant</strong></td><td style="padding:8px 12px;">Ask questions, get insights, navigate with natural language</td></tr>
+  </tbody>
+</table>
+
+<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-top:20px;">
+  <strong>Tip:</strong> Start with the <strong>Executive Dashboard</strong>. It shows a live summary of everything happening in your company right now — guards active today, AWOL count, pending actions, revenue, and more.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_navigation" model="security.help.article">
+    <field name="category_id" ref="cat_getting_started"/>
+    <field name="title">Navigating the System</field>
+    <field name="summary">How to find your way around — menus, breadcrumbs, and quick actions</field>
+    <field name="sequence">2</field>
+    <field name="tags">navigation menu breadcrumb search</field>
+    <field name="body"><![CDATA[
+<h2>Finding Your Way Around</h2>
+
+<h3>The Top Menu Bar</h3>
+<p>The top bar runs across every page. From left to right it contains:</p>
+<ul>
+  <li><strong>App icon / Home</strong> — click to go back to the main app list</li>
+  <li><strong>Menu name</strong> — shows which section you are in (e.g. "Roster &amp; Scheduling")</li>
+  <li><strong>Sub-menus</strong> — click to expand the current section's options</li>
+  <li><strong>Search bar</strong> — press <code>/</code> anywhere to jump to the search bar</li>
+  <li><strong>Notification bell</strong> — alerts about AWOL guards, overdue invoices, expiring documents</li>
+  <li><strong>AI chat button</strong> — bottom-right corner, always available</li>
+</ul>
+
+<h3>Breadcrumbs</h3>
+<p>Breadcrumbs appear at the top of record pages, e.g. <em>Roster Batches &gt; June 2026 Roster</em>. Click any part to go back without losing your place.</p>
+
+<h3>List vs Form views</h3>
+<ul>
+  <li><strong>List view</strong> — shows many records at once (e.g. all guards). Click a row to open it.</li>
+  <li><strong>Form view</strong> — shows one record in full detail. Use the arrows ‹ › to browse to the next or previous record.</li>
+  <li><strong>Kanban view</strong> — card-based layout used for some workflows (e.g. incidents by status).</li>
+</ul>
+
+<h3>Searching and Filtering</h3>
+<p>Every list view has a search bar at the top right. You can:</p>
+<ul>
+  <li>Type a name or keyword and press <strong>Enter</strong> to filter</li>
+  <li>Click the <strong>▼ Filters</strong> dropdown for preset filters (e.g. "AWOL today", "Draft invoices")</li>
+  <li>Click <strong>Group By</strong> to group records (e.g. group guards by grade)</li>
+</ul>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Remember:</strong> Use the <strong>AI chat assistant</strong> (bottom-right button) to navigate quickly. Just type "show me AWOL guards today" or "open the June payroll" and it will take you there.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_dashboard" model="security.help.article">
+    <field name="category_id" ref="cat_getting_started"/>
+    <field name="title">Understanding the Executive Dashboard</field>
+    <field name="summary">Reading KPI cards, tabs, charts, and quick-action buttons</field>
+    <field name="sequence">3</field>
+    <field name="tags">dashboard kpi overview executive charts</field>
+    <field name="body"><![CDATA[
+<h2>The Executive Dashboard</h2>
+<p>The Executive Dashboard is your command centre — a live, real-time view of your entire security operation. Open it from the <strong>Security Suite</strong> home page or the main menu.</p>
+
+<h3>KPI Cards (the big numbers at the top)</h3>
+<p>The row of coloured cards shows the most important numbers right now:</p>
+<ul>
+  <li><strong>Active Guards</strong> — total guards currently employed and active</li>
+  <li><strong>Present Today</strong> — guards who checked in for today's shifts</li>
+  <li><strong>AWOL Today</strong> — guards who did not show up without notifying</li>
+  <li><strong>Unassigned Slots</strong> — open shift slots with no guard assigned yet</li>
+  <li><strong>Pending Leave</strong> — leave requests waiting for approval</li>
+  <li><strong>Open Incidents</strong> — disciplinary incidents not yet resolved</li>
+  <li><strong>Overdue Invoices</strong> — client invoices past their due date</li>
+  <li><strong>Revenue MTD</strong> — money invoiced to clients this calendar month</li>
+</ul>
+<p>Any number shown in <strong>red</strong> needs your attention. Click a card to jump to the related records.</p>
+
+<h3>The Tabs</h3>
+<p>Below the KPI cards are tabs that show different views of your data:</p>
+<ul>
+  <li><strong>Overview</strong> — status summary, pending actions list, active alerts</li>
+  <li><strong>Roster</strong> — today's shift assignments and coverage by site</li>
+  <li><strong>Workforce</strong> — guard availability and reliability breakdown</li>
+  <li><strong>Finance</strong> — billing summary, payment status, revenue trend</li>
+</ul>
+
+<h3>Quick Actions (the grid of buttons)</h3>
+<p>The button grid at the bottom of the Overview tab is a shortcut to every main module. Click <strong>Fleet</strong>, <strong>Documents</strong>, <strong>Payslips</strong>, etc. to open that section directly.</p>
+
+<div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Best practice:</strong> Start every work day on the Executive Dashboard. Check for AWOL guards and unassigned slots first thing in the morning.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_key_concepts" model="security.help.article">
+    <field name="category_id" ref="cat_getting_started"/>
+    <field name="title">Key Concepts Explained</field>
+    <field name="summary">Guards, Posts, Sites, Slots, Batches — what they mean and how they connect</field>
+    <field name="sequence">4</field>
+    <field name="tags">concepts glossary guard post site slot batch roster</field>
+    <field name="body"><![CDATA[
+<h2>Key Concepts in DogForce</h2>
+<p>Before you dive in, it helps to understand how the main building blocks connect.</p>
+
+<h3>Guards (Employees)</h3>
+<p>A <strong>guard</strong> is any person employed to provide security services. In DogForce, each guard has a profile that includes their grade, certifications, reliability score, and document status. Guards are the core of everything.</p>
+
+<h3>Client Sites</h3>
+<p>A <strong>client site</strong> is a physical location that your company guards — a shopping mall, a bank, a construction site. Each site belongs to a client and can have multiple posts.</p>
+
+<h3>Posts</h3>
+<p>A <strong>post</strong> is a specific position within a site — for example, "Main Gate" or "Control Room" at a particular mall. Guards are assigned to posts, not just sites.</p>
+
+<h3>Shift Templates</h3>
+<p>A <strong>shift template</strong> defines the working hours — e.g. "Day Shift: 06:00–18:00" or "Night Shift: 18:00–06:00". Templates are reused across many roster slots.</p>
+
+<h3>Shift Requirements</h3>
+<p>A <strong>shift requirement</strong> says "Post X needs 2 guards on the Day Shift every weekday". Requirements drive the automatic roster generation.</p>
+
+<h3>Roster Batches</h3>
+<p>A <strong>roster batch</strong> is a complete month's worth of shifts. When you generate a roster, the system creates one batch (e.g. "June 2026") containing all individual slots for that month.</p>
+
+<h3>Roster Slots</h3>
+<p>A <strong>slot</strong> is one shift on one day at one post — the smallest unit. Example: "John Nangolo, Main Gate, Day Shift, 5 June 2026". Slots start unassigned and are filled one by one.</p>
+
+<h3>Attendance Records</h3>
+<p>When a guard arrives for their shift, a supervisor records their check-in time. This creates an <strong>attendance record</strong> that is compared against the roster slot to calculate hours worked, late arrivals, and AWOL status.</p>
+
+<h3>The Workflow in One Picture</h3>
+<div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:16px; font-family:monospace; font-size:0.85rem; line-height:2;">
+  Client Site → Posts → Shift Requirements<br/>
+  ↓<br/>
+  Roster Batch (Generate) → Roster Slots (Assign guards)<br/>
+  ↓<br/>
+  Attendance Records (Check-in/out) → Payroll (Calculate pay)<br/>
+  ↓<br/>
+  Billing (Invoice client) → Payments (Record receipts)
+</div>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     GUARDS & WORKFORCE
+════════════════════════════════════════════════════════ -->
+
+<record id="art_add_guard" model="security.help.article">
+    <field name="category_id" ref="cat_guards"/>
+    <field name="title">Adding a New Guard</field>
+    <field name="summary">Step-by-step guide to creating a guard profile from scratch</field>
+    <field name="sequence">1</field>
+    <field name="tags">guard employee add create new profile</field>
+    <field name="body"><![CDATA[
+<h2>Adding a New Guard</h2>
+<p>Before a guard can be rostered, paid, or tracked, they need a profile in the system.</p>
+
+<h3>Step 1 — Open the Employee list</h3>
+<p>Go to <strong>Workforce → Guards</strong> (or <strong>Employees</strong> in the main menu). Click the <strong>New</strong> button in the top-left.</p>
+
+<h3>Step 2 — Fill in basic details</h3>
+<ul>
+  <li><strong>Name</strong> — full legal name as on ID document</li>
+  <li><strong>Job Position</strong> — select "Security Guard" or equivalent</li>
+  <li><strong>Grade</strong> — select the guard's grade (A, B, C). Grade determines which posts they can work and their pay rate.</li>
+  <li><strong>Date of Birth</strong> and <strong>ID Number</strong></li>
+  <li><strong>Phone / Email</strong></li>
+  <li><strong>Bank Account</strong> — needed for payroll</li>
+</ul>
+
+<h3>Step 3 — Assign certifications</h3>
+<p>Under the <strong>Certifications</strong> tab, add any qualifications the guard holds (e.g. First Aid, Firearm Competency). Enter the expiry date where applicable — the system will alert you before it expires.</p>
+
+<h3>Step 4 — Upload documents</h3>
+<p>Under the <strong>Documents</strong> tab (or via <strong>Documents → Employee Documents</strong>), upload copies of:</p>
+<ul>
+  <li>National ID or Passport</li>
+  <li>Security licence / PSIRA certificate</li>
+  <li>Firearm competency (if applicable)</li>
+  <li>Medical clearance</li>
+</ul>
+
+<h3>Step 5 — Save</h3>
+<p>Click <strong>Save</strong>. The guard's profile is now active and can be used in rosters.</p>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Important:</strong> A guard cannot be assigned to a post that requires a higher grade than theirs. Make sure you set the correct grade before building the roster.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_grades_certs" model="security.help.article">
+    <field name="category_id" ref="cat_guards"/>
+    <field name="title">Guard Grades &amp; Certifications</field>
+    <field name="summary">What grades mean, how they affect pay and post eligibility</field>
+    <field name="sequence">2</field>
+    <field name="tags">grade certification qualification post eligibility pay rate</field>
+    <field name="body"><![CDATA[
+<h2>Guard Grades &amp; Certifications</h2>
+
+<h3>What is a Grade?</h3>
+<p>Every guard is assigned a grade (A, B, C, or custom). Grades serve two purposes:</p>
+<ol>
+  <li><strong>Pay rate</strong> — each grade has its own hourly rate used in payroll calculations</li>
+  <li><strong>Post eligibility</strong> — posts can require a minimum grade. A Grade C guard cannot be assigned to a Grade A post.</li>
+</ol>
+
+<h3>Setting Up Grades</h3>
+<p>Go to <strong>Configuration → Guard Grades</strong>. For each grade, set:</p>
+<ul>
+  <li>Name (e.g. "Grade A")</li>
+  <li>Hourly rate (N$/hour)</li>
+  <li>Description (responsibilities level)</li>
+</ul>
+
+<h3>What are Certifications?</h3>
+<p>Certifications are qualifications a guard must hold to work certain posts. Examples:</p>
+<ul>
+  <li>First Aid Level 1</li>
+  <li>Firearm Competency (Handgun)</li>
+  <li>VIP Protection</li>
+  <li>CCTV Operator</li>
+</ul>
+
+<h3>Setting Up Certifications</h3>
+<p>Go to <strong>Configuration → Certifications</strong>. For each certification, decide whether it expires (most training certifications need renewal every 1–2 years).</p>
+
+<h3>Assigning Certifications to Guards</h3>
+<p>Open a guard's profile and go to the <strong>Certifications</strong> tab. Click <strong>Add a line</strong> to link the certification. If it has an expiry date, the system will send a notification 30 days before it expires.</p>
+
+<h3>Post Requirements</h3>
+<p>Each post type can have required certifications. When the AI shift planner suggests guards for a slot, it will only suggest guards who hold all required certifications and have the correct grade.</p>
+    ]]></field>
+</record>
+
+<record id="art_reliability" model="security.help.article">
+    <field name="category_id" ref="cat_guards"/>
+    <field name="title">Guard Reliability Scores</field>
+    <field name="summary">How reliability scores are calculated and what they mean for rostering</field>
+    <field name="sequence">3</field>
+    <field name="tags">reliability score performance awol attendance discipline</field>
+    <field name="body"><![CDATA[
+<h2>Guard Reliability Scores</h2>
+<p>The reliability score is a single number (0–100) that summarises how dependable a guard is. It affects rostering priority and is visible on the Roster Board when selecting guards.</p>
+
+<h3>What affects the score?</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Event</th><th style="padding:8px 12px; text-align:left;">Impact</th></tr></thead>
+  <tbody>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">AWOL (no-show)</td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#dc2626;">−10 points</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Absence (notified)</td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#d97706;">−3 points</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Late arrival</td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#d97706;">−2 points</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Disciplinary incident (approved)</td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#dc2626;">−5 to −20 points (by severity)</td></tr>
+    <tr><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0;">Full shift completed on time</td><td style="padding:8px 12px; border-bottom:1px solid #e2e8f0; color:#16a34a;">+1 point (capped)</td></tr>
+    <tr><td style="padding:8px 12px;">Manual adjustment</td><td style="padding:8px 12px;">Set by manager (positive or negative)</td></tr>
+  </tbody>
+</table>
+
+<h3>Score bands</h3>
+<ul>
+  <li><strong>80–100 (Green)</strong> — Excellent. Prioritised for critical posts.</li>
+  <li><strong>60–79 (Amber)</strong> — Good. Suitable for most posts.</li>
+  <li><strong>40–59 (Orange)</strong> — Below average. Monitor closely.</li>
+  <li><strong>Below 40 (Red)</strong> — Poor. Consider performance review.</li>
+</ul>
+
+<h3>Manual Adjustments</h3>
+<p>Managers can add a manual reliability adjustment from the guard's profile under <strong>Configuration → Reliability Adjustments</strong>. This is useful for rewarding exceptional performance or correcting a one-off unfair deduction.</p>
+    ]]></field>
+</record>
+
+<record id="art_guard_documents" model="security.help.article">
+    <field name="category_id" ref="cat_guards"/>
+    <field name="title">Managing Guard Documents</field>
+    <field name="summary">Uploading, verifying, and tracking expiry of guard documents</field>
+    <field name="sequence">4</field>
+    <field name="tags">documents identity licence firearm medical expiry verification</field>
+    <field name="body"><![CDATA[
+<h2>Managing Guard Documents</h2>
+<p>DogForce tracks all compliance documents for each guard and alerts you before they expire.</p>
+
+<h3>Document Types</h3>
+<ul>
+  <li><strong>Identity</strong> — National ID, passport</li>
+  <li><strong>Employment</strong> — Employment contract, tax form</li>
+  <li><strong>Training / Certification</strong> — Security licence, First Aid, etc.</li>
+  <li><strong>Medical</strong> — Fitness certificate, medical clearance</li>
+  <li><strong>Clearance</strong> — Police clearance, background check</li>
+  <li><strong>Client</strong> — Site-specific access cards or client-required documents</li>
+</ul>
+
+<h3>Adding a Document</h3>
+<ol>
+  <li>Go to <strong>Workforce → Employee Documents</strong></li>
+  <li>Click <strong>New</strong></li>
+  <li>Select the guard (Employee), document type, and issue date</li>
+  <li>Enter the expiry date (if the document expires)</li>
+  <li>Click the attachment icon to upload a scanned copy</li>
+  <li>Save — the document status starts as <strong>Draft</strong></li>
+</ol>
+
+<h3>Verifying a Document</h3>
+<p>Once you have confirmed the document is genuine, click <strong>Verify</strong>. The document moves to <strong>Verified</strong> status and a timestamp is recorded.</p>
+
+<h3>Expiry Alerts</h3>
+<p>The system automatically sends notifications 30 days before a document expires. You will see an alert in the notification bell. Documents transition automatically from Verified → <strong>Expiring</strong> → <strong>Expired</strong> based on the expiry date.</p>
+
+<div style="background:#fee2e2; border-left:4px solid #dc2626; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Warning:</strong> Guards with an expired firearm competency certificate should not be assigned to armed posts. The system will warn you during rostering.
+</div>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ROSTER & SCHEDULING
+════════════════════════════════════════════════════════ -->
+
+<record id="art_roster_overview" model="security.help.article">
+    <field name="category_id" ref="cat_roster"/>
+    <field name="title">How Rosters Work</field>
+    <field name="summary">The complete lifecycle from draft to confirmed roster</field>
+    <field name="sequence">1</field>
+    <field name="tags">roster lifecycle draft generated submitted approved confirmed</field>
+    <field name="body"><![CDATA[
+<h2>How Rosters Work</h2>
+<p>DogForce uses a structured roster workflow to ensure every shift is properly planned, reviewed, and approved before the month begins.</p>
+
+<h3>The Roster Lifecycle</h3>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin:16px 0;">
+  <span style="background:#f1f5f9; border:1px solid #e2e8f0; padding:6px 14px; border-radius:20px; font-size:0.85rem;">📝 Draft</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#fef3c7; border:1px solid #fde68a; padding:6px 14px; border-radius:20px; font-size:0.85rem;">⚙️ Generated</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:6px 14px; border-radius:20px; font-size:0.85rem;">📤 Submitted</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#dcfce7; border:1px solid #86efac; padding:6px 14px; border-radius:20px; font-size:0.85rem;">✓ Approved</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#ddd6fe; border:1px solid #c4b5fd; padding:6px 14px; border-radius:20px; font-size:0.85rem;">🔒 Confirmed</span>
+</div>
+
+<h4>Draft</h4>
+<p>You create a new roster batch for the month. Nothing is generated yet — this is just the header record (month, year).</p>
+
+<h4>Generated</h4>
+<p>You click <strong>Generate Roster</strong> and the system creates individual shift slots from your shift requirements. These slots are empty (no guard assigned yet).</p>
+
+<h4>Submitted</h4>
+<p>After assigning guards to all slots, you submit the roster for management review.</p>
+
+<h4>Approved</h4>
+<p>A manager reviews and approves the roster. Guards can now be notified of their shifts.</p>
+
+<h4>Confirmed</h4>
+<p>The roster is locked. No further changes can be made. Payroll can now process attendance against these shifts.</p>
+
+<h3>What are Shift Requirements?</h3>
+<p>Before generating a roster, you need <strong>shift requirements</strong> — these tell the system how many guards are needed at each post, on which days, and at what times. Set them up under <strong>Scheduling → Shift Requirements</strong> for each site and post.</p>
+    ]]></field>
+</record>
+
+<record id="art_create_roster" model="security.help.article">
+    <field name="category_id" ref="cat_roster"/>
+    <field name="title">Creating a Monthly Roster</field>
+    <field name="summary">Step-by-step: from blank batch to fully assigned roster</field>
+    <field name="sequence">2</field>
+    <field name="tags">roster create generate monthly batch slots assign</field>
+    <field name="body"><![CDATA[
+<h2>Creating a Monthly Roster</h2>
+
+<h3>Before you start — Prerequisites</h3>
+<p>Make sure these are set up first:</p>
+<ul>
+  <li>Client sites and posts are created</li>
+  <li>Shift templates exist (e.g. Day 06:00–18:00, Night 18:00–06:00)</li>
+  <li>Shift requirements are configured for each post</li>
+  <li>Guards have correct grades and active documents</li>
+</ul>
+
+<h3>Step 1 — Create a new Roster Batch</h3>
+<ol>
+  <li>Go to <strong>Scheduling → Roster Batches</strong></li>
+  <li>Click <strong>New</strong></li>
+  <li>Set the <strong>Month</strong> and <strong>Year</strong></li>
+  <li>Give it a name (e.g. "June 2026 Roster")</li>
+  <li>Save — status is now <strong>Draft</strong></li>
+</ol>
+
+<h3>Step 2 — Generate Slots</h3>
+<ol>
+  <li>Click the <strong>Generate Roster</strong> button</li>
+  <li>The system reads all shift requirements and creates one slot per requirement per day</li>
+  <li>Status moves to <strong>Generated</strong></li>
+  <li>You will now see all empty slots listed under the batch</li>
+</ol>
+
+<h3>Step 3 — Assign Guards</h3>
+<p>You have two ways to assign guards:</p>
+<ul>
+  <li><strong>Roster Board</strong> (recommended) — an interactive visual board. Open it from <strong>Scheduling → Roster Board</strong>. See the Roster Board article for details.</li>
+  <li><strong>Slot list</strong> — open each slot individually and select a guard from the dropdown.</li>
+</ul>
+
+<h3>Step 4 — Submit for Approval</h3>
+<p>Once all slots are filled, click <strong>Submit</strong> on the Roster Batch record. A manager must then click <strong>Approve</strong>.</p>
+
+<h3>Step 5 — Confirm</h3>
+<p>After approval, click <strong>Confirm</strong> to lock the roster. It is now ready for attendance posting.</p>
+
+<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Tip:</strong> Use the AI Shift Planner to get ranked guard suggestions for each empty slot. It checks grades, certifications, leave conflicts, and double-bookings automatically.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_roster_board" model="security.help.article">
+    <field name="category_id" ref="cat_roster"/>
+    <field name="title">Using the Roster Board</field>
+    <field name="summary">The interactive visual tool for assigning guards to shifts</field>
+    <field name="sequence">3</field>
+    <field name="tags">roster board assign guard slot visual interactive suggestion</field>
+    <field name="body"><![CDATA[
+<h2>The Roster Board</h2>
+<p>The Roster Board is an interactive visual tool that makes assigning guards to shifts much faster. Open it from <strong>Scheduling → Roster Board</strong>.</p>
+
+<h3>Layout</h3>
+<ul>
+  <li><strong>Left sidebar</strong> — Select the month, site, and view options</li>
+  <li><strong>Main grid</strong> — Shows the calendar with all slots. Rows = posts, columns = days.</li>
+  <li><strong>Slot cards</strong> — Each cell is a shift slot. Colours show assignment status (empty = grey, assigned = blue).</li>
+</ul>
+
+<h3>Assigning a Guard</h3>
+<ol>
+  <li>Click on an empty (grey) slot</li>
+  <li>A panel opens on the right showing <strong>Suggested Guards</strong></li>
+  <li>The AI ranks candidates by score — best match at the top</li>
+  <li>Each suggestion shows the guard's name, grade, reliability score, and any flags (leave conflict, certification warning)</li>
+  <li>Click <strong>Assign</strong> next to a guard to fill the slot</li>
+</ol>
+
+<h3>Reading the Suggestion Cards</h3>
+<ul>
+  <li><span style="color:#16a34a;">●</span> <strong>Green score</strong> — Best available match</li>
+  <li><span style="color:#d97706;">●</span> <strong>Amber score</strong> — Acceptable but some concerns</li>
+  <li><span style="color:#dc2626;">●</span> <strong>Red score</strong> — Not recommended (shown for completeness)</li>
+  <li><strong>⚠ Leave conflict</strong> — This guard has approved leave on this date</li>
+  <li><strong>⚠ Double booked</strong> — Guard is already assigned to another slot at the same time</li>
+</ul>
+
+<h3>Removing or Swapping an Assignment</h3>
+<p>Click on a filled (blue) slot to see the current assignment. Click <strong>Remove</strong> to clear it, then assign a different guard.</p>
+
+<div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Tip:</strong> Filter by site in the left sidebar to focus on one client at a time. This is much easier than scrolling through all slots at once.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_awol_handling" model="security.help.article">
+    <field name="category_id" ref="cat_roster"/>
+    <field name="title">Handling AWOL Guards</field>
+    <field name="summary">What to do when a guard does not show up for their shift</field>
+    <field name="sequence">4</field>
+    <field name="tags">awol absent no-show replacement slot emergency</field>
+    <field name="body"><![CDATA[
+<h2>Handling AWOL Guards</h2>
+<p>AWOL (Absent Without Leave) means a guard did not show up for a scheduled shift without prior notice.</p>
+
+<h3>Step 1 — Mark the guard AWOL</h3>
+<ol>
+  <li>Go to <strong>Attendance → Posting Console</strong> (or open the attendance batch for today)</li>
+  <li>Find the slot for the missing guard</li>
+  <li>Set the status to <strong>AWOL</strong></li>
+  <li>The system records the time and decrements the guard's reliability score by 10 points</li>
+</ol>
+
+<h3>Step 2 — Find a Replacement</h3>
+<ol>
+  <li>Go to <strong>Scheduling → Roster Board</strong></li>
+  <li>Find the affected slot (it will show as unfilled/AWOL)</li>
+  <li>Click the slot to see replacement suggestions</li>
+  <li>The AI suggests available guards considering the current time (emergency fill)</li>
+  <li>Call the guard and assign them to the slot</li>
+</ol>
+
+<h3>Step 3 — Raise a Disciplinary Incident</h3>
+<p>AWOL is a disciplinary matter. You should raise a formal incident:</p>
+<ol>
+  <li>Go to <strong>Discipline → Incidents → New</strong></li>
+  <li>Select the guard, set type to "AWOL / Absence", attach the roster slot</li>
+  <li>Save and submit for approval</li>
+</ol>
+
+<h3>AWOL Heatmap</h3>
+<p>The AWOL heatmap (under <strong>Attendance → AWOL Heatmap</strong>) shows patterns over time — which guards are repeatedly AWOL, and on which days/sites. Use this to spot systemic issues.</p>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ATTENDANCE
+════════════════════════════════════════════════════════ -->
+
+<record id="art_attendance_intro" model="security.help.article">
+    <field name="category_id" ref="cat_attendance"/>
+    <field name="title">Recording Daily Attendance</field>
+    <field name="summary">How to capture check-ins and check-outs using attendance batches</field>
+    <field name="sequence">1</field>
+    <field name="tags">attendance check-in check-out posting batch daily</field>
+    <field name="body"><![CDATA[
+<h2>Recording Daily Attendance</h2>
+<p>Every day, supervisors must record whether each guard showed up for their shift. This is done through <strong>attendance batches</strong>.</p>
+
+<h3>What is an Attendance Batch?</h3>
+<p>An attendance batch is a daily sheet that groups all the shift slots for a specific day and site. One batch = one day's attendance for a set of guards.</p>
+
+<h3>Creating a Batch</h3>
+<ol>
+  <li>Go to <strong>Attendance → Posting Sheets</strong></li>
+  <li>Click <strong>New</strong></li>
+  <li>Select the <strong>Date</strong> and <strong>Site</strong></li>
+  <li>The system loads all roster slots for that date/site automatically</li>
+  <li>Save — the batch starts in <strong>Draft</strong> status</li>
+</ol>
+
+<h3>Capturing Attendance</h3>
+<p>For each slot in the batch:</p>
+<ul>
+  <li>Enter the <strong>actual check-in time</strong></li>
+  <li>Enter the <strong>actual check-out time</strong> (end of shift)</li>
+  <li>The system automatically calculates: late arrival, early departure, total hours worked</li>
+  <li>Set the status: <strong>Present</strong>, <strong>Late</strong>, <strong>Absent</strong>, or <strong>AWOL</strong></li>
+</ul>
+
+<h3>Submitting the Batch</h3>
+<p>Once all guards are captured, click <strong>Mark as Captured</strong>. A supervisor then reviews and clicks <strong>Review</strong>. Finally, lock the batch — no changes can be made after locking.</p>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Important:</strong> Batches must be locked before payroll runs. Unlocked attendance records are not included in payslip calculations.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_posting_console" model="security.help.article">
+    <field name="category_id" ref="cat_attendance"/>
+    <field name="title">The Posting Console</field>
+    <field name="summary">A fast, touch-friendly interface for capturing attendance on the spot</field>
+    <field name="sequence">2</field>
+    <field name="tags">posting console check-in fast tablet mobile attendance</field>
+    <field name="body"><![CDATA[
+<h2>The Posting Console</h2>
+<p>The Posting Console is a streamlined interface designed for supervisors to quickly record attendance — optimised for tablets and touch screens used at the gate.</p>
+
+<h3>Opening the Console</h3>
+<p>Go to <strong>Attendance → Posting Console</strong>. Select the date and site from the dropdowns.</p>
+
+<h3>How to Use It</h3>
+<ol>
+  <li>The console shows a card for each expected guard shift</li>
+  <li>As guards arrive, tap their card and enter the check-in time</li>
+  <li>At the end of a shift, tap again to record the check-out time</li>
+  <li>Guards not present can be marked AWOL or Absent with a single tap</li>
+</ol>
+
+<h3>Status Colours</h3>
+<ul>
+  <li><span style="background:#dcfce7; padding:2px 8px; border-radius:4px; color:#14532d;">Present</span> — on time and working</li>
+  <li><span style="background:#fef3c7; padding:2px 8px; border-radius:4px; color:#78350f;">Late</span> — arrived after scheduled start time</li>
+  <li><span style="background:#fee2e2; padding:2px 8px; border-radius:4px; color:#7f1d1d;">AWOL</span> — did not show, no notice given</li>
+  <li><span style="background:#f1f5f9; padding:2px 8px; border-radius:4px; color:#475569;">Absent</span> — absent with prior notification</li>
+</ul>
+
+<h3>Why Use the Console?</h3>
+<p>The console is much faster than the standard form view for high-volume check-ins. On a busy morning shift at a large site, you can process 30+ guards in minutes rather than opening individual records.</p>
+    ]]></field>
+</record>
+
+<record id="art_attendance_statuses" model="security.help.article">
+    <field name="category_id" ref="cat_attendance"/>
+    <field name="title">Attendance Statuses Explained</field>
+    <field name="summary">What Present, Late, Early Leave, Absent, and AWOL mean — and how each affects pay</field>
+    <field name="sequence">3</field>
+    <field name="tags">status present late early leave absent awol pay impact</field>
+    <field name="body"><![CDATA[
+<h2>Attendance Statuses Explained</h2>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+  <thead><tr style="background:#1a3a5c; color:white;"><th style="padding:10px 14px; text-align:left;">Status</th><th style="padding:10px 14px; text-align:left;">Meaning</th><th style="padding:10px 14px; text-align:left;">Pay Impact</th><th style="padding:10px 14px; text-align:left;">Reliability Impact</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:10px 14px;"><strong style="color:#16a34a;">Present</strong></td>
+      <td style="padding:10px 14px;">On time, completed shift</td>
+      <td style="padding:10px 14px;">Full hours paid</td>
+      <td style="padding:10px 14px; color:#16a34a;">+1 point</td>
+    </tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;">
+      <td style="padding:10px 14px;"><strong style="color:#d97706;">Late</strong></td>
+      <td style="padding:10px 14px;">Arrived after scheduled start time</td>
+      <td style="padding:10px 14px;">Hours from actual check-in only</td>
+      <td style="padding:10px 14px; color:#d97706;">−2 points</td>
+    </tr>
+    <tr style="border-bottom:1px solid #e2e8f0;">
+      <td style="padding:10px 14px;"><strong style="color:#d97706;">Early Leave</strong></td>
+      <td style="padding:10px 14px;">Left before scheduled end time</td>
+      <td style="padding:10px 14px;">Hours up to actual check-out only</td>
+      <td style="padding:10px 14px; color:#d97706;">−2 points</td>
+    </tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;">
+      <td style="padding:10px 14px;"><strong style="color:#94a3b8;">Absent</strong></td>
+      <td style="padding:10px 14px;">Did not work, notified in advance</td>
+      <td style="padding:10px 14px;">Zero pay for the shift</td>
+      <td style="padding:10px 14px; color:#d97706;">−3 points</td>
+    </tr>
+    <tr>
+      <td style="padding:10px 14px;"><strong style="color:#dc2626;">AWOL</strong></td>
+      <td style="padding:10px 14px;">No show, no notice given</td>
+      <td style="padding:10px 14px;">Zero pay; may trigger deduction</td>
+      <td style="padding:10px 14px; color:#dc2626;">−10 points</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Payable Hours</h3>
+<p>The system calculates <strong>payable hours</strong> for each record — this is the actual time worked within the scheduled window. Overtime beyond the scheduled window is tracked separately.</p>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     PAYROLL
+════════════════════════════════════════════════════════ -->
+
+<record id="art_payroll_overview" model="security.help.article">
+    <field name="category_id" ref="cat_payroll"/>
+    <field name="title">How Payroll Works</field>
+    <field name="summary">The end-to-end payroll process from attendance to net pay</field>
+    <field name="sequence">1</field>
+    <field name="tags">payroll overview period payslip gross net process</field>
+    <field name="body"><![CDATA[
+<h2>How Payroll Works</h2>
+<p>DogForce automates the Namibian payroll process, calculating gross pay from attendance, then deducting SSC, PAYE, loans, and discipline deductions to arrive at net pay.</p>
+
+<h3>The Payroll Process (in order)</h3>
+<ol>
+  <li><strong>Lock attendance</strong> — all posting batches for the period must be locked</li>
+  <li><strong>Create a Payroll Period</strong> — defines the month/period being paid</li>
+  <li><strong>Process the Period</strong> — the system generates payslips for all active guards</li>
+  <li><strong>Review Payslips</strong> — check individual payslips for errors</li>
+  <li><strong>Confirm Payslips</strong> — finalise, ready for payment</li>
+  <li><strong>Mark as Paid</strong> — record that bank transfers were made</li>
+  <li><strong>Close the Period</strong> — lock the period; no further changes</li>
+</ol>
+
+<h3>What goes into Gross Pay?</h3>
+<ul>
+  <li>Normal hours × hourly rate</li>
+  <li>Saturday hours × 1.25 (Saturday premium)</li>
+  <li>Sunday hours × 1.5 (Sunday premium)</li>
+  <li>Public holiday hours × 1.5</li>
+  <li>Night shift hours × 1.25 (if applicable)</li>
+  <li>Overtime hours × 1.5</li>
+</ul>
+
+<h3>What is deducted?</h3>
+<ul>
+  <li><strong>SSC</strong> — Social Security Commission (employee portion: 0.9% of gross)</li>
+  <li><strong>PAYE</strong> — Pay As You Earn income tax (Namibian tax brackets)</li>
+  <li><strong>Loan repayments</strong> — active employee loans</li>
+  <li><strong>Discipline deductions</strong> — approved incident penalties</li>
+  <li><strong>Equipment damage</strong> — costs for damaged/lost equipment</li>
+</ul>
+
+<div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Net Pay Floor:</strong> DogForce enforces a minimum net pay floor of 30% of gross. If deductions would leave the guard with less than 30%, the deductions are capped.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_run_payroll" model="security.help.article">
+    <field name="category_id" ref="cat_payroll"/>
+    <field name="title">Running a Payroll Period</field>
+    <field name="summary">Step-by-step guide to processing and finalising monthly payroll</field>
+    <field name="sequence">2</field>
+    <field name="tags">payroll period process run monthly step by step</field>
+    <field name="body"><![CDATA[
+<h2>Running a Payroll Period</h2>
+
+<h3>Before you start</h3>
+<p>Confirm all attendance batches for the period are <strong>locked</strong>. Go to <strong>Attendance → Posting Sheets</strong> and filter by the month — all should show status "Locked".</p>
+
+<h3>Step 1 — Create the Payroll Period</h3>
+<ol>
+  <li>Go to <strong>Payroll → Payroll Periods</strong></li>
+  <li>Click <strong>New</strong></li>
+  <li>Set the <strong>Name</strong> (e.g. "June 2026"), <strong>Start Date</strong>, and <strong>End Date</strong></li>
+  <li>Select the <strong>Payroll Rule Set</strong> (Namibia Standard)</li>
+  <li>Save — status is <strong>Draft</strong></li>
+</ol>
+
+<h3>Step 2 — Process the Period</h3>
+<ol>
+  <li>Click <strong>Process</strong> on the period record</li>
+  <li>The system calculates gross pay for all guards based on locked attendance</li>
+  <li>Status moves to <strong>Processed</strong></li>
+  <li>Individual payslips are created — one per active guard</li>
+</ol>
+
+<h3>Step 3 — Review Payslips</h3>
+<p>Click <strong>View Payslips</strong> to see all generated payslips. Review any that look unusual (very high or very low amounts). Open a payslip to see the full breakdown.</p>
+
+<h3>Step 4 — Confirm and Pay</h3>
+<ol>
+  <li>Select all correct payslips and click <strong>Confirm</strong></li>
+  <li>Process bank transfers outside the system</li>
+  <li>Come back and click <strong>Mark as Paid</strong> on the period</li>
+  <li>Click <strong>Close Period</strong> to lock it permanently</li>
+</ol>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Note:</strong> Closing a period cannot be undone. Make sure all payslips are correct before closing.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_read_payslip" model="security.help.article">
+    <field name="category_id" ref="cat_payroll"/>
+    <field name="title">Understanding a Payslip</field>
+    <field name="summary">How to read the payslip breakdown — earnings, deductions, and net pay</field>
+    <field name="sequence">3</field>
+    <field name="tags">payslip read earnings deductions gross net PAYE SSC understanding</field>
+    <field name="body"><![CDATA[
+<h2>Understanding a Payslip</h2>
+<p>Each guard receives a payslip every pay period. Here is how to read it.</p>
+
+<h3>Earnings Section</h3>
+<p>Lists every type of pay earned this period:</p>
+<ul>
+  <li><strong>Normal Hours</strong> — weekday hours at base rate</li>
+  <li><strong>Saturday Hours</strong> — at 1.25× rate</li>
+  <li><strong>Sunday Hours</strong> — at 1.50× rate</li>
+  <li><strong>Public Holiday Hours</strong> — at 1.50× rate</li>
+  <li><strong>Night Shift Hours</strong> — at 1.25× rate</li>
+  <li><strong>Overtime</strong> — at 1.50× rate</li>
+</ul>
+<p><strong>Gross Pay</strong> = sum of all earning lines</p>
+
+<h3>Deductions Section</h3>
+<ul>
+  <li><strong>SSC Employee</strong> — 0.9% of gross (Social Security Commission)</li>
+  <li><strong>PAYE</strong> — income tax calculated on annual equivalent earnings</li>
+  <li><strong>Loan Repayment</strong> — monthly instalment for any active employee loan</li>
+  <li><strong>Discipline</strong> — approved disciplinary deductions</li>
+  <li><strong>Equipment</strong> — cost of damaged or lost equipment</li>
+</ul>
+
+<h3>Net Pay</h3>
+<p><strong>Net Pay</strong> = Gross Pay − Total Deductions</p>
+<p>This is the amount the guard receives in their bank account.</p>
+
+<h3>Payslip Statuses</h3>
+<ul>
+  <li><strong>Draft</strong> — generated but not yet confirmed. Can still be edited.</li>
+  <li><strong>Confirmed</strong> — finalised and ready for payment. No further edits.</li>
+  <li><strong>Paid</strong> — payment has been made to the guard.</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_namibia_tax" model="security.help.article">
+    <field name="category_id" ref="cat_payroll"/>
+    <field name="title">Namibian PAYE &amp; SSC Explained</field>
+    <field name="summary">How income tax and social security contributions are calculated</field>
+    <field name="sequence">4</field>
+    <field name="tags">PAYE SSC tax Namibia income social security contribution bracket</field>
+    <field name="body"><![CDATA[
+<h2>Namibian PAYE &amp; SSC</h2>
+<p>DogForce is configured with Namibian payroll rules. Here is how the two main statutory deductions work.</p>
+
+<h3>SSC — Social Security Commission</h3>
+<p>Both the employee and employer contribute to the Namibian Social Security Commission:</p>
+<ul>
+  <li><strong>Employee contribution</strong>: 0.9% of gross monthly earnings</li>
+  <li><strong>Employer contribution</strong>: 0.9% of gross monthly earnings (this is a company cost, not deducted from the guard)</li>
+</ul>
+<p>The SSC contribution covers maternity leave, sick leave, and death benefits.</p>
+
+<h3>PAYE — Pay As You Earn Income Tax</h3>
+<p>PAYE is calculated using Namibian annual tax brackets applied to the annualised monthly gross:</p>
+<ol>
+  <li>Monthly gross is multiplied by 12 to get annual equivalent</li>
+  <li>Tax is calculated on this annual figure using the bracket table</li>
+  <li>The annual tax is divided by 12 to get the monthly PAYE deduction</li>
+</ol>
+
+<h3>Namibian Tax Brackets (approximate)</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+  <thead><tr style="background:#1a3a5c; color:white;"><th style="padding:8px 12px; text-align:left;">Annual Income (N$)</th><th style="padding:8px 12px; text-align:left;">Tax Rate</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">0 – 50,000</td><td style="padding:8px 12px;">0% (exempt)</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;">50,001 – 100,000</td><td style="padding:8px 12px;">18%</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">100,001 – 300,000</td><td style="padding:8px 12px;">25% – 32%</td></tr>
+    <tr><td style="padding:8px 12px;">Above 300,000</td><td style="padding:8px 12px;">37%</td></tr>
+  </tbody>
+</table>
+<p style="font-size:0.8rem; color:#64748b; margin-top:8px;">Exact brackets are configurable under Configuration → Payroll Rule Sets → Tax Brackets.</p>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     LEAVE MANAGEMENT
+════════════════════════════════════════════════════════ -->
+
+<record id="art_leave_types" model="security.help.article">
+    <field name="category_id" ref="cat_leave"/>
+    <field name="title">Types of Leave</field>
+    <field name="summary">Annual, sick, compassionate — what each type covers and how it accrues</field>
+    <field name="sequence">1</field>
+    <field name="tags">leave type annual sick compassionate accrual balance</field>
+    <field name="body"><![CDATA[
+<h2>Types of Leave</h2>
+<p>DogForce supports multiple leave types, each with its own accrual policy and rules.</p>
+
+<h3>Common Leave Types</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Type</th><th style="padding:8px 12px; text-align:left;">What it covers</th><th style="padding:8px 12px; text-align:left;">Typical allowance</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><strong>Annual Leave</strong></td><td style="padding:8px 12px;">Planned time off, vacation</td><td style="padding:8px 12px;">24 days/year (2 days/month accrual)</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;"><strong>Sick Leave</strong></td><td style="padding:8px 12px;">Medical illness or injury</td><td style="padding:8px 12px;">30 days per 3-year cycle</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><strong>Compassionate</strong></td><td style="padding:8px 12px;">Death of immediate family member</td><td style="padding:8px 12px;">3–5 days per event</td></tr>
+    <tr><td style="padding:8px 12px;"><strong>Study Leave</strong></td><td style="padding:8px 12px;">Examinations or training</td><td style="padding:8px 12px;">Varies by policy</td></tr>
+  </tbody>
+</table>
+
+<h3>Leave Accrual</h3>
+<p>Annual leave accrues over time. By default, a guard earns 2 days of leave for every month they work. Accrual only applies when the guard is actively working — not during unpaid leave periods.</p>
+
+<h3>Leave Balances</h3>
+<p>Each guard's current leave balance is shown on their profile under the <strong>Leave</strong> tab, and in <strong>Leave → Leave Balances</strong>. The balance shows days available, days taken, and days pending approval.</p>
+
+<h3>Year-End</h3>
+<p>At year-end, the system can:</p>
+<ul>
+  <li><strong>Carry over</strong> unused leave (up to a configured cap)</li>
+  <li><strong>Forfeit</strong> excess leave above the cap</li>
+  <li><strong>Pay out</strong> unused leave (configured per leave type)</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_leave_request" model="security.help.article">
+    <field name="category_id" ref="cat_leave"/>
+    <field name="title">Submitting &amp; Approving Leave Requests</field>
+    <field name="summary">How to create a leave request and approve or refuse it</field>
+    <field name="sequence">2</field>
+    <field name="tags">leave request submit approve refuse draft</field>
+    <field name="body"><![CDATA[
+<h2>Leave Requests</h2>
+
+<h3>Creating a Leave Request</h3>
+<ol>
+  <li>Go to <strong>Leave → Leave Requests → New</strong></li>
+  <li>Select the <strong>Guard</strong> (employee)</li>
+  <li>Select the <strong>Leave Type</strong> (Annual, Sick, etc.)</li>
+  <li>Enter the <strong>Start Date</strong> and <strong>End Date</strong></li>
+  <li>Add a reason in the <strong>Description</strong> field</li>
+  <li>Save — status is <strong>Draft</strong></li>
+  <li>Click <strong>Submit</strong> to send it for approval</li>
+</ol>
+
+<h3>Approving a Leave Request</h3>
+<ol>
+  <li>Go to <strong>Leave → Leave Requests</strong></li>
+  <li>Filter by <strong>Submitted</strong> status</li>
+  <li>Open the request and review the dates</li>
+  <li>Check the roster — does the guard have shifts on those days? Are there enough other guards to cover?</li>
+  <li>Click <strong>Approve</strong> (or <strong>Refuse</strong> with a reason)</li>
+</ol>
+
+<h3>What happens after approval?</h3>
+<ul>
+  <li>The guard's leave balance is reduced by the number of approved days</li>
+  <li>The roster board will show a leave conflict warning if someone tries to assign the guard to a shift during their leave period</li>
+  <li>Public holidays within the leave period are not counted as leave days</li>
+</ul>
+
+<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Tip:</strong> The AI Assistant can check roster impact before you approve. Ask it: "If I approve leave for [Guard Name] from 10 June to 14 June, how many slots are affected?"
+</div>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     CLIENT BILLING
+════════════════════════════════════════════════════════ -->
+
+<record id="art_billing_plan" model="security.help.article">
+    <field name="category_id" ref="cat_billing"/>
+    <field name="title">Setting Up a Client Contract (Billing Plan)</field>
+    <field name="summary">How to create billing plans for recurring, per-shift, and ad-hoc clients</field>
+    <field name="sequence">1</field>
+    <field name="tags">billing plan contract client recurring per-shift invoice setup</field>
+    <field name="body"><![CDATA[
+<h2>Setting Up a Client Contract</h2>
+<p>A <strong>Billing Plan</strong> is the contract between DogForce and a client — it defines what services are provided and how much to charge.</p>
+
+<h3>Billing Modes</h3>
+<ul>
+  <li><strong>Recurring</strong> — a fixed monthly fee, invoiced automatically each month</li>
+  <li><strong>Per-Shift</strong> — charged based on actual shifts worked (calculated from attendance)</li>
+  <li><strong>Ad-hoc</strong> — manual invoices as needed, no automatic generation</li>
+</ul>
+
+<h3>Creating a Billing Plan</h3>
+<ol>
+  <li>Go to <strong>Billing → Billing Plans → New</strong></li>
+  <li>Select the <strong>Client</strong> (partner)</li>
+  <li>Select the <strong>Site</strong> this plan covers</li>
+  <li>Choose the <strong>Billing Mode</strong></li>
+  <li>Set <strong>Payment Terms</strong> (e.g. Net 30 days)</li>
+  <li>Set <strong>VAT rate</strong> (default 15% for Namibia)</li>
+  <li>Add <strong>Plan Lines</strong> — one line per service or post type, with the rate per unit</li>
+  <li>Save and <strong>Activate</strong> the plan</li>
+</ol>
+
+<h3>Plan Lines</h3>
+<p>Each line specifies what is being charged. For a per-shift plan, lines might be:</p>
+<ul>
+  <li>Grade A Guard — N$XX/hour</li>
+  <li>Grade B Guard — N$XX/hour</li>
+  <li>Vehicle — N$XX/trip</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_invoicing" model="security.help.article">
+    <field name="category_id" ref="cat_billing"/>
+    <field name="title">Generating &amp; Managing Invoices</field>
+    <field name="summary">How to generate, confirm, send, and track client invoices</field>
+    <field name="sequence">2</field>
+    <field name="tags">invoice generate confirm send billing client payment status</field>
+    <field name="body"><![CDATA[
+<h2>Client Invoices</h2>
+
+<h3>Generating Invoices</h3>
+<p>For <strong>recurring plans</strong>, the system can auto-generate draft invoices at the start of each month via a scheduled job. You can also generate manually:</p>
+<ol>
+  <li>Go to <strong>Billing → Invoices → New</strong></li>
+  <li>Select the <strong>Billing Plan</strong></li>
+  <li>Set the invoice <strong>Date</strong> and <strong>Period</strong></li>
+  <li>Add or adjust line items</li>
+  <li>Save — status is <strong>Draft</strong></li>
+</ol>
+
+<h3>Invoice Workflow</h3>
+<div style="display:flex; gap:8px; flex-wrap:wrap; margin:12px 0;">
+  <span style="background:#f1f5f9; border:1px solid #e2e8f0; padding:6px 14px; border-radius:20px; font-size:0.85rem;">Draft</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#e0f2fe; border:1px solid #bae6fd; padding:6px 14px; border-radius:20px; font-size:0.85rem;">Confirmed</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#fef3c7; border:1px solid #fde68a; padding:6px 14px; border-radius:20px; font-size:0.85rem;">Sent</span>
+  <span style="color:#94a3b8; padding:6px 4px;">→</span>
+  <span style="background:#dcfce7; border:1px solid #86efac; padding:6px 14px; border-radius:20px; font-size:0.85rem;">Paid</span>
+</div>
+<ul>
+  <li><strong>Confirm</strong> — locks the invoice amounts. Client can now be sent the invoice.</li>
+  <li><strong>Mark as Sent</strong> — records that the invoice was emailed/delivered to the client.</li>
+  <li><strong>Record Payment</strong> — when the client pays, record the payment (see next article).</li>
+</ul>
+
+<h3>Overdue Invoices</h3>
+<p>The system automatically flags invoices as overdue when they pass their due date. These appear in red on the Executive Dashboard and trigger a notification alert.</p>
+    ]]></field>
+</record>
+
+<record id="art_payments" model="security.help.article">
+    <field name="category_id" ref="cat_billing"/>
+    <field name="title">Recording Client Payments</field>
+    <field name="summary">How to log when a client pays an invoice and reconcile balances</field>
+    <field name="sequence">3</field>
+    <field name="tags">payment client invoice reconcile record bank transfer partial</field>
+    <field name="body"><![CDATA[
+<h2>Recording Client Payments</h2>
+
+<h3>When a Client Pays</h3>
+<ol>
+  <li>Go to <strong>Billing → Client Payments → New</strong></li>
+  <li>Select the <strong>Client</strong></li>
+  <li>Enter the <strong>Amount Received</strong> and <strong>Payment Date</strong></li>
+  <li>Select the <strong>Payment Method</strong> (bank transfer, cash, etc.)</li>
+  <li>Enter the bank reference or deposit slip number</li>
+  <li>Save</li>
+</ol>
+
+<h3>Allocating to Invoices</h3>
+<p>After recording the payment, link it to the outstanding invoice(s):</p>
+<ol>
+  <li>Open the payment record</li>
+  <li>Under <strong>Invoice Allocation</strong>, click <strong>Add a line</strong></li>
+  <li>Select the invoice being paid and the amount applied</li>
+  <li>If the payment covers multiple invoices, add multiple allocation lines</li>
+  <li>Save — the invoice status will update automatically</li>
+</ol>
+
+<h3>Partial Payments</h3>
+<p>If a client pays less than the full amount, the invoice status becomes <strong>Partially Paid</strong>. The remaining balance shows on the ageing report.</p>
+
+<h3>Invoice Ageing Report</h3>
+<p>Go to <strong>Billing → Invoice Ageing</strong> to see a full breakdown of what each client owes, grouped by how many days overdue. Use this for collection follow-ups.</p>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     DISCIPLINE & INCIDENTS
+════════════════════════════════════════════════════════ -->
+
+<record id="art_record_incident" model="security.help.article">
+    <field name="category_id" ref="cat_discipline"/>
+    <field name="title">Recording a Disciplinary Incident</field>
+    <field name="summary">How to log an incident, set severity, and submit it for approval</field>
+    <field name="sequence">1</field>
+    <field name="tags">incident discipline record severity log submit approval</field>
+    <field name="body"><![CDATA[
+<h2>Recording a Disciplinary Incident</h2>
+<p>When a guard behaves in a way that violates company policy, a formal incident record must be created. This ensures a proper paper trail and triggers the appropriate consequences.</p>
+
+<h3>Step 1 — Create the Incident</h3>
+<ol>
+  <li>Go to <strong>Discipline → Incidents → New</strong></li>
+  <li>Select the <strong>Guard</strong> (employee)</li>
+  <li>Select the <strong>Incident Type</strong> (e.g. AWOL, Insubordination, Theft)</li>
+  <li>Set the <strong>Incident Date</strong></li>
+  <li>Write a detailed <strong>Description</strong> of what happened</li>
+  <li>Attach evidence if available (photos, witness statements)</li>
+  <li>Save — status is <strong>Draft</strong></li>
+</ol>
+
+<h3>Step 2 — Set the Severity</h3>
+<p>Severity determines the automatic consequences:</p>
+<ul>
+  <li><strong>Low</strong> — verbal warning, minor reliability deduction</li>
+  <li><strong>Medium</strong> — written warning, moderate deduction</li>
+  <li><strong>High</strong> — final warning, significant deduction, possible suspension</li>
+  <li><strong>Critical</strong> — immediate dismissal consideration, guard may be disqualified from future assignments</li>
+</ul>
+
+<h3>Step 3 — Submit for Approval</h3>
+<p>Click <strong>Submit</strong>. A manager must review and click <strong>Approve</strong> before the consequences take effect. Once approved, the reliability score is automatically adjusted and any payroll deduction is created.</p>
+
+<h3>Guard Acknowledgment</h3>
+<p>The system tracks whether the guard has been shown and acknowledged the incident. Tick the <strong>Guard Acknowledged</strong> checkbox once the incident has been communicated to them.</p>
+    ]]></field>
+</record>
+
+<record id="art_incident_appeal" model="security.help.article">
+    <field name="category_id" ref="cat_discipline"/>
+    <field name="title">The Incident Appeal Process</field>
+    <field name="summary">How guards can appeal an incident and how managers handle appeals</field>
+    <field name="sequence">2</field>
+    <field name="tags">appeal incident overturn upheld discipline fairness</field>
+    <field name="body"><![CDATA[
+<h2>The Incident Appeal Process</h2>
+<p>DogForce supports a formal appeal process for incidents, ensuring fairness and allowing guards to contest decisions they believe are unjust.</p>
+
+<h3>Filing an Appeal</h3>
+<ol>
+  <li>Open the approved incident record</li>
+  <li>Click <strong>File Appeal</strong></li>
+  <li>Enter the guard's grounds for appeal and supporting information</li>
+  <li>Save — the incident status moves to <strong>Under Appeal</strong></li>
+</ol>
+
+<h3>Reviewing an Appeal</h3>
+<p>A senior manager reviews the appeal and decides:</p>
+<ul>
+  <li><strong>Uphold the incident</strong> — the original decision stands; consequences remain</li>
+  <li><strong>Overturn the incident</strong> — the incident is reversed; reliability score is restored and any deductions are cancelled</li>
+</ul>
+
+<h3>After the Decision</h3>
+<p>The outcome is recorded on the incident with a date and the deciding manager's name. The guard should be informed of the outcome in writing.</p>
+
+<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Best practice:</strong> Always document appeals promptly. A guard should receive a response within 5 working days of filing an appeal.
+</div>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     EQUIPMENT & FLEET
+════════════════════════════════════════════════════════ -->
+
+<record id="art_equipment_issue" model="security.help.article">
+    <field name="category_id" ref="cat_equipment"/>
+    <field name="title">Issuing Equipment to Guards</field>
+    <field name="summary">How to allocate uniforms, radios, and firearms to a guard</field>
+    <field name="sequence">1</field>
+    <field name="tags">equipment issue allocate uniform radio firearm guard</field>
+    <field name="body"><![CDATA[
+<h2>Issuing Equipment to Guards</h2>
+<p>DogForce tracks all equipment issued to guards — from uniforms to radios and firearms. This creates accountability and enables automatic deductions if items are lost or damaged.</p>
+
+<h3>Equipment Types</h3>
+<ul>
+  <li><strong>Non-serialised</strong> (e.g. uniforms, boots) — tracked by quantity, not individual item</li>
+  <li><strong>Serialised</strong> (e.g. radios, firearms) — each item has a unique serial number</li>
+</ul>
+
+<h3>Creating an Allocation</h3>
+<ol>
+  <li>Go to <strong>Equipment → Allocations → New</strong></li>
+  <li>Select the <strong>Guard</strong></li>
+  <li>Select the <strong>Equipment Type</strong></li>
+  <li>For serialised items, select the specific <strong>Item</strong> (serial number)</li>
+  <li>Enter the quantity (for non-serialised)</li>
+  <li>Set the <strong>Issue Date</strong></li>
+  <li>Save — status is <strong>Allocated</strong></li>
+  <li>Click <strong>Issue</strong> to confirm physical handover — status moves to <strong>Issued</strong></li>
+  <li>Once the guard signs for it, click <strong>Acknowledge</strong></li>
+</ol>
+
+<h3>Returning Equipment</h3>
+<p>When a guard returns equipment (e.g. end of employment), open the allocation and click <strong>Return</strong>. Enter the return date and condition of the item.</p>
+
+<h3>Equipment Damage</h3>
+<p>If an item is returned damaged or reported lost, record a damage report on the allocation. The cost is automatically calculated and a payroll deduction is created for the next payslip.</p>
+    ]]></field>
+</record>
+
+<record id="art_fleet" model="security.help.article">
+    <field name="category_id" ref="cat_equipment"/>
+    <field name="title">Managing the Vehicle Fleet</field>
+    <field name="summary">Vehicles, shuttle routes, runs, inspections, and fuel logs</field>
+    <field name="sequence">2</field>
+    <field name="tags">fleet vehicle shuttle route run inspection fuel service odometer</field>
+    <field name="body"><![CDATA[
+<h2>Managing the Vehicle Fleet</h2>
+<p>The Fleet module tracks all company vehicles used for transporting guards, including shuttle runs, inspections, fuel costs, and service history.</p>
+
+<h3>Vehicles</h3>
+<p>Go to <strong>Fleet → Vehicles</strong>. Each vehicle record includes:</p>
+<ul>
+  <li>Registration number, make, model, year</li>
+  <li>Current odometer reading</li>
+  <li>Assigned driver</li>
+  <li>Status: Available / In Transit / In Service / Scrapped</li>
+</ul>
+
+<h3>Shuttle Routes</h3>
+<p>A <strong>shuttle route</strong> defines a regular transport path with ordered stops (pickup and drop-off points). Set up routes under <strong>Fleet → Routes</strong>.</p>
+
+<h3>Shuttle Runs</h3>
+<p>Each actual trip is recorded as a <strong>shuttle run</strong>. A run records:</p>
+<ul>
+  <li>Which vehicle and driver</li>
+  <li>Which route was followed</li>
+  <li>Which guards boarded, got dropped off, or were no-shows</li>
+  <li>Departure and arrival times</li>
+</ul>
+
+<h3>Pre-Departure Inspections</h3>
+<p>Before each trip, the driver should complete a <strong>vehicle inspection</strong>. The inspection checklist covers brakes, tyres, lights, fuel level, and more. A failed inspection <strong>blocks</strong> the vehicle from departing until the issue is resolved.</p>
+
+<h3>Fuel Logs</h3>
+<p>Record every fuel fill-up under <strong>Fleet → Fuel Logs</strong>. The system tracks consumption (km/litre) per vehicle over time.</p>
+
+<h3>Service Records</h3>
+<p>Log maintenance and service events under <strong>Fleet → Service Records</strong>. This creates a full service history for each vehicle.</p>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     AI ASSISTANT
+════════════════════════════════════════════════════════ -->
+
+<record id="art_ai_overview" model="security.help.article">
+    <field name="category_id" ref="cat_ai"/>
+    <field name="title">What the AI Assistant Can Do</field>
+    <field name="summary">An overview of AI features and the chat assistant</field>
+    <field name="sequence">1</field>
+    <field name="tags">AI assistant overview features chat gemini claude</field>
+    <field name="body"><![CDATA[
+<h2>The DogForce AI Assistant</h2>
+<p>DogForce includes a built-in AI assistant powered by Google Gemini (or Claude/OpenAI depending on your configuration). It can answer questions, find records, and even take actions — after your confirmation.</p>
+
+<h3>What can you ask?</h3>
+<ul>
+  <li>"How many guards were AWOL this week?"</li>
+  <li>"Show me all overdue invoices"</li>
+  <li>"Who are the top 5 guards by reliability score?"</li>
+  <li>"What shifts are unassigned for next Monday?"</li>
+  <li>"Summarise today's attendance"</li>
+  <li>"Show me the payslip for John Nangolo in June"</li>
+</ul>
+
+<h3>What the AI can do for you</h3>
+<ul>
+  <li><strong>Answer questions</strong> — searches live data and gives you accurate, current numbers</li>
+  <li><strong>Navigate</strong> — produces clickable links to records and filtered list views</li>
+  <li><strong>Propose actions</strong> — can suggest updating a record or running an action, but always shows a confirmation dialog before doing anything</li>
+</ul>
+
+<h3>What the AI cannot do</h3>
+<ul>
+  <li>It cannot make changes without your explicit confirmation</li>
+  <li>It cannot access data outside the DogForce platform</li>
+  <li>It cannot run payroll or confirm rosters automatically</li>
+</ul>
+
+<div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Privacy:</strong> The AI only uses data within your DogForce instance. It does not send your guard or client data to external services beyond the AI provider (Gemini/Claude) for generating responses.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_ai_chat" model="security.help.article">
+    <field name="category_id" ref="cat_ai"/>
+    <field name="title">Using the Chat Assistant</field>
+    <field name="summary">How to open, use, and get the best results from the AI chat panel</field>
+    <field name="sequence">2</field>
+    <field name="tags">chat assistant panel open message quick reply navigate</field>
+    <field name="body"><![CDATA[
+<h2>Using the AI Chat Panel</h2>
+
+<h3>Opening the Chat</h3>
+<p>The chat button is in the <strong>bottom-right corner</strong> of every page — it looks like a speech bubble icon with the DogForce shield. Click it to open the panel. Click again (or the × button) to close it.</p>
+
+<h3>Sending a Message</h3>
+<ol>
+  <li>Click in the text box at the bottom of the panel</li>
+  <li>Type your question or request</li>
+  <li>Press <strong>Enter</strong> to send (or <strong>Shift+Enter</strong> for a new line)</li>
+  <li>Wait a moment — the AI calls live data tools before answering</li>
+</ol>
+
+<h3>Quick Replies</h3>
+<p>After the AI responds, it often shows <strong>suggested follow-up questions</strong> as clickable buttons. These are quick replies — tap one to continue the conversation without typing.</p>
+
+<h3>Clickable Links in Responses</h3>
+<p>The AI often includes <strong>navigation chips</strong> (blue buttons that say "Open Record →" or "View all AWOL →"). Click these to jump directly to the relevant page.</p>
+
+<h3>Action Confirmation</h3>
+<p>If you ask the AI to do something (e.g. "Approve this leave request"), it will show a <strong>confirmation card</strong> describing exactly what it plans to do. You must click <strong>Confirm</strong> for the action to execute. You can always click <strong>Cancel</strong> to decline.</p>
+
+<h3>Starting a New Chat</h3>
+<p>Click the <strong>+</strong> icon in the chat header to clear the conversation and start fresh. Previous conversations are saved to session history.</p>
+
+<h3>Tips for Better Responses</h3>
+<ul>
+  <li>Be specific: "AWOL guards this week" is better than "attendance problems"</li>
+  <li>Include names or dates when relevant: "payslip for John Nangolo June 2026"</li>
+  <li>Ask one question at a time for clearer answers</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_ai_setup" model="security.help.article">
+    <field name="category_id" ref="cat_ai"/>
+    <field name="title">Setting Up the AI Engine</field>
+    <field name="summary">How administrators configure the AI provider and API key</field>
+    <field name="sequence">3</field>
+    <field name="tags">AI setup configuration API key Gemini Claude provider admin</field>
+    <field name="body"><![CDATA[
+<h2>Setting Up the AI Engine</h2>
+<p>Before the AI chat assistant works, an administrator must configure the AI provider and enter an API key.</p>
+
+<h3>Step 1 — Open AI Configuration</h3>
+<p>Go to <strong>Configuration → AI Engine</strong> (you must be an administrator).</p>
+
+<h3>Step 2 — Choose a Provider</h3>
+<p>Select your preferred AI provider:</p>
+<ul>
+  <li><strong>Google Gemini</strong> — recommended. Requires a Gemini API key from Google AI Studio.</li>
+  <li><strong>Anthropic Claude</strong> — high quality. Requires an API key from console.anthropic.com.</li>
+  <li><strong>OpenAI</strong> — GPT-4 based. Requires an API key from platform.openai.com.</li>
+</ul>
+
+<h3>Step 3 — Enter the API Key</h3>
+<p>Paste your API key into the corresponding field (e.g. <strong>Gemini API Key</strong>). Click <strong>Save</strong>.</p>
+
+<h3>Step 4 — Test the Connection</h3>
+<p>Click <strong>Test Connection</strong>. If the key is valid, you will see a success message. If not, check that the key is correct and has not expired.</p>
+
+<h3>Optional Settings</h3>
+<ul>
+  <li><strong>Max Tokens</strong> — maximum length of AI responses (default: 4096, recommended for complex queries)</li>
+  <li><strong>Temperature</strong> — 0.1–0.3 for factual answers, higher for creative text (default: 0.2)</li>
+  <li><strong>Response Cache</strong> — reuses identical query responses for 24 hours, reducing API costs</li>
+</ul>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Cost awareness:</strong> Each question sent to the AI uses a small amount of API tokens. Enabling the response cache significantly reduces costs for repeated questions.
+</div>
+    ]]></field>
+</record>
+
+</odoo>

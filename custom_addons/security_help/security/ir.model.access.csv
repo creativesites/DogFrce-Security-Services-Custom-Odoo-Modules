@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_help_category_user,security.help.category user read,model_security_help_category,base.group_user,1,0,0,0
+access_help_category_system,security.help.category system full,model_security_help_category,base.group_system,1,1,1,1
+access_help_article_user,security.help.article user read,model_security_help_article,base.group_user,1,0,0,0
+access_help_article_system,security.help.article system full,model_security_help_article,base.group_system,1,1,1,1

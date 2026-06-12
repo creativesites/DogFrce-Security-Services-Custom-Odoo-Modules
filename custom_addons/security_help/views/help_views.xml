@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Client action: Help Portal ── -->
+    <record id="action_help_portal" model="ir.actions.client">
+        <field name="name">Help Centre</field>
+        <field name="tag">security_help.HelpPortal</field>
+    </record>
+
+    <!-- ── Main menu entry inside Security Suite ── -->
+    <menuitem id="menu_help_root"
+              name="Help Centre"
+              parent="security_base.menu_security_root"
+              action="action_help_portal"
+              sequence="80"/>
+
+    <!-- ── Admin category views ── -->
+    <record id="view_help_category_list" model="ir.ui.view">
+        <field name="name">security.help.category.list</field>
+        <field name="model">security.help.category</field>
+        <field name="arch" type="xml">
+            <list string="Help Categories">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="icon"/>
+                <field name="article_count" string="Articles"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_help_category_form" model="ir.ui.view">
+        <field name="name">security.help.category.form</field>
+        <field name="model">security.help.category</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                        <field name="icon"/>
+                        <field name="color"/>
+                        <field name="sequence"/>
+                    </group>
+                    <notebook>
+                        <page string="Articles">
+                            <field name="article_ids">
+                                <list>
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="title"/>
+                                    <field name="summary"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_help_category" model="ir.actions.act_window">
+        <field name="name">Help Categories</field>
+        <field name="res_model">security.help.category</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ── Admin article views ── -->
+    <record id="view_help_article_list" model="ir.ui.view">
+        <field name="name">security.help.article.list</field>
+        <field name="model">security.help.article</field>
+        <field name="arch" type="xml">
+            <list string="Help Articles">
+                <field name="sequence" widget="handle"/>
+                <field name="category_id"/>
+                <field name="title"/>
+                <field name="summary"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_help_article_form" model="ir.ui.view">
+        <field name="name">security.help.article.form</field>
+        <field name="model">security.help.article</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="category_id"/>
+                        <field name="title"/>
+                        <field name="summary"/>
+                        <field name="sequence"/>
+                        <field name="tags"/>
+                    </group>
+                    <field name="body" widget="html"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_help_article" model="ir.actions.act_window">
+        <field name="name">Help Articles</field>
+        <field name="res_model">security.help.article</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ── Admin sub-menus under Security → Configuration ── -->
+    <menuitem id="menu_help_admin"
+              name="Help Centre"
+              parent="security_base.menu_security_configuration"
+              sequence="70"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_help_admin_categories"
+              name="Categories"
+              parent="menu_help_admin"
+              action="action_help_category"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_help_admin_articles"
+              name="Articles"
+              parent="menu_help_admin"
+              action="action_help_article"
+              groups="base.group_system"/>
+
+</odoo>
