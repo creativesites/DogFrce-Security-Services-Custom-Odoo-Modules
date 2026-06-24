@@ -24,7 +24,7 @@ def _site_summary(site, today):
         [("site_id", "=", site.id), ("attendance_date", "=", today)], limit=1
     )
     if batch:
-        records = env["security.attendance.record"].sudo().search([("batch_id", "=", batch.id)])
+        records = env["security.attendance.record"].sudo().search([("attendance_batch_id", "=", batch.id)])
         total      = len(records)
         present    = len(records.filtered(lambda r: r.manual_presence == "present"))
         absent     = len(records.filtered(lambda r: r.manual_presence == "absent"))
@@ -128,7 +128,7 @@ class ManagerController(http.Controller):
 
         if batch:
             records = env["security.attendance.record"].sudo().search(
-                [("batch_id", "=", batch.id)], order="employee_id asc"
+                [("attendance_batch_id", "=", batch.id)], order="employee_id asc"
             )
             roster = [_serialize_rec(r) for r in records]
             overtime_pending = [_serialize_rec(r) for r in records
@@ -174,7 +174,7 @@ class ManagerController(http.Controller):
 
         vals = {"overtime_approved": bool(body.get("approved", True))}
         if body.get("note"):
-            vals["overtime_note"] = body["note"]
+            vals["overtime_approval_note"] = body["note"]
         record.write(vals)
 
         return _json_ok({"record_id": record.id,

@@ -93,6 +93,15 @@
                     </span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size:11px; color:#94a3b8;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-right:5px;"/>
+                        Critical Gaps
+                    </span>
+                    <span class="fw-semibold" style="font-size:12px; color:#fca5a5;">
+                        <t t-esc="state.stats.criticalGaps"/>
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
                     <span style="font-size:11px; color:#94a3b8;">Coverage</span>
                     <span class="fw-bold" style="font-size:13px; color:#fff;">
                         <t t-esc="assignmentPercent"/>%
@@ -136,9 +145,18 @@
                 </div>
             </div>
             <div t-if="state.batchId" class="d-flex gap-2 align-items-center">
+                <button class="rb-btn rb-btn-autofill"
+                        t-on-click="autoFillSlots"
+                        t-att-disabled="state.autoFilling or state.loading">
+                    <i t-att-class="state.autoFilling ? 'fa fa-spinner fa-spin' : 'fa fa-magic'"/>
+                    <span class="ms-1">
+                        <t t-if="state.autoFilling">Filling…</t>
+                        <t t-else="">Auto-Fill</t>
+                    </span>
+                </button>
                 <button class="rb-btn rb-btn-ghost"
                         t-on-click="refreshBoard"
-                        t-att-disabled="state.loading">
+                        t-att-disabled="state.loading or state.autoFilling">
                     <i t-att-class="state.loading ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
                     <span class="ms-1">Refresh</span>
                 </button>
@@ -245,6 +263,15 @@
                                                             <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.conflict ? '#991b1b' : '#15803d') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
                                                                  t-esc="slot.employee_name"/>
                                                             <div t-if="slot.shift_label" style="font-size:9px; color:#86efac; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        </div>
+                                                    </t>
+
+                                                    <!-- CRITICAL GAP — auto-fill found no eligible guard -->
+                                                    <t t-elif="slot.critical_gap">
+                                                        <div t-on-click="() => this.selectSlot(slot)"
+                                                             class="rb-cell-critical-gap">
+                                                            <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">CRITICAL GAP</span>
+                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#f87171; margin-top:2px;" t-esc="slot.shift_label"/>
                                                         </div>
                                                     </t>
 

@@ -109,6 +109,108 @@ class SecuritySlotSuggestion(models.Model):
         return None
 
 
+class SecurityRosterBatch(models.Model):
+    _inherit = "security.roster.batch"
+
+    unassigned_count = fields.Integer(
+        compute="_compute_gap_counts",
+        string="Unassigned Slots",
+    )
+    critical_gap_count = fields.Integer(
+        compute="_compute_gap_counts",
+        string="Critical Gaps",
+    )
+    fill_rate = fields.Float(
+        compute="_compute_gap_counts",
+        string="Fill Rate (%)",
+        digits=(5, 1),
+    )
+
+    @api.depends("slot_ids.employee_id", "slot_ids.state", "slot_ids.critical_gap")
+    def _compute_gap_counts(self):
+        for batch in self:
+            active = batch.slot_ids.filtered(lambda s: s.state != "cancelled")
+            unassigned = active.filtered(lambda s: not s.employee_id)
+            batch.unassigned_count = len(unassigned)
+            batch.critical_gap_count = len(unassigned.filtered(lambda s: s.critical_gap))
+            total = len(active)
+            assigned = total - len(unassigned)
+            batch.fill_rate = round(assigned / total * 100, 1) if total else 0.0
+
+    def action_auto_fill_slots(self):
+        """
+        Greedy auto-fill: assigns the highest-scoring eligible guard to each
+        unassigned slot, processing high-value shifts first.
+
+        assigned_today tracks within-run assignments to prevent double-booking.
+
+        NOTE: rest-hour constraints between slots filled in the same run are not
+        enforced here. Add a _is_still_eligible() check after each assignment
+        once rest-hour rules are implemented on SecurityRosterSlot (Phase 2).
+
+        Notification create calls use sudo() to avoid cascading writes if a
+        write listener on security.attendance.record recomputes batch fields and
+        tries to trigger further notifications (no_notify context pattern).
+        """
+        for batch in self:
+            unassigned = batch.slot_ids.filtered(
+                lambda s: not s.employee_id and s.state != "cancelled"
+            )
+            # High-value shifts first, then by date and shift start time
+            unassigned = unassigned.sorted(
+                key=lambda s: (
+                    not s.high_value_shift,
+                    str(s.shift_date) if s.shift_date else "",
+                    s.shift_template_id.start_hour if s.shift_template_id else 0,
+                )
+            )
+            # {shift_date_str: set(employee_id)} — prevents double-booking in this run
+            assigned_today = {}
+            filled = 0
+            gaps = 0
+            for slot in unassigned:
+                slot.critical_gap = False
+                eligible = slot._get_eligible_guards(slot)
+                if not eligible:
+                    slot.critical_gap = True
+                    gaps += 1
+                    continue
+                # Exclude guards assigned in this run (DB query is already done in
+                # _get_eligible_guards; assigned_today covers intra-run assignments)
+                date_key = str(slot.shift_date)
+                run_assigned = assigned_today.get(date_key, set())
+                eligible = [(emp, sc) for emp, sc in eligible if emp.id not in run_assigned]
+                if not eligible:
+                    slot.critical_gap = True
+                    gaps += 1
+                    continue
+                # Score remaining candidates and assign the best
+                scored = []
+                for employee, _ in eligible:
+                    score, _breakdown = slot._score_guard(slot, employee)
+                    scored.append((score, employee))
+                scored.sort(key=lambda x: x[0], reverse=True)
+                _best_score, best_employee = scored[0]
+                slot.employee_id = best_employee.id
+                slot.state = "assigned"
+                slot.critical_gap = False
+                assigned_today.setdefault(date_key, set()).add(best_employee.id)
+                filled += 1
+        msg = f"{filled} slot(s) filled automatically."
+        if gaps:
+            msg += f" {gaps} critical gap(s) could not be filled — review red cells."
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Auto-Fill Complete",
+                "message": msg,
+                "type": "success" if not gaps else "warning",
+                "sticky": gaps > 0,
+            },
+        }
+
+
 class SecurityRosterSlot(models.Model):
     _inherit = "security.roster.slot"
 
@@ -118,6 +220,11 @@ class SecurityRosterSlot(models.Model):
         string="Guard Suggestions",
     )
     suggestion_count = fields.Integer(compute="_compute_suggestion_count")
+    critical_gap = fields.Boolean(
+        default=False,
+        string="Critical Gap",
+        help="Set by auto-fill when no eligible guard was found for this slot.",
+    )
 
     def _compute_suggestion_count(self):
         for slot in self:

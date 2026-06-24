@@ -27,6 +27,7 @@ class RosterBoard extends Component {
 
         this.state = useState({
             loading: false,
+            autoFilling: false,
             batches: [],
             batchId: null,
             batchDateFrom: null,
@@ -40,7 +41,7 @@ class RosterBoard extends Component {
             suggestions: [],
             suggestionsLoaded: false,
             loadingSuggestions: false,
-            stats: { assigned: 0, unassigned: 0 },
+            stats: { assigned: 0, unassigned: 0, criticalGaps: 0 },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
         });
 
@@ -83,7 +84,7 @@ class RosterBoard extends Component {
             [
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning",
+                "fairness_warning", "critical_gap",
             ]
         );
 
@@ -116,6 +117,7 @@ class RosterBoard extends Component {
                 state: s.state,
                 suggestion_count: s.suggestion_count,
                 conflict: !!s.fairness_warning,
+                critical_gap: !!s.critical_gap,
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -138,11 +140,12 @@ class RosterBoard extends Component {
         const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
         this.state.stats.assigned = activeSlots.filter((s) => s.employee_id).length;
         this.state.stats.unassigned = activeSlots.filter((s) => !s.employee_id).length;
+        this.state.stats.criticalGaps = activeSlots.filter((s) => !s.employee_id && s.critical_gap).length;
 
         this.state.loading = false;
     }
 
-    // Reload only the slot data for the current batch (used after assign/unassign)
+    // Reload only the slot data for the current batch (used after assign/unassign/auto-fill)
     async loadSlots(batchId) {
         const slots = await this.orm.searchRead(
             "security.roster.slot",
@@ -150,7 +153,7 @@ class RosterBoard extends Component {
             [
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning",
+                "fairness_warning", "critical_gap",
             ]
         );
 
@@ -181,6 +184,7 @@ class RosterBoard extends Component {
                 state: s.state,
                 suggestion_count: s.suggestion_count,
                 conflict: !!s.fairness_warning,
+                critical_gap: !!s.critical_gap,
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -188,6 +192,7 @@ class RosterBoard extends Component {
         const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
         this.state.stats.assigned = activeSlots.filter((s) => s.employee_id).length;
         this.state.stats.unassigned = activeSlots.filter((s) => !s.employee_id).length;
+        this.state.stats.criticalGaps = activeSlots.filter((s) => !s.employee_id && s.critical_gap).length;
     }
 
     // ─── Computed getters ───────────────────────────────────────────
@@ -256,6 +261,31 @@ class RosterBoard extends Component {
 
     async refreshBoard() {
         await this.loadBoard();
+    }
+
+    async autoFillSlots() {
+        if (!this.state.batchId || this.state.autoFilling) return;
+        this.state.autoFilling = true;
+        try {
+            const result = await this.orm.call(
+                "security.roster.batch",
+                "action_auto_fill_slots",
+                [[this.state.batchId]]
+            );
+            // Reload board so critical-gap cells and assignments are reflected
+            await this.loadBoard();
+            if (result && result.params) {
+                this.notification.add(result.params.message || "Auto-fill complete.", {
+                    title: result.params.title || "Auto-Fill",
+                    type: result.params.type || "success",
+                    sticky: !!result.params.sticky,
+                });
+            }
+        } catch (e) {
+            this.notification.add("Auto-fill failed: " + (e.message || e), { type: "danger" });
+        } finally {
+            this.state.autoFilling = false;
+        }
     }
 
     selectSlot(slot) {

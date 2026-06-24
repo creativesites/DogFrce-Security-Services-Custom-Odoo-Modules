@@ -120,7 +120,7 @@ class SupervisorController(http.Controller):
         for batch in batches:
             data = _serialize_batch(batch)
             records = env["security.attendance.record"].sudo().search(
-                [("batch_id", "=", batch.id)],
+                [("attendance_batch_id", "=", batch.id)],
                 order="employee_id asc",
             )
             data["slots"] = [_serialize_record(r) for r in records]

@@ -187,6 +187,23 @@ class SecurityShiftRequirement(models.Model):
     )
     active = fields.Boolean(default=True)
     note = fields.Text()
+    contract_active = fields.Boolean(
+        compute="_compute_contract_active",
+        string="Contract Active",
+        help="Whether the client has an active contract covering this site today.",
+    )
+
+    @api.depends("site_id")
+    def _compute_contract_active(self):
+        today = fields.Date.context_today(self)
+        contract_model = self.env.get("security.client.contract")
+        for req in self:
+            if contract_model and req.site_id and req.site_id.partner_id:
+                req.contract_active = bool(
+                    contract_model.get_active_for_site(req.site_id, today)
+                )
+            else:
+                req.contract_active = True  # no contract module installed — no gate
 
     def _is_active_on_date(self, target_date):
         self.ensure_one()
@@ -404,7 +421,23 @@ class SecurityRosterBatch(models.Model):
                 raise ValidationError("No new roster slots were created. Check dates or existing slots.")
 
     def action_confirm(self):
+        contract_model = self.env.get("security.client.contract")
         for batch in self:
+            if contract_model:
+                # Validate every site in this batch has an active contract on date_from.
+                # Mid-month expiry is caught here — ops managers see the problem via the
+                # contract_active badge on ShiftRequirement before generating a new batch.
+                sites = batch.slot_ids.mapped("site_id")
+                for site in sites:
+                    if not site.partner_id:
+                        continue
+                    contract = contract_model.get_active_for_site(site, batch.date_from)
+                    if not contract:
+                        raise ValidationError(
+                            f"No active contract for site '{site.name}' "
+                            f"(client: {site.partner_id.name}). "
+                            "Activate a client contract before confirming this roster."
+                        )
             batch.slot_ids.write({"state": "confirmed"})
             batch.state = "confirmed"
 

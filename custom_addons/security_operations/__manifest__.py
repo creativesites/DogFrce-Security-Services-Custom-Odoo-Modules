@@ -11,6 +11,7 @@
         "views/security_operations_menu.xml",
         "views/security_roster_wizard_views.xml",
         "views/security_operations_views.xml",
+        "views/security_client_contract_views.xml",
     ],
     "installable": True,
     "application": False,

@@ -111,8 +111,8 @@ Developer-facing items ranked by risk and effort. Use for sprint planning and PR
 
 | Item | Location | Refactor |
 |------|----------|----------|
-| Mobile API field names | `security_mobile/controllers/*.py` | Replace `batch_id` → `attendance_batch_id`; fix owner KPI domain |
-| Overtime note field | `manager.py` | Write `overtime_approval_note` not `overtime_note` |
+| ~~Mobile API field names~~ | ~~`security_mobile/controllers/*.py`~~ | ~~Fixed: `batch_id` → `attendance_batch_id`; owner KPI domain corrected~~ |
+| ~~Overtime note field~~ | ~~`manager.py`~~ | ~~Fixed: writes `overtime_approval_note`~~ |
 | Attendance batch submit workflow | `security_attendance` + `supervisor.py` | Implement `action_capture()` aligned with `action_generate_from_roster()` |
 | Mobile role detection | `mobile/src/api/auth.ts` | Fetch Odoo groups from session or dedicated `/me` endpoint |
 
