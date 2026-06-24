@@ -1,4 +1,7 @@
-from datetime import timedelta
+import calendar
+from datetime import date, timedelta
+
+from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
@@ -64,6 +67,82 @@ class SecurityClientSite(models.Model):
         string="Guard Exclusions",
     )
     note = fields.Text()
+    site_coverage_today = fields.Float(
+        compute="_compute_site_coverage_today",
+        string="Today's Coverage (%)",
+    )
+    site_coverage_month = fields.Float(
+        compute="_compute_site_coverage_month",
+        string="Month-to-Date Coverage (%)",
+    )
+
+    def _compute_site_coverage_today(self):
+        today = fields.Date.today()
+        slot_model = self.env["security.roster.slot"]
+        for site in self:
+            slots = slot_model.search([
+                ("site_id", "=", site.id),
+                ("shift_date", "=", today),
+                ("state", "!=", "cancelled"),
+            ])
+            total = len(slots)
+            assigned = len(slots.filtered(
+                lambda s: s.employee_id and s.state in ("assigned", "confirmed")
+            ))
+            site.site_coverage_today = (assigned / total * 100.0) if total else 0.0
+
+    def _compute_site_coverage_month(self):
+        today = fields.Date.today()
+        first_day = today.replace(day=1)
+        slot_model = self.env["security.roster.slot"]
+        for site in self:
+            slots = slot_model.search([
+                ("site_id", "=", site.id),
+                ("shift_date", ">=", first_day),
+                ("shift_date", "<=", today),
+                ("state", "!=", "cancelled"),
+            ])
+            total = len(slots)
+            assigned = len(slots.filtered(
+                lambda s: s.employee_id and s.state in ("assigned", "confirmed")
+            ))
+            site.site_coverage_month = (assigned / total * 100.0) if total else 0.0
+
+    @api.model
+    def get_calendar_data(self, site_id, month_str):
+        year, month = map(int, month_str.split("-"))
+        days_in_month = calendar.monthrange(year, month)[1]
+        first_weekday = calendar.weekday(year, month, 1)
+
+        date_from = date(year, month, 1)
+        date_to = date(year, month, days_in_month)
+        slots = self.env["security.roster.slot"].search([
+            ("site_id", "=", site_id),
+            ("shift_date", ">=", date_from),
+            ("shift_date", "<=", date_to),
+            ("state", "!=", "cancelled"),
+        ])
+
+        days_data = {}
+        for slot in slots:
+            key = str(slot.shift_date)
+            if key not in days_data:
+                days_data[key] = {"total": 0, "assigned": 0, "slots": []}
+            days_data[key]["total"] += 1
+            if slot.employee_id and slot.state in ("assigned", "confirmed"):
+                days_data[key]["assigned"] += 1
+            days_data[key]["slots"].append({
+                "id": slot.id,
+                "shift": slot.shift_template_id.name if slot.shift_template_id else "",
+                "post": slot.post_id.name if slot.post_id else "",
+                "guard": slot.employee_id.name if slot.employee_id else "",
+            })
+
+        return {
+            "days_in_month": days_in_month,
+            "first_weekday": first_weekday,
+            "days": days_data,
+        }
 
 
 class SecurityPost(models.Model):
@@ -495,8 +574,6 @@ class SecurityRosterBatch(models.Model):
     def action_copy_from_previous_month(self):
         """Copy all confirmed slots from the most recent previous batch."""
         self.ensure_one()
-        from dateutil.relativedelta import relativedelta
-
         prev_batch = self.search(
             [("id", "!=", self.id), ("date_from", "<", self.date_from)],
             order="date_from desc",
@@ -542,6 +619,105 @@ class SecurityRosterBatch(models.Model):
                 "type": "success",
             },
         }
+
+    @api.model
+    def action_cron_auto_generate_next_month_batches(self):
+        """Cron (runs on the 20th): auto-create next month's roster batch for every active billing plan."""
+        today = date.today()
+        next_month = today + relativedelta(months=1)
+        first_day = next_month.replace(day=1)
+        last_day = next_month.replace(day=calendar.monthrange(next_month.year, next_month.month)[1])
+
+        billing_model = self.env.get("security.billing.plan")
+        if not billing_model:
+            return
+
+        active_plans = billing_model.search([("active", "=", True)])
+        req_model = self.env["security.shift.requirement"]
+        notif_model = self.env.get("security.notification")
+
+        created_batches = 0
+        total_slots = 0
+
+        for plan in active_plans:
+            requirements = req_model.search([
+                ("partner_id", "=", plan.partner_id.id),
+                ("active", "=", True),
+            ])
+            sites = requirements.mapped("site_id")
+
+            for site in sites:
+                existing = self.search([
+                    ("site_id", "=", site.id),
+                    ("date_from", "=", str(first_day)),
+                    ("date_to", "=", str(last_day)),
+                ], limit=1)
+                if existing:
+                    continue
+
+                batch = self.create({
+                    "date_from": first_day,
+                    "date_to": last_day,
+                    "site_id": site.id,
+                    "partner_id": plan.partner_id.id,
+                })
+                try:
+                    batch.action_generate_slots()
+                    total_slots += batch.generated_slot_count
+                    created_batches += 1
+                except ValidationError:
+                    batch.unlink()
+                    continue
+
+        if notif_model and created_batches:
+            notif_model.sudo().create({
+                "title": f"Roster Auto-Generated: {first_day.strftime('%B %Y')}",
+                "body": (
+                    f"{created_batches} roster batch(es) auto-created for "
+                    f"{first_day.strftime('%B %Y')} with {total_slots} slots. "
+                    "Please assign guards before the month starts."
+                ),
+                "notification_type": "roster_gap",
+                "severity": "info",
+            })
+
+    def action_generate_next_month(self):
+        """Manual trigger: generate next month's roster for this batch's site/client."""
+        today = date.today()
+        next_month = today + relativedelta(months=1)
+        first_day = next_month.replace(day=1)
+        last_day = next_month.replace(day=calendar.monthrange(next_month.year, next_month.month)[1])
+
+        for batch in self:
+            existing = self.search([
+                ("site_id", "=", batch.site_id.id),
+                ("partner_id", "=", batch.partner_id.id),
+                ("date_from", "=", str(first_day)),
+            ], limit=1)
+            if existing:
+                return {
+                    "type": "ir.actions.client",
+                    "tag": "display_notification",
+                    "params": {
+                        "title": "Already Exists",
+                        "message": f"A roster batch for {first_day.strftime('%B %Y')} already exists for this site.",
+                        "type": "warning",
+                    },
+                }
+            new_batch = self.create({
+                "date_from": first_day,
+                "date_to": last_day,
+                "site_id": batch.site_id.id,
+                "partner_id": batch.partner_id.id,
+            })
+            new_batch.action_generate_slots()
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "security.roster.batch",
+                "res_id": new_batch.id,
+                "views": [[False, "form"]],
+                "target": "current",
+            }
 
 
 class SecurityRosterSlot(models.Model):
@@ -720,3 +896,35 @@ class SecurityRosterSlot(models.Model):
                 raise ValidationError(
                     "The assigned guard does not meet the minimum reliability score."
                 )
+
+    @api.model
+    def action_batch_assign(self, slot_ids, employee_id):
+        """Assign employee_id to all slot_ids, skipping slots that fail eligibility."""
+        slots = self.browse(slot_ids)
+        employee = self.env["hr.employee"].browse(employee_id)
+        assigned = []
+        skipped = []
+        for slot in slots:
+            if slot.employee_id:
+                skipped.append(f"{slot.name} (already assigned)")
+                continue
+            try:
+                slot.write({"employee_id": employee.id, "state": "assigned"})
+                assigned.append(slot.name)
+            except ValidationError as e:
+                skipped.append(f"{slot.name} ({e.args[0]})")
+        msg_parts = [f"{len(assigned)} slot(s) assigned to {employee.name}."]
+        if skipped:
+            msg_parts.append(
+                f"{len(skipped)} skipped: {'; '.join(skipped[:3])}"
+                f"{'…' if len(skipped) > 3 else ''}"
+            )
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Batch Assign Complete",
+                "message": " ".join(msg_parts),
+                "type": "success" if not skipped else "warning",
+            },
+        }
