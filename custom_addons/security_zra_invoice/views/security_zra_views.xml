@@ -152,10 +152,9 @@
                 <filter name="filter_pending" string="Pending" domain="[('state','=','pending')]"/>
                 <filter name="filter_type_invoice" string="Invoices" domain="[('submission_type','=','invoice')]"/>
                 <filter name="filter_type_cn" string="Credit Notes" domain="[('submission_type','=','credit_note')]"/>
-                <group string="Group By">
-                    <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
-                    <filter name="group_type" string="Type" context="{'group_by': 'submission_type'}"/>
-                </group>
+                <separator/>
+                <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                <filter name="group_type" string="Type" context="{'group_by': 'submission_type'}"/>
             </search>
         </field>
     </record>

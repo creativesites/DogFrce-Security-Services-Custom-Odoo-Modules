@@ -76,12 +76,11 @@
                         domain="[('state','=','draft')]"/>
                 <filter name="filter_expired" string="Expired / Terminated"
                         domain="[('state','in',['expired','terminated'])]"/>
-                <group string="Group By">
-                    <filter name="group_by_partner" string="Client"
-                            context="{'group_by': 'partner_id'}"/>
-                    <filter name="group_by_state" string="Status"
-                            context="{'group_by': 'state'}"/>
-                </group>
+                <separator/>
+                <filter name="group_by_partner" string="Client"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_by_state" string="Status"
+                        context="{'group_by': 'state'}"/>
             </search>
         </field>
     </record>
