@@ -20,7 +20,9 @@
         <field name="napsa_salary_cap">34164.0</field>
         <field name="employee_nhima_rate">0.005</field>
         <field name="employer_nhima_rate">0.005</field>
-        <field name="employer_wcf_rate">0.0</field>
+        <!-- WCF: 1.75% — mid-range for mixed private security (Class IX, WCFCB).
+             Range is 1.25%–2.00%; confirm exact rate annually via eWorkers Portal. -->
+        <field name="employer_wcf_rate">0.0175</field>
         <field name="wcf_salary_cap">0.0</field>
         <field name="sunday_multiplier">1.5</field>
         <field name="public_holiday_multiplier">1.5</field>
@@ -67,6 +69,71 @@
 
     <record id="security_tax_bracket_zm_4" model="security.tax.bracket">
         <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_default"/>
+        <field name="lower_bound">110400.01</field>
+        <field name="upper_bound">999999999</field>
+        <field name="fixed_amount">12360</field>
+        <field name="rate">0.37</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Zambia PAYE Rule Set — 2026                                      -->
+    <!-- IMPORTANT: These brackets mirror the 2025 rates and must be      -->
+    <!-- verified against the Zambia National Budget announcement          -->
+    <!-- (typically October/November 2025). Update the bracket records    -->
+    <!-- below once the ZRA publishes the 2026 PAYE tables.               -->
+    <!-- ================================================================ -->
+    <record id="security_payroll_rule_set_zm_2026" model="security.payroll.rule.set">
+        <field name="name">Zambia Rule Set 2026</field>
+        <field name="country_code">ZM</field>
+        <field name="currency_id" ref="base.ZMW"/>
+        <field name="effective_from">2026-01-01</field>
+        <field name="employee_ssc_rate">0.0</field>
+        <field name="employer_ssc_rate">0.0</field>
+        <field name="ssc_salary_cap">0.0</field>
+        <field name="employee_napsa_rate">0.05</field>
+        <field name="employer_napsa_rate">0.05</field>
+        <field name="napsa_salary_cap">34164.0</field>
+        <field name="employee_nhima_rate">0.005</field>
+        <field name="employer_nhima_rate">0.005</field>
+        <!-- WCF: verify with WCFCB eWorkers Portal; 1.75% used as default -->
+        <field name="employer_wcf_rate">0.0175</field>
+        <field name="wcf_salary_cap">0.0</field>
+        <field name="sunday_multiplier">1.5</field>
+        <field name="public_holiday_multiplier">1.5</field>
+        <field name="saturday_multiplier">1.25</field>
+        <field name="night_shift_multiplier">1.25</field>
+        <field name="overtime_multiplier">1.5</field>
+        <field name="standard_shift_hours">12</field>
+        <field name="vat_rate">16</field>
+        <field name="deduction_floor_pct">0.30</field>
+        <field name="legal_invoice_text">This invoice is subject to 16% VAT as registered with the Zambia Revenue Authority (ZRA).</field>
+    </record>
+
+    <!-- PAYE brackets for 2026 — PENDING BUDGET VERIFICATION -->
+    <!-- Cloned from 2025 (Budget Oct 2024). Update once ZRA publishes 2026 tables. -->
+    <record id="security_tax_bracket_zm_2026_1" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_2026"/>
+        <field name="lower_bound">0</field>
+        <field name="upper_bound">61200</field>
+        <field name="fixed_amount">0</field>
+        <field name="rate">0.00</field>
+    </record>
+    <record id="security_tax_bracket_zm_2026_2" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_2026"/>
+        <field name="lower_bound">61200.01</field>
+        <field name="upper_bound">85200</field>
+        <field name="fixed_amount">0</field>
+        <field name="rate">0.20</field>
+    </record>
+    <record id="security_tax_bracket_zm_2026_3" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_2026"/>
+        <field name="lower_bound">85200.01</field>
+        <field name="upper_bound">110400</field>
+        <field name="fixed_amount">4800</field>
+        <field name="rate">0.30</field>
+    </record>
+    <record id="security_tax_bracket_zm_2026_4" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_2026"/>
         <field name="lower_bound">110400.01</field>
         <field name="upper_bound">999999999</field>
         <field name="fixed_amount">12360</field>

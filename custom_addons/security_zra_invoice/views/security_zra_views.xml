@@ -195,6 +195,13 @@
                      invisible="zra_state not in ('pending', 'error', 'rejected')">
                     ZRA Status: <field name="zra_state" readonly="1"/>
                 </div>
+                <div class="alert alert-info" role="alert"
+                     invisible="partner_id.vat or state == 'cancelled' or zra_state == 'accepted'">
+                    <strong>Missing Customer TPIN</strong> — ZRA requires the customer's
+                    Taxpayer Identification Number (TPIN) for a valid fiscal invoice.
+                    Open the customer record and enter the TPIN in the
+                    <strong>Company Tax ID</strong> field before submitting to ZRA.
+                </div>
             </xpath>
         </field>
     </record>

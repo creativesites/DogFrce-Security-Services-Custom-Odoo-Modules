@@ -41,21 +41,40 @@ class SecurityPayrollRuleSetZM(models.Model):
         help="Employer NHIMA levy rate. Standard rate is 0.5% (0.005).",
     )
 
-    # WCF — Workers' Compensation Fund
-    # Employer-only levy; rate is industry-specific.
-    # NOTE: The rate for the private security industry must be confirmed from the WCF
-    # risk category schedule before this field is used in payslip computation (Phase 2).
+    # WCF — Workers' Compensation Fund Control Board (WCFCB)
+    # Employer-only levy; rate is set by risk classification, not a flat industry rate.
+    # Private security typically falls under Class IX (Miscellaneous/Services).
+    # Assessment rate range: 1.25% – 2.00% of total gross payroll, depending on whether
+    # operations are predominantly unarmed static guarding (lower end) or include armed
+    # cash-in-transit or high-risk duties (higher end).
+    # Default pre-configured to 1.75% (mid-range for mixed private security operations).
+    # Update annually: submit wage returns and confirm your rate via the WCFCB eWorkers Portal.
     employer_wcf_rate = fields.Float(
         string="Employer WCF Rate",
         digits=(16, 4),
         default=0.0,
-        help="Employer-only Workers' Compensation Fund levy. Rate varies by industry risk category. "
-             "Confirm the correct rate for private security from the WCF schedule before activating.",
+        help=(
+            "Employer-only Workers' Compensation Fund (WCFCB) levy.\n\n"
+            "Private security companies are typically assessed under Class IX "
+            "(Miscellaneous/Services). The assessment rate ranges from 1.25% to 2.00% "
+            "of total gross payroll, based on your specific risk profile:\n"
+            "  • 1.25–1.50% — predominantly unarmed static guarding\n"
+            "  • 1.50–1.75% — mixed operations (static + patrol)\n"
+            "  • 1.75–2.00% — armed operations, cash-in-transit, or high-risk sites\n\n"
+            "Assessable earnings include basic salary, allowances, overtime, and bonuses.\n"
+            "No earnings ceiling applies (unlike NAPSA).\n\n"
+            "Update annually: confirm your exact rate and submit wage returns via the "
+            "WCFCB eWorkers Portal (eworkers.wcf.org.zm). "
+            "Ref: Workers' Compensation Act Cap 271, Laws of Zambia."
+        ),
     )
     wcf_salary_cap = fields.Float(
         string="WCF Monthly Earnings Ceiling (ZMW)",
         default=0.0,
-        help="Monthly earnings ceiling for WCF (if applicable). Leave at 0.0 if uncapped.",
+        help=(
+            "Monthly earnings ceiling for WCF levy calculation. "
+            "Leave at 0.0 for uncapped (standard — WCF assessable earnings have no statutory ceiling)."
+        ),
     )
 
 
