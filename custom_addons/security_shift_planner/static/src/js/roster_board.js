@@ -27,6 +27,7 @@ class RosterBoard extends Component {
 
         this.state = useState({
             loading: false,
+            autoAssigning: false,
             batches: [],
             batchId: null,
             batchDateFrom: null,
@@ -55,7 +56,7 @@ class RosterBoard extends Component {
         const batches = await this.orm.searchRead(
             "security.roster.batch",
             [["state", "not in", ["cancelled"]]],
-            ["id", "name", "date_from", "date_to", "site_id"],
+            ["id", "name", "date_from", "date_to", "site_id", "state"],
             { order: "date_from desc", limit: 50 }
         );
         this.state.batches = batches;
@@ -209,6 +210,28 @@ class RosterBoard extends Component {
         if (!this.state.batchId) return "";
         const b = this.state.batches.find((b) => b.id === this.state.batchId);
         return b ? b.name : "";
+    }
+
+    get selectedBatch() {
+        if (!this.state.batchId) return null;
+        return this.state.batches.find((b) => b.id === this.state.batchId) || null;
+    }
+
+    get unassignedCount() {
+        return this.state.slots.filter(
+            (s) => !s.employee_id && s.state !== "cancelled"
+        ).length;
+    }
+
+    batchStateColor(state) {
+        const colors = {
+            draft:      "#94a3b8",
+            generated:  "#3b82f6",
+            submitted:  "#f59e0b",
+            approved:   "#8b5cf6",
+            confirmed:  "#16a34a",
+        };
+        return colors[state] || "#64748b";
     }
 
     getPostsForSite(siteId) {
@@ -383,6 +406,44 @@ class RosterBoard extends Component {
             this.notification.add("Guard unassigned.", { type: "info" });
         } catch (e) {
             this.notification.add("Unassign failed: " + (e.message || e), { type: "danger" });
+        }
+    }
+
+    async autoAssignAll() {
+        const unassigned = this.state.slots.filter(
+            (s) => !s.employee_id && s.state !== "cancelled"
+        );
+        if (!unassigned.length) {
+            this.notification.add("All slots are already assigned.", { type: "info" });
+            return;
+        }
+        this.state.autoAssigning = true;
+        this.state.assignError = null;
+        const slotIds = unassigned.map((s) => s.id);
+        try {
+            const result = await this.orm.call(
+                "security.roster.slot",
+                "action_auto_assign_all",
+                [slotIds]
+            );
+            if (result && result.tag === "display_notification") {
+                const p = result.params || {};
+                this.notification.add(p.message || "Auto-assignment complete.", {
+                    title: p.title || "Auto-Assign",
+                    type: p.type || "success",
+                    sticky: p.sticky || false,
+                });
+            }
+            await this.loadSlots(this.state.batchId);
+            this.state.selectedSlot = null;
+            this.state.suggestions = [];
+            this.state.suggestionsLoaded = false;
+        } catch (e) {
+            this.notification.add("Auto-assignment failed: " + (e.message || e), {
+                type: "danger",
+            });
+        } finally {
+            this.state.autoAssigning = false;
         }
     }
 
