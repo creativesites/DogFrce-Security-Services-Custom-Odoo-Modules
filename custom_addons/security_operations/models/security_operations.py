@@ -440,6 +440,25 @@ class SecurityRosterBatch(models.Model):
                         )
             batch.slot_ids.write({"state": "confirmed"})
             batch.state = "confirmed"
+            if "security.notification" in self.env:
+                sites = batch.slot_ids.mapped("site_id")
+                supervisor_users = self.env["res.users"].browse()
+                for site in sites:
+                    if site.supervisor_id and site.supervisor_id.user_id:
+                        supervisor_users |= site.supervisor_id.user_id
+                if supervisor_users:
+                    self.env["security.notification"].sudo().create({
+                        "title": f"Roster Confirmed: {batch.name}",
+                        "body": (
+                            f"Roster '{batch.name}' has been confirmed. "
+                            "Your shift assignments are now locked in."
+                        ),
+                        "notification_type": "roster_gap",
+                        "severity": "info",
+                        "recipient_ids": [(6, 0, supervisor_users.ids)],
+                        "related_model": "security.roster.batch",
+                        "related_id": batch.id,
+                    })
 
     def action_cancel(self):
         for batch in self:

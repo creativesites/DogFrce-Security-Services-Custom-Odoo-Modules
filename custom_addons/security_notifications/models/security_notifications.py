@@ -134,3 +134,78 @@ class SecurityNotification(models.Model):
                     "related_model": "security.billing.invoice",
                     "related_id": inv.id,
                 })
+
+    @api.model
+    def action_scan_roster_gaps(self):
+        """Cron (every 10 min): alert on unassigned slots starting within 2 h and missing check-ins."""
+        from datetime import datetime, timedelta, time as _time
+        now_utc = datetime.utcnow()
+        gap_window_end = now_utc + timedelta(hours=2)
+        today = fields.Date.context_today(self)
+
+        slot_model = self.env.get("security.roster.slot")
+        if slot_model:
+            unassigned = slot_model.search([
+                ("shift_date", "=", today),
+                ("employee_id", "=", False),
+                ("state", "not in", ["cancelled"]),
+            ])
+            for slot in unassigned:
+                tmpl = slot.shift_template_id
+                if not tmpl:
+                    continue
+                h = int(tmpl.start_hour)
+                m = int(round((tmpl.start_hour - h) * 60))
+                slot_start = datetime.combine(today, _time(h, m))
+                if not (now_utc <= slot_start <= gap_window_end):
+                    continue
+                existing = self.search([
+                    ("notification_type", "=", "roster_gap"),
+                    ("related_model", "=", "security.roster.slot"),
+                    ("related_id", "=", slot.id),
+                    ("state", "!=", "dismissed"),
+                ], limit=1)
+                if not existing:
+                    site_name = slot.site_id.name if slot.site_id else "Unknown Site"
+                    self.create({
+                        "title": f"Unassigned Slot: {site_name}",
+                        "body": (
+                            f"Slot at {site_name} (post: {slot.post_id.name if slot.post_id else 'N/A'}, "
+                            f"shift: {tmpl.name}) starts within 2 hours with no guard assigned."
+                        ),
+                        "notification_type": "roster_gap",
+                        "severity": "critical",
+                        "related_model": "security.roster.slot",
+                        "related_id": slot.id,
+                    })
+
+        record_model = self.env.get("security.attendance.record")
+        if record_model:
+            cutoff_str = fields.Datetime.to_string(now_utc - timedelta(minutes=15))
+            late_records = record_model.search([
+                ("shift_date", "=", today),
+                ("check_in", "=", False),
+                ("manual_presence", "not in", ["absent", "awol"]),
+                ("scheduled_start", "!=", False),
+                ("scheduled_start", "<=", cutoff_str),
+            ])
+            for rec in late_records:
+                existing = self.search([
+                    ("notification_type", "=", "roster_gap"),
+                    ("related_model", "=", "security.attendance.record"),
+                    ("related_id", "=", rec.id),
+                    ("state", "!=", "dismissed"),
+                ], limit=1)
+                if not existing:
+                    self.create({
+                        "title": f"Missing Check-in: {rec.employee_id.name or 'Guard'}",
+                        "body": (
+                            f"{rec.employee_id.name or 'Guard'} at "
+                            f"{rec.site_id.name or 'unknown site'} was scheduled "
+                            f"but has not checked in."
+                        ),
+                        "notification_type": "roster_gap",
+                        "severity": "warning",
+                        "related_model": "security.attendance.record",
+                        "related_id": rec.id,
+                    })

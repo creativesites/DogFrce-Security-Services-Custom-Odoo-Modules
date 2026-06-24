@@ -40,6 +40,7 @@ class SecurityAttendanceBatch(models.Model):
     record_count = fields.Integer(compute="_compute_record_count")
     absent_count = fields.Integer(compute="_compute_record_count")
     awol_count = fields.Integer(compute="_compute_record_count")
+    missing_checkin_count = fields.Integer(compute="_compute_record_count", string="Missing Check-ins")
     note = fields.Text()
 
     @api.depends("attendance_date", "partner_id", "site_id")
@@ -49,11 +50,24 @@ class SecurityAttendanceBatch(models.Model):
             batch.name = f"{batch.attendance_date} - {scope}" if batch.attendance_date else scope
 
     def _compute_record_count(self):
+        from datetime import datetime, timedelta
+        now_utc = datetime.utcnow()
+        cutoff = now_utc - timedelta(minutes=15)
         for batch in self:
             records = batch.attendance_record_ids
             batch.record_count = len(records)
             batch.absent_count = len(records.filtered(lambda record: record.status == "absent"))
             batch.awol_count = len(records.filtered(lambda record: record.absence_type == "awol"))
+            missing = 0
+            for rec in records:
+                if rec.manual_presence in ("absent", "awol"):
+                    continue
+                if rec.check_in:
+                    continue
+                sched = fields.Datetime.to_datetime(rec.scheduled_start)
+                if sched and sched <= cutoff:
+                    missing += 1
+            batch.missing_checkin_count = missing
 
     @api.onchange("site_id")
     def _onchange_site_id(self):
@@ -556,6 +570,70 @@ class SecurityAttendanceRecord(models.Model):
         for record in self:
             record.overtime_approved = True
             record.overtime_approved_by_id = self.env.user
+
+    @api.model
+    def _group_expand_status(self, statuses, domain, order):
+        return [key for key, _ in type(self).status.selection]
+
+    def write(self, vals):
+        awol_triggered = (
+            vals.get("manual_presence") == "awol"
+            or vals.get("absence_type") == "awol"
+        )
+        result = super().write(vals)
+        if awol_triggered:
+            self.sudo()._notify_awol()
+        return result
+
+    def _notify_awol(self):
+        notification_model = self.env.get("security.notification")
+        if not notification_model:
+            return
+        for rec in self:
+            if rec.manual_presence != "awol" and rec.absence_type != "awol":
+                continue
+            recipients = self.env["res.users"].browse()
+            site = rec.site_id
+            if site and site.supervisor_id and site.supervisor_id.user_id:
+                recipients |= site.supervisor_id.user_id
+            mgr_users = self.env["res.users"].search(
+                [("groups_id", "in", [self.env.ref("base.group_system").id])],
+                limit=3,
+            )
+            recipients |= mgr_users
+
+            replacement_hint = ""
+            slot = rec.roster_slot_id
+            if slot and hasattr(slot, "_get_eligible_guards"):
+                try:
+                    eligible = slot._get_eligible_guards(slot)
+                    if eligible:
+                        if hasattr(slot, "_score_guard"):
+                            scored = sorted(
+                                [(slot._score_guard(slot, e)[0], e) for e, _ in eligible[:5]],
+                                key=lambda x: x[0],
+                                reverse=True,
+                            )
+                            best_emp = scored[0][1]
+                        else:
+                            best_emp = eligible[0][0]
+                        replacement_hint = f" Suggested replacement: {best_emp.name}."
+                except Exception:
+                    pass
+
+            notification_model.create({
+                "title": f"AWOL: {rec.employee_id.name or 'Unknown Guard'}",
+                "body": (
+                    f"{rec.employee_id.name or 'Guard'} marked AWOL at "
+                    f"{rec.site_id.name or 'unknown site'} on {rec.shift_date}."
+                    f"{replacement_hint}"
+                ),
+                "notification_type": "awol_alert",
+                "severity": "critical",
+                "recipient_ids": [(6, 0, recipients.ids)],
+                "related_model": "security.attendance.record",
+                "related_id": rec.id,
+            })
 
     @api.depends("roster_slot_id", "employee_id", "shift_date")
     def _compute_name(self):

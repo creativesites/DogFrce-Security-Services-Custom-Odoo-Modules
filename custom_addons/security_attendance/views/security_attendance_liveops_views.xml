@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_attendance_record_liveops_kanban" model="ir.ui.view">
+        <field name="name">security.attendance.record.liveops.kanban</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" group_expand="1"
+                    quick_create="false" records_draggable="false">
+                <field name="status"/>
+                <field name="employee_id"/>
+                <field name="site_id"/>
+                <field name="post_id"/>
+                <field name="shift_template_id"/>
+                <field name="check_in"/>
+                <field name="late_minutes"/>
+                <field name="manual_presence"/>
+                <field name="shift_date"/>
+                <templates>
+                    <t t-name="card">
+                        <div t-att-class="'liveops-card liveops-card-' + record.status.raw_value">
+                            <strong><field name="employee_id"/></strong>
+                            <div class="liveops-site">
+                                <field name="site_id"/>
+                            </div>
+                            <div class="liveops-post">
+                                <field name="post_id"/>
+                            </div>
+                            <div t-if="record.check_in.raw_value" class="liveops-checkin">
+                                In: <field name="check_in"/>
+                            </div>
+                            <div t-if="record.late_minutes.raw_value > 0" class="liveops-late">
+                                +<field name="late_minutes"/> min late
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_security_attendance_liveops" model="ir.actions.act_window">
+        <field name="name">Live Ops — Today</field>
+        <field name="res_model">security.attendance.record</field>
+        <field name="view_mode">kanban,list</field>
+        <field name="domain">[("shift_date", "=", context_today())]</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+            (0, 0, {'view_mode': 'kanban',
+                    'view_id': ref('view_security_attendance_record_liveops_kanban')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No attendance records for today</p>
+            <p>Generate posting sheets from today's roster to see live status here.</p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_attendance_liveops"
+        name="Live Ops"
+        parent="security_operations.menu_security_roster"
+        action="action_security_attendance_liveops"
+        sequence="20"
+        groups="hr.group_hr_user"
+    />
+</odoo>

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_roster_week_form" model="ir.ui.view">
+        <field name="name">security.roster.week.form</field>
+        <field name="model">security.roster.week</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_review" type="object" string="Mark Reviewed"
+                            class="btn-secondary" invisible="state != 'draft'"/>
+                    <button name="action_confirm_week" type="object" string="Confirm Week"
+                            class="btn-primary" invisible="state == 'confirmed'"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,reviewed,confirmed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="week_start" string="Week Starting"/>
+                        <h1><field name="week_start"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="batch_id"/>
+                            <field name="week_end" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="reviewer_id"/>
+                            <field name="reviewed_at"/>
+                            <field name="gap_count_snap" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Review Notes">
+                        <field name="review_notes" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_roster_week_list" model="ir.ui.view">
+        <field name="name">security.roster.week.list</field>
+        <field name="model">security.roster.week</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'draft'"
+                  decoration-warning="state == 'reviewed'"
+                  decoration-success="state == 'confirmed'">
+                <field name="week_start"/>
+                <field name="week_end"/>
+                <field name="batch_id"/>
+                <field name="gap_count_snap" string="Gaps"/>
+                <field name="reviewer_id"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'reviewed'"
+                       decoration-success="state == 'confirmed'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_roster_week_search" model="ir.ui.view">
+        <field name="name">security.roster.week.search</field>
+        <field name="model">security.roster.week</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="batch_id"/>
+                <field name="week_start"/>
+                <filter name="filter_draft" string="Pending Review"
+                        domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_confirmed" string="Confirmed"
+                        domain="[('state', '=', 'confirmed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="State"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_roster_week" model="ir.actions.act_window">
+        <field name="name">Weekly Reviews</field>
+        <field name="res_model">security.roster.week</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No weekly reviews yet</p>
+            <p>Use the Weekly Check-in dashboard to confirm each week's roster.</p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_roster_week"
+        name="Weekly Reviews"
+        parent="security_operations.menu_security_roster"
+        action="action_security_roster_week"
+        sequence="15"
+        groups="hr.group_hr_user"
+    />
+</odoo>
