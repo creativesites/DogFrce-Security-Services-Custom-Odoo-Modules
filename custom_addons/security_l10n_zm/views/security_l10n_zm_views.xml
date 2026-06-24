@@ -9,7 +9,7 @@
         <field name="model">security.payroll.rule.set</field>
         <field name="inherit_id" ref="security_l10n_na.view_security_payroll_rule_set_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@string='Premium Rate Multipliers']" position="before">
+            <xpath expr="//group[@name='premium_rate_multipliers']" position="before">
                 <group string="Zambia Statutory Deductions" invisible="country_code != 'ZM'">
                     <group string="NAPSA (National Pension Scheme Authority)">
                         <field name="employee_napsa_rate" widget="percentage"/>
@@ -43,7 +43,7 @@
         <field name="model">hr.employee</field>
         <field name="inherit_id" ref="security_payroll_core.view_employee_form_security_payroll"/>
         <field name="arch" type="xml">
-            <xpath expr="//group[@string='Namibian Statutory Registration']" position="after">
+            <xpath expr="//group[@name='na_statutory_registration']" position="after">
                 <group string="Zambian Statutory Registration">
                     <group>
                         <field name="security_napsa_number" placeholder="e.g. 1000012345"/>
