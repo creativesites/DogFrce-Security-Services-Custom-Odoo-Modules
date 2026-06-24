@@ -69,12 +69,29 @@ class SecurityZraSubmission(models.Model):
 
     @api.model
     def action_retry_pending(self):
-        """Cron entry-point: retry pending and errored submissions up to 5 times."""
+        """Cron entry-point: retry pending/errored submissions with exponential backoff.
+
+        Backoff schedule (minutes to wait after the previous attempt):
+          retry 1 → wait  2 min
+          retry 2 → wait 10 min
+          retry 3 → wait 30 min
+          retry 4 → wait 120 min (2 hr)
+          retry 5 → wait 240 min (4 hr)
+        After 5 retries the cron stops touching the record; staff must intervene.
+        """
+        BACKOFF_MINUTES = {1: 2, 2: 10, 3: 30, 4: 120, 5: 240}
+
         pending = self.search([
             ("state", "in", ("pending", "error")),
             ("retry_count", "<", 5),
         ])
+        now = fields.Datetime.now()
         for sub in pending:
+            if sub.last_attempt:
+                wait_minutes = BACKOFF_MINUTES.get(sub.retry_count, 2)
+                elapsed_minutes = (now - sub.last_attempt).total_seconds() / 60.0
+                if elapsed_minutes < wait_minutes:
+                    continue
             try:
                 if sub.invoice_id:
                     sub.invoice_id._submit_to_zra(existing_submission=sub)

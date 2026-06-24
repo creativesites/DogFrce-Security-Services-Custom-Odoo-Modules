@@ -39,6 +39,7 @@
                         <field name="icon"/>
                         <field name="color"/>
                         <field name="sequence"/>
+                        <field name="country_code" placeholder="e.g. ZM (leave blank for all countries)"/>
                     </group>
                     <notebook>
                         <page string="Articles">
@@ -72,6 +73,7 @@
                 <field name="category_id"/>
                 <field name="title"/>
                 <field name="summary"/>
+                <field name="country_code" string="Country"/>
             </list>
         </field>
     </record>
@@ -88,6 +90,7 @@
                         <field name="summary"/>
                         <field name="sequence"/>
                         <field name="tags"/>
+                        <field name="country_code" placeholder="e.g. ZM (leave blank for all countries)"/>
                     </group>
                     <field name="body" widget="html"/>
                 </sheet>

@@ -10,6 +10,7 @@ class HelpPortal extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.companyCountryCode = "";
         this.state = useState({
             categories: [],
             articles: [],
@@ -23,14 +24,24 @@ class HelpPortal extends Component {
         this._searchTimer = null;
 
         onWillStart(async () => {
+            this.companyCountryCode = await this.orm.call(
+                "security.help.article",
+                "get_company_country_code",
+                []
+            );
             await this._loadCategories();
         });
+    }
+
+    _countryDomain() {
+        // Show categories/articles with no country restriction OR matching this company's country.
+        return ["|", ["country_code", "=", false], ["country_code", "=", this.companyCountryCode]];
     }
 
     async _loadCategories() {
         const cats = await this.orm.searchRead(
             "security.help.category",
-            [],
+            this._countryDomain(),
             ["id", "name", "icon", "color", "article_count"],
             { order: "sequence asc, name asc" }
         );
@@ -45,9 +56,10 @@ class HelpPortal extends Component {
         this.state.searching = false;
         this.state.searchResults = [];
 
+        const domain = [["category_id", "=", catId], ...this._countryDomain()];
         const arts = await this.orm.searchRead(
             "security.help.article",
-            [["category_id", "=", catId]],
+            domain,
             ["id", "title", "summary"],
             { order: "sequence asc, title asc" }
         );
@@ -95,7 +107,11 @@ class HelpPortal extends Component {
         this.state.activeCatId = null;
         this.state.activeArticleId = null;
         this.state.activeArticle = null;
-        const results = await this.orm.call("security.help.article", "search_articles", [q]);
+        const results = await this.orm.call(
+            "security.help.article",
+            "search_articles",
+            [q, this.companyCountryCode]
+        );
         this.state.searchResults = results;
     }
 }
