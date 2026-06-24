@@ -196,6 +196,26 @@ class SecurityRosterBatch(models.Model):
                 slot.critical_gap = False
                 assigned_today.setdefault(date_key, set()).add(best_employee.id)
                 filled += 1
+            if gaps and "security.notification" in self.env:
+                manager_group = self.env.ref(
+                    "security_base.group_security_manager", raise_if_not_found=False
+                )
+                manager_users = (
+                    manager_group.users if manager_group else self.env["res.users"].browse()
+                )
+                self.env["security.notification"].sudo().create({
+                    "title": f"Auto-Fill: {gaps} Critical Gap(s) — {batch.name}",
+                    "body": (
+                        f"Auto-fill for '{batch.name}' left {gaps} slot(s) unfilled — "
+                        "no eligible guard was available. "
+                        "Review the red cells in the Roster Board and assign manually."
+                    ),
+                    "notification_type": "roster_gap",
+                    "severity": "critical",
+                    "recipient_ids": [(6, 0, manager_users.ids)],
+                    "related_model": "security.roster.batch",
+                    "related_id": batch.id,
+                })
         msg = f"{filled} slot(s) filled automatically."
         if gaps:
             msg += f" {gaps} critical gap(s) could not be filled — review red cells."

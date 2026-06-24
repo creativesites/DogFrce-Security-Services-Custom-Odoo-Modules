@@ -154,6 +154,13 @@
                         <t t-else="">Auto-Fill</t>
                     </span>
                 </button>
+                <button t-att-class="state.showGapsOnly ? 'rb-btn rb-btn-toggle-active' : 'rb-btn rb-btn-ghost'"
+                        t-on-click="toggleGapsOnly"
+                        t-att-disabled="state.loading">
+                    <i class="fa fa-filter me-1"/>
+                    <t t-if="state.showGapsOnly">Show All</t>
+                    <t t-else="">Gaps Only</t>
+                </button>
                 <button class="rb-btn rb-btn-ghost"
                         t-on-click="refreshBoard"
                         t-att-disabled="state.loading or state.autoFilling">
@@ -246,50 +253,57 @@
                                                 </t>
                                                 <t t-foreach="slots" t-as="slot" t-key="slot.id">
 
-                                                    <!-- CANCELLED slot -->
+                                                    <!-- CANCELLED slot (no context menu) -->
                                                     <t t-if="slot.state === 'cancelled'">
                                                         <div style="background:#f8fafc; border-left:3px solid #cbd5e1; border-radius:4px; padding:4px 7px; margin-bottom:2px; opacity:.5; font-size:11px; min-height:30px;">
                                                             <span style="color:#94a3b8; font-style:italic; font-size:10px;">Cancelled</span>
                                                         </div>
                                                     </t>
 
-                                                    <!-- ASSIGNED slot -->
-                                                    <t t-elif="slot.employee_id">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             t-att-style="'background:' + (slot.conflict ? '#fee2e2' : '#dcfce7') + '; border-left:3px solid ' + (slot.conflict ? '#dc2626' : '#16a34a') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
-                                                            <t t-if="slot.conflict">
-                                                                <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
-                                                            </t>
-                                                            <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.conflict ? '#991b1b' : '#15803d') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
-                                                                 t-esc="slot.employee_name"/>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#86efac; margin-top:1px;" t-esc="slot.shift_label"/>
-                                                        </div>
-                                                    </t>
-
-                                                    <!-- CRITICAL GAP — auto-fill found no eligible guard -->
-                                                    <t t-elif="slot.critical_gap">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             class="rb-cell-critical-gap">
-                                                            <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">CRITICAL GAP</span>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#f87171; margin-top:2px;" t-esc="slot.shift_label"/>
-                                                        </div>
-                                                    </t>
-
-                                                    <!-- UNASSIGNED confirmed slot -->
-                                                    <t t-elif="slot.state === 'confirmed'">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             style="background:#fef9c3; border-left:3px solid #ca8a04; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
-                                                            <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
-                                                        </div>
-                                                    </t>
-
-                                                    <!-- UNASSIGNED draft slot -->
+                                                    <!-- Active slots: right-click opens context menu -->
                                                     <t t-else="">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             style="background:#f1f5f9; border-left:3px solid #94a3b8; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
-                                                            <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        <div t-on-contextmenu="(ev) => this.onSlotContextMenu(slot, ev)">
+
+                                                            <!-- ASSIGNED slot -->
+                                                            <t t-if="slot.employee_id">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     t-att-style="'background:' + (slot.conflict ? '#fee2e2' : '#dcfce7') + '; border-left:3px solid ' + (slot.conflict ? '#dc2626' : '#16a34a') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                                    <t t-if="slot.conflict">
+                                                                        <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
+                                                                    </t>
+                                                                    <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.conflict ? '#991b1b' : '#15803d') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
+                                                                         t-esc="slot.employee_name"/>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#86efac; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
+                                                            <!-- CRITICAL GAP — auto-fill found no eligible guard -->
+                                                            <t t-elif="slot.critical_gap">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     class="rb-cell-critical-gap">
+                                                                    <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">CRITICAL GAP</span>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#f87171; margin-top:2px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
+                                                            <!-- UNASSIGNED confirmed slot -->
+                                                            <t t-elif="slot.state === 'confirmed'">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     style="background:#fef9c3; border-left:3px solid #ca8a04; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
+                                                                    <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
+                                                            <!-- UNASSIGNED draft slot -->
+                                                            <t t-else="">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     style="background:#f1f5f9; border-left:3px solid #94a3b8; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
+                                                                    <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
                                                         </div>
                                                     </t>
 
@@ -453,6 +467,57 @@
         </div><!-- /grid + guard pool wrapper -->
 
     </div><!-- /main content area -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         CONTEXT MENU — right-click on any active slot
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.contextMenu.visible">
+        <!-- Transparent backdrop to close menu on outside click -->
+        <div style="position:fixed; inset:0; z-index:9998;"
+             t-on-click="closeContextMenu"
+             t-on-contextmenu.prevent="closeContextMenu"/>
+
+        <!-- Menu panel -->
+        <div class="rb-ctx-panel"
+             t-att-style="'position:fixed; z-index:9999; left:' + state.contextMenu.x + 'px; top:' + state.contextMenu.y + 'px;'">
+
+            <t t-if="state.contextMenu.slot">
+                <!-- Slot label -->
+                <div class="rb-ctx-label">
+                    <i class="fa fa-map-marker me-1" style="color:#94a3b8;"/>
+                    <t t-esc="state.contextMenu.slot.post_name"/>
+                </div>
+                <div class="rb-ctx-divider"/>
+
+                <!-- Suggest Guards (only for unassigned, non-cancelled) -->
+                <button t-if="!state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="contextMenuSuggest">
+                    <i class="fa fa-magic me-2" style="color:#3b82f6;"/>Suggest Guards
+                </button>
+
+                <!-- Unassign Guard -->
+                <button t-if="state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="contextMenuUnassign">
+                    <i class="fa fa-user-times me-2" style="color:#ef4444;"/>Unassign Guard
+                </button>
+
+                <!-- View Guard Profile -->
+                <button t-if="state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="contextMenuViewGuard">
+                    <i class="fa fa-user me-2" style="color:#64748b;"/>View Guard Profile
+                </button>
+
+                <div class="rb-ctx-divider"/>
+                <button class="rb-ctx-item rb-ctx-close"
+                        t-on-click="closeContextMenu">
+                    <i class="fa fa-times me-2"/>Close
+                </button>
+            </t>
+        </div>
+    </t>
 
 </div><!-- /o_roster_board -->
 

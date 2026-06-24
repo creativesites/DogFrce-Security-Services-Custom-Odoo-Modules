@@ -24,6 +24,7 @@ class RosterBoard extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.action = useService("action");
 
         this.state = useState({
             loading: false,
@@ -37,12 +38,14 @@ class RosterBoard extends Component {
             posts: [],
             slots: [],
             filterSiteId: null,
+            showGapsOnly: false,
             selectedSlot: null,
             suggestions: [],
             suggestionsLoaded: false,
             loadingSuggestions: false,
             stats: { assigned: 0, unassigned: 0, criticalGaps: 0 },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
+            contextMenu: { visible: false, x: 0, y: 0, slot: null },
         });
 
         onWillStart(async () => {
@@ -198,10 +201,14 @@ class RosterBoard extends Component {
     // ─── Computed getters ───────────────────────────────────────────
 
     get visibleSites() {
+        let sites = this.state.sites;
         if (this.state.filterSiteId) {
-            return this.state.sites.filter((s) => s.id === this.state.filterSiteId);
+            sites = sites.filter((s) => s.id === this.state.filterSiteId);
         }
-        return this.state.sites;
+        if (this.state.showGapsOnly) {
+            sites = sites.filter((s) => this._siteHasGap(s.id));
+        }
+        return sites;
     }
 
     get assignmentPercent() {
@@ -217,7 +224,27 @@ class RosterBoard extends Component {
     }
 
     getPostsForSite(siteId) {
-        return this.state.posts.filter((p) => p.site_id === siteId);
+        const posts = this.state.posts.filter((p) => p.site_id === siteId);
+        if (this.state.showGapsOnly) {
+            return posts.filter((p) => this._postHasGap(siteId, p.id));
+        }
+        return posts;
+    }
+
+    _siteHasGap(siteId) {
+        return this.state.slots.some(
+            (s) => s.site_id === siteId && !s.employee_id && s.state !== "cancelled"
+        );
+    }
+
+    _postHasGap(siteId, postId) {
+        return this.state.slots.some(
+            (s) => s.site_id === siteId && s.post_id === postId && !s.employee_id && s.state !== "cancelled"
+        );
+    }
+
+    toggleGapsOnly() {
+        this.state.showGapsOnly = !this.state.showGapsOnly;
     }
 
     getSlotsForCell(siteId, postId, dateStr) {
@@ -414,6 +441,45 @@ class RosterBoard extends Component {
         } catch (e) {
             this.notification.add("Unassign failed: " + (e.message || e), { type: "danger" });
         }
+    }
+
+    // ─── Context menu ───────────────────────────────────────────────
+
+    onSlotContextMenu(slot, ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.state.contextMenu = { visible: true, x: ev.clientX, y: ev.clientY, slot };
+    }
+
+    closeContextMenu() {
+        this.state.contextMenu = { visible: false, x: 0, y: 0, slot: null };
+    }
+
+    async contextMenuSuggest() {
+        const slot = this.state.contextMenu.slot;
+        this.closeContextMenu();
+        this.selectSlot(slot);
+        await this.loadSuggestions();
+    }
+
+    async contextMenuUnassign() {
+        const slot = this.state.contextMenu.slot;
+        this.closeContextMenu();
+        this.state.selectedSlot = slot;
+        await this.unassignSlot();
+    }
+
+    contextMenuViewGuard() {
+        const slot = this.state.contextMenu.slot;
+        this.closeContextMenu();
+        if (!slot || !slot.employee_id) return;
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "hr.employee",
+            res_id: slot.employee_id,
+            views: [[false, "form"]],
+            target: "new",
+        });
     }
 
     // ─── Helpers ────────────────────────────────────────────────────
