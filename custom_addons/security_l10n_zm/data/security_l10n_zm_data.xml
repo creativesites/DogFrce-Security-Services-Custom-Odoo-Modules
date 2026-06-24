@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ================================================================ -->
+    <!-- Zambia Default Payroll Rule Set                                   -->
+    <!-- PAYE brackets: ZRA 2024/2025 (annual thresholds)                 -->
+    <!-- NAPSA: 5% employee + 5% employer, ZMW 34,164 ceiling (2025)      -->
+    <!-- NHIMA: 0.5% employee + 0.5% employer                             -->
+    <!-- VAT: 16% standard rate                                           -->
+    <!-- ================================================================ -->
+    <record id="security_payroll_rule_set_zm_default" model="security.payroll.rule.set">
+        <field name="name">Zambia Default Rule Set</field>
+        <field name="country_code">ZM</field>
+        <field name="currency_id" ref="base.ZMW"/>
+        <field name="effective_from">2025-01-01</field>
+        <field name="employee_ssc_rate">0.0</field>
+        <field name="employer_ssc_rate">0.0</field>
+        <field name="ssc_salary_cap">0.0</field>
+        <field name="employee_napsa_rate">0.05</field>
+        <field name="employer_napsa_rate">0.05</field>
+        <field name="napsa_salary_cap">34164.0</field>
+        <field name="employee_nhima_rate">0.005</field>
+        <field name="employer_nhima_rate">0.005</field>
+        <field name="employer_wcf_rate">0.0</field>
+        <field name="wcf_salary_cap">0.0</field>
+        <field name="sunday_multiplier">1.5</field>
+        <field name="public_holiday_multiplier">1.5</field>
+        <field name="saturday_multiplier">1.25</field>
+        <field name="night_shift_multiplier">1.25</field>
+        <field name="overtime_multiplier">1.5</field>
+        <field name="standard_shift_hours">12</field>
+        <field name="vat_rate">16</field>
+        <field name="deduction_floor_pct">0.30</field>
+        <field name="legal_invoice_text">This invoice is subject to 16% VAT as registered with the Zambia Revenue Authority (ZRA).</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Zambia PAYE Tax Brackets — 2024/2025                             -->
+    <!-- Source: PwC Tax Summaries (zambia/individual/taxes-on-personal-  -->
+    <!--         income); corroborated by Sail Global ZM payroll guide.   -->
+    <!-- Note: These are ANNUAL thresholds. The payslip engine converts   -->
+    <!--       monthly gross to an annual equivalent before bracket       -->
+    <!--       lookup, then divides the resulting tax by 12.              -->
+    <!-- ================================================================ -->
+    <record id="security_tax_bracket_zm_1" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_default"/>
+        <field name="lower_bound">0</field>
+        <field name="upper_bound">61200</field>
+        <field name="fixed_amount">0</field>
+        <field name="rate">0.00</field>
+    </record>
+
+    <record id="security_tax_bracket_zm_2" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_default"/>
+        <field name="lower_bound">61200.01</field>
+        <field name="upper_bound">85200</field>
+        <field name="fixed_amount">0</field>
+        <field name="rate">0.20</field>
+    </record>
+
+    <record id="security_tax_bracket_zm_3" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_default"/>
+        <field name="lower_bound">85200.01</field>
+        <field name="upper_bound">110400</field>
+        <field name="fixed_amount">4800</field>
+        <field name="rate">0.30</field>
+    </record>
+
+    <record id="security_tax_bracket_zm_4" model="security.tax.bracket">
+        <field name="rule_set_id" ref="security_l10n_zm.security_payroll_rule_set_zm_default"/>
+        <field name="lower_bound">110400.01</field>
+        <field name="upper_bound">999999999</field>
+        <field name="fixed_amount">12360</field>
+        <field name="rate">0.37</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Zambian Public Holidays — 2024                                   -->
+    <!-- Source: Public Holidays Act Cap 272 (Zambia); Wikipedia cross-   -->
+    <!--         reference. Sunday → Monday substitution per the Act.     -->
+    <!-- Saturday holidays are NOT substituted (Act is silent on this).   -->
+    <!--                                                                  -->
+    <!-- Heroes' Day  = First Monday in July  → Jul 1 (Mon)              -->
+    <!-- Unity Day    = Tuesday after Heroes' → Jul 2 (Tue)              -->
+    <!-- Farmers' Day = First Monday in Aug   → Aug 5 (Mon)              -->
+    <!-- African Freedom Day May 25 = Saturday — no substitution          -->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_zm_2024_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-01-01</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_youth_day" model="security.public.holiday">
+        <field name="name">Youth Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-03-12</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-04-19</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_holy_saturday" model="security.public.holiday">
+        <field name="name">Holy Saturday</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-04-20</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_labour_day" model="security.public.holiday">
+        <field name="name">Labour Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-05-01</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_african_freedom" model="security.public.holiday">
+        <field name="name">African Freedom Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-05-25</field>
+        <field name="note">Falls on Saturday. No Monday substitution under Zambia Public Holidays Act Cap 272 (Sunday-only rule).</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-07-01</field>
+        <field name="note">First Monday in July 2024.</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_unity_day" model="security.public.holiday">
+        <field name="name">Unity Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-07-02</field>
+        <field name="note">Tuesday following Heroes' Day 2024.</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_farmers_day" model="security.public.holiday">
+        <field name="name">Farmers' Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-08-05</field>
+        <field name="note">First Monday in August 2024.</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_independence" model="security.public.holiday">
+        <field name="name">Independence Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-10-24</field>
+    </record>
+    <record id="security_public_holiday_zm_2024_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2024-12-25</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Zambian Public Holidays — 2025                                   -->
+    <!-- Heroes' Day  = First Monday in July  → Jul 7 (Jul 1 = Tue)     -->
+    <!-- Unity Day    = Tuesday after Heroes' → Jul 8                    -->
+    <!-- Farmers' Day = First Monday in Aug   → Aug 4 (Aug 1 = Fri)     -->
+    <!-- African Freedom Day May 25 = Sunday → observed Mon May 26        -->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_zm_2025_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-01-01</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_youth_day" model="security.public.holiday">
+        <field name="name">Youth Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-03-12</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-04-18</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_holy_saturday" model="security.public.holiday">
+        <field name="name">Holy Saturday</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-04-19</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_labour_day" model="security.public.holiday">
+        <field name="name">Labour Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-05-01</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_african_freedom_observed" model="security.public.holiday">
+        <field name="name">African Freedom Day (observed)</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-05-26</field>
+        <field name="note">May 25 falls on Sunday → observed Monday May 26 per Public Holidays Act Cap 272.</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-07-07</field>
+        <field name="note">First Monday in July 2025 (Jul 1 = Tuesday).</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_unity_day" model="security.public.holiday">
+        <field name="name">Unity Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-07-08</field>
+        <field name="note">Tuesday following Heroes' Day 2025.</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_farmers_day" model="security.public.holiday">
+        <field name="name">Farmers' Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-08-04</field>
+        <field name="note">First Monday in August 2025 (Aug 1 = Friday).</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_independence" model="security.public.holiday">
+        <field name="name">Independence Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-10-24</field>
+    </record>
+    <record id="security_public_holiday_zm_2025_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2025-12-25</field>
+    </record>
+
+    <!-- ================================================================ -->
+    <!-- Zambian Public Holidays — 2026                                   -->
+    <!-- Heroes' Day  = First Monday in July  → Jul 6 (Jul 1 = Wed)     -->
+    <!-- Unity Day    = Tuesday after Heroes' → Jul 7                    -->
+    <!-- Farmers' Day = First Monday in Aug   → Aug 3 (Aug 1 = Sat)     -->
+    <!-- African Freedom Day May 25 = Monday — no substitution needed     -->
+    <!-- Independence Day Oct 24 = Saturday — no substitution (Act)       -->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_zm_2026_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-01-01</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_youth_day" model="security.public.holiday">
+        <field name="name">Youth Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-03-12</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-04-03</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_holy_saturday" model="security.public.holiday">
+        <field name="name">Holy Saturday</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-04-04</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_labour_day" model="security.public.holiday">
+        <field name="name">Labour Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-05-01</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_african_freedom" model="security.public.holiday">
+        <field name="name">African Freedom Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-05-25</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-07-06</field>
+        <field name="note">First Monday in July 2026 (Jul 1 = Wednesday).</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_unity_day" model="security.public.holiday">
+        <field name="name">Unity Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-07-07</field>
+        <field name="note">Tuesday following Heroes' Day 2026.</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_farmers_day" model="security.public.holiday">
+        <field name="name">Farmers' Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-08-03</field>
+        <field name="note">First Monday in August 2026 (Aug 1 = Saturday).</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_independence" model="security.public.holiday">
+        <field name="name">Independence Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-10-24</field>
+        <field name="note">Falls on Saturday. No Monday substitution under Zambia Public Holidays Act Cap 272 (Sunday-only rule).</field>
+    </record>
+    <record id="security_public_holiday_zm_2026_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">ZM</field>
+        <field name="holiday_date">2026-12-25</field>
+    </record>
+</odoo>
