@@ -820,17 +820,18 @@ class SecurityRosterSlot(models.Model):
                 raise ValidationError(
                     "Disqualified guards cannot be assigned to roster slots."
                 )
-            exclusion_domain = [
-                ("employee_id", "=", employee.id),
-                ("active", "=", True),
-                "|",
-                ("site_id", "=", slot.site_id.id or False),
-                ("partner_id", "=", slot.partner_id.id or False),
-            ]
-            if self.env["security.guard.exclusion"].search_count(exclusion_domain):
-                raise ValidationError(
-                    "This guard is excluded from this client or site."
-                )
+            if slot.site_id or slot.partner_id:
+                exclusion_domain = [
+                    ("employee_id", "=", employee.id),
+                    ("active", "=", True),
+                    "|",
+                    ("site_id", "=", slot.site_id.id or False),
+                    ("partner_id", "=", slot.partner_id.id or False),
+                ]
+                if self.env["security.guard.exclusion"].search_count(exclusion_domain):
+                    raise ValidationError(
+                        "This guard is excluded from this client or site."
+                    )
             if post_type.min_grade_id and employee.security_grade_id:
                 if employee.security_grade_id.sequence > post_type.min_grade_id.sequence:
                     raise ValidationError(

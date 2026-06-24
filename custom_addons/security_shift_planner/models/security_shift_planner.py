@@ -152,6 +152,8 @@ class SecurityRosterBatch(models.Model):
         write listener on security.attendance.record recomputes batch fields and
         tries to trigger further notifications (no_notify context pattern).
         """
+        filled = 0
+        gaps = 0
         for batch in self:
             unassigned = batch.slot_ids.filtered(
                 lambda s: not s.employee_id and s.state != "cancelled"
@@ -166,8 +168,6 @@ class SecurityRosterBatch(models.Model):
             )
             # {shift_date_str: set(employee_id)} — prevents double-booking in this run
             assigned_today = {}
-            filled = 0
-            gaps = 0
             for slot in unassigned:
                 slot.critical_gap = False
                 eligible = slot._get_eligible_guards(slot)
@@ -200,9 +200,12 @@ class SecurityRosterBatch(models.Model):
                 manager_group = self.env.ref(
                     "security_base.group_security_manager", raise_if_not_found=False
                 )
-                manager_users = (
-                    manager_group.users if manager_group else self.env["res.users"].browse()
-                )
+                if manager_group:
+                    manager_users = self.env["res.users"].search(
+                        [("groups_id", "in", [manager_group.id])]
+                    )
+                else:
+                    manager_users = self.env["res.users"].browse()
                 self.env["security.notification"].sudo().create({
                     "title": f"Auto-Fill: {gaps} Critical Gap(s) — {batch.name}",
                     "body": (
