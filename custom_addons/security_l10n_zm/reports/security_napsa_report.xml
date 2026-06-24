@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- NAPSA Employer Contribution Schedule — QWeb PDF          -->
+    <!-- Model: security.payroll.period                          -->
+    <!-- Shows employee and employer NAPSA contributions,        -->
+    <!-- with gross capped at the monthly earnings ceiling.      -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_napsa_zm_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="period">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 11px;">
+
+                        <!-- Title block -->
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                                National Pension Scheme Authority (NAPSA)
+                            </h2>
+                            <h3 style="margin: 4px 0 0 0;">
+                                Employer Monthly Contribution Schedule
+                            </h3>
+                        </div>
+
+                        <!-- Header info box -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <tr>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Contribution Month</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="period.date_from and period.date_from.strftime('%B %Y') or ''"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Employer Name</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="env.company.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Period</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="period.date_from"/> — <t t-esc="period.date_to"/>
+                                </td>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Earnings Ceiling (ZMW)</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-set="napsa_cap" t-value="period.rule_set_id and period.rule_set_id.napsa_salary_cap or 34164.0"/>
+                                    <t t-esc="'%.2f' % napsa_cap"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Employee NAPSA schedule table -->
+                        <t t-set="active_slips" t-value="period.payslip_ids.filtered(lambda p: p.state in ('confirmed', 'paid'))"/>
+
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <thead>
+                                <tr style="background-color: #1A5276; color: white;">
+                                    <th style="padding: 5px 6px; text-align: center; width: 4%;">#</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 24%;">Employee Name</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 16%;">NAPSA Member No.</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">Gross Pay (ZMW)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">Assessable Earnings</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">Employee NAPSA (5%)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">Employer NAPSA (5%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="active_slips" t-as="slip">
+                                    <t t-set="napsa_lines" t-value="slip.deduction_line_ids.filtered(lambda l: l.code == 'NAPSA')"/>
+                                    <t t-set="employee_napsa" t-value="sum(napsa_lines.mapped('amount'))"/>
+                                    <t t-set="rule_set" t-value="period.rule_set_id"/>
+                                    <t t-set="cap" t-value="rule_set and rule_set.napsa_salary_cap or 34164.0"/>
+                                    <t t-set="emp_rate" t-value="rule_set and rule_set.employee_napsa_rate or 0.05"/>
+                                    <t t-set="er_rate" t-value="rule_set and rule_set.employer_napsa_rate or 0.05"/>
+                                    <t t-set="assessable" t-value="min(slip.total_earnings, cap)"/>
+                                    <t t-set="employer_napsa" t-value="round(assessable * er_rate, 2)"/>
+                                    <tr>
+                                        <td style="padding: 4px 6px; text-align: center;">
+                                            <t t-esc="slip_index + 1"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.name"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.security_napsa_number or '—'"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % slip.total_earnings"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % assessable"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % employee_napsa"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % employer_napsa"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background-color: #e8e8e8; font-weight: bold;">
+                                    <td style="padding: 5px 6px; text-align: right;" colspan="3">TOTALS</td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(active_slips.mapped('total_earnings'))"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-set="cap_total" t-value="period.rule_set_id and period.rule_set_id.napsa_salary_cap or 34164.0"/>
+                                        <t t-esc="'%.2f' % sum(min(s.total_earnings, cap_total) for s in active_slips)"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            sum(s.deduction_line_ids.filtered(lambda l: l.code == 'NAPSA').mapped('amount'))
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-set="er_rate_total" t-value="period.rule_set_id and period.rule_set_id.employer_napsa_rate or 0.05"/>
+                                        <t t-set="cap_er" t-value="period.rule_set_id and period.rule_set_id.napsa_salary_cap or 34164.0"/>
+                                        <t t-esc="'%.2f' % sum(round(min(s.total_earnings, cap_er) * er_rate_total, 2) for s in active_slips)"/>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Remittance note -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;" border="0">
+                            <tr>
+                                <td style="width: 50%; padding-right: 16px; vertical-align: top;">
+                                    <p style="margin: 0; font-size: 10px; color: #555; font-style: italic;">
+                                        Both employee and employer contributions must be remitted to NAPSA
+                                        by the 10th of the following month.<br/>
+                                        Ref: NAPSA Act Cap 256 of the Laws of Zambia.<br/>
+                                        2025 monthly earnings ceiling: ZMW 34,164.
+                                    </p>
+                                </td>
+                                <td style="width: 50%; padding-left: 16px; vertical-align: top;">
+                                    <p style="margin: 0;">Authorised Signatory: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Designation: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Date: ________________________</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report action — bound to security.payroll.period -->
+    <record id="action_report_security_napsa_zm" model="ir.actions.report">
+        <field name="name">NAPSA Contribution Schedule (Zambia)</field>
+        <field name="model">security.payroll.period</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_l10n_zm.report_security_napsa_zm_document</field>
+        <field name="report_file">security_l10n_zm.report_security_napsa_zm_document</field>
+        <field name="print_report_name">'NAPSA_Schedule_%s' % (object.name or 'Schedule')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>
