@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- ZM Payslip Template Override                            -->
+    <!-- Inherits security_payroll_core.report_security_payslip  -->
+    <!-- For ZM payrolls:                                        -->
+    <!--   - Shows company city/country instead of hardcoded     -->
+    <!--     "Windhoek, Namibia"                                 -->
+    <!--   - Replaces SSC Number with NAPSA/NHIMA/TPIN fields    -->
+    <!-- Non-ZM payrolls are unaffected (conditional t-if).      -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_zm_payslip" inherit_id="security_payroll_core.report_security_payslip">
+
+        <!-- 1. Replace hardcoded company address with dynamic city/country -->
+        <xpath expr="//p[text()='Windhoek, Namibia']" position="replace">
+            <p class="text-muted small mb-0"
+               t-if="not (doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM')">
+                Windhoek, Namibia
+            </p>
+            <p class="text-muted small mb-0"
+               t-if="doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM'">
+                <t t-esc="env.company.city or 'Lusaka'"/>, <t t-esc="env.company.country_id.name or 'Zambia'"/>
+            </p>
+        </xpath>
+
+        <!-- 2. Replace SSC Number row with ZM statutory ID rows -->
+        <xpath expr="//tr[td[text()='SSC Number:']]" position="replace">
+            <!-- Retained for non-ZM payrolls -->
+            <tr t-if="not (doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM')">
+                <td class="text-muted py-1">SSC Number:</td>
+                <td class="py-1">
+                    <span t-field="doc.employee_id.security_ssc_number"/>
+                    <span t-if="not doc.employee_id.security_ssc_number" class="text-muted">-</span>
+                </td>
+            </tr>
+            <!-- ZM-specific statutory ID fields -->
+            <t t-if="doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM'">
+                <tr>
+                    <td class="text-muted py-1">NAPSA Member No.:</td>
+                    <td class="py-1">
+                        <span t-field="doc.employee_id.security_napsa_number"/>
+                        <span t-if="not doc.employee_id.security_napsa_number" class="text-muted">-</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-muted py-1">NHIMA Member No.:</td>
+                    <td class="py-1">
+                        <span t-field="doc.employee_id.security_nhima_number"/>
+                        <span t-if="not doc.employee_id.security_nhima_number" class="text-muted">-</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-muted py-1">TPIN:</td>
+                    <td class="py-1">
+                        <span t-field="doc.employee_id.security_tpin"/>
+                        <span t-if="not doc.employee_id.security_tpin" class="text-muted">-</span>
+                    </td>
+                </tr>
+            </t>
+        </xpath>
+
+    </template>
+
+</odoo>

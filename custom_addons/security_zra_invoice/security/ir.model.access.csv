@@ -3,3 +3,4 @@ access_security_zra_config_manager,security.zra.config manager,model_security_zr
 access_security_zra_config_user,security.zra.config user,model_security_zra_config,base.group_user,1,0,0,0
 access_security_zra_submission_manager,security.zra.submission manager,model_security_zra_submission,base.group_system,1,1,1,1
 access_security_zra_submission_user,security.zra.submission user,model_security_zra_submission,hr.group_hr_user,1,1,1,0
+access_security_zra_bulk_submit_user,security.zra.bulk.submit user,model_security_zra_bulk_submit,hr.group_hr_user,1,1,1,1

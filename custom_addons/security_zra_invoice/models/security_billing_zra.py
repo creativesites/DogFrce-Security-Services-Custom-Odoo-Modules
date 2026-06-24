@@ -269,6 +269,63 @@ class SecurityBillingInvoiceZra(models.Model):
             "context": {"default_invoice_id": self.id},
         }
 
+    def _submit_zra_cancellation(self):
+        """Send a cancellation notice to ZRA for a previously accepted invoice.
+
+        Calls saveSales with salesStsCd='05' (cancelled). Errors are logged but
+        do not block the Odoo-side cancel.
+        """
+        self.ensure_one()
+        config = self.env["security.zra.config"].get_active_config(
+            company_id=self.env.company.id
+        )
+        if not config:
+            _logger.warning(
+                "No ZRA config for company %s; skipping ZRA cancellation for %s",
+                self.env.company.name,
+                self.name,
+            )
+            return
+        from .security_zra_client import ZRAApiError
+        client = config._get_client()
+        now_dt = datetime.now()
+        payload = self._build_zra_invoice_payload()
+        payload.update({
+            "salesStsCd": "05",
+            "cnclReqDt": now_dt.strftime("%Y%m%d%H%M%S"),
+            "cnclDt": now_dt.strftime("%Y%m%d%H%M%S"),
+        })
+        now = fields.Datetime.now()
+        sub = self.env["security.zra.submission"].create({
+            "invoice_id": self.id,
+            "submission_type": "invoice",
+            "state": "pending",
+            "last_attempt": now,
+        })
+        try:
+            raw_req, raw_resp, data = client.save_sales(payload)
+            _store_zra_response(sub, raw_req, raw_resp, data.get("data", {}), now)
+            self.zra_submission_ids.filtered(
+                lambda s: s.state == "accepted" and s.id != sub.id
+            ).write({"state": "rejected", "error_message": "Invoice cancelled"})
+        except ZRAApiError as exc:
+            sub.write({
+                "state": "error",
+                "raw_request": json.dumps(payload),
+                "error_message": f"ZRA cancellation: {exc}",
+            })
+            _logger.warning("ZRA cancellation failed for %s: %s", self.name, exc)
+
+    def action_cancel(self):
+        for inv in self.filtered(lambda i: i.zra_state == "accepted"):
+            try:
+                inv._submit_zra_cancellation()
+            except Exception as exc:
+                _logger.warning(
+                    "Unexpected error during ZRA cancellation for %s: %s", inv.name, exc
+                )
+        return super().action_cancel()
+
 
 class SecurityBillingCreditNoteZra(models.Model):
     _inherit = "security.billing.credit.note"

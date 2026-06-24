@@ -10,6 +10,7 @@
         "security/ir.model.access.csv",
         "data/security_zra_cron.xml",
         "views/security_zra_views.xml",
+        "views/security_zra_bulk_wizard_views.xml",
         "reports/security_zra_invoice_report.xml",
     ],
     "installable": True,

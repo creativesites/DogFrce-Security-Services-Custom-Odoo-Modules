@@ -32,6 +32,8 @@
         'security_loans',
         'security_discipline',
         'security_billing',
+        'security_l10n_zm',
+        'security_zra_invoice',
         'security_client_reports',
         'security_equipment',
         'security_fleet',
