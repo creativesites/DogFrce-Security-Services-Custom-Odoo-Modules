@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- ZRA Configuration                                            -->
+    <!-- ============================================================ -->
+
+    <record id="view_security_zra_config_form" model="ir.ui.view">
+        <field name="name">security.zra.config.form</field>
+        <field name="model">security.zra.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_test_connection" type="object"
+                            string="Test Connection" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group string="Company &amp; Environment">
+                            <field name="company_id"/>
+                            <field name="environment"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="VSDC Credentials">
+                            <field name="base_url" placeholder="https://sandbox.zra.org.zm:38083/sandboxvsdc"/>
+                            <field name="tpin" placeholder="10-digit TPIN"/>
+                            <field name="bhf_id" placeholder="000"/>
+                            <field name="dvc_srl_no" placeholder="Device serial from ZRA onboarding"/>
+                        </group>
+                    </group>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="environment != 'production'">
+                        <strong>Production Mode</strong> — all invoices submitted here will be
+                        fiscally signed with ZRA. Ensure this is intentional.
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_zra_config_list" model="ir.ui.view">
+        <field name="name">security.zra.config.list</field>
+        <field name="model">security.zra.config</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active">
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="environment"/>
+                <field name="tpin"/>
+                <field name="bhf_id"/>
+                <field name="dvc_srl_no"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_security_zra_config" model="ir.actions.act_window">
+        <field name="name">ZRA Smart Invoice Config</field>
+        <field name="res_model">security.zra.config</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- ZRA Submission log                                           -->
+    <!-- ============================================================ -->
+
+    <record id="view_security_zra_submission_list" model="ir.ui.view">
+        <field name="name">security.zra.submission.list</field>
+        <field name="model">security.zra.submission</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'accepted'"
+                  decoration-danger="state in ('rejected', 'error')"
+                  decoration-muted="state == 'pending'">
+                <field name="display_name"/>
+                <field name="submission_type"/>
+                <field name="invoice_id"/>
+                <field name="credit_note_id"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'accepted'"
+                       decoration-danger="state in ('rejected', 'error')"
+                       decoration-warning="state == 'pending'"/>
+                <field name="zra_receipt_no"/>
+                <field name="retry_count"/>
+                <field name="last_attempt"/>
+                <field name="accepted_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_zra_submission_form" model="ir.ui.view">
+        <field name="name">security.zra.submission.form</field>
+        <field name="model">security.zra.submission</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="pending,accepted,rejected,error"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Reference">
+                            <field name="submission_type"/>
+                            <field name="invoice_id" readonly="submission_type != 'invoice'"/>
+                            <field name="credit_note_id" readonly="submission_type != 'credit_note'"/>
+                        </group>
+                        <group string="ZRA Response">
+                            <field name="zra_receipt_no"/>
+                            <field name="zra_internal_data"/>
+                            <field name="zra_signature"/>
+                            <field name="zra_sdc_id"/>
+                            <field name="zra_mrc_no"/>
+                            <field name="zra_vsdc_date"/>
+                        </group>
+                    </group>
+                    <group string="Submission Audit">
+                        <group>
+                            <field name="retry_count"/>
+                            <field name="last_attempt"/>
+                            <field name="accepted_at"/>
+                        </group>
+                        <group>
+                            <field name="error_message" invisible="not error_message"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Request">
+                            <field name="raw_request" widget="text" readonly="1"/>
+                        </page>
+                        <page string="Response">
+                            <field name="raw_response" widget="text" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_zra_submission_search" model="ir.ui.view">
+        <field name="name">security.zra.submission.search</field>
+        <field name="model">security.zra.submission</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="display_name"/>
+                <field name="invoice_id"/>
+                <field name="zra_receipt_no"/>
+                <filter name="filter_accepted" string="Accepted" domain="[('state','=','accepted')]"/>
+                <filter name="filter_error" string="Errors" domain="[('state','in',('error','rejected'))]"/>
+                <filter name="filter_pending" string="Pending" domain="[('state','=','pending')]"/>
+                <filter name="filter_type_invoice" string="Invoices" domain="[('submission_type','=','invoice')]"/>
+                <filter name="filter_type_cn" string="Credit Notes" domain="[('submission_type','=','credit_note')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                    <filter name="group_type" string="Type" context="{'group_by': 'submission_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_zra_submission" model="ir.actions.act_window">
+        <field name="name">ZRA Submissions</field>
+        <field name="res_model">security.zra.submission</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Extend Billing Invoice form — ZRA status + action buttons    -->
+    <!-- ============================================================ -->
+
+    <record id="view_security_billing_invoice_zra_ext" model="ir.ui.view">
+        <field name="name">security.billing.invoice.zra.ext</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_form"/>
+        <field name="arch" type="xml">
+            <!-- Add ZRA submit button in the header next to existing state buttons -->
+            <xpath expr="//header/button[@name='action_mark_sent']" position="before">
+                <button name="action_submit_to_zra" type="object"
+                        string="Submit to ZRA"
+                        class="btn-primary"
+                        invisible="zra_state == 'accepted' or state in ('cancelled')"/>
+                <button name="action_view_zra_submissions" type="object"
+                        string="ZRA Submissions"
+                        invisible="not zra_submission_ids"/>
+            </xpath>
+            <!-- Add ZRA status badge to the sheet -->
+            <xpath expr="//sheet/group[1]" position="before">
+                <div class="alert alert-success" role="alert"
+                     invisible="zra_state != 'accepted'">
+                    <strong>ZRA Accepted</strong> — Receipt No: <field name="zra_receipt_no" readonly="1"/>
+                </div>
+                <div class="alert alert-warning" role="alert"
+                     invisible="zra_state not in ('pending', 'error', 'rejected')">
+                    ZRA Status: <field name="zra_state" readonly="1"/>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Extend Credit Note form — ZRA submit button                  -->
+    <!-- ============================================================ -->
+
+    <record id="view_security_billing_credit_note_zra_ext" model="ir.ui.view">
+        <field name="name">security.billing.credit.note.zra.ext</field>
+        <field name="model">security.billing.credit.note</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_credit_note_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_submit_credit_note_to_zra" type="object"
+                        string="Submit Credit Note to ZRA"
+                        class="btn-secondary"
+                        invisible="zra_state == 'accepted' or state not in ('confirmed', 'applied')"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Menu items — under Settings (system only) and Billing        -->
+    <!-- ============================================================ -->
+
+    <menuitem id="menu_zra_root"
+              name="ZRA Smart Invoice"
+              parent="security_operations.menu_security_billing_root"
+              sequence="90"/>
+
+    <menuitem id="menu_zra_config"
+              name="Configuration"
+              parent="menu_zra_root"
+              action="action_security_zra_config"
+              sequence="10"
+              groups="base.group_system"/>
+
+    <menuitem id="menu_zra_submissions"
+              name="Submission Log"
+              parent="menu_zra_root"
+              action="action_security_zra_submission"
+              sequence="20"/>
+
+</odoo>

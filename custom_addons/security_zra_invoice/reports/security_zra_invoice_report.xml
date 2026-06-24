@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- ZRA-Compliant Tax Invoice PDF                            -->
+    <!-- Model: security.billing.invoice                         -->
+    <!-- Renders with ZRA receipt number, signature, and QR code  -->
+    <!-- when the invoice has an accepted ZRA submission;         -->
+    <!-- renders as a standard draft invoice otherwise.          -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_zra_invoice_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 11px;">
+
+                        <!-- ── Title ────────────────────────────────────── -->
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                            <div>
+                                <h2 style="margin:0; text-transform:uppercase; letter-spacing:1px;">Tax Invoice</h2>
+                                <t t-if="doc.zra_state == 'accepted'">
+                                    <span style="font-size:10px; color:#1A6B3C; font-weight:bold;">
+                                        ✓ ZRA Fiscally Signed
+                                    </span>
+                                </t>
+                                <t t-if="doc.zra_state != 'accepted'">
+                                    <span style="font-size:10px; color:#cc6600;">
+                                        DRAFT — Not yet submitted to ZRA
+                                    </span>
+                                </t>
+                            </div>
+                            <!-- QR code (right-aligned, shown only when ZRA-accepted) -->
+                            <t t-if="doc.zra_qr_code">
+                                <div style="text-align:center;">
+                                    <img t-att-src="image_data_uri(doc.zra_qr_code)"
+                                         style="width:80px; height:80px; border:1px solid #ccc;"/>
+                                    <div style="font-size:8px; color:#555; margin-top:2px;">ZRA Verified</div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- ── Invoice header table ──────────────────────── -->
+                        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;" border="1">
+                            <tr>
+                                <td style="padding:4px 8px; width:20%;"><strong>Invoice No.</strong></td>
+                                <td style="padding:4px 8px; width:30%;"><t t-esc="doc.name"/></td>
+                                <td style="padding:4px 8px; width:20%;"><strong>Invoice Date</strong></td>
+                                <td style="padding:4px 8px;"><t t-esc="doc.invoice_date"/></td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 8px;"><strong>Client</strong></td>
+                                <td style="padding:4px 8px;" colspan="3"><t t-esc="doc.partner_id.name"/></td>
+                            </tr>
+                            <tr t-if="doc.site_id">
+                                <td style="padding:4px 8px;"><strong>Site</strong></td>
+                                <td style="padding:4px 8px;" colspan="3"><t t-esc="doc.site_id.name"/></td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 8px;"><strong>Service Period</strong></td>
+                                <td style="padding:4px 8px;" colspan="3">
+                                    <t t-esc="doc.service_date_from"/> — <t t-esc="doc.service_date_to"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding:4px 8px;"><strong>Due Date</strong></td>
+                                <td style="padding:4px 8px;"><t t-esc="doc.due_date"/></td>
+                                <td style="padding:4px 8px;"><strong>PO Number</strong></td>
+                                <td style="padding:4px 8px;"><t t-esc="doc.po_number or '—'"/></td>
+                            </tr>
+                            <!-- ZRA receipt fields — only shown when accepted -->
+                            <tr t-if="doc.zra_state == 'accepted'">
+                                <td style="padding:4px 8px;"><strong>ZRA Receipt No.</strong></td>
+                                <td style="padding:4px 8px;"><t t-esc="doc.zra_receipt_no or '—'"/></td>
+                                <td style="padding:4px 8px;"><strong>Employer TPIN</strong></td>
+                                <td style="padding:4px 8px;"><t t-esc="env.company.vat or '—'"/></td>
+                            </tr>
+                        </table>
+
+                        <!-- ── Invoice lines ──────────────────────────────── -->
+                        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;" border="1">
+                            <thead>
+                                <tr style="background-color:#1A6B3C; color:white;">
+                                    <th style="padding:5px 6px; text-align:left; width:40%;">Description</th>
+                                    <th style="padding:5px 6px; text-align:left; width:15%;">Post</th>
+                                    <th style="padding:5px 6px; text-align:left; width:15%;">Shift</th>
+                                    <th style="padding:5px 6px; text-align:right; width:8%;">Qty</th>
+                                    <th style="padding:5px 6px; text-align:right; width:10%;">Unit Rate</th>
+                                    <th style="padding:5px 6px; text-align:right; width:12%;">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc.line_ids" t-as="line">
+                                    <td style="padding:4px 6px;"><t t-esc="line.name"/></td>
+                                    <td style="padding:4px 6px;"><t t-esc="line.post_id.name or '—'"/></td>
+                                    <td style="padding:4px 6px;"><t t-esc="line.shift_template_id.name or '—'"/></td>
+                                    <td style="padding:4px 6px; text-align:right;">
+                                        <t t-esc="'%.2f' % line.quantity"/>
+                                    </td>
+                                    <td style="padding:4px 6px; text-align:right;">
+                                        <t t-esc="'%.2f' % line.unit_price"/>
+                                    </td>
+                                    <td style="padding:4px 6px; text-align:right;">
+                                        <t t-esc="'%.2f' % line.subtotal"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- ── Totals block ───────────────────────────────── -->
+                        <table style="width:100%; border-collapse:collapse; margin-bottom:16px;" border="0">
+                            <tr>
+                                <td style="width:60%;"></td>
+                                <td style="width:40%;">
+                                    <table style="width:100%; border-collapse:collapse;" border="1">
+                                        <tr>
+                                            <td style="padding:4px 8px;">Subtotal</td>
+                                            <td style="padding:4px 8px; text-align:right;">
+                                                <t t-esc="doc.currency_id.symbol"/>
+                                                <t t-esc="'%.2f' % doc.subtotal_amount"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding:4px 8px;">
+                                                VAT (<t t-esc="'%.0f' % doc.vat_rate"/>%)
+                                            </td>
+                                            <td style="padding:4px 8px; text-align:right;">
+                                                <t t-esc="doc.currency_id.symbol"/>
+                                                <t t-esc="'%.2f' % doc.vat_amount"/>
+                                            </td>
+                                        </tr>
+                                        <tr style="background-color:#e8e8e8; font-weight:bold;">
+                                            <td style="padding:5px 8px;">TOTAL</td>
+                                            <td style="padding:5px 8px; text-align:right;">
+                                                <t t-esc="doc.currency_id.symbol"/>
+                                                <t t-esc="'%.2f' % doc.total_amount"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="padding:4px 8px; font-size:10px; font-style:italic;">
+                                                <t t-esc="doc.amount_in_words"/>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- ── ZRA fiscal stamp block ─────────────────────── -->
+                        <t t-if="doc.zra_state == 'accepted'">
+                            <table style="width:100%; border-collapse:collapse; margin-top:12px;
+                                          border:1px solid #1A6B3C; background:#f0fff4;" border="0">
+                                <tr>
+                                    <td style="padding:8px 12px; width:65%; vertical-align:top;">
+                                        <div style="font-size:10px; font-weight:bold; color:#1A6B3C; margin-bottom:4px;">
+                                            ZRA SMART INVOICE — FISCAL DATA
+                                        </div>
+                                        <table style="font-size:9px; border-collapse:collapse;">
+                                            <tr>
+                                                <td style="padding:2px 8px 2px 0; white-space:nowrap;"><strong>Receipt No.:</strong></td>
+                                                <td style="padding:2px 0;"><t t-esc="doc.zra_receipt_no or '—'"/></td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:2px 8px 2px 0;"><strong>Internal Data:</strong></td>
+                                                <td style="padding:2px 0; word-break:break-all;">
+                                                    <t t-esc="doc.zra_internal_data or '—'"/>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding:2px 8px 2px 0;"><strong>Employer TPIN:</strong></td>
+                                                <td style="padding:2px 0;"><t t-esc="env.company.vat or '—'"/></td>
+                                            </tr>
+                                        </table>
+                                        <p style="font-size:8px; color:#555; margin:6px 0 0 0; font-style:italic;">
+                                            This invoice has been fiscally signed under the Zambia
+                                            Revenue Authority Smart Invoice system.
+                                            Ref: Value Added Tax Act Cap 331 of the Laws of Zambia.
+                                        </p>
+                                    </td>
+                                    <td style="padding:8px 12px; text-align:center; vertical-align:middle; width:35%;">
+                                        <t t-if="doc.zra_qr_code">
+                                            <img t-att-src="image_data_uri(doc.zra_qr_code)"
+                                                 style="width:90px; height:90px;"/>
+                                            <div style="font-size:8px; color:#1A6B3C; margin-top:2px; font-weight:bold;">
+                                                Scan to verify
+                                            </div>
+                                        </t>
+                                    </td>
+                                </tr>
+                            </table>
+                        </t>
+
+                        <!-- ── Notes ─────────────────────────────────────── -->
+                        <t t-if="doc.note">
+                            <p style="margin-top:12px; font-size:10px;">
+                                <strong>Notes:</strong> <t t-esc="doc.note"/>
+                            </p>
+                        </t>
+
+                        <!-- ── Payment instructions ──────────────────────── -->
+                        <t t-if="doc.billing_plan_id and doc.billing_plan_id.legal_invoice_text">
+                            <!-- placeholder for legal invoice text if exposed on plan later -->
+                        </t>
+                        <p style="font-size:9px; color:#555; margin-top:16px; font-style:italic;">
+                            Please reference invoice number <strong><t t-esc="doc.name"/></strong>
+                            when making payment. Payment is due by <strong><t t-esc="doc.due_date"/></strong>.
+                        </p>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report action — replaces (supplements) the default invoice report for ZRA-submitted invoices -->
+    <record id="action_report_security_zra_invoice" model="ir.actions.report">
+        <field name="name">ZRA Tax Invoice</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_zra_invoice.report_security_zra_invoice_document</field>
+        <field name="report_file">security_zra_invoice.report_security_zra_invoice_document</field>
+        <field name="print_report_name">'ZRA_Invoice_%s' % (object.name or 'Invoice')</field>
+        <field name="binding_model_id" ref="security_billing.model_security_billing_invoice"/>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

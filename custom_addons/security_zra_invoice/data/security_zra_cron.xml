@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Retry ZRA submissions that are pending or errored (runs every hour) -->
+    <record id="ir_cron_zra_retry_pending" model="ir.cron">
+        <field name="name">ZRA Smart Invoice: Retry Pending Submissions</field>
+        <field name="model_id" ref="model_security_zra_submission"/>
+        <field name="state">code</field>
+        <field name="code">model.action_retry_pending()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="numbercall">-1</field>
+        <field name="active">True</field>
+    </record>
+</odoo>
