@@ -51,6 +51,15 @@ These affect users, integrators, or go-live readiness today.
 | **Payroll not signed off for production** | Tests exist but DogForce finance manual verification still required |
 | **`security_payroll_core` depends on `security_l10n_na`** | Cannot install country-neutral payroll without Namibia pack |
 
+### Payroll and statutory (Zambia)
+
+| Limitation | Impact |
+|------------|--------|
+| **2026 PAYE brackets unconfirmed** | `security_l10n_zm/data/security_l10n_zm_data.xml` contains a 2026 rule set copied from 2025; update once the Zambia Revenue Authority publishes 2026 budget brackets |
+| **WCF rate is per-company assessment** | Default rate is WCFCB Class IX (security industry); confirm and update `wcf_rate` per actual WCFCB assessment letter |
+| **ZRA VSDC endpoint must be configured** | `ir.config_parameter` key `zra.vsdc_url` and `zra.api_key` must be set before submissions are live; no validation warning if left blank |
+| **ZRA cancellation only voids locally if VSDC is unreachable** | `action_cancel` falls through to local void on network error; submission log will show `error` state for reconciliation |
+
 ### Operations and attendance
 
 | Limitation | Impact |
@@ -175,10 +184,13 @@ High-level gap vs DogForce functional specification:
 | Attendance posting sheet | **Implemented** — mobile API bugs affect field use |
 | Leave accrual/deduction | **Partial** — manual balances, no accrual engine |
 | Namibia PAYE/SSC/premiums | **Partial** — Sunday/holiday/OT; Saturday/night/split missing |
+| Zambia NAPSA/NHIMA/WCF/PAYE | **Implemented** — `security_l10n_zm`; 2026 PAYE brackets pending budget confirmation |
+| ZRA Smart Invoice (Zambia fiscal) | **Implemented** — VSDC submit/cancel, bulk wizard, exponential backoff retry |
 | Loans, discipline, equipment deductions | **Basic** — payslip integration present |
 | Client invoicing | **Partial** — custom invoices, no GL |
 | Bank reconciliation | **Minimal** — payment records only |
 | Compliance reports (SSC, PAYE exports) | **Not implemented** |
+| In-app Help Centre | **Implemented** — country-aware articles; Namibia and Zambia content seeded |
 | Migration from DogForce Enterprise | **Module exists** (`security_dogforce_migration`); cutover tooling ongoing |
 | Auto-roster | **Deferred** (ADR-0012) |
 | Mobile field app | **Scaffold** — API + UI; production blockers above |

@@ -1,8 +1,8 @@
 # DogForce Security Suite
 
-A reusable **Odoo-based operations platform** for private security companies. The suite covers guard profiles, roster planning, attendance, leave, Namibia payroll, client billing, fleet, equipment, and a companion mobile app for field supervisors and managers.
+A reusable **Odoo-based operations platform** for private security companies. The suite covers guard profiles, roster planning, attendance, leave, multi-country payroll (Namibia and Zambia), ZRA Smart Invoice fiscal compliance, client billing, fleet, equipment, and a companion mobile app for field supervisors and managers.
 
-The first deployment target is **DogForce Security Services** (Namibia). The codebase is designed so country-specific rules stay in localization packs and the core modules can be adapted for Zambia and other markets without rewriting operational logic.
+The first deployment targets are **DogForce Security Services** (Namibia) and its Zambian operations. The codebase is designed so country-specific rules stay in localization packs — `security_l10n_na` for Namibia, `security_l10n_zm` for Zambia — and the core modules can be adapted for additional markets without rewriting operational logic.
 
 ---
 
@@ -13,9 +13,10 @@ The first deployment target is **DogForce Security Services** (Namibia). The cod
 | Guard qualification tracking is scattered across spreadsheets | Central guard profiles with grades, certifications, attributes, reliability scores, and disqualification rules |
 | Rosters are hard to validate against contract requirements | Structured client → site → post → shift → roster model with eligibility constraints and override audit trails |
 | Payroll depends on accurate scheduled-vs-actual attendance | Posting sheets link roster slots to check-in/out records, late/early metrics, and overtime approval |
-| Namibia statutory payroll is complex | Configurable PAYE brackets, SSC rates, public holidays, and shift premiums in a dedicated localization module |
+| Namibia statutory payroll is complex | Configurable PAYE brackets, SSC rates, public holidays, and shift premiums in `security_l10n_na` |
+| Zambia statutory payroll and fiscal compliance | NAPSA, NHIMA, WCF, PAYE brackets in `security_l10n_zm`; ZRA Smart Invoice VSDC integration in `security_zra_invoice` |
 | Supervisors need field tools, not only the Odoo web UI | Expo mobile app with role-based dashboards connected to a custom JSON API on Odoo |
-| One-off client customizations create unmaintainable forks | Country-neutral core modules, Namibia pack (`security_l10n_na`), and planned client migration module |
+| One-off client customizations create unmaintainable forks | Country-neutral core modules, Namibia pack (`security_l10n_na`), Zambia pack (`security_l10n_zm`), and client migration module |
 
 ---
 
@@ -26,7 +27,7 @@ The first deployment target is **DogForce Security Services** (Namibia). The cod
 | ERP platform | **Odoo 19 Community** (Python, PostgreSQL, QWeb) |
 | Database | **PostgreSQL 16** |
 | Local runtime | **Docker Compose** (official `odoo` + `postgres` images) |
-| Custom business logic | 22 Odoo modules in `custom_addons/` |
+| Custom business logic | 26 Odoo modules in `custom_addons/` |
 | Mobile app | **Expo 51** / **React Native 0.74** / **TypeScript** |
 | Mobile state & data | Zustand, TanStack Query, Axios, Expo Secure Store |
 | Mobile UI | React Native Paper (dark theme), Expo Router |
@@ -39,7 +40,7 @@ The first deployment target is **DogForce Security Services** (Namibia). The cod
 
 ```text
 .
-├── custom_addons/          # Odoo Security Suite modules (22 modules)
+├── custom_addons/          # Odoo Security Suite modules (26 modules)
 ├── mobile/                 # DogForce Mobile app (Expo / React Native)
 ├── deploy/                 # Docker Compose definition
 ├── docs/                   # Project plans, guides, and specifications
@@ -84,7 +85,7 @@ See **[TESTING.md](TESTING.md)** for the full guide. Quick start:
 open .local/coverage/html/index.html
 ```
 
-Modules with automated tests: `security_payroll_core`, `security_equipment`, `security_fleet`.
+Modules with automated tests: `security_payroll_core`, `security_attendance`, `security_equipment`, `security_fleet`, `security_l10n_zm`.
 
 ---
 
@@ -96,7 +97,7 @@ Modules with automated tests: `security_payroll_core`, `security_equipment`, `se
 | `security_operations` | Clients, sites, posts, shift templates, roster planning |
 | `security_attendance` | Posting sheets, scheduled-vs-actual attendance metrics |
 | `security_leave` | Leave types, balances, requests |
-| `security_l10n_na` | Namibia payroll rules, tax brackets, public holidays |
+| `security_l10n_na` | Namibia payroll rules — PAYE brackets, SSC rates, public holidays |
 | `security_payroll_core` | Payroll periods, payslips, statutory calculations |
 | `security_loans` | Employee loans and payroll deductions |
 | `security_discipline` | Behavioral incidents and reliability impact |
@@ -113,6 +114,11 @@ Modules with automated tests: `security_payroll_core`, `security_equipment`, `se
 | `security_demo_data` | Namibian demo dataset (post-install hook) |
 | `security_shift_planner` | Guard scoring engine and Roster Board OWL |
 | `security_dogforce_migration` | CSV data migration tools for go-live |
+| `security_l10n_zm` | Zambia payroll — NAPSA, NHIMA, WCF, PAYE brackets, ZM payslip PDF |
+| `security_zra_invoice` | ZRA Smart Invoice — VSDC API integration, fiscal signing, submission log |
+| `security_help` | In-app Help Centre — country-aware articles for Namibia and Zambia |
+| `security_suite` | Meta-module: installs the complete Security Suite in one step |
+| `security_demo_site` | Demo site login panel and accounts management |
 
 For dependency relationships and data flows, see [ARCHITECTURE.md](ARCHITECTURE.md).
 

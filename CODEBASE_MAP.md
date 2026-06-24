@@ -42,7 +42,7 @@ Mounted into the Odoo Docker container at `/mnt/extra-addons`. Each subdirectory
 | `security_shift_planner` | Constraint-satisfaction guard scoring engine, roster suggestions, Roster Board OWL client action |
 | `security_attendance` | Posting sheets and scheduled-vs-actual attendance |
 | `security_leave` | Leave types, balances, requests |
-| `security_l10n_na` | Namibia payroll rules, tax brackets, public holidays |
+| `security_l10n_na` | Namibia payroll — PAYE brackets, SSC rates, public holidays, payslip PDF |
 | `security_payroll_core` | Payroll periods, payslips, statutory calculations |
 | `security_loans` | Employee loans and payroll deductions |
 | `security_discipline` | Behavioral incidents and reliability impact |
@@ -58,6 +58,11 @@ Mounted into the Odoo Docker container at `/mnt/extra-addons`. Each subdirectory
 | `security_notifications` | Internal notification model with daily crons for document expiry and overdue invoice alerts |
 | `security_demo_data` | Post-install hook that seeds Namibian demo records |
 | `security_dogforce_migration` | CSV import tools for migrating guards, clients, leave balances, and loans |
+| `security_l10n_zm` | Zambia payroll — NAPSA, NHIMA, WCF levy, PAYE brackets, ZM payslip PDF override |
+| `security_zra_invoice` | ZRA Smart Invoice — VSDC API integration, fiscal signing, bulk wizard, submission log, retry with exponential backoff |
+| `security_help` | In-app Help Centre — country-aware categories and articles (OWL client action, full-text search) |
+| `security_suite` | Meta-module that installs the complete Security Suite in one step |
+| `security_demo_site` | Demo site login panel and demo account management |
 
 #### Standard Odoo module layout
 
@@ -281,6 +286,14 @@ Use this table when you know **what** you need to change but not **where**:
 | Import historical data from CSV | `custom_addons/security_dogforce_migration/models/security_migration.py` |
 | Add an internal notification | `custom_addons/security_notifications/models/security_notifications.py` |
 | Change guard roster scoring logic | `custom_addons/security_shift_planner/models/security_shift_planner.py` |
+| Adjust Zambia PAYE brackets or NAPSA/NHIMA rates | `custom_addons/security_l10n_zm/data/security_l10n_zm_data.xml` |
+| Change Zambia payslip computation | `custom_addons/security_l10n_zm/models/security_l10n_zm.py` |
+| Update WCF risk class or rate | `custom_addons/security_l10n_zm/models/security_l10n_zm.py` (WCF fields on employee form) |
+| Debug ZRA Smart Invoice submission | `custom_addons/security_zra_invoice/models/security_billing_zra.py` |
+| Change ZRA retry backoff schedule | `custom_addons/security_zra_invoice/models/security_zra_submission.py` |
+| Submit ZRA invoices in bulk | `custom_addons/security_zra_invoice/models/security_zra_bulk_wizard.py` |
+| Add a Help Centre article | `custom_addons/security_help/data/help_content.xml` |
+| Change Help Centre OWL portal | `custom_addons/security_help/static/src/js/help_portal.js` |
 
 ---
 
