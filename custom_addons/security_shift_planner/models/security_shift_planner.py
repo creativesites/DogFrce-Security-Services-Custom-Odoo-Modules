@@ -473,3 +473,15 @@ class SecurityRosterSlot(models.Model):
                 parts.append(f"-{penalty} AWOL in last 30 days ({awol_count}x)")
 
         return max(0.0, score), " | ".join(parts)
+
+    def action_log_override(self, reason):
+        """
+        Record a manual override on the slot: write override_reason and append
+        a timestamped entry to the note field for the full audit trail.
+        """
+        now = fields.Datetime.now()
+        user_name = self.env.user.name
+        for slot in self:
+            slot.override_reason = reason or ""
+            entry = f"[{now.strftime('%Y-%m-%d %H:%M')} UTC] Override by {user_name}: {reason or '(no reason given)'}"
+            slot.note = (slot.note + "\n" + entry).strip() if slot.note else entry

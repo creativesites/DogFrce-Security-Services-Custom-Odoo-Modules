@@ -293,27 +293,85 @@ class SecurityBillingInvoice(models.Model):
             domain.append(("site_id", "=", self.site_id.id))
         return domain
 
+    # (field_name, display_label, rule_set_multiplier_attr)
+    _PREMIUM_BUCKETS = [
+        ("normal_hours",         "Normal Hours",         None),
+        ("saturday_hours",       "Saturday Hours",       "saturday_multiplier"),
+        ("sunday_hours",         "Sunday Hours",         "sunday_multiplier"),
+        ("public_holiday_hours", "Public Holiday Hours", "public_holiday_multiplier"),
+        ("night_hours",          "Night Shift Hours",    "night_shift_multiplier"),
+    ]
+
+    def _get_billing_rule_set(self):
+        if "security.payroll.rule.set" not in self.env:
+            return None
+        country_code = self.env.company.country_id.code if self.env.company.country_id else None
+        domain = [("country_code", "=", country_code)] if country_code else []
+        return self.env["security.payroll.rule.set"].search(domain, order="id desc", limit=1)
+
     def _prepare_grouped_invoice_lines(self, source_records):
+        if not source_records:
+            return []
+        if source_records._name == "security.attendance.record":
+            return self._prepare_attendance_invoice_lines(source_records)
+        return self._prepare_roster_invoice_lines(source_records)
+
+    def _prepare_attendance_invoice_lines(self, records):
+        """Invoice lines split by premium bucket using actual payable hours."""
+        rule_set = self._get_billing_rule_set()
         grouped = {}
-        for record in source_records:
-            slot = record.roster_slot_id if record._name == "security.attendance.record" else record
+        for rec in records:
+            slot = rec.roster_slot_id
+            if not slot:
+                continue
+            requirement = slot.shift_requirement_id
+            post = slot.post_id
+            template = slot.shift_template_id
+            if not post or not template:
+                continue
+            bill_rate = requirement.bill_rate if requirement else 0.0
+            if bill_rate <= 0:
+                continue
+            site_prefix = (post.site_id.name + " — ") if post.site_id else ""
+            for field_name, label, mult_attr in self._PREMIUM_BUCKETS:
+                hours = getattr(rec, field_name, 0.0)
+                if not hours:
+                    continue
+                multiplier = (
+                    getattr(rule_set, mult_attr, 1.0) if rule_set and mult_attr else 1.0
+                )
+                key = (post.site_id.id or False, post.id, template.id, field_name)
+                if key not in grouped:
+                    grouped[key] = {
+                        "name": f"{site_prefix}{post.name or ''} ({label})",
+                        "site_id": post.site_id.id or False,
+                        "post_id": post.id,
+                        "shift_template_id": template.id,
+                        "quantity": 0.0,
+                        "unit_price": bill_rate * multiplier,
+                        "service_date_from": self.service_date_from,
+                        "service_date_to": self.service_date_to,
+                    }
+                grouped[key]["quantity"] += hours
+        return [(0, 0, v) for v in grouped.values() if v["quantity"] > 0]
+
+    def _prepare_roster_invoice_lines(self, slots):
+        """Invoice lines grouped by post/template, counting shifts."""
+        grouped = {}
+        for slot in slots:
             requirement = slot.shift_requirement_id
             post = slot.post_id
             template = slot.shift_template_id
             bill_rate = requirement.bill_rate if requirement else 0.0
             if bill_rate <= 0:
                 continue
-            key = (
-                post.site_id.id if post.site_id else False,
-                post.id,
-                template.id,
-                bill_rate,
-            )
+            key = (post.site_id.id or False, post.id, template.id, bill_rate)
             if key not in grouped:
+                site_name = post.site_id.name if post.site_id else ""
                 grouped[key] = {
-                    "site": post.site_id.name if post.site_id else "",
-                    "post": post.name or "",
-                    "template": template.name or "",
+                    "name": " - ".join(p for p in [site_name, post.name or "", template.name or ""] if p),
+                    "site_id": post.site_id.id or False,
+                    "post_id": post.id,
                     "shift_template_id": template.id,
                     "quantity": 0.0,
                     "unit_price": bill_rate,
@@ -321,28 +379,7 @@ class SecurityBillingInvoice(models.Model):
                     "service_date_to": self.service_date_to,
                 }
             grouped[key]["quantity"] += 1.0
-
-        invoice_lines = []
-        for values in grouped.values():
-            label_parts = [values["site"], values["post"], values["template"]]
-            invoice_lines.append(
-                (
-                    0,
-                    0,
-                    {
-                        "name": " - ".join(part for part in label_parts if part),
-                        "service_date_from": values["service_date_from"],
-                        "service_date_to": values["service_date_to"],
-                        "site_id": key[0],
-                        "post_id": key[1],
-                        "guard_count": 1,
-                        "shift_template_id": values["shift_template_id"],
-                        "quantity": values["quantity"],
-                        "unit_price": values["unit_price"],
-                    },
-                )
-            )
-        return invoice_lines
+        return [(0, 0, v) for v in grouped.values()]
 
     def action_generate_from_roster(self):
         roster_model = self.env["security.roster.slot"]

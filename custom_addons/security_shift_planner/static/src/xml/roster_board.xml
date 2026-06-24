@@ -280,7 +280,10 @@
                                                             <!-- CRITICAL GAP — auto-fill found no eligible guard -->
                                                             <t t-elif="slot.critical_gap">
                                                                 <div t-on-click="() => this.selectSlot(slot)"
-                                                                     class="rb-cell-critical-gap">
+                                                                     t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                                     t-on-dragleave="onDragLeaveSlot"
+                                                                     t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                                     t-att-class="state.dragOverSlotId === slot.id ? 'rb-cell-critical-gap rb-drop-hover' : 'rb-cell-critical-gap'">
                                                                     <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">CRITICAL GAP</span>
                                                                     <div t-if="slot.shift_label" style="font-size:9px; color:#f87171; margin-top:2px;" t-esc="slot.shift_label"/>
                                                                 </div>
@@ -289,7 +292,10 @@
                                                             <!-- UNASSIGNED confirmed slot -->
                                                             <t t-elif="slot.state === 'confirmed'">
                                                                 <div t-on-click="() => this.selectSlot(slot)"
-                                                                     style="background:#fef9c3; border-left:3px solid #ca8a04; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
+                                                                     t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                                     t-on-dragleave="onDragLeaveSlot"
+                                                                     t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                                     t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : '#fef9c3') + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : '#ca8a04') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
                                                                     <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
                                                                     <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
                                                                 </div>
@@ -298,7 +304,10 @@
                                                             <!-- UNASSIGNED draft slot -->
                                                             <t t-else="">
                                                                 <div t-on-click="() => this.selectSlot(slot)"
-                                                                     style="background:#f1f5f9; border-left:3px solid #94a3b8; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
+                                                                     t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                                     t-on-dragleave="onDragLeaveSlot"
+                                                                     t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                                     t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : '#f1f5f9') + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : '#94a3b8') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
                                                                     <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
                                                                     <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
                                                                 </div>
@@ -408,7 +417,9 @@
 
                         <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
                             <div class="rb-suggestion-card"
-                                 style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:8px; transition:box-shadow .15s, border-color .15s;">
+                                 draggable="true"
+                                 t-on-dragstart="(ev) => this.onDragStartSuggestion(sug, ev)"
+                                 style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:8px; transition:box-shadow .15s, border-color .15s; cursor:grab;">
 
                                 <!-- Rank + Name row -->
                                 <div class="d-flex align-items-start justify-content-between mb-2">
@@ -496,6 +507,13 @@
                     <i class="fa fa-magic me-2" style="color:#3b82f6;"/>Suggest Guards
                 </button>
 
+                <!-- Swap Guard (opens override-reason dialog, then suggestion panel) -->
+                <button t-if="state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="() => this.openSwapDialog(state.contextMenu.slot)">
+                    <i class="fa fa-exchange me-2" style="color:#8b5cf6;"/>Swap Guard
+                </button>
+
                 <!-- Unassign Guard -->
                 <button t-if="state.contextMenu.slot.employee_id"
                         class="rb-ctx-item"
@@ -516,6 +534,62 @@
                     <i class="fa fa-times me-2"/>Close
                 </button>
             </t>
+        </div>
+    </t>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SWAP DIALOG — override reason before re-assigning guard
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.swapDialog.visible">
+        <div style="position:fixed; inset:0; z-index:10000; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center;"
+             t-on-click.self="closeSwapDialog">
+            <div style="background:#fff; border-radius:14px; padding:28px; width:420px; max-width:92vw; box-shadow:0 24px 64px rgba(0,0,0,.28);">
+
+                <!-- Header -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <div style="font-size:16px; font-weight:700; color:#1e293b;">Swap Guard</div>
+                        <div t-if="state.swapDialog.slot" style="font-size:12px; color:#64748b; margin-top:2px;">
+                            <t t-esc="state.swapDialog.slot.post_name"/>
+                            <span class="mx-1">·</span>
+                            <t t-esc="formatDateShort(state.swapDialog.slot.shift_date)"/>
+                        </div>
+                    </div>
+                    <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; line-height:1; padding:4px;"
+                            t-on-click="closeSwapDialog">
+                        <i class="fa fa-times"/>
+                    </button>
+                </div>
+
+                <!-- Current guard info -->
+                <div t-if="state.swapDialog.slot and state.swapDialog.slot.employee_name"
+                     style="background:#fef9c3; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; margin-bottom:16px; font-size:12px; color:#92400e;">
+                    <i class="fa fa-user me-1"/>
+                    Replacing: <strong t-esc="state.swapDialog.slot.employee_name"/>
+                </div>
+
+                <!-- Reason textarea -->
+                <div style="font-size:12px; font-weight:600; color:#334155; margin-bottom:6px;">Override Reason</div>
+                <textarea
+                    style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:12px; resize:vertical; min-height:90px; font-family:inherit; color:#1e293b; outline:none;"
+                    placeholder="e.g. Guard requested swap, client preference, medical leave, training conflict…"
+                    t-on-input="(ev) => { state.swapDialog.reason = ev.target.value; }"
+                    t-on-focus="(ev) => { ev.target.style.borderColor = '#3b82f6'; }"
+                    t-on-blur="(ev) => { ev.target.style.borderColor = '#e2e8f0'; }"
+                />
+                <div style="font-size:10px; color:#94a3b8; margin-top:4px; margin-bottom:16px;">
+                    Reason is optional but helps the compliance audit trail.
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="rb-btn rb-btn-ghost" t-on-click="closeSwapDialog">Cancel</button>
+                    <button class="rb-btn rb-btn-primary" t-on-click="confirmSwap">
+                        <i class="fa fa-exchange me-1"/>Confirm Swap
+                    </button>
+                </div>
+
+            </div>
         </div>
     </t>
 

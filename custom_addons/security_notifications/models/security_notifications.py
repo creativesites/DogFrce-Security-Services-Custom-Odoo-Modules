@@ -1,5 +1,9 @@
+import logging
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class SecurityNotification(models.Model):
@@ -15,6 +19,7 @@ class SecurityNotification(models.Model):
         ("invoice_overdue", "Invoice Overdue"),
         ("awol_alert", "AWOL Alert"),
         ("roster_gap", "Roster Gap"),
+        ("sms_alert", "SMS Alert"),
         ("system", "System"),
     ], default="system", required=True)
     severity = fields.Selection([
@@ -30,6 +35,7 @@ class SecurityNotification(models.Model):
     ], default="unread")
     related_model = fields.Char(string="Related Model")
     related_id = fields.Integer(string="Related Record ID")
+    sms_recipient = fields.Char(string="SMS Recipient Number")
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -70,6 +76,35 @@ class SecurityNotification(models.Model):
 
     def action_dismiss(self):
         self.state = "dismissed"
+
+    def _send_sms_alert_stub(self, phone_number, message):
+        """
+        SMS gateway stub — logs the payload for future integration.
+
+        Replace this body with a real gateway call (Twilio, Vonage, Africa's Talking,
+        etc.) once an SMS provider is contracted. The stub keeps the notification
+        record and audit trail in place without requiring a live provider.
+        """
+        _logger.info(
+            "SMS STUB | notification_id=%s | to=%s | message=%s",
+            self.id, phone_number, message
+        )
+        return True
+
+    @api.model
+    def action_send_sms(self, phone_number, message, severity="info"):
+        """Create an SMS notification record and dispatch via the stub."""
+        if not phone_number or not message:
+            return False
+        record = self.create({
+            "title": "SMS Alert",
+            "body": message,
+            "notification_type": "sms_alert",
+            "severity": severity,
+            "sms_recipient": phone_number,
+        })
+        record._send_sms_alert_stub(phone_number, message)
+        return record
 
     @api.model
     def action_scan_document_expiry(self):

@@ -46,6 +46,9 @@ class RosterBoard extends Component {
             stats: { assigned: 0, unassigned: 0, criticalGaps: 0 },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
             contextMenu: { visible: false, x: 0, y: 0, slot: null },
+            // Phase 4: drag-and-drop + swap dialog
+            dragOverSlotId: null,
+            swapDialog: { visible: false, slot: null, reason: "" },
         });
 
         onWillStart(async () => {
@@ -480,6 +483,94 @@ class RosterBoard extends Component {
             views: [[false, "form"]],
             target: "new",
         });
+    }
+
+    openSwapDialog(slot) {
+        this.closeContextMenu();
+        this.state.swapDialog = { visible: true, slot, reason: "" };
+    }
+
+    closeSwapDialog() {
+        this.state.swapDialog = { visible: false, slot: null, reason: "" };
+    }
+
+    async confirmSwap() {
+        const { slot, reason } = this.state.swapDialog;
+        if (!slot) return;
+        this.closeSwapDialog();
+        try {
+            if (reason) {
+                await this.orm.call(
+                    "security.roster.slot",
+                    "action_log_override",
+                    [[slot.id], reason]
+                );
+            }
+            await this.orm.write("security.roster.slot", [slot.id], {
+                employee_id: false,
+                state: "draft",
+            });
+            await this.loadSlots(this.state.batchId);
+            const updated = this.state.slots.find((s) => s.id === slot.id);
+            if (updated) this.selectSlot(updated);
+            this.notification.add(
+                "Guard removed. Pick a replacement from the suggestions panel.",
+                { type: "info" }
+            );
+        } catch (e) {
+            this.notification.add("Swap failed: " + (e.message || e), { type: "danger" });
+        }
+    }
+
+    // ─── Drag-and-drop ──────────────────────────────────────────────
+
+    onDragStartSuggestion(sug, ev) {
+        ev.dataTransfer.setData(
+            "application/json",
+            JSON.stringify({ employee_id: sug.employee_id, employee_name: sug.employee_name })
+        );
+        ev.dataTransfer.effectAllowed = "move";
+    }
+
+    onDragOverSlot(slot, ev) {
+        if (slot.state === "cancelled" || slot.employee_id) return;
+        ev.preventDefault();
+        this.state.dragOverSlotId = slot.id;
+        ev.dataTransfer.dropEffect = "move";
+    }
+
+    onDragLeaveSlot() {
+        this.state.dragOverSlotId = null;
+    }
+
+    async onDropSlot(slot, ev) {
+        ev.preventDefault();
+        this.state.dragOverSlotId = null;
+        if (slot.state === "cancelled" || slot.employee_id) return;
+        let data;
+        try {
+            data = JSON.parse(ev.dataTransfer.getData("application/json"));
+        } catch {
+            return;
+        }
+        if (!data || !data.employee_id) return;
+        try {
+            await this.orm.write("security.roster.slot", [slot.id], {
+                employee_id: data.employee_id,
+                state: "assigned",
+                critical_gap: false,
+            });
+            await this.loadSlots(this.state.batchId);
+            this.notification.add(
+                `${data.employee_name} assigned to ${slot.post_name}.`,
+                { type: "success" }
+            );
+        } catch (e) {
+            this.notification.add(
+                "Drop assignment failed: " + (e.message || e),
+                { type: "danger" }
+            );
+        }
     }
 
     // ─── Helpers ────────────────────────────────────────────────────
