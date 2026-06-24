@@ -76,7 +76,7 @@
                         domain="[('state','=','draft')]"/>
                 <filter name="filter_expired" string="Expired / Terminated"
                         domain="[('state','in',['expired','terminated'])]"/>
-                <group expand="1" string="Group By">
+                <group string="Group By">
                     <filter name="group_by_partner" string="Client"
                             context="{'group_by': 'partner_id'}"/>
                     <filter name="group_by_state" string="Status"

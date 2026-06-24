@@ -70,7 +70,7 @@
                         domain="[('state', '=', 'draft')]"/>
                 <filter name="filter_confirmed" string="Confirmed"
                         domain="[('state', '=', 'confirmed')]"/>
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter name="group_state" string="State"
                             context="{'group_by': 'state'}"/>
                 </group>
