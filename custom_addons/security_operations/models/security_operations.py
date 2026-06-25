@@ -75,6 +75,64 @@ class SecurityClientSite(models.Model):
         compute="_compute_site_coverage_month",
         string="Month-to-Date Coverage (%)",
     )
+    contract_status = fields.Selection(
+        [
+            ("valid", "Contract Valid"),
+            ("expiring_soon", "Expiring Soon"),
+            ("expired", "Expired"),
+            ("none", "No Contract"),
+        ],
+        compute="_compute_contract_status",
+        string="Contract Status",
+    )
+    risk_level = fields.Selection(
+        [
+            ("low", "Low Risk"),
+            ("medium", "Medium Risk"),
+            ("high", "High Risk"),
+            ("critical", "Critical"),
+        ],
+        compute="_compute_risk_level",
+        string="Risk Level",
+    )
+
+    def _compute_contract_status(self):
+        today = fields.Date.today()
+        contract_model = self.env.get("security.client.contract")
+        for site in self:
+            if not contract_model:
+                site.contract_status = "none"
+                continue
+            contract = contract_model.get_active_for_site(site, today)
+            if not contract:
+                site.contract_status = "none"
+            elif contract.date_end and (contract.date_end - today).days <= 30:
+                site.contract_status = "expiring_soon"
+            else:
+                site.contract_status = "valid"
+        # Mark expired contracts for sites with no active contract but a past one
+        for site in self:
+            if site.contract_status == "none" and contract_model:
+                past = contract_model.search([
+                    ("site_id", "=", site.id),
+                    ("state", "in", ("active", "expired")),
+                    ("date_end", "<", today),
+                ], limit=1)
+                if past:
+                    site.contract_status = "expired"
+
+    def _compute_risk_level(self):
+        for site in self:
+            today_cov = site.site_coverage_today
+            month_cov = site.site_coverage_month
+            if today_cov < 50 or month_cov < 60:
+                site.risk_level = "critical"
+            elif today_cov < 75 or month_cov < 75:
+                site.risk_level = "high"
+            elif today_cov < 90 or month_cov < 85:
+                site.risk_level = "medium"
+            else:
+                site.risk_level = "low"
 
     def _compute_site_coverage_today(self):
         today = fields.Date.today()

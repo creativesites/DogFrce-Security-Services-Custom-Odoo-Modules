@@ -12,24 +12,23 @@
                         string="Suggest Guards" icon="fa-magic"
                         invisible="employee_id != False"/>
             </xpath>
-            <!-- Add suggestions notebook inside the sheet (appended after existing groups) -->
-            <xpath expr="//sheet" position="inside">
-                <notebook invisible="suggestion_count == 0">
-                    <page string="Guard Suggestions">
-                        <field name="suggestion_ids">
-                            <list>
-                                <field name="rank" string="#"/>
-                                <field name="employee_id"/>
-                                <field name="employee_grade_id" string="Grade"/>
-                                <field name="score" string="Score" digits="[6,1]"/>
-                                <field name="score_breakdown" string="Breakdown"/>
-                                <button name="action_assign_to_slot" type="object"
-                                        string="Assign" class="btn-sm btn-primary"
-                                        icon="fa-check"/>
-                            </list>
-                        </field>
-                    </page>
-                </notebook>
+            <!-- Suggestions panel injected before the first group in the sheet -->
+            <xpath expr="//sheet/group[1]" position="before">
+                <div class="alert alert-info mb-3" invisible="suggestion_count == 0">
+                    <strong><i class="fa fa-magic me-1"/>Top Guard Suggestions</strong>
+                    <field name="suggestion_ids" nolabel="1">
+                        <list>
+                            <field name="rank" string="#" width="40px"/>
+                            <field name="employee_id"/>
+                            <field name="employee_grade_id" string="Grade"/>
+                            <field name="score" string="Score" digits="[6,1]"/>
+                            <field name="score_breakdown" string="Reasoning"/>
+                            <button name="action_assign_to_slot" type="object"
+                                    string="Assign" class="btn-sm btn-primary"
+                                    icon="fa-check"/>
+                        </list>
+                    </field>
+                </div>
             </xpath>
         </field>
     </record>

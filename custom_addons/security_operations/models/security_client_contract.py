@@ -32,7 +32,59 @@ class SecurityClientContract(models.Model):
         "res.currency",
         default=lambda self: self.env.company.currency_id,
     )
+    billing_this_period = fields.Float(
+        compute="_compute_billing_cap",
+        string="Billed This Month",
+        digits=(10, 2),
+    )
+    cap_used_pct = fields.Float(
+        compute="_compute_billing_cap",
+        string="Cap Used (%)",
+        digits=(5, 1),
+    )
+    cap_exceeded = fields.Boolean(
+        compute="_compute_billing_cap",
+        string="Cap Exceeded",
+    )
     note = fields.Text()
+
+    def _compute_billing_cap(self):
+        from datetime import date
+        today = date.today()
+        first_day = today.replace(day=1)
+        attendance_model = self.env.get("security.attendance.record")
+        for contract in self:
+            billed = 0.0
+            if attendance_model and contract.site_id:
+                records = attendance_model.search([
+                    ("site_id", "=", contract.site_id.id),
+                    ("shift_date", ">=", str(first_day)),
+                    ("shift_date", "<=", str(today)),
+                    ("status", "in", ["present", "late", "early_leave"]),
+                ])
+                for rec in records:
+                    hours = 0.0
+                    if hasattr(rec, "shift_template_id") and rec.shift_template_id:
+                        tmpl = rec.shift_template_id
+                        end = tmpl.end_hour if hasattr(tmpl, "end_hour") else 8.0
+                        start = tmpl.start_hour if hasattr(tmpl, "start_hour") else 0.0
+                        hours = max(0.0, end - start)
+                    else:
+                        hours = 8.0
+                    if hasattr(rec, "bill_rate") and rec.bill_rate:
+                        billed += hours * rec.bill_rate
+                    elif hasattr(rec, "roster_slot_id") and rec.roster_slot_id and hasattr(rec.roster_slot_id, "shift_requirement_id"):
+                        req = rec.roster_slot_id.shift_requirement_id
+                        if req and hasattr(req, "bill_rate"):
+                            billed += hours * req.bill_rate
+            contract.billing_this_period = billed
+            cap = contract.monthly_value
+            if cap and cap > 0:
+                contract.cap_used_pct = round(billed / cap * 100, 1)
+                contract.cap_exceeded = billed > cap
+            else:
+                contract.cap_used_pct = 0.0
+                contract.cap_exceeded = False
 
     @api.constrains("date_start", "date_end")
     def _check_dates(self):

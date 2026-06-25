@@ -176,10 +176,19 @@ class SecurityRosterBatch(models.Model):
             unassigned = batch.slot_ids.filtered(
                 lambda s: not s.employee_id and s.state != "cancelled"
             )
-            # High-value shifts first, then by date and shift start time
+            # Hardest-to-fill slots first (difficulty = grade requirement + high-value flag),
+            # then by date and shift start time.
+            def _difficulty(s):
+                d = 0
+                if s.high_value_shift:
+                    d += 50
+                if s.post_id and s.post_id.post_type_id and s.post_id.post_type_id.min_grade_id:
+                    d += s.post_id.post_type_id.min_grade_id.sequence * 10
+                return d
+
             unassigned = unassigned.sorted(
                 key=lambda s: (
-                    not s.high_value_shift,
+                    -_difficulty(s),
                     str(s.shift_date) if s.shift_date else "",
                     s.shift_template_id.start_hour if s.shift_template_id else 0,
                 )
@@ -380,6 +389,19 @@ class SecurityRosterSlot(models.Model):
                 ("partner_id", "=", partner_id),
             ]).mapped("employee_id").ids)
 
+        # Pre-fetch fatigue constraints — min rest hours between shifts
+        min_rest_hours = 10.0
+        try:
+            param = self.env["ir.config_parameter"].sudo().get_param(
+                "security.min_rest_hours", "10"
+            )
+            min_rest_hours = float(param)
+        except (TypeError, ValueError):
+            pass
+
+        # For the shift start hour, compute from template
+        target_start_hour = slot.shift_template_id.start_hour if slot.shift_template_id else 0.0
+
         eligible = []
         for employee in all_guards:
             # Guard on leave
@@ -408,6 +430,26 @@ class SecurityRosterSlot(models.Model):
                 expired = employee.get_expired_certification_ids()
                 if required_certs & expired:
                     continue
+
+            # Fatigue check — minimum rest hours between shifts
+            if slot.shift_date and min_rest_hours > 0:
+                look_back_date = slot.shift_date - timedelta(days=2)
+                recent_slot = self.search([
+                    ("employee_id", "=", employee.id),
+                    ("shift_date", ">=", look_back_date),
+                    ("shift_date", "<", slot.shift_date),
+                    ("state", "not in", ("cancelled",)),
+                ], order="shift_date desc, id desc", limit=1)
+                if recent_slot:
+                    last_date = recent_slot.shift_date
+                    last_end_hour = (
+                        recent_slot.shift_template_id.end_hour
+                        if recent_slot.shift_template_id else 8.0
+                    )
+                    days_diff = (slot.shift_date - last_date).days
+                    rest_hours = days_diff * 24 - last_end_hour + target_start_hour
+                    if rest_hours < min_rest_hours:
+                        continue
 
             # Check required documents for the post type
             post_type_for_docs = slot.post_id.post_type_id if slot.post_id and slot.post_id.post_type_id else False
@@ -438,7 +480,7 @@ class SecurityRosterSlot(models.Model):
     def _score_guard(self, slot, employee):
         """Return (score, breakdown_text) for one eligible guard."""
         score = float(employee.security_reliability_score)
-        parts = [f"Reliability: {score:.0f}"]
+        parts = [f"✓ Reliability: {score:.0f}/100"]
 
         # Site familiarity bonus
         attendance_model = self.env["security.attendance.record"]
@@ -453,7 +495,7 @@ class SecurityRosterSlot(models.Model):
             ])
             if familiarity_count > 0:
                 score += 20
-                parts.append(f"+20 site familiarity ({familiarity_count} recent shifts)")
+                parts.append(f"✓ Site familiarity: +20 ({familiarity_count} recent shifts)")
 
         # Grade bonus (guard is better-qualified than minimum)
         if slot.post_id.post_type_id.min_grade_id and employee.security_grade_id:
@@ -461,7 +503,7 @@ class SecurityRosterSlot(models.Model):
             emp_seq = employee.security_grade_id.sequence
             if emp_seq > min_seq:
                 score += 10
-                parts.append("+10 above minimum grade")
+                parts.append("△ Above minimum grade: +10")
 
         # Fairness penalty (shifts already in this batch)
         if slot.batch_id:
@@ -474,7 +516,7 @@ class SecurityRosterSlot(models.Model):
             penalty = min(shifts_this_period * 5, 30)
             if penalty > 0:
                 score -= penalty
-                parts.append(f"-{penalty} fairness ({shifts_this_period} shifts this period)")
+                parts.append(f"⚠ Fairness penalty: -{penalty} ({shifts_this_period} shifts this period)")
 
         # AWOL / absence penalty
         attendance_model_avail = self.env["security.attendance.record"]
@@ -488,9 +530,9 @@ class SecurityRosterSlot(models.Model):
             if awol_count > 0:
                 penalty = min(awol_count * 10, 30)
                 score -= penalty
-                parts.append(f"-{penalty} AWOL in last 30 days ({awol_count}x)")
+                parts.append(f"⚠ AWOL penalty: -{penalty} ({awol_count}x in last 30 days)")
 
-        return max(0.0, score), " | ".join(parts)
+        return max(0.0, score), "\n".join(parts)
 
     def action_log_override(self, reason):
         """

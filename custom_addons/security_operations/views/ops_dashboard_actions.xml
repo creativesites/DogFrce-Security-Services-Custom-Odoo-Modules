@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_ops_dashboard" model="ir.actions.client">
+        <field name="name">Operations Dashboard</field>
+        <field name="tag">security_operations.ops_dashboard</field>
+    </record>
+
+    <menuitem
+        id="menu_ops_dashboard"
+        name="Dashboard"
+        parent="security_operations.menu_security_operations_root"
+        action="action_ops_dashboard"
+        sequence="1"
+    />
+</odoo>

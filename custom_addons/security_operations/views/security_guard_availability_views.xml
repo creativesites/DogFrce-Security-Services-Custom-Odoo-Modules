@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_security_guard_availability_list" model="ir.ui.view">
+        <field name="name">security.guard.availability.list</field>
+        <field name="model">security.guard.availability</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id"/>
+                <field name="max_shifts_per_week"/>
+                <field name="preferred_shift_template_ids" widget="many2many_tags"/>
+                <field name="preferred_site_ids" widget="many2many_tags"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_guard_availability_form" model="ir.ui.view">
+        <field name="name">security.guard.availability.form</field>
+        <field name="model">security.guard.availability</field>
+        <field name="arch" type="xml">
+            <form string="Guard Availability">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="max_shifts_per_week"/>
+                        </group>
+                    </group>
+                    <group string="Preferences">
+                        <field name="preferred_shift_template_ids" widget="many2many_tags"/>
+                        <field name="preferred_site_ids" widget="many2many_tags"/>
+                    </group>
+                    <group string="Notes">
+                        <field name="note" nolabel="1" placeholder="Any availability notes..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_guard_availability" model="ir.actions.act_window">
+        <field name="name">Guard Availability</field>
+        <field name="res_model">security.guard.availability</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Set guard availability preferences
+            </p>
+            <p>
+                Configure each guard's preferred shifts, sites, and maximum shifts per week
+                to help the auto-fill algorithm make better assignments.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_guard_availability"
+        name="Guard Availability"
+        parent="security_operations.menu_security_workforce"
+        action="action_security_guard_availability"
+        sequence="30"
+    />
+
+</odoo>
