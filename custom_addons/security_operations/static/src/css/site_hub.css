@@ -1,5 +1,12 @@
 /* ─── Site Management Hub ──────────────────────────────────────────── */
 
+:root {
+    --df-navy: #1B2040;
+    --df-amber: #F5A523;
+    --df-navy-light: rgba(27, 32, 64, 0.08);
+    --df-amber-light: rgba(245, 165, 35, 0.15);
+}
+
 .sh-root {
     background: #f8f9fa;
     min-height: 100vh;
@@ -13,23 +20,27 @@
     z-index: 10;
 }
 
+/* ─── Tabs (DogForce brand colors) ─────────────── */
+
 .sh-tabs .nav-link {
     color: #6c757d;
     border: none;
     padding: 0.6rem 1rem;
     font-size: 0.875rem;
     border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
 }
 
 .sh-tabs .nav-link.active {
-    color: #0d6efd;
-    border-bottom: 2px solid #0d6efd;
+    color: var(--df-navy);
+    border-bottom: 2px solid var(--df-amber);
     background: transparent;
+    font-weight: 600;
 }
 
 .sh-tabs .nav-link:hover {
-    color: #0d6efd;
-    background: rgba(13,110,253,.05);
+    color: var(--df-navy);
+    background: var(--df-navy-light);
 }
 
 /* ─── Calendar ──────────────────────────────── */
@@ -44,7 +55,7 @@
 .sh-cal-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: #343a40;
+    background: var(--df-navy);
     color: #fff;
 }
 
@@ -68,12 +79,12 @@
     position: relative;
     cursor: pointer;
     border-right: 1px solid #dee2e6;
-    transition: background 0.15s;
+    transition: background 0.15s, opacity 0.2s;
 }
 
 .sh-day:last-child { border-right: none; }
 
-.sh-day:hover { background: rgba(13,110,253,.06); }
+.sh-day:hover { background: var(--df-navy-light); }
 
 .sh-day-filler,
 .sh-day-empty {
@@ -85,12 +96,12 @@
 .sh-day-empty:hover { background: #f8f9fa; }
 
 .sh-day-full  { background: rgba(25, 135, 84, 0.08); }
-.sh-day-partial { background: rgba(255, 193, 7, 0.12); }
+.sh-day-partial { background: rgba(245, 165, 35, 0.12); }
 .sh-day-none  { background: rgba(220, 53, 69, 0.08); }
 .sh-day-no-slots { background: #fafafa; }
 
 .sh-day-full:hover  { background: rgba(25, 135, 84, 0.15); }
-.sh-day-partial:hover { background: rgba(255, 193, 7, 0.2); }
+.sh-day-partial:hover { background: var(--df-amber-light); }
 .sh-day-none:hover  { background: rgba(220, 53, 69, 0.15); }
 
 .sh-day-num {
@@ -109,7 +120,41 @@
 
 .sh-day-full .sh-day-count  { color: #198754; font-weight: 600; }
 .sh-day-none .sh-day-count  { color: #dc3545; font-weight: 600; }
-.sh-day-partial .sh-day-count { color: #856404; font-weight: 600; }
+.sh-day-partial .sh-day-count { color: #92600a; font-weight: 600; }
+
+/* ─── Mini coverage bar inside calendar cells ─── */
+
+.sh-day-bar-wrap {
+    margin-top: 4px;
+    height: 4px;
+    border-radius: 2px;
+    background: #e9ecef;
+    overflow: hidden;
+}
+
+.sh-day-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+
+.sh-day-full .sh-day-bar-fill    { background: #198754; }
+.sh-day-partial .sh-day-bar-fill  { background: var(--df-amber); }
+.sh-day-none .sh-day-bar-fill     { background: #dc3545; width: 0% !important; }
+
+/* ─── Gaps Only mode ────────────────────────── */
+
+.sh-gaps-only .sh-day-full,
+.sh-gaps-only .sh-day-no-slots {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.sh-gaps-only-btn.active {
+    background-color: var(--df-navy);
+    color: #fff;
+    border-color: var(--df-navy);
+}
 
 /* ─── Day popover ───────────────────────────── */
 
@@ -125,10 +170,11 @@
     max-width: 300px;
     padding: 0;
     overflow: hidden;
+    box-shadow: 0 4px 16px rgba(27, 32, 64, 0.12);
 }
 
 .sh-popover-header {
-    background: #343a40;
+    background: var(--df-navy);
     color: #fff;
     padding: 6px 10px;
     font-size: 0.8rem;
@@ -156,7 +202,7 @@
 }
 
 .sh-legend-full    { background: rgba(25, 135, 84, 0.5); }
-.sh-legend-partial { background: rgba(255, 193, 7, 0.5); }
+.sh-legend-partial { background: rgba(245, 165, 35, 0.5); }
 .sh-legend-none    { background: rgba(220, 53, 69, 0.4); }
 .sh-legend-empty   { background: #dee2e6; }
 

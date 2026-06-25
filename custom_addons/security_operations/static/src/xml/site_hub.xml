@@ -25,7 +25,7 @@
             <!-- Header bar -->
             <div class="sh-header d-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-white">
                 <div class="d-flex align-items-center gap-3">
-                    <i class="fa fa-building-o text-primary fs-4"/>
+                    <i class="fa fa-building-o fs-4" style="color: var(--df-navy);"/>
                     <div>
                         <h4 class="mb-0 fw-bold"><t t-esc="state.site.name"/></h4>
                         <small class="text-muted">
@@ -84,6 +84,11 @@
                                              t-att-class="state.site.site_coverage_today >= 100 ? 'bg-success' : state.site.site_coverage_today >= 50 ? 'bg-warning' : 'bg-danger'"
                                              t-att-style="'width:' + Math.min(state.site.site_coverage_today, 100) + '%'"/>
                                     </div>
+                                    <t t-if="state.site.site_coverage_today &lt; 50">
+                                        <div class="mt-2 small text-danger fw-semibold">
+                                            <i class="fa fa-exclamation-triangle me-1"/>Critical — gaps detected
+                                        </div>
+                                    </t>
                                 </div>
                             </div>
                         </div>
@@ -147,14 +152,29 @@
 
                 <!-- ── CALENDAR ── -->
                 <t t-if="state.activeTab === 'calendar'">
-                    <!-- Month navigation -->
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <button class="btn btn-outline-secondary btn-sm" t-on-click="prevMonth">
-                            <i class="fa fa-chevron-left"/>
-                        </button>
-                        <h5 class="mb-0 fw-semibold"><t t-esc="monthLabel"/></h5>
-                        <button class="btn btn-outline-secondary btn-sm" t-on-click="nextMonth">
-                            <i class="fa fa-chevron-right"/>
+                    <!-- Month navigation + Gaps Only toggle -->
+                    <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="prevMonth">
+                                <i class="fa fa-chevron-left"/>
+                            </button>
+                            <h5 class="mb-0 fw-semibold" style="min-width: 160px; text-align: center;">
+                                <t t-esc="monthLabel"/>
+                            </h5>
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="nextMonth">
+                                <i class="fa fa-chevron-right"/>
+                            </button>
+                        </div>
+                        <button
+                            class="btn btn-sm sh-gaps-only-btn"
+                            t-att-class="state.gapsOnly ? 'btn-outline-secondary active' : 'btn-outline-secondary'"
+                            t-on-click="toggleGapsOnly"
+                            title="Show only days with unfilled slots">
+                            <i class="fa fa-exclamation-triangle me-1"/>
+                            Gaps Only
+                            <t t-if="state.gapsOnly">
+                                <span class="ms-1 badge" style="background: var(--df-amber); color: #1B2040;">ON</span>
+                            </t>
                         </button>
                     </div>
 
@@ -172,8 +192,8 @@
                         </div>
                     </t>
                     <t t-else="">
-                        <!-- Day headers -->
-                        <div class="sh-calendar">
+                        <div t-att-class="state.gapsOnly ? 'sh-calendar sh-gaps-only' : 'sh-calendar'">
+                            <!-- Day name header -->
                             <div class="sh-cal-header">
                                 <t t-foreach="['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" t-as="dname" t-key="dname">
                                     <div class="sh-cal-dayname"><t t-esc="dname"/></div>
@@ -194,13 +214,20 @@
                                                     <span class="sh-day-count">
                                                         <t t-esc="cell.data.assigned"/>/<t t-esc="cell.data.total"/>
                                                     </span>
+                                                    <!-- Mini coverage bar -->
+                                                    <t t-if="cell.data.total > 0">
+                                                        <div class="sh-day-bar-wrap">
+                                                            <div class="sh-day-bar-fill"
+                                                                 t-att-style="'width:' + coveragePct(cell) + '%'"/>
+                                                        </div>
+                                                    </t>
                                                 </t>
                                                 <!-- Popover -->
                                                 <t t-if="state.activePopoverDay === cell.key and cell.data">
                                                     <div class="sh-popover shadow" t-on-click.stop="">
                                                         <div class="sh-popover-header d-flex justify-content-between align-items-center">
                                                             <strong><t t-esc="cell.key"/></strong>
-                                                            <button class="btn-close btn-sm" t-on-click="closePopover"/>
+                                                            <button class="btn-close btn-close-white btn-sm" t-on-click="closePopover"/>
                                                         </div>
                                                         <t t-foreach="cell.data.slots" t-as="slot" t-key="slot.id">
                                                             <div class="sh-popover-slot d-flex justify-content-between align-items-center">

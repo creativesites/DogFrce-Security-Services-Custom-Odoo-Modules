@@ -10,6 +10,7 @@
         "security/ir.model.access.csv",
         "data/security_operations_cron.xml",
         "views/security_operations_menu.xml",
+        "views/security_wizard_stubs.xml",
         "views/security_roster_wizard_views.xml",
         "views/security_operations_views.xml",
         "views/security_client_contract_views.xml",

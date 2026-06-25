@@ -1,13 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- ─── Operations (quick-action landing) ─── -->
+    <menuitem
+        id="menu_security_operations_root"
+        name="Operations"
+        parent="security_base.menu_security_root"
+        sequence="5"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- ─── Rostering ─── -->
     <menuitem
         id="menu_security_roster"
-        name="Roster &amp; Scheduling"
+        name="Rostering"
         parent="security_base.menu_security_root"
         sequence="10"
         groups="hr.group_hr_user"
     />
 
+    <!-- ─── Workforce ─── -->
     <menuitem
         id="menu_security_workforce"
         name="Workforce"
@@ -16,6 +27,7 @@
         groups="hr.group_hr_user"
     />
 
+    <!-- ─── Payroll ─── -->
     <menuitem
         id="menu_security_payroll"
         name="Payroll"
@@ -24,9 +36,10 @@
         groups="hr.group_hr_user"
     />
 
+    <!-- ─── Clients &amp; Sites ─── -->
     <menuitem
         id="menu_security_billing_root"
-        name="Clients &amp; Billing"
+        name="Clients &amp; Sites"
         parent="security_base.menu_security_root"
         sequence="40"
         groups="hr.group_hr_user"

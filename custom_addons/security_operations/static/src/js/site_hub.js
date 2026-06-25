@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart, onWillUpdateProps } from "@odoo/owl";
+import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -8,7 +8,6 @@ const MONTH_NAMES = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
 ];
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 class SiteHub extends Component {
     static template = "security_operations.SiteHub";
@@ -28,6 +27,7 @@ class SiteHub extends Component {
             activePopoverDay: null,
             guards: [],
             requirements: [],
+            gapsOnly: false,
         });
 
         onWillStart(() => this._load());
@@ -66,7 +66,7 @@ class SiteHub extends Component {
             cells.push({ day: d, key, data: dayData });
         }
 
-        // Group into weeks
+        // Group into weeks (always 7 columns — grid must stay intact)
         const weeks = [];
         for (let i = 0; i < cells.length; i += 7) {
             weeks.push(cells.slice(i, i + 7).concat(
@@ -76,6 +76,13 @@ class SiteHub extends Component {
         return weeks;
     }
 
+    /** True when this day has at least one unfilled slot. */
+    hasGap(cell) {
+        if (!cell || !cell.data) return false;
+        const { total, assigned } = cell.data;
+        return total > 0 && assigned < total;
+    }
+
     dayClass(cell) {
         if (!cell || !cell.data) return "sh-day sh-day-empty";
         const { total, assigned } = cell.data;
@@ -83,6 +90,12 @@ class SiteHub extends Component {
         if (assigned === total) return "sh-day sh-day-full";
         if (assigned === 0) return "sh-day sh-day-none";
         return "sh-day sh-day-partial";
+    }
+
+    /** Percentage fill for the mini progress bar (0-100). */
+    coveragePct(cell) {
+        if (!cell || !cell.data || cell.data.total === 0) return 0;
+        return Math.round((cell.data.assigned / cell.data.total) * 100);
     }
 
     async _load() {
@@ -105,6 +118,11 @@ class SiteHub extends Component {
             this._loadGuards(),
             this._loadRequirements(),
         ]);
+
+        // Auto-enable Gaps Only when today's coverage is critically low.
+        if (site.site_coverage_today < 50) {
+            this.state.gapsOnly = true;
+        }
 
         this.state.loading = false;
     }
@@ -156,6 +174,11 @@ class SiteHub extends Component {
         this.state.activeTab = tab;
     }
 
+    toggleGapsOnly() {
+        this.state.gapsOnly = !this.state.gapsOnly;
+        this.state.activePopoverDay = null;
+    }
+
     async prevMonth() {
         let { calendarYear, calendarMonth } = this.state;
         calendarMonth--;
@@ -178,6 +201,7 @@ class SiteHub extends Component {
 
     togglePopover(cell) {
         if (!cell || !cell.data) return;
+        // In gaps-only mode, non-gap days are pointer-events:none so this only fires on gap days
         this.state.activePopoverDay =
             this.state.activePopoverDay === cell.key ? null : cell.key;
     }

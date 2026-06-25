@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ======================== -->
+    <!-- CLIENT ONBOARDING WIZARD -->
+    <!-- ======================== -->
+
+    <record id="view_client_onboarding_wizard_form" model="ir.ui.view">
+        <field name="name">security.client.onboarding.wizard.form</field>
+        <field name="model">security.client.onboarding.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Onboard New Client">
+                <group string="Client">
+                    <field name="partner_id" placeholder="Select existing client company..."/>
+                </group>
+                <group string="New Site">
+                    <field name="site_name" placeholder="e.g. Windhoek Head Office"/>
+                    <field name="location" placeholder="e.g. Independence Ave, Windhoek"/>
+                    <field name="supervisor_id"/>
+                </group>
+                <footer>
+                    <button name="action_create_site" type="object"
+                            string="Create Site" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_client_onboarding_wizard" model="ir.actions.act_window">
+        <field name="name">Onboard New Client</field>
+        <field name="res_model">security.client.onboarding.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ======================== -->
+    <!-- ROSTER SETUP CHECK       -->
+    <!-- ======================== -->
+
+    <record id="view_roster_setup_wizard_form" model="ir.ui.view">
+        <field name="name">security.roster.setup.wizard.form</field>
+        <field name="model">security.roster.setup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Roster Setup Check">
+                <group>
+                    <field name="site_id"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <group invisible="not check_result" string="Results">
+                    <field name="check_result" nolabel="1" readonly="1"/>
+                </group>
+                <footer>
+                    <button name="action_check" type="object"
+                            string="Run Check" class="btn-primary"/>
+                    <button special="cancel" string="Close" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_roster_setup_wizard" model="ir.actions.act_window">
+        <field name="name">Roster Setup Check</field>
+        <field name="res_model">security.roster.setup.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ======================== -->
+    <!-- OPERATIONS SUB-MENUS     -->
+    <!-- ======================== -->
+
+    <menuitem
+        id="menu_client_onboarding_wizard"
+        name="Onboard New Client"
+        parent="security_operations.menu_security_operations_root"
+        action="action_client_onboarding_wizard"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_roster_setup_wizard"
+        name="Roster Setup Check"
+        parent="security_operations.menu_security_operations_root"
+        action="action_roster_setup_wizard"
+        sequence="20"
+        groups="hr.group_hr_user"
+    />
+
+</odoo>
