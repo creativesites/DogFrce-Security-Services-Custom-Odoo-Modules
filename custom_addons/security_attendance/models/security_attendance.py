@@ -1,5 +1,7 @@
 from datetime import datetime, time, timedelta
 
+import pytz
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.security_attendance.utils.shift_split import split_shift_by_boundaries
@@ -364,19 +366,25 @@ class SecurityAttendanceRecord(models.Model):
             end_hour = int(template.end_hour)
             end_minute = int(round((template.end_hour - end_hour) * 60))
 
-            start_dt = datetime.combine(
+            tz_name = self.env.company.partner_id.tz or "UTC"
+            tz = pytz.timezone(tz_name)
+
+            start_dt_local = datetime.combine(
                 shift_date,
                 time(hour=start_hour, minute=start_minute),
             )
-            end_dt = datetime.combine(
+            end_dt_local = datetime.combine(
                 shift_date,
                 time(hour=end_hour, minute=end_minute),
             )
-            if end_dt <= start_dt:
-                end_dt += timedelta(days=1)
+            if end_dt_local <= start_dt_local:
+                end_dt_local += timedelta(days=1)
 
-            record.scheduled_start = fields.Datetime.to_string(start_dt)
-            record.scheduled_end = fields.Datetime.to_string(end_dt)
+            start_dt_utc = tz.localize(start_dt_local).astimezone(pytz.utc).replace(tzinfo=None)
+            end_dt_utc = tz.localize(end_dt_local).astimezone(pytz.utc).replace(tzinfo=None)
+
+            record.scheduled_start = fields.Datetime.to_string(start_dt_utc)
+            record.scheduled_end = fields.Datetime.to_string(end_dt_utc)
 
     @api.depends(
         "scheduled_start",

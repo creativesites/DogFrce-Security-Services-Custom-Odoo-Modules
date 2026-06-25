@@ -833,7 +833,7 @@ class SecurityRosterSlot(models.Model):
                         "This guard is excluded from this client or site."
                     )
             if post_type.min_grade_id and employee.security_grade_id:
-                if employee.security_grade_id.sequence > post_type.min_grade_id.sequence:
+                if employee.security_grade_id.sequence < post_type.min_grade_id.sequence:
                     raise ValidationError(
                         "The assigned guard does not meet the minimum grade for this post type."
                     )
