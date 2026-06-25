@@ -226,7 +226,7 @@
                     <group>
                         <group>
                             <field name="code" placeholder="e.g. ACMEHQ"/>
-                            <field name="partner_id" placeholder="Select Client..."/>
+                            <field name="partner_id" placeholder="Select Client..." domain="[('is_company','=',True)]"/>
                             <field name="location" placeholder="Physical Address..."/>
                         </group>
                         <group>
@@ -365,8 +365,8 @@
                     <group>
                         <group>
                             <field name="code" placeholder="e.g. MG-01"/>
-                            <field name="partner_id"/>
-                            <field name="site_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
+                            <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
                             <field name="post_type_id"/>
                         </group>
                         <group>
@@ -541,8 +541,8 @@
             <form>
                 <sheet>
                     <group>
-                        <field name="partner_id"/>
-                        <field name="site_id"/>
+                        <field name="partner_id" domain="[('is_company','=',True)]"/>
+                        <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
                         <field name="post_type_id"/>
                         <field name="minimum_guard_count"/>
                         <field name="minimum_reliability_score"/>
@@ -603,8 +603,8 @@
                     <group>
                         <group>
                             <field name="employee_id"/>
-                            <field name="partner_id"/>
-                            <field name="site_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
+                            <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
                         </group>
                         <group>
                             <field name="reason" placeholder="Reason for exclusion..."/>
@@ -720,8 +720,8 @@
                         <group>
                             <field name="date_from"/>
                             <field name="date_to"/>
-                            <field name="partner_id"/>
-                            <field name="site_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
+                            <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
                         </group>
                         <group>
                             <field name="generated_slot_count" readonly="1"/>

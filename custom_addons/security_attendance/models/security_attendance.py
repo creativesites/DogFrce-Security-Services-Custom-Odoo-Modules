@@ -14,8 +14,8 @@ class SecurityAttendanceBatch(models.Model):
 
     name = fields.Char(compute="_compute_name", store=True)
     attendance_date = fields.Date(required=True, default=fields.Date.context_today)
-    partner_id = fields.Many2one("res.partner", string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", string="Client", domain=[("is_company", "=", True)])
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     roster_batch_id = fields.Many2one("security.roster.batch", string="Roster Batch")
     captured_by_id = fields.Many2one(
         "res.users",
@@ -76,6 +76,12 @@ class SecurityAttendanceBatch(models.Model):
         for batch in self:
             if batch.site_id:
                 batch.partner_id = batch.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for batch in self:
+            if batch.site_id and batch.site_id.partner_id != batch.partner_id:
+                batch.site_id = False
 
     def action_generate_from_roster(self):
         record_model = self.env["security.attendance.record"]

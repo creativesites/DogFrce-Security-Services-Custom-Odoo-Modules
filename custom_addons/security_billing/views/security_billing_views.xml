@@ -9,7 +9,7 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="partner_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
                             <field name="billing_mode"/>
                             <field name="active"/>
                         </group>
@@ -187,8 +187,8 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="partner_id"/>
-                            <field name="site_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
+                            <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
                             <field name="billing_plan_id"/>
                             <field name="currency_id"/>
                         </group>

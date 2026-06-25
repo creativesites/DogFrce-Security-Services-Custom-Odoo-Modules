@@ -11,7 +11,7 @@ class SecurityBillingPlan(models.Model):
     _order = "partner_id, name"
 
     name = fields.Char(required=True)
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     currency_id = fields.Many2one(
         "res.currency",
         required=True,
@@ -150,11 +150,11 @@ class SecurityBillingInvoice(models.Model):
     _rec_name = "name"
 
     name = fields.Char(required=True)
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     billing_plan_id = fields.Many2one("security.billing.plan")
     service_date_from = fields.Date()
     service_date_to = fields.Date()
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     generation_source = fields.Selection(
         [
             ("manual", "Manual"),
@@ -252,6 +252,12 @@ class SecurityBillingInvoice(models.Model):
         self.vat_rate = self.billing_plan_id.vat_rate
         if self.invoice_date and self.billing_plan_id.payment_term_days:
             self.due_date = self.invoice_date + timedelta(days=self.billing_plan_id.payment_term_days)
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for invoice in self:
+            if invoice.site_id and invoice.site_id.partner_id != invoice.partner_id:
+                invoice.site_id = False
 
     @api.onchange("invoice_date")
     def _onchange_invoice_date(self):

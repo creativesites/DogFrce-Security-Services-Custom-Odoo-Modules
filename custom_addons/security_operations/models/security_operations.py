@@ -48,7 +48,7 @@ class SecurityClientSite(models.Model):
 
     name = fields.Char(required=True)
     code = fields.Char()
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     location = fields.Char()
     supervisor_id = fields.Many2one(
         "hr.employee",
@@ -153,10 +153,11 @@ class SecurityPost(models.Model):
     name = fields.Char(required=True)
     code = fields.Char()
     active = fields.Boolean(default=True)
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     partner_id = fields.Many2one(
         "res.partner",
         string="Client",
+        domain=[("is_company", "=", True)],
     )
     post_type_id = fields.Many2one("security.post.type", required=True)
     location = fields.Char()
@@ -177,6 +178,12 @@ class SecurityPost(models.Model):
         for post in self:
             if post.site_id:
                 post.partner_id = post.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for post in self:
+            if post.site_id and post.site_id.partner_id != post.partner_id:
+                post.site_id = False
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -332,10 +339,10 @@ class SecuritySiteRequirement(models.Model):
     _order = "partner_id, post_type_id"
 
     name = fields.Char(compute="_compute_name", store=True)
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     post_type_id = fields.Many2one("security.post.type", required=True)
     minimum_guard_count = fields.Integer(default=1)
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     minimum_reliability_score = fields.Integer(default=0)
     required_language_ids = fields.Many2many(
         "security.language",
@@ -361,6 +368,18 @@ class SecuritySiteRequirement(models.Model):
     )
     note = fields.Text()
 
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for req in self:
+            if req.site_id and req.site_id.partner_id:
+                req.partner_id = req.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for req in self:
+            if req.site_id and req.site_id.partner_id != req.partner_id:
+                req.site_id = False
+
     @api.depends("partner_id", "post_type_id")
     def _compute_name(self):
         for requirement in self:
@@ -380,8 +399,8 @@ class SecurityGuardExclusion(models.Model):
         domain=[("security_guard", "=", True)],
         string="Guard",
     )
-    partner_id = fields.Many2one("res.partner", string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", string="Client", domain=[("is_company", "=", True)])
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     reason = fields.Char(required=True)
     active = fields.Boolean(default=True)
     note = fields.Text()
@@ -391,6 +410,12 @@ class SecurityGuardExclusion(models.Model):
         for exclusion in self:
             if exclusion.site_id:
                 exclusion.partner_id = exclusion.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for exclusion in self:
+            if exclusion.site_id and exclusion.site_id.partner_id != exclusion.partner_id:
+                exclusion.site_id = False
 
     @api.constrains("partner_id", "site_id")
     def _check_scope(self):
@@ -407,8 +432,8 @@ class SecurityRosterBatch(models.Model):
     name = fields.Char(compute="_compute_name", store=True)
     date_from = fields.Date(required=True)
     date_to = fields.Date(required=True)
-    partner_id = fields.Many2one("res.partner", string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", string="Client", domain=[("is_company", "=", True)])
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -446,6 +471,12 @@ class SecurityRosterBatch(models.Model):
         for batch in self:
             if batch.site_id:
                 batch.partner_id = batch.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for batch in self:
+            if batch.site_id and batch.site_id.partner_id != batch.partner_id:
+                batch.site_id = False
 
     @api.constrains("date_from", "date_to")
     def _check_dates(self):
