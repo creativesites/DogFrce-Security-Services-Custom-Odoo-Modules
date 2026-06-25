@@ -1,133 +1,453 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — LIST VIEW
+         ══════════════════════════════════════════════════════════════ -->
     <record id="view_security_attendance_record_list" model="ir.ui.view">
         <field name="name">security.attendance.record.list</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
-            <list decoration-danger="missing_check_out or status == 'absent'" decoration-warning="late_minutes > 0 or early_departure_minutes > 0" decoration-success="status == 'present' and late_minutes == 0 and early_departure_minutes == 0">
-                <field name="shift_date"/>
-                <field name="partner_id"/>
-                <field name="site_id"/>
-                <field name="employee_id"/>
-                <field name="post_id"/>
-                <field name="check_in"/>
-                <field name="check_out"/>
-                <field name="late_minutes" optional="show"/>
-                <field name="early_departure_minutes" optional="hide"/>
+            <list
+                decoration-danger="status in ('absent', 'incomplete') or absence_type == 'awol'"
+                decoration-warning="status in ('late', 'early_leave') or missing_check_out"
+                decoration-success="status == 'present'"
+                decoration-muted="status == 'scheduled'"
+                default_order="shift_date desc">
+
+                <field name="shift_date" string="Date" widget="date"/>
+                <field name="employee_id" string="Guard"/>
+                <field name="partner_id" string="Client" optional="show"/>
+                <field name="site_id" string="Site"/>
+                <field name="post_id" string="Post" optional="show"/>
+                <field name="check_in" string="Clock In" widget="datetime" optional="show"/>
+                <field name="check_out" string="Clock Out" widget="datetime" optional="show"/>
+                <field name="scheduled_hours" string="Sched Hrs" digits="[4,2]" optional="show"/>
+                <field name="worked_hours" string="Worked Hrs" digits="[4,2]"/>
+                <field name="payable_hours" string="Payable Hrs" digits="[4,2]" optional="show"/>
+                <field name="late_minutes" string="Late (min)" optional="show"/>
+                <field name="early_departure_minutes" string="Early Leave (min)" optional="hide"/>
+                <field name="overtime_hours" string="OT Hrs" digits="[4,2]" optional="hide"/>
+                <field name="manual_presence" string="Posting Mark" optional="show"
+                       widget="badge"
+                       decoration-danger="manual_presence == 'awol'"
+                       decoration-warning="manual_presence == 'absent'"
+                       decoration-success="manual_presence == 'present'"
+                       decoration-secondary="manual_presence == 'not_marked'"/>
+                <field name="absence_type" string="Absence" optional="show"
+                       widget="badge"
+                       decoration-danger="absence_type == 'awol'"
+                       decoration-warning="absence_type in ('authorised', 'no_show')"
+                       decoration-secondary="absence_type == 'none'"/>
+                <field name="status" string="Status" widget="badge"
+                       decoration-danger="status in ('absent', 'incomplete')"
+                       decoration-warning="status in ('late', 'early_leave')"
+                       decoration-success="status == 'present'"
+                       decoration-secondary="status == 'scheduled'"/>
                 <field name="missing_check_out" column_invisible="1"/>
-                <field name="status" widget="badge" decoration-danger="status == 'absent'" decoration-success="status == 'present'"/>
+                <field name="premium_category" optional="hide"/>
+                <field name="is_night_shift" optional="hide"/>
             </list>
         </field>
     </record>
 
-    <record id="view_security_attendance_record_search" model="ir.ui.view">
-        <field name="name">security.attendance.record.search</field>
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — KANBAN VIEW
+         ══════════════════════════════════════════════════════════════ -->
+    <record id="view_security_attendance_record_kanban" model="ir.ui.view">
+        <field name="name">security.attendance.record.kanban</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
-            <search>
+            <kanban default_group_by="status" class="o_kanban_small_column" quick_create="false">
+                <field name="status"/>
                 <field name="employee_id"/>
                 <field name="site_id"/>
+                <field name="post_id"/>
                 <field name="shift_date"/>
-                <filter name="filter_late" string="Late Arrivals" domain="[('late_minutes', '>', 0)]"/>
-                <filter name="filter_missing_checkout" string="Missing Check-Out" domain="[('missing_check_out', '=', True)]"/>
-                <filter name="filter_absent" string="Absent" domain="[('status', '=', 'absent')]"/>
-                <filter name="group_date" string="Group by Date" context="{'group_by': 'shift_date'}"/>
-                <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
-                <filter name="group_site" string="Group by Site" context="{'group_by': 'site_id'}"/>
-            </search>
+                <field name="check_in"/>
+                <field name="check_out"/>
+                <field name="late_minutes"/>
+                <field name="worked_hours"/>
+                <field name="payable_hours"/>
+                <field name="absence_type"/>
+                <field name="manual_presence"/>
+                <field name="missing_check_out"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top mb-1">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="employee_id"/>
+                                    </strong>
+                                </div>
+                                <div>
+                                    <t t-if="record.late_minutes.raw_value > 0">
+                                        <span class="badge text-bg-warning" style="font-size:10px;">
+                                            +<t t-esc="record.late_minutes.raw_value"/>min late
+                                        </span>
+                                    </t>
+                                    <t t-if="record.missing_check_out.raw_value">
+                                        <span class="badge text-bg-danger" style="font-size:10px;">No clock-out</span>
+                                    </t>
+                                    <t t-if="record.absence_type.raw_value == 'awol'">
+                                        <span class="badge text-bg-danger" style="font-size:10px;">AWOL</span>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_body">
+                                <div class="text-muted" style="font-size:12px;">
+                                    <i class="fa fa-building-o me-1"/>
+                                    <t t-esc="record.site_id.value"/> — <t t-esc="record.post_id.value"/>
+                                </div>
+                                <div class="text-muted" style="font-size:12px;">
+                                    <i class="fa fa-calendar me-1"/>
+                                    <field name="shift_date" widget="date"/>
+                                </div>
+                                <div t-if="record.check_in.raw_value" class="mt-1" style="font-size:12px;">
+                                    <i class="fa fa-clock-o me-1 text-success"/>
+                                    <field name="check_in" widget="datetime"/>
+                                    <t t-if="record.check_out.raw_value">
+                                        — <field name="check_out" widget="datetime"/>
+                                    </t>
+                                </div>
+                            </div>
+                            <div class="o_kanban_record_bottom mt-1">
+                                <div class="oe_kanban_bottom_left text-muted" style="font-size:11px;">
+                                    <i class="fa fa-clock-o me-1"/>
+                                    <t t-esc="record.worked_hours.raw_value.toFixed(2)"/> hrs worked
+                                </div>
+                                <div class="oe_kanban_bottom_right text-muted" style="font-size:11px;">
+                                    Payable: <t t-esc="record.payable_hours.raw_value.toFixed(2)"/>h
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
         </field>
     </record>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — CALENDAR VIEW
+         ══════════════════════════════════════════════════════════════ -->
+    <record id="view_security_attendance_record_calendar" model="ir.ui.view">
+        <field name="name">security.attendance.record.calendar</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <calendar
+                string="Attendance Calendar"
+                date_start="shift_date"
+                date_stop="shift_date"
+                color="status"
+                event_limit="5"
+                quick_create="false">
+                <field name="employee_id" string="Guard"/>
+                <field name="site_id" string="Site"/>
+                <field name="status" string="Status"/>
+                <field name="worked_hours" string="Worked Hrs"/>
+            </calendar>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — FORM VIEW
+         ══════════════════════════════════════════════════════════════ -->
     <record id="view_security_attendance_record_form" model="ir.ui.view">
         <field name="name">security.attendance.record.form</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="scheduled,present,late,early_leave,absent,incomplete"
+                           readonly="1"/>
+                </header>
                 <sheet>
+                    <!-- Title block -->
                     <div class="oe_title">
+                        <label class="o_form_label" for="employee_id" string="Guard"/>
                         <h1>
                             <field name="employee_id" readonly="1"/>
                         </h1>
                         <h2>
-                            <field name="shift_date" readonly="1"/>
+                            <field name="shift_date" readonly="1" widget="date"/>
                         </h2>
                     </div>
-                    <group>
+
+                    <!-- Status badges row -->
+                    <div class="mb-3 d-flex gap-2 flex-wrap">
+                        <field name="status" widget="badge"
+                               decoration-danger="status in ('absent','incomplete')"
+                               decoration-warning="status in ('late','early_leave')"
+                               decoration-success="status == 'present'"
+                               decoration-secondary="status == 'scheduled'"
+                               readonly="1"/>
+                        <field name="manual_presence" widget="badge"
+                               decoration-danger="manual_presence == 'awol'"
+                               decoration-warning="manual_presence == 'absent'"
+                               decoration-success="manual_presence == 'present'"
+                               decoration-secondary="manual_presence == 'not_marked'"
+                               readonly="1"/>
+                        <field name="absence_type" widget="badge"
+                               decoration-danger="absence_type == 'awol'"
+                               decoration-warning="absence_type in ('authorised','no_show')"
+                               decoration-secondary="absence_type == 'none'"
+                               readonly="1"
+                               invisible="absence_type == 'none'"/>
+                        <span class="badge text-bg-secondary"
+                              invisible="not is_night_shift">Night Shift</span>
+                        <span class="badge text-bg-warning"
+                              invisible="not is_saturday">Saturday</span>
+                        <span class="badge text-bg-warning"
+                              invisible="not is_sunday">Sunday</span>
+                        <span class="badge text-bg-danger"
+                              invisible="not is_public_holiday">Public Holiday</span>
+                    </div>
+
+                    <!-- Assignment info -->
+                    <group string="Assignment">
                         <group>
-                            <field name="roster_slot_id"/>
-                            <field name="partner_id" readonly="1"/>
+                            <field name="roster_slot_id" readonly="1"/>
+                            <field name="partner_id" readonly="1" string="Client"/>
                             <field name="site_id" readonly="1"/>
+                        </group>
+                        <group>
                             <field name="post_id" readonly="1"/>
-                            <field name="shift_template_id" readonly="1"/>
-                        </group>
-                        <group>
-                            <field name="check_in"/>
-                            <field name="check_out"/>
-                            <field name="status" readonly="1" widget="badge" decoration-danger="status == 'absent'" decoration-success="status == 'present'"/>
-                            <field name="missing_check_out" readonly="1" widget="boolean_toggle"/>
+                            <field name="shift_template_id" readonly="1" string="Shift"/>
+                            <field name="attendance_batch_id" readonly="1" string="Posting Sheet"/>
                         </group>
                     </group>
-                    <group string="Time Calculation">
-                        <group>
-                            <field name="scheduled_start" readonly="1"/>
-                            <field name="scheduled_end" readonly="1"/>
-                            <field name="scheduled_hours" readonly="1"/>
+
+                    <!-- Clock-in / Clock-out -->
+                    <group string="Attendance Times">
+                        <group string="Scheduled">
+                            <field name="scheduled_start" readonly="1" string="Start"/>
+                            <field name="scheduled_end" readonly="1" string="End"/>
+                            <field name="scheduled_hours" readonly="1" string="Scheduled Hours" digits="[4,2]"/>
                         </group>
-                        <group>
-                            <field name="worked_hours" readonly="1"/>
-                            <field name="valid_hours" readonly="1"/>
-                            <field name="late_minutes" readonly="1"/>
-                            <field name="early_departure_minutes" readonly="1"/>
+                        <group string="Actual">
+                            <field name="check_in" string="Clock In"/>
+                            <field name="check_out" string="Clock Out"/>
+                            <field name="worked_hours" readonly="1" string="Worked Hours" digits="[4,2]"/>
+                            <field name="missing_check_out" readonly="1" widget="boolean_toggle" string="Missing Clock-Out"/>
                         </group>
                     </group>
-                    <group string="Supervisor Adjustments">
-                        <field name="override_reason" placeholder="If modifying check-in/out manually, provide a reason..."/>
-                        <field name="note" placeholder="General notes about this attendance record..."/>
+
+                    <!-- Punctuality -->
+                    <group string="Punctuality" invisible="late_minutes == 0 and early_departure_minutes == 0">
+                        <field name="late_minutes" readonly="1" string="Late by (minutes)"/>
+                        <field name="early_departure_minutes" readonly="1" string="Left early by (minutes)"/>
+                    </group>
+
+                    <!-- Payable hours breakdown -->
+                    <group string="Hours Breakdown">
+                        <group string="Payable">
+                            <field name="valid_hours" readonly="1" string="Valid Hours" digits="[4,2]"/>
+                            <field name="payable_hours" readonly="1" string="Payable Hours" digits="[4,2]"/>
+                            <field name="unpaid_hours" readonly="1" string="Unpaid Hours" digits="[4,2]"/>
+                            <field name="no_work_no_pay" readonly="1" widget="boolean_toggle" string="No Work No Pay"/>
+                        </group>
+                        <group string="Premium Categories">
+                            <field name="normal_hours" readonly="1" string="Normal" digits="[4,2]"/>
+                            <field name="saturday_hours" readonly="1" string="Saturday" digits="[4,2]"/>
+                            <field name="sunday_hours" readonly="1" string="Sunday" digits="[4,2]"/>
+                            <field name="public_holiday_hours" readonly="1" string="Public Holiday" digits="[4,2]"/>
+                            <field name="night_hours" readonly="1" string="Night" digits="[4,2]"/>
+                        </group>
+                    </group>
+
+                    <!-- Overtime -->
+                    <group string="Overtime">
+                        <group>
+                            <field name="overtime_approved" widget="boolean_toggle" string="Overtime Approved"/>
+                            <field name="overtime_approved_by_id" readonly="1"
+                                   invisible="not overtime_approved"
+                                   string="Approved By"/>
+                        </group>
+                        <group>
+                            <field name="overtime_hours" readonly="1" string="Overtime Hours" digits="[4,2]"
+                                   invisible="not overtime_approved"/>
+                            <field name="overtime_approval_note" string="Approval Note"
+                                   invisible="not overtime_approved"/>
+                        </group>
+                    </group>
+
+                    <!-- Absence -->
+                    <group string="Absence" invisible="absence_type == 'none' and manual_presence == 'not_marked'">
+                        <field name="manual_presence" string="Posting Sheet Mark"/>
+                        <field name="absence_type" string="Absence Category"/>
+                    </group>
+
+                    <!-- Supervisor notes -->
+                    <group string="Supervisor Notes">
+                        <field name="override_reason" string="Override Reason"
+                               placeholder="Provide a reason if manually adjusting clock-in/out times…"/>
+                        <field name="note" string="Notes" placeholder="General notes…"/>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — SEARCH VIEW
+         ══════════════════════════════════════════════════════════════ -->
+    <record id="view_security_attendance_record_search" model="ir.ui.view">
+        <field name="name">security.attendance.record.search</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <search string="Search Attendance">
+                <field name="employee_id" string="Guard"/>
+                <field name="partner_id" string="Client"/>
+                <field name="site_id" string="Site"/>
+                <field name="post_id" string="Post"/>
+                <field name="shift_date" string="Date"/>
+                <field name="attendance_batch_id" string="Posting Sheet"/>
+
+                <separator/>
+                <!-- Status filters -->
+                <filter name="filter_present"
+                        string="Present"
+                        domain="[('status', '=', 'present')]"/>
+                <filter name="filter_absent"
+                        string="Absent"
+                        domain="[('status', '=', 'absent')]"/>
+                <filter name="filter_late"
+                        string="Late"
+                        domain="[('late_minutes', '>', 0)]"/>
+                <filter name="filter_early_leave"
+                        string="Left Early"
+                        domain="[('early_departure_minutes', '>', 0)]"/>
+                <filter name="filter_incomplete"
+                        string="Incomplete"
+                        domain="[('status', '=', 'incomplete')]"/>
+
+                <separator/>
+                <!-- Absence type filters -->
+                <filter name="filter_awol"
+                        string="AWOL"
+                        domain="[('absence_type', '=', 'awol')]"/>
+                <filter name="filter_no_show"
+                        string="No Show"
+                        domain="[('absence_type', '=', 'no_show')]"/>
+                <filter name="filter_authorised"
+                        string="Authorised Absence"
+                        domain="[('absence_type', '=', 'authorised')]"/>
+
+                <separator/>
+                <!-- Operational flags -->
+                <filter name="filter_missing_checkout"
+                        string="Missing Clock-Out"
+                        domain="[('missing_check_out', '=', True)]"/>
+                <filter name="filter_no_work_no_pay"
+                        string="No Work No Pay"
+                        domain="[('no_work_no_pay', '=', True)]"/>
+                <filter name="filter_has_overtime"
+                        string="Has Overtime"
+                        domain="[('overtime_hours', '>', 0)]"/>
+                <filter name="filter_overtime_pending"
+                        string="Overtime Not Approved"
+                        domain="[('overtime_hours', '>', 0), ('overtime_approved', '=', False)]"/>
+
+                <separator/>
+                <!-- Premium shift filters -->
+                <filter name="filter_night"
+                        string="Night Shift"
+                        domain="[('is_night_shift', '=', True)]"/>
+                <filter name="filter_saturday"
+                        string="Saturday"
+                        domain="[('is_saturday', '=', True)]"/>
+                <filter name="filter_sunday"
+                        string="Sunday"
+                        domain="[('is_sunday', '=', True)]"/>
+                <filter name="filter_public_holiday"
+                        string="Public Holiday"
+                        domain="[('is_public_holiday', '=', True)]"/>
+
+                <separator/>
+                <!-- Date range quick filters -->
+                <filter name="filter_today"
+                        string="Today"
+                        domain="[('shift_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_week"
+                        string="This Week"
+                        domain="[('shift_date', '>=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_this_month"
+                        string="This Month"
+                        domain="[('shift_date', '>=', context_today().strftime('%Y-%m-01'))]"/>
+
+                <separator/>
+                <!-- Group by options -->
+                <group expand="0" string="Group By">
+                    <filter name="group_date"      string="Date"     context="{'group_by': 'shift_date:day'}"/>
+                    <filter name="group_week"       string="Week"     context="{'group_by': 'shift_date:week'}"/>
+                    <filter name="group_month"      string="Month"    context="{'group_by': 'shift_date:month'}"/>
+                    <filter name="group_employee"   string="Guard"    context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_site"       string="Site"     context="{'group_by': 'site_id'}"/>
+                    <filter name="group_partner"    string="Client"   context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_post"       string="Post"     context="{'group_by': 'post_id'}"/>
+                    <filter name="group_status"     string="Status"   context="{'group_by': 'status'}"/>
+                    <filter name="group_absence"    string="Absence Type" context="{'group_by': 'absence_type'}"/>
+                    <filter name="group_premium"    string="Premium Category" context="{'group_by': 'premium_category'}"/>
+                    <filter name="group_batch"      string="Posting Sheet" context="{'group_by': 'attendance_batch_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — PIVOT VIEW
+         ══════════════════════════════════════════════════════════════ -->
     <record id="view_security_attendance_record_pivot" model="ir.ui.view">
         <field name="name">security.attendance.record.pivot</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
-            <pivot string="Attendance Analysis">
-                <field name="site_id" type="row"/>
-                <field name="shift_date" type="col"/>
+            <pivot string="Attendance Analysis" display_quantity="true">
+                <field name="employee_id" type="row"/>
+                <field name="shift_date" type="col" interval="month"/>
+                <field name="scheduled_hours" type="measure"/>
                 <field name="worked_hours" type="measure"/>
+                <field name="payable_hours" type="measure"/>
                 <field name="late_minutes" type="measure"/>
+                <field name="overtime_hours" type="measure"/>
             </pivot>
         </field>
     </record>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — GRAPH VIEW
+         ══════════════════════════════════════════════════════════════ -->
     <record id="view_security_attendance_record_graph" model="ir.ui.view">
         <field name="name">security.attendance.record.graph</field>
         <field name="model">security.attendance.record</field>
         <field name="arch" type="xml">
-            <graph string="Attendance Trend" type="bar">
-                <field name="site_id"/>
+            <graph string="Attendance Trend" type="bar" stacked="True">
+                <field name="shift_date" interval="week"/>
+                <field name="status" type="row"/>
                 <field name="worked_hours" type="measure"/>
             </graph>
         </field>
     </record>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — WINDOW ACTION
+         ══════════════════════════════════════════════════════════════ -->
     <record id="action_security_attendance_record" model="ir.actions.act_window">
         <field name="name">Attendance Records</field>
         <field name="res_model">security.attendance.record</field>
-        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="view_mode">list,kanban,calendar,form,pivot,graph</field>
         <field name="search_view_id" ref="view_security_attendance_record_search"/>
+        <field name="context">{'search_default_this_month': 1}</field>
         <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Record your first Attendance!
-            </p>
-            <p>
-                Attendance records track when guards clock in and out, comparing it to their scheduled Roster Slots.
-            </p>
+            <p class="o_view_nocontent_smiling_face">No attendance records yet.</p>
+            <p>Attendance records are created when guards clock in and out against their roster slots.</p>
         </field>
     </record>
 
+    <!-- ══════════════════════════════════════════════════════════════
+         ATTENDANCE RECORD — MENU ITEM
+         ══════════════════════════════════════════════════════════════ -->
     <menuitem
         id="menu_security_attendance_record"
         name="Attendance Records"
@@ -136,4 +456,5 @@
         sequence="10"
         groups="hr.group_hr_user"
     />
+
 </odoo>

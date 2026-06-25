@@ -5,7 +5,7 @@
     "category": "Human Resources",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_attendance", "web"],
+    "depends": ["security_operations", "security_attendance", "web"],
     "data": [
         "security/ir.model.access.csv",
         "views/security_shift_planner_views.xml",
