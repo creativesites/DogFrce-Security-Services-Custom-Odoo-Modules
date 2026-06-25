@@ -14,3 +14,4 @@ access_security_client_contract_user,security.client.contract user,model_securit
 access_security_client_onboarding_wizard,security.client.onboarding.wizard,model_security_client_onboarding_wizard,hr.group_hr_user,1,1,1,1
 access_security_roster_setup_wizard,security.roster.setup.wizard,model_security_roster_setup_wizard,hr.group_hr_user,1,1,1,1
 access_security_guard_availability_user,security.guard.availability user,model_security_guard_availability,hr.group_hr_user,1,1,1,1
+access_security_contract_rate_user,security.contract.rate user,model_security_contract_rate,hr.group_hr_user,1,1,1,1

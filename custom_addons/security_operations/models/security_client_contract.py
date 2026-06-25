@@ -46,6 +46,11 @@ class SecurityClientContract(models.Model):
         compute="_compute_billing_cap",
         string="Cap Exceeded",
     )
+    rate_line_ids = fields.One2many(
+        "security.contract.rate",
+        "contract_id",
+        string="Rate Card",
+    )
     note = fields.Text()
 
     def _compute_billing_cap(self):
@@ -102,6 +107,46 @@ class SecurityClientContract(models.Model):
         if self.date_end and target_date > self.date_end:
             return False
         return True
+
+    def get_rate_for(self, grade, shift_category):
+        """Return the agreed hourly rate (float) for the given grade and shift category.
+
+        Lookup order:
+          1. Grade-specific rate for the requested category
+          2. All-grades rate for the requested category
+          3. Grade-specific normal rate (fallback when no category-specific rate exists)
+          4. All-grades normal rate (last resort)
+          5. 0.0 if nothing matched
+        """
+        self.ensure_one()
+        lines = self.rate_line_ids
+        grade_id = grade.id if grade else None
+
+        def _match(cat, gid):
+            for line in lines:
+                if line.shift_category != cat:
+                    continue
+                line_gid = line.grade_id.id if line.grade_id else None
+                if line_gid == gid:
+                    return line.hourly_rate
+            return None
+
+        if grade_id:
+            r = _match(shift_category, grade_id)
+            if r is not None:
+                return r
+        r = _match(shift_category, None)
+        if r is not None:
+            return r
+        if grade_id and shift_category != "normal":
+            r = _match("normal", grade_id)
+            if r is not None:
+                return r
+        if shift_category != "normal":
+            r = _match("normal", None)
+            if r is not None:
+                return r
+        return 0.0
 
     def get_active_for_site(self, site, target_date):
         """

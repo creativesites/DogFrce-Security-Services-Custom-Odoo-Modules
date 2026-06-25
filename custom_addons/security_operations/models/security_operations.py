@@ -506,6 +506,11 @@ class SecurityRosterBatch(models.Model):
     )
     slot_ids = fields.One2many("security.roster.slot", "batch_id", string="Roster Slots")
     generated_slot_count = fields.Integer(compute="_compute_generated_slot_count")
+    planned_revenue = fields.Float(
+        compute="_compute_planned_revenue",
+        string="Planned Revenue",
+        digits=(10, 2),
+    )
     submitted_by_id = fields.Many2one("res.users", readonly=True, string="Submitted By")
     approved_by_id = fields.Many2one("res.users", readonly=True, string="Approved By")
     rejection_reason = fields.Text(string="Rejection Reason")
@@ -523,6 +528,53 @@ class SecurityRosterBatch(models.Model):
     def _compute_generated_slot_count(self):
         for batch in self:
             batch.generated_slot_count = len(batch.slot_ids)
+
+    def _compute_planned_revenue(self):
+        contract_model = self.env.get("security.client.contract")
+        holiday_model = self.env.get("security.public.holiday")
+        for batch in self:
+            if not contract_model:
+                batch.planned_revenue = 0.0
+                continue
+            total = 0.0
+            for slot in batch.slot_ids:
+                if slot.state == "cancelled":
+                    continue
+                if not slot.shift_date or not slot.shift_template_id:
+                    continue
+                site = slot.site_id
+                if not site:
+                    continue
+                contract = contract_model.get_active_for_site(site, slot.shift_date)
+                if not contract:
+                    continue
+                # Determine primary billing category for this slot
+                category = "normal"
+                if holiday_model and slot.shift_date:
+                    if holiday_model.search_count([
+                        ("holiday_date", "=", slot.shift_date),
+                        ("active", "=", True),
+                    ]):
+                        category = "public_holiday"
+                if category == "normal":
+                    weekday = slot.shift_date.weekday()
+                    if weekday == 6:
+                        category = "sunday"
+                    elif weekday == 5:
+                        category = "saturday"
+                    else:
+                        start = slot.shift_template_id.start_hour
+                        if start >= 18 or start < 6:
+                            category = "night"
+                grade = slot.employee_id.security_grade_id if slot.employee_id else None
+                rate = contract.get_rate_for(grade, category)
+                hours = slot.shift_template_id.duration_hours or max(
+                    0.0, slot.shift_template_id.end_hour - slot.shift_template_id.start_hour
+                )
+                if hours <= 0:
+                    hours += 24.0
+                total += hours * rate
+            batch.planned_revenue = round(total, 2)
 
     @api.onchange("site_id")
     def _onchange_site_id(self):

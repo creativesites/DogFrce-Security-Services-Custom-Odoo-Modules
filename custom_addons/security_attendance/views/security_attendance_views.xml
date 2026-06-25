@@ -80,6 +80,17 @@
                             <field name="early_departure_minutes" readonly="1"/>
                         </group>
                     </group>
+                    <group string="Billing">
+                        <group>
+                            <field name="billing_contract_id" readonly="1"/>
+                            <field name="billing_amount" readonly="1" widget="monetary"/>
+                        </group>
+                        <group>
+                            <field name="payable_hours" readonly="1"/>
+                            <field name="overtime_hours" readonly="1"/>
+                            <field name="overtime_approved" widget="boolean_toggle"/>
+                        </group>
+                    </group>
                     <group string="Supervisor Adjustments">
                         <field name="override_reason" placeholder="If modifying check-in/out manually, provide a reason..."/>
                         <field name="note" placeholder="General notes about this attendance record..."/>

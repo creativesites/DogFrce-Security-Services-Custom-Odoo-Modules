@@ -338,6 +338,18 @@ class SecurityAttendanceRecord(models.Model):
     overtime_approved = fields.Boolean(default=False)
     overtime_approved_by_id = fields.Many2one("res.users", string="Overtime Approved By")
     overtime_approval_note = fields.Char()
+    billing_contract_id = fields.Many2one(
+        "security.client.contract",
+        compute="_compute_billing_amount",
+        string="Billing Contract",
+        store=False,
+    )
+    billing_amount = fields.Float(
+        compute="_compute_billing_amount",
+        string="Billing Amount",
+        digits=(10, 2),
+        store=False,
+    )
     status = fields.Selection(
         [
             ("scheduled", "Scheduled"),
@@ -564,6 +576,40 @@ class SecurityAttendanceRecord(models.Model):
             record.saturday_hours = buckets["saturday_hours"]
             record.night_hours = buckets["night_hours"]
             record.is_night_shift = buckets["night_hours"] > 0
+
+    @api.depends(
+        "normal_hours", "night_hours", "saturday_hours", "sunday_hours",
+        "public_holiday_hours", "overtime_hours", "overtime_approved",
+        "site_id", "shift_date", "employee_id",
+    )
+    def _compute_billing_amount(self):
+        contract_model = self.env.get("security.client.contract")
+        for record in self:
+            record.billing_contract_id = False
+            record.billing_amount = 0.0
+            if not contract_model or not record.site_id or not record.shift_date:
+                continue
+            contract = contract_model.get_active_for_site(record.site_id, record.shift_date)
+            if not contract:
+                continue
+            record.billing_contract_id = contract.id
+            grade = record.employee_id.security_grade_id if record.employee_id else None
+            amount = 0.0
+            buckets = {
+                "normal": record.normal_hours or 0.0,
+                "night": record.night_hours or 0.0,
+                "saturday": record.saturday_hours or 0.0,
+                "sunday": record.sunday_hours or 0.0,
+                "public_holiday": record.public_holiday_hours or 0.0,
+            }
+            for category, hours in buckets.items():
+                if hours > 0:
+                    rate = contract.get_rate_for(grade, category)
+                    amount += hours * rate
+            if record.overtime_approved and record.overtime_hours:
+                ot_rate = contract.get_rate_for(grade, "normal")
+                amount += record.overtime_hours * ot_rate
+            record.billing_amount = round(amount, 2)
 
     @api.onchange("manual_presence")
     def _onchange_manual_presence(self):

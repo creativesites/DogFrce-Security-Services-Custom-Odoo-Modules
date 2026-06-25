@@ -34,7 +34,31 @@
                             <field name="currency_id" groups="base.group_multi_currency"/>
                         </group>
                     </group>
-                    <field name="note" placeholder="Contract terms and notes…"/>
+                    <group invisible="not billing_this_period and not cap_used_pct">
+                        <group string="Billing (This Month)">
+                            <field name="billing_this_period" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="cap_used_pct" readonly="1" string="Cap Used"/>
+                            <field name="cap_exceeded" readonly="1" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Rate Card" name="rate_card">
+                            <div class="alert alert-info mb-2" invisible="rate_line_ids">
+                                Add billing rates for each shift category. The system uses these rates to calculate planned revenue on rosters and billing amounts on attendance records.
+                            </div>
+                            <field name="rate_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="shift_category"/>
+                                    <field name="grade_id" optional="show"/>
+                                    <field name="hourly_rate"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note" placeholder="Contract terms and notes…"/>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>

@@ -742,6 +742,9 @@
                         </group>
                         <group>
                             <field name="generated_slot_count" readonly="1"/>
+                            <field name="planned_revenue" readonly="1" widget="monetary"
+                                   string="Planned Revenue"
+                                   invisible="planned_revenue == 0"/>
                             <field name="submitted_by_id" readonly="1"
                                    invisible="not submitted_by_id"/>
                             <field name="approved_by_id" readonly="1"
