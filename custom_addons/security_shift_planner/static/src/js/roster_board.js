@@ -49,10 +49,21 @@ class RosterBoard extends Component {
             // Phase 4: drag-and-drop + swap dialog
             dragOverSlotId: null,
             swapDialog: { visible: false, slot: null, reason: "" },
+            // Create-batch dialog
+            allSites: [],
+            createDialog: {
+                visible: false,
+                partnerId: null,
+                siteId: null,
+                month: "",
+                year: "",
+                creating: false,
+                error: "",
+            },
         });
 
         onWillStart(async () => {
-            await this.loadBatches();
+            await Promise.all([this.loadBatches(), this.loadAllSites()]);
         });
     }
 
@@ -66,6 +77,16 @@ class RosterBoard extends Component {
             { order: "date_from desc", limit: 50 }
         );
         this.state.batches = batches;
+    }
+
+    async loadAllSites() {
+        const sites = await this.orm.searchRead(
+            "security.client.site",
+            [["active", "=", true]],
+            ["id", "name", "partner_id"],
+            { order: "name" }
+        );
+        this.state.allSites = sites;
     }
 
     async loadBoard() {
@@ -268,6 +289,40 @@ class RosterBoard extends Component {
         return "#ef4444";
     }
 
+    get createDialogPartners() {
+        const seen = new Set();
+        const partners = [];
+        for (const s of this.state.allSites) {
+            if (s.partner_id && !seen.has(s.partner_id[0])) {
+                seen.add(s.partner_id[0]);
+                partners.push({ id: s.partner_id[0], name: s.partner_id[1] });
+            }
+        }
+        return partners.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    get createDialogSites() {
+        const pid = this.state.createDialog.partnerId;
+        if (!pid) return [];
+        return this.state.allSites.filter((s) => s.partner_id && s.partner_id[0] === pid);
+    }
+
+    get dialogMonthOptions() {
+        return [
+            { value: "01", label: "January" }, { value: "02", label: "February" },
+            { value: "03", label: "March" }, { value: "04", label: "April" },
+            { value: "05", label: "May" }, { value: "06", label: "June" },
+            { value: "07", label: "July" }, { value: "08", label: "August" },
+            { value: "09", label: "September" }, { value: "10", label: "October" },
+            { value: "11", label: "November" }, { value: "12", label: "December" },
+        ];
+    }
+
+    get dialogYearOptions() {
+        const y = new Date().getFullYear();
+        return [String(y - 1), String(y), String(y + 1), String(y + 2)];
+    }
+
     // ─── Event handlers ─────────────────────────────────────────────
 
     async onBatchChange(ev) {
@@ -291,6 +346,72 @@ class RosterBoard extends Component {
 
     async refreshBoard() {
         await this.loadBoard();
+    }
+
+    openCreateDialog() {
+        const now = new Date();
+        let nextM = now.getMonth() + 2;
+        let nextY = now.getFullYear();
+        if (nextM > 12) { nextM = 1; nextY++; }
+        const dlg = this.state.createDialog;
+        dlg.visible = true;
+        dlg.partnerId = null;
+        dlg.siteId = null;
+        dlg.month = String(nextM).padStart(2, "0");
+        dlg.year = String(nextY);
+        dlg.creating = false;
+        dlg.error = "";
+    }
+
+    closeCreateDialog() {
+        this.state.createDialog.visible = false;
+    }
+
+    onDialogPartnerChange(ev) {
+        const val = parseInt(ev.target.value);
+        this.state.createDialog.partnerId = isNaN(val) ? null : val;
+        this.state.createDialog.siteId = null;
+        this.state.createDialog.error = "";
+    }
+
+    onDialogSiteChange(ev) {
+        const val = parseInt(ev.target.value);
+        this.state.createDialog.siteId = isNaN(val) ? null : val;
+    }
+
+    onDialogMonthChange(ev) { this.state.createDialog.month = ev.target.value; }
+    onDialogYearChange(ev)  { this.state.createDialog.year  = ev.target.value; }
+
+    async confirmCreateBatch() {
+        const dlg = this.state.createDialog;
+        if (!dlg.partnerId) { dlg.error = "Please select a client."; return; }
+        if (!dlg.month || !dlg.year) { dlg.error = "Please select a month and year."; return; }
+        const y = parseInt(dlg.year);
+        const m = parseInt(dlg.month);
+        const dateFrom = `${y}-${String(m).padStart(2, "0")}-01`;
+        const lastDay = new Date(y, m, 0).getDate();
+        const dateTo = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+        dlg.creating = true;
+        dlg.error = "";
+        try {
+            const result = await this.orm.call(
+                "security.roster.batch",
+                "action_quick_create_batch",
+                [],
+                { partner_id: dlg.partnerId, site_id: dlg.siteId || false, date_from: dateFrom, date_to: dateTo }
+            );
+            dlg.visible = false;
+            await this.loadBatches();
+            this.state.batchId = result.batch_id;
+            await this.loadBoard();
+            this.notification.add(
+                `Roster created: ${result.batch_name} (${result.slot_count} slot${result.slot_count !== 1 ? "s" : ""})`,
+                { type: "success" }
+            );
+        } catch (e) {
+            dlg.error = e.message || "Failed to create roster. Ensure shift requirements are configured for this site.";
+            dlg.creating = false;
+        }
     }
 
     async autoFillSlots() {

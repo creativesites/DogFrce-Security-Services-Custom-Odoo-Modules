@@ -112,6 +112,24 @@ class SecuritySlotSuggestion(models.Model):
 class SecurityRosterBatch(models.Model):
     _inherit = "security.roster.batch"
 
+    @api.model
+    def action_quick_create_batch(self, partner_id=False, site_id=False, date_from=False, date_to=False):
+        """Create a batch and generate slots in one call — used by the Roster Board create dialog."""
+        vals = {"date_from": date_from, "date_to": date_to}
+        if site_id:
+            vals["site_id"] = site_id
+            site = self.env["security.client.site"].browse(site_id)
+            vals["partner_id"] = site.partner_id.id
+        elif partner_id:
+            vals["partner_id"] = partner_id
+        batch = self.create(vals)
+        batch.action_generate_slots()
+        return {
+            "batch_id": batch.id,
+            "batch_name": batch.name,
+            "slot_count": len(batch.slot_ids),
+        }
+
     unassigned_count = fields.Integer(
         compute="_compute_gap_counts",
         string="Unassigned Slots",
