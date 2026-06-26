@@ -14,6 +14,9 @@
                 <field name="check_out"/>
                 <field name="late_minutes" optional="show"/>
                 <field name="early_departure_minutes" optional="hide"/>
+                <field name="billing_amount" optional="hide" widget="monetary"/>
+                <field name="has_billing_exception" optional="hide" widget="boolean_toggle"/>
+                <field name="billing_approved" optional="hide" widget="boolean_toggle"/>
                 <field name="missing_check_out" column_invisible="1"/>
                 <field name="status" widget="badge" decoration-danger="status == 'absent'" decoration-success="status == 'present'"/>
             </list>
@@ -31,6 +34,11 @@
                 <filter name="filter_late" string="Late Arrivals" domain="[('late_minutes', '>', 0)]"/>
                 <filter name="filter_missing_checkout" string="Missing Check-Out" domain="[('missing_check_out', '=', True)]"/>
                 <filter name="filter_absent" string="Absent" domain="[('status', '=', 'absent')]"/>
+                <separator/>
+                <filter name="filter_billing_exceptions" string="Billing Exceptions" domain="[('has_billing_exception', '=', True)]"/>
+                <filter name="filter_pending_approval" string="Pending Approval" domain="[('has_billing_exception', '=', True), ('billing_approved', '=', False)]"/>
+                <filter name="filter_billing_approved" string="Billing Approved" domain="[('billing_approved', '=', True)]"/>
+                <separator/>
                 <filter name="group_date" string="Group by Date" context="{'group_by': 'shift_date'}"/>
                 <filter name="group_employee" string="Group by Guard" context="{'group_by': 'employee_id'}"/>
                 <filter name="group_site" string="Group by Site" context="{'group_by': 'site_id'}"/>
@@ -91,6 +99,28 @@
                             <field name="overtime_approved" widget="boolean_toggle"/>
                         </group>
                     </group>
+                    <group string="Billing Approval" invisible="not has_billing_exception">
+                        <group>
+                            <field name="has_billing_exception" readonly="1" widget="boolean_toggle"/>
+                            <field name="billing_exception_reason" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="billing_approved" widget="boolean_toggle"/>
+                            <field name="billing_approved_by_id" readonly="1"/>
+                            <field name="billing_approved_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <div class="text-center mb-3" invisible="not has_billing_exception or billing_approved">
+                        <button name="action_approve_billing" type="object"
+                                string="Approve for Billing" class="btn btn-success"/>
+                        <p class="text-muted small mt-1">
+                            This record has exceptions. Review and approve to include it in invoice generation.
+                        </p>
+                    </div>
+                    <div class="text-center mb-3" invisible="not billing_approved">
+                        <button name="action_reset_billing_approval" type="object"
+                                string="Reset Approval" class="btn btn-secondary btn-sm"/>
+                    </div>
                     <group string="Supervisor Adjustments">
                         <field name="override_reason" placeholder="If modifying check-in/out manually, provide a reason..."/>
                         <field name="note" placeholder="General notes about this attendance record..."/>
@@ -145,6 +175,71 @@
         parent="security_operations.menu_security_workforce"
         action="action_security_attendance_record"
         sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- Billing Exception Queue -->
+
+    <record id="view_billing_exception_queue_list" model="ir.ui.view">
+        <field name="name">security.attendance.record.exception.list</field>
+        <field name="model">security.attendance.record</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="not billing_approved" decoration-success="billing_approved"
+                  string="Billing Exception Queue">
+                <field name="shift_date"/>
+                <field name="employee_id"/>
+                <field name="site_id"/>
+                <field name="billing_exception_reason"/>
+                <field name="billing_amount" widget="monetary"/>
+                <field name="billing_approved" widget="boolean_toggle"/>
+                <field name="billing_approved_by_id"/>
+                <field name="billing_approved_date"/>
+                <field name="status" widget="badge"
+                       decoration-danger="status == 'absent'"
+                       decoration-warning="status in ('late', 'early_leave')"
+                       decoration-success="status == 'present'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_billing_exception_queue" model="ir.actions.act_window">
+        <field name="name">Billing Exception Queue</field>
+        <field name="res_model">security.attendance.record</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_billing_exception_queue_list"/>
+        <field name="domain">[('has_billing_exception', '=', True)]</field>
+        <field name="context">{'search_default_filter_pending_approval': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No billing exceptions!</p>
+            <p>All attendance records are clean. Exceptions appear here when guards are late,
+               absent, AWOL, have missing check-outs, or have unapproved overtime.</p>
+        </field>
+    </record>
+
+    <record id="action_bulk_approve_billing" model="ir.actions.server">
+        <field name="name">Approve for Billing</field>
+        <field name="model_id" ref="security_attendance.model_security_attendance_record"/>
+        <field name="binding_model_id" ref="security_attendance.model_security_attendance_record"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_approve_billing()</field>
+    </record>
+
+    <record id="action_bulk_reset_billing_approval" model="ir.actions.server">
+        <field name="name">Reset Billing Approval</field>
+        <field name="model_id" ref="security_attendance.model_security_attendance_record"/>
+        <field name="binding_model_id" ref="security_attendance.model_security_attendance_record"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">records.action_reset_billing_approval()</field>
+    </record>
+
+    <menuitem
+        id="menu_billing_exception_queue"
+        name="Billing Exception Queue"
+        parent="security_operations.menu_security_billing_root"
+        action="action_billing_exception_queue"
+        sequence="3"
         groups="hr.group_hr_user"
     />
 </odoo>

@@ -350,6 +350,18 @@ class SecurityAttendanceRecord(models.Model):
         digits=(10, 2),
         store=False,
     )
+    billing_approved = fields.Boolean(default=False, string="Billing Approved")
+    billing_approved_by_id = fields.Many2one("res.users", string="Approved By", readonly=True)
+    billing_approved_date = fields.Datetime(string="Approval Date", readonly=True)
+    has_billing_exception = fields.Boolean(
+        compute="_compute_has_billing_exception",
+        store=True,
+        string="Has Billing Exception",
+    )
+    billing_exception_reason = fields.Char(
+        compute="_compute_billing_exception_reason",
+        string="Exception Reason",
+    )
     status = fields.Selection(
         [
             ("scheduled", "Scheduled"),
@@ -610,6 +622,62 @@ class SecurityAttendanceRecord(models.Model):
                 ot_rate = contract.get_rate_for(grade, "normal")
                 amount += record.overtime_hours * ot_rate
             record.billing_amount = round(amount, 2)
+
+    @api.depends(
+        "status", "late_minutes", "early_departure_minutes",
+        "missing_check_out", "absence_type", "manual_presence",
+        "overtime_hours", "overtime_approved",
+    )
+    def _compute_has_billing_exception(self):
+        for record in self:
+            has_exc = False
+            if record.manual_presence == "awol" or record.absence_type == "awol":
+                has_exc = True
+            elif record.status == "absent" and record.absence_type not in ("authorised",):
+                has_exc = True
+            elif record.late_minutes > 0:
+                has_exc = True
+            elif record.early_departure_minutes > 0:
+                has_exc = True
+            elif record.missing_check_out:
+                has_exc = True
+            elif record.overtime_hours > 0 and not record.overtime_approved:
+                has_exc = True
+            record.has_billing_exception = has_exc
+
+    @api.depends(
+        "status", "late_minutes", "early_departure_minutes",
+        "missing_check_out", "absence_type", "manual_presence",
+        "overtime_hours", "overtime_approved",
+    )
+    def _compute_billing_exception_reason(self):
+        for record in self:
+            reasons = []
+            if record.manual_presence == "awol" or record.absence_type == "awol":
+                reasons.append("AWOL")
+            elif record.status == "absent":
+                reasons.append("Absent")
+            if record.late_minutes > 0:
+                reasons.append(f"Late {record.late_minutes}min")
+            if record.early_departure_minutes > 0:
+                reasons.append(f"Early leave {record.early_departure_minutes}min")
+            if record.missing_check_out:
+                reasons.append("Missing check-out")
+            if record.overtime_hours > 0 and not record.overtime_approved:
+                reasons.append("Unapproved OT")
+            record.billing_exception_reason = "; ".join(reasons) if reasons else ""
+
+    def action_approve_billing(self):
+        for record in self:
+            record.billing_approved = True
+            record.billing_approved_by_id = self.env.user
+            record.billing_approved_date = fields.Datetime.now()
+
+    def action_reset_billing_approval(self):
+        for record in self:
+            record.billing_approved = False
+            record.billing_approved_by_id = False
+            record.billing_approved_date = False
 
     @api.onchange("manual_presence")
     def _onchange_manual_presence(self):

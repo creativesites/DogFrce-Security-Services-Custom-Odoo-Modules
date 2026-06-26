@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="security_billing.RevenueDashboard">
+        <div class="rd-root o_action">
+
+            <!-- Header bar -->
+            <div class="rd-header">
+                <div class="rd-header-left">
+                    <span class="rd-logo-dot"/>
+                    <h1 class="rd-title">Revenue Dashboard</h1>
+                </div>
+                <div class="rd-header-right">
+                    <button class="rd-btn rd-btn-outline" t-on-click="() => this.onNavigate('generate')">
+                        <i class="fa fa-plus"/> Generate Invoice
+                    </button>
+                    <button class="rd-btn rd-btn-outline" t-on-click="() => this.onNavigate('invoices')">
+                        <i class="fa fa-list"/> All Invoices
+                    </button>
+                    <button class="rd-btn rd-btn-ghost" t-on-click="refresh" title="Refresh">
+                        <i class="fa fa-refresh"/>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div t-if="state.loading" class="rd-loading">
+                <div class="rd-spinner"/>
+                <p>Loading dashboard…</p>
+            </div>
+
+            <!-- Error state -->
+            <div t-elif="!state.data" class="rd-empty">
+                <i class="fa fa-bar-chart rd-empty-icon"/>
+                <p>No billing data available yet.</p>
+                <p class="rd-empty-sub">Generate your first invoice to see revenue insights here.</p>
+            </div>
+
+            <!-- Dashboard content -->
+            <div t-else="">
+
+                <!-- KPI strip -->
+                <div class="rd-kpi-strip">
+                    <t t-foreach="kpis" t-as="kpi" t-key="kpi.label">
+                        <div class="rd-kpi-card"
+                             t-att-class="kpi.cls + (kpi.action ? ' rd-kpi-clickable' : '')"
+                             t-att-title="kpi.help"
+                             t-on-click="kpi.action ? () => this.onKpiClick(kpi) : undefined">
+                            <div class="rd-kpi-icon">
+                                <i t-att-class="'fa ' + kpi.icon"/>
+                            </div>
+                            <div class="rd-kpi-body">
+                                <div class="rd-kpi-value" t-esc="kpi.value"/>
+                                <div t-if="kpi.subvalue" class="rd-kpi-sub" t-esc="kpi.subvalue"/>
+                                <div class="rd-kpi-label" t-esc="kpi.label"/>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+
+                <!-- Two-column main -->
+                <div class="rd-main-grid">
+
+                    <!-- Bar chart: monthly invoiced revenue -->
+                    <div class="rd-card rd-card-chart">
+                        <div class="rd-card-header">
+                            <span class="rd-card-title">Revenue Trend — Last 6 Months</span>
+                            <span class="rd-legend">
+                                <span class="rd-legend-dot rd-dot-invoiced"/> Invoiced
+                                <span class="rd-legend-dot rd-dot-paid"/> Collected
+                            </span>
+                        </div>
+                        <div class="rd-chart-area">
+                            <t t-if="!chartBars.length">
+                                <div class="rd-chart-empty">No invoiced revenue in the last 6 months</div>
+                            </t>
+                            <t t-else="">
+                                <div class="rd-bar-chart">
+                                    <t t-foreach="chartBars" t-as="bar" t-key="bar.month">
+                                        <div class="rd-bar-col">
+                                            <div class="rd-bar-wrap">
+                                                <div class="rd-bar-invoiced"
+                                                     t-att-style="'height:' + bar.heightPct + '%'"
+                                                     t-att-title="bar.label"/>
+                                                <div class="rd-bar-paid"
+                                                     t-att-style="'height:' + bar.paidPct + '%'"
+                                                     t-att-title="'Collected: ' + bar.label"/>
+                                            </div>
+                                            <div class="rd-bar-label" t-esc="bar.month"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Top clients table -->
+                    <div class="rd-card rd-card-clients">
+                        <div class="rd-card-header">
+                            <span class="rd-card-title">Top Clients by Revenue</span>
+                        </div>
+                        <t t-if="!state.data.top_clients.length">
+                            <div class="rd-chart-empty">No client invoice data yet</div>
+                        </t>
+                        <t t-else="">
+                            <table class="rd-table">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th class="rd-num">Invoiced</th>
+                                        <th class="rd-num">Collected</th>
+                                        <th class="rd-num">Outstanding</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.data.top_clients" t-as="client" t-key="client.name">
+                                        <tr>
+                                            <td class="rd-client-name" t-esc="client.name"/>
+                                            <td class="rd-num">
+                                                <t t-esc="state.data.currency_symbol"/>
+                                                <t t-esc="_fmt(client.invoiced)"/>
+                                            </td>
+                                            <td class="rd-num rd-paid">
+                                                <t t-esc="state.data.currency_symbol"/>
+                                                <t t-esc="_fmt(client.paid)"/>
+                                            </td>
+                                            <td class="rd-num" t-att-class="client.outstanding > 0 ? 'rd-outstanding' : 'rd-paid'">
+                                                <t t-esc="state.data.currency_symbol"/>
+                                                <t t-esc="_fmt(client.outstanding)"/>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

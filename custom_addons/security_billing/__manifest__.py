@@ -5,16 +5,24 @@
     "category": "Accounting",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_payroll_core"],
+    "depends": ["security_payroll_core", "security_operations", "security_attendance"],
     "data": [
         "data/ir_sequence.xml",
         "data/security_billing_cron.xml",
         "security/ir.model.access.csv",
+        "views/revenue_dashboard_actions.xml",
         "views/security_billing_views.xml",
         "views/security_billing_wizard_views.xml",
         "reports/security_invoice_report.xml",
         "reports/security_invoice_aging_report.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "security_billing/static/src/css/revenue_dashboard.css",
+            "security_billing/static/src/xml/revenue_dashboard.xml",
+            "security_billing/static/src/js/revenue_dashboard.js",
+        ],
+    },
     "installable": True,
     "application": False,
 }

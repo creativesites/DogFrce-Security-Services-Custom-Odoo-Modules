@@ -155,6 +155,12 @@ class SecurityBillingInvoice(models.Model):
     service_date_from = fields.Date()
     service_date_to = fields.Date()
     site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
+    contract_id = fields.Many2one(
+        "security.client.contract",
+        string="Client Contract",
+        domain="[('partner_id','=',partner_id)]",
+        help="When generating from approved attendance, uses this contract's rate card.",
+    )
     generation_source = fields.Selection(
         [
             ("manual", "Manual"),
@@ -422,6 +428,105 @@ class SecurityBillingInvoice(models.Model):
             invoice.line_ids = lines
             invoice.generation_source = "attendance"
 
+    def action_generate_from_approved_attendance(self):
+        """Generate invoice lines from contract rate cards using billing-approved attendance."""
+        contract_model = self.env.get("security.client.contract")
+        if not contract_model:
+            raise ValidationError("The contracts module (security_operations) is not installed.")
+
+        _CATEGORY_LABELS = {
+            "normal": "Normal / Day",
+            "night": "Night Shift",
+            "saturday": "Saturday",
+            "sunday": "Sunday",
+            "public_holiday": "Public Holiday",
+        }
+
+        for invoice in self:
+            if not invoice.service_date_from or not invoice.service_date_to:
+                raise ValidationError("Set service dates before generating invoice lines.")
+
+            domain = invoice._get_generation_domain()
+            # Include records that are present/late/early_leave AND either have no exception
+            # or have an exception that has been billing-approved.
+            domain += [("status", "in", ("present", "late", "early_leave"))]
+            domain += [
+                "|",
+                ("has_billing_exception", "=", False),
+                "&",
+                ("has_billing_exception", "=", True),
+                ("billing_approved", "=", True),
+            ]
+
+            records = self.env["security.attendance.record"].search(domain)
+            if not records:
+                raise ValidationError(
+                    "No billable attendance records found for this period. "
+                    "Ensure guards have check-in/out data and billing exceptions are approved."
+                )
+
+            lines_data = {}
+            included_record_ids = []
+
+            for rec in records:
+                if not rec.site_id or not rec.shift_date:
+                    continue
+                contract = invoice.contract_id or contract_model.get_active_for_site(
+                    rec.site_id, rec.shift_date
+                )
+                if not contract:
+                    continue
+                grade = rec.employee_id.security_grade_id if rec.employee_id else None
+                grade_name = grade.name if grade else "Standard"
+                site_name = rec.site_id.name if rec.site_id else "Unknown Site"
+
+                buckets = {
+                    "normal": (rec.normal_hours or 0.0),
+                    "night": (rec.night_hours or 0.0),
+                    "saturday": (rec.saturday_hours or 0.0),
+                    "sunday": (rec.sunday_hours or 0.0),
+                    "public_holiday": (rec.public_holiday_hours or 0.0),
+                }
+                if rec.overtime_approved and rec.overtime_hours:
+                    buckets["normal"] += rec.overtime_hours
+
+                for cat, hours in buckets.items():
+                    if not hours:
+                        continue
+                    rate = contract.get_rate_for(grade, cat)
+                    if not rate:
+                        continue
+                    key = (rec.site_id.id, grade.id if grade else False, cat)
+                    if key not in lines_data:
+                        lines_data[key] = {
+                            "name": f"{site_name} — {grade_name} ({_CATEGORY_LABELS[cat]})",
+                            "site_id": rec.site_id.id if rec.site_id else False,
+                            "quantity": 0.0,
+                            "unit_price": rate,
+                            "service_date_from": invoice.service_date_from,
+                            "service_date_to": invoice.service_date_to,
+                        }
+                    else:
+                        # Use the highest rate found (handles multiple contracts with different rates)
+                        lines_data[key]["unit_price"] = max(lines_data[key]["unit_price"], rate)
+                    lines_data[key]["quantity"] += hours
+                included_record_ids.append(rec.id)
+
+            if not lines_data:
+                raise ValidationError(
+                    "No billable hours found. Ensure contracts have rate cards configured."
+                )
+
+            invoice.line_ids.unlink()
+            invoice.attendance_record_ids = [(6, 0, included_record_ids)]
+            invoice.roster_slot_ids = [(5, 0, 0)]
+            invoice.line_ids = [
+                (0, 0, {**v, "quantity": round(v["quantity"], 2)})
+                for v in lines_data.values()
+                if v["quantity"] > 0
+            ]
+            invoice.generation_source = "attendance"
+
     def action_mark_sent(self):
         for invoice in self:
             if not invoice.line_ids:
@@ -494,6 +599,125 @@ class SecurityBillingInvoice(models.Model):
             "views": [[False, "form"]],
             "context": {"default_invoice_id": self.id},
             "target": "new",
+        }
+
+    @api.model
+    def get_revenue_dashboard_data(self):
+        """Server-side data for the Revenue Dashboard OWL component."""
+        import calendar
+        from datetime import date, timedelta
+        from collections import defaultdict
+
+        today = date.today()
+        mtd_start = today.replace(day=1)
+        mtd_end = today
+
+        # Approved attendance billing (MTD) — sum billing_amount from attendance records
+        # billing_amount is non-stored, so we pull the stored hour buckets + contract rates
+        attendance_model = self.env.get("security.attendance.record")
+        contract_model = self.env.get("security.client.contract")
+        mtd_approved_billing = 0.0
+        exception_count = 0
+        pending_approval_count = 0
+
+        if attendance_model:
+            exception_count = attendance_model.search_count(
+                [("has_billing_exception", "=", True)]
+            )
+            pending_approval_count = attendance_model.search_count(
+                [("has_billing_exception", "=", True), ("billing_approved", "=", False)]
+            )
+            if contract_model:
+                approved_recs = attendance_model.search([
+                    ("shift_date", ">=", mtd_start),
+                    ("shift_date", "<=", mtd_end),
+                    ("status", "in", ("present", "late", "early_leave")),
+                    "|",
+                    ("has_billing_exception", "=", False),
+                    "&",
+                    ("has_billing_exception", "=", True),
+                    ("billing_approved", "=", True),
+                ])
+                for rec in approved_recs:
+                    mtd_approved_billing += rec.billing_amount or 0.0
+
+        # Invoice totals (MTD)
+        mtd_invoices = self.search([
+            ("invoice_date", ">=", str(mtd_start)),
+            ("invoice_date", "<=", str(mtd_end)),
+            ("state", "!=", "cancelled"),
+        ])
+        invoiced_mtd = sum(mtd_invoices.filtered(lambda i: i.state in ("sent", "paid")).mapped("total_amount"))
+        paid_mtd = sum(mtd_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
+
+        # All-time outstanding
+        all_invoices = self.search([("state", "not in", ("cancelled",))])
+        total_invoiced = sum(all_invoices.filtered(lambda i: i.state in ("sent", "paid")).mapped("total_amount"))
+        total_paid = sum(all_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
+        outstanding = max(total_invoiced - total_paid, 0.0)
+
+        # Monthly revenue trend (last 6 months, invoiced)
+        monthly_trend = []
+        for i in range(5, -1, -1):
+            ref = today.replace(day=1)
+            if i > 0:
+                # Go back i months
+                year = ref.year
+                month = ref.month - i
+                while month <= 0:
+                    month += 12
+                    year -= 1
+                ref = ref.replace(year=year, month=month)
+            m_start = ref
+            m_end = ref.replace(day=calendar.monthrange(ref.year, ref.month)[1])
+            m_invoices = self.search([
+                ("invoice_date", ">=", str(m_start)),
+                ("invoice_date", "<=", str(m_end)),
+                ("state", "in", ("sent", "paid")),
+            ])
+            monthly_trend.append({
+                "month": m_start.strftime("%b %Y"),
+                "amount": round(sum(m_invoices.mapped("total_amount")), 2),
+                "paid": round(sum(m_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount")), 2),
+            })
+
+        # Top clients by invoiced amount
+        client_data = defaultdict(lambda: {"invoiced": 0.0, "paid": 0.0, "id": None})
+        for inv in all_invoices:
+            if inv.state not in ("sent", "paid"):
+                continue
+            cname = inv.partner_id.name or "Unknown"
+            if not client_data[cname]["id"]:
+                client_data[cname]["id"] = inv.partner_id.id
+            client_data[cname]["invoiced"] += inv.total_amount
+            if inv.state == "paid":
+                client_data[cname]["paid"] += inv.total_amount
+
+        top_clients = sorted(
+            [
+                {
+                    "name": name,
+                    "id": data["id"],
+                    "invoiced": round(data["invoiced"], 2),
+                    "paid": round(data["paid"], 2),
+                    "outstanding": round(data["invoiced"] - data["paid"], 2),
+                }
+                for name, data in client_data.items()
+            ],
+            key=lambda x: x["invoiced"],
+            reverse=True,
+        )[:8]
+
+        return {
+            "mtd_approved_billing": round(mtd_approved_billing, 2),
+            "invoiced_mtd": round(invoiced_mtd, 2),
+            "paid_mtd": round(paid_mtd, 2),
+            "outstanding": round(outstanding, 2),
+            "exception_count": exception_count,
+            "pending_approval_count": pending_approval_count,
+            "monthly_trend": monthly_trend,
+            "top_clients": top_clients,
+            "currency_symbol": self.env.company.currency_id.symbol or "N$",
         }
 
     def action_print_aging(self):
