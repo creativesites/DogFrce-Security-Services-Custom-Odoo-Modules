@@ -1,2 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_security_client_service_report_user,security.client.service.report user,model_security_client_service_report,hr.group_hr_user,1,1,1,1
+access_security_roster_export_wizard_user,security.roster.export.wizard user,model_security_roster_export_wizard,hr.group_hr_user,1,1,1,1
+access_security_attendance_export_wizard_user,security.attendance.export.wizard user,model_security_attendance_export_wizard,hr.group_hr_user,1,1,1,1
+access_security_billing_export_wizard_user,security.billing.export.wizard user,model_security_billing_export_wizard,hr.group_hr_user,1,1,1,1
+access_security_guard_hours_export_wizard_user,security.guard.hours.export.wizard user,model_security_guard_hours_export_wizard,hr.group_hr_user,1,1,1,1
