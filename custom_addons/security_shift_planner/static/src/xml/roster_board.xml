@@ -142,11 +142,16 @@
         <div class="rb-header d-flex align-items-center px-4 py-2"
              style="background:#fff; border-bottom:1px solid #e2e8f0; flex-shrink:0; min-height:52px; box-shadow:0 1px 4px rgba(0,0,0,.06);">
             <div style="flex:1;">
-                <div class="fw-bold" style="font-size:16px; color:#1e293b;">
-                    <t t-if="selectedBatchName" t-esc="selectedBatchName"/>
-                    <span t-else="" style="color:#94a3b8;">Select a Roster Batch</span>
+                <div class="d-flex align-items-center gap-2">
+                    <t t-if="selectedBatch">
+                        <span class="fw-bold" style="font-size:16px; color:#1e293b;"
+                              t-esc="selectedBatch.name"/>
+                        <span t-att-style="'font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:2px 8px; border-radius:10px; color:#fff; background:' + batchStateColor(selectedBatch.state)"
+                              t-esc="selectedBatch.state"/>
+                    </t>
+                    <span t-else="" style="font-size:16px; font-weight:600; color:#94a3b8;">Select a Roster Batch</span>
                 </div>
-                <div t-if="state.batchDateFrom" style="font-size:11px; color:#64748b;">
+                <div t-if="state.batchDateFrom" style="font-size:11px; color:#64748b; margin-top:2px;">
                     <t t-esc="formatDateLong(state.batchDateFrom)"/>
                     <span class="mx-1">–</span>
                     <t t-esc="formatDateLong(state.batchDateTo)"/>
@@ -154,14 +159,13 @@
                 </div>
             </div>
             <div t-if="state.batchId" class="d-flex gap-2 align-items-center">
-                <button class="rb-btn rb-btn-autofill"
-                        t-on-click="autoFillSlots"
-                        t-att-disabled="state.autoFilling or state.loading">
-                    <i t-att-class="state.autoFilling ? 'fa fa-spinner fa-spin' : 'fa fa-magic'"/>
-                    <span class="ms-1">
-                        <t t-if="state.autoFilling">Filling…</t>
-                        <t t-else="">Auto-Fill</t>
-                    </span>
+                <button class="rb-btn rb-btn-success"
+                        t-on-click="autoAssignAll"
+                        t-att-disabled="state.autoAssigning or state.loading or unassignedCount === 0">
+                    <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin me-1' : 'fa fa-bolt me-1'"/>
+                    <t t-if="state.autoAssigning">Auto-Assigning…</t>
+                    <t t-elif="unassignedCount > 0">Auto-Assign All (<t t-esc="unassignedCount"/>)</t>
+                    <t t-else="">All Assigned</t>
                 </button>
                 <button t-att-class="state.showGapsOnly ? 'rb-btn rb-btn-toggle-active' : 'rb-btn rb-btn-ghost'"
                         t-on-click="toggleGapsOnly"
@@ -375,7 +379,8 @@
                     </div>
 
                     <!-- Action buttons -->
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <!-- Unassigned slot: suggest guards -->
                         <button t-if="!state.selectedSlot.employee_name and state.selectedSlot.state !== 'cancelled'"
                                 class="rb-btn rb-btn-primary"
                                 style="flex:1;"
@@ -383,13 +388,24 @@
                                 t-att-disabled="state.loadingSuggestions">
                             <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-magic me-1'"/>
                             <t t-if="state.loadingSuggestions">Loading…</t>
+                            <t t-elif="state.suggestionsLoaded">Refresh Suggestions</t>
                             <t t-else="">Suggest Guards</t>
                         </button>
-                        <button t-if="state.selectedSlot.employee_name"
-                                class="rb-btn rb-btn-danger"
-                                t-on-click="unassignSlot">
-                            <i class="fa fa-user-times me-1"/>Unassign
-                        </button>
+                        <!-- Assigned slot: find replacement + unassign -->
+                        <t t-if="state.selectedSlot.employee_name">
+                            <button class="rb-btn rb-btn-ghost"
+                                    style="flex:1;"
+                                    t-on-click="loadSuggestions"
+                                    t-att-disabled="state.loadingSuggestions">
+                                <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-exchange me-1'"/>
+                                <t t-if="state.loadingSuggestions">Loading…</t>
+                                <t t-else="">Find Replacement</t>
+                            </button>
+                            <button class="rb-btn rb-btn-danger"
+                                    t-on-click="unassignSlot">
+                                <i class="fa fa-user-times me-1"/>Unassign
+                            </button>
+                        </t>
                     </div>
                 </div>
 

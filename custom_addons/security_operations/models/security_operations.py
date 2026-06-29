@@ -745,6 +745,7 @@ class SecurityRosterBatch(models.Model):
                     "post_id": slot.post_id.id,
                     "shift_date": new_date,
                     "shift_template_id": slot.shift_template_id.id,
+                    "shift_requirement_id": slot.shift_requirement_id.id if slot.shift_requirement_id else False,
                     "state": "draft",
                 }
                 if slot.employee_id:

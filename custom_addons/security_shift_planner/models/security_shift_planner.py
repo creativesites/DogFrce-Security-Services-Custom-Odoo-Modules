@@ -290,7 +290,7 @@ class SecurityRosterSlot(models.Model):
           +10 grade bonus              if guard's grade sequence is higher than minimum
           -5 per shift this period     (fairness — cap at -30, so max 6 shifts penalty)
           -10 awol or absence flag     if guard had AWOL in last 30 days
-          -20 double-booking           excluded — handled by eligibility filter
+          Guards who score exactly 0 after all adjustments are excluded from suggestions.
         """
         for slot in self:
             slot.suggestion_ids.unlink()
@@ -299,11 +299,14 @@ class SecurityRosterSlot(models.Model):
                 continue
 
             suggestions = []
-            for employee, ineligibility_score in eligible:
+            for employee, _unused in eligible:
                 score, breakdown = self._score_guard(slot, employee)
                 suggestions.append((score, employee, breakdown))
 
+            # Exclude guards who scored zero — they have no positive signal
+            suggestions = [(s, e, b) for s, e, b in suggestions if s > 0]
             suggestions.sort(key=lambda x: x[0], reverse=True)
+
             suggestion_vals = []
             for rank, (score, employee, breakdown) in enumerate(suggestions, start=1):
                 suggestion_vals.append({
@@ -315,6 +318,67 @@ class SecurityRosterSlot(models.Model):
                 })
             if suggestion_vals:
                 self.env["security.slot.suggestion"].create(suggestion_vals)
+
+    # Minimum score a suggestion must reach for auto-assignment (amber threshold)
+    AUTO_ASSIGN_MIN_SCORE = 50.0
+
+    def action_auto_assign_all(self):
+        """
+        Auto-assign the top-ranked eligible guard to every unassigned slot in self.
+
+        Only assigns when the top suggestion scores >= AUTO_ASSIGN_MIN_SCORE so that
+        very low-quality matches are left for manual review. Returns a summary
+        notification that can be displayed directly by the JS caller.
+        """
+        assigned = 0
+        no_candidates = 0
+        below_threshold = 0
+
+        for slot in self:
+            if slot.state == "cancelled" or slot.employee_id:
+                continue
+
+            slot.action_suggest_guards()
+
+            top = self.env["security.slot.suggestion"].search(
+                [("slot_id", "=", slot.id)],
+                order="rank",
+                limit=1,
+            )
+
+            if not top:
+                no_candidates += 1
+                continue
+
+            if top.score < self.AUTO_ASSIGN_MIN_SCORE:
+                below_threshold += 1
+                continue
+
+            reason = top._check_assignment_eligibility(slot, top.employee_id)
+            if reason:
+                no_candidates += 1
+                continue
+
+            slot.employee_id = top.employee_id
+            slot.state = "assigned"
+            assigned += 1
+
+        parts = [f"{assigned} slot(s) auto-assigned"]
+        if no_candidates:
+            parts.append(f"{no_candidates} had no eligible candidates")
+        if below_threshold:
+            parts.append(f"{below_threshold} skipped (best score below {int(self.AUTO_ASSIGN_MIN_SCORE)} pts — review manually)")
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Auto-Assignment Complete",
+                "message": ". ".join(parts) + ".",
+                "type": "success" if assigned > 0 else "warning",
+                "sticky": False,
+            },
+        }
 
     def _get_eligible_guards(self, slot):
         """
@@ -373,15 +437,6 @@ class SecurityRosterSlot(models.Model):
         exclusion_model = self.env["security.guard.exclusion"]
         excluded_guard_ids = set()
         if site_id or partner_id:
-            domain = [("active", "=", True), "|"]
-            if site_id:
-                domain.append(("site_id", "=", site_id))
-            else:
-                domain.append(("site_id", "=", False))
-            if partner_id:
-                domain.append(("partner_id", "=", partner_id))
-            else:
-                domain.append(("partner_id", "=", False))
             excluded_guard_ids = set(exclusion_model.search([
                 ("active", "=", True),
                 "|",

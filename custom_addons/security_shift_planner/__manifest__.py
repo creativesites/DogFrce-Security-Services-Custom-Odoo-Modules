@@ -5,7 +5,7 @@
     "category": "Human Resources",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_attendance", "web"],
+    "depends": ["security_operations", "security_attendance", "web"],
     "data": [
         "security/ir.model.access.csv",
         "views/security_shift_planner_views.xml",
@@ -15,9 +15,12 @@
     "assets": {
         "web.assets_backend": [
             "security_shift_planner/static/src/css/roster_board.css",
+            "security_shift_planner/static/src/css/rostering_hub.css",
             "security_shift_planner/static/src/js/roster_board.js",
-            "security_shift_planner/static/src/xml/roster_board.xml",
+            "security_shift_planner/static/src/js/rostering_hub.js",
             "security_shift_planner/static/src/js/weekly_checkin.js",
+            "security_shift_planner/static/src/xml/roster_board.xml",
+            "security_shift_planner/static/src/xml/rostering_hub.xml",
             "security_shift_planner/static/src/xml/weekly_checkin.xml",
         ],
     },
