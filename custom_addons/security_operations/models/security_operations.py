@@ -762,6 +762,61 @@ class SecurityRosterBatch(models.Model):
             },
         }
 
+    def action_auto_fill_slots(self):
+        """Auto-assign available guards to all empty (unassigned) slots in this batch."""
+        self.ensure_one()
+        empty_slots = self.slot_ids.filtered(lambda s: not s.employee_id and s.state == "draft")
+        if not empty_slots:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Gaps Found",
+                    "message": "All slots in this batch already have guards assigned.",
+                    "type": "info",
+                },
+            }
+        guards = self.env["hr.employee"].search([("security_guard", "=", True), ("active", "=", True)])
+        if not guards:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Guards Available",
+                    "message": "No active security guards found in the system.",
+                    "type": "warning",
+                },
+            }
+        assigned = 0
+        skipped = 0
+        for slot in empty_slots:
+            busy_guard_ids = set(
+                self.env["security.roster.slot"].search([
+                    ("shift_date", "=", slot.shift_date),
+                    ("employee_id", "!=", False),
+                    ("state", "not in", ["cancelled"]),
+                    ("id", "!=", slot.id),
+                ]).mapped("employee_id").ids
+            )
+            available = guards.filtered(lambda g: g.id not in busy_guard_ids)
+            if not available:
+                skipped += 1
+                continue
+            slot.write({"employee_id": available[0].id, "state": "assigned"})
+            assigned += 1
+        msg = f"{assigned} slot(s) filled."
+        if skipped:
+            msg += f" {skipped} slot(s) could not be filled (no available guard)."
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Auto-Fill Complete",
+                "message": msg,
+                "type": "success" if assigned else "warning",
+            },
+        }
+
     @api.model
     def action_cron_auto_generate_next_month_batches(self):
         """Cron (runs on the 20th): auto-create next month's roster batch for every active billing plan."""
