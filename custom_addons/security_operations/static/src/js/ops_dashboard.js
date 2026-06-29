@@ -104,12 +104,9 @@ class OpsDashboard extends Component {
     async _loadAlertSites() {
         const batches = await this.orm.searchRead(
             "security.roster.batch",
-            [
-                ["state", "in", ["generated", "confirmed", "submitted", "approved"]],
-                ["critical_gap_count", ">", 0],
-            ],
+            [["state", "in", ["generated", "confirmed", "submitted", "approved"]]],
             ["site_id", "fill_rate", "critical_gap_count", "unassigned_count"],
-            { limit: 20 },
+            { limit: 50 },
         );
 
         const siteMap = {};
@@ -130,6 +127,7 @@ class OpsDashboard extends Component {
             }
         }
         this.state.alertSites = Object.values(siteMap)
+            .filter(s => s.criticalGaps > 0)
             .sort((a, b) => b.criticalGaps - a.criticalGaps)
             .slice(0, 6);
     }
