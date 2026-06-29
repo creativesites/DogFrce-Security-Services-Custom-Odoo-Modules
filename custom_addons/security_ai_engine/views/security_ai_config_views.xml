@@ -244,7 +244,6 @@
                                    decoration-success="ai_anomaly_feedback == 'accepted'"
                                    decoration-danger="ai_anomaly_feedback == 'rejected'"
                                    decoration-warning="ai_anomaly_feedback == 'flagged'"
-                                   decoration-secondary="ai_anomaly_feedback == 'pending'"/>
                         </group>
                         <field name="ai_anomaly_narrative" widget="ai_output" readonly="1" nolabel="1"/>
                         <!-- Feedback controls -->
@@ -308,7 +307,6 @@
                                    decoration-success="ai_risk_feedback == 'accepted'"
                                    decoration-danger="ai_risk_feedback == 'rejected'"
                                    decoration-warning="ai_risk_feedback == 'flagged'"
-                                   decoration-secondary="ai_risk_feedback == 'pending'"/>
                         </group>
                         <field name="ai_risk_narrative" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -365,7 +363,6 @@
                                    decoration-success="ai_audit_feedback == 'accepted'"
                                    decoration-danger="ai_audit_feedback == 'rejected'"
                                    decoration-warning="ai_audit_feedback == 'flagged'"
-                                   decoration-secondary="ai_audit_feedback == 'pending'"/>
                         </group>
                         <field name="ai_audit_notes" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -423,7 +420,6 @@
                                    decoration-success="ai_roster_feedback == 'accepted'"
                                    decoration-danger="ai_roster_feedback == 'rejected'"
                                    decoration-warning="ai_roster_feedback == 'flagged'"
-                                   decoration-secondary="ai_roster_feedback == 'pending'"/>
                         </group>
                         <field name="ai_roster_notes" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -485,7 +481,6 @@
                                    decoration-success="ai_replacement_feedback == 'accepted'"
                                    decoration-danger="ai_replacement_feedback == 'rejected'"
                                    decoration-warning="ai_replacement_feedback == 'flagged'"
-                                   decoration-secondary="ai_replacement_feedback == 'pending'"/>
                         </group>
                         <field name="ai_replacement_suggestion" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -544,7 +539,6 @@
                                    decoration-success="ai_consequence_feedback == 'accepted'"
                                    decoration-danger="ai_consequence_feedback == 'rejected'"
                                    decoration-warning="ai_consequence_feedback == 'flagged'"
-                                   decoration-secondary="ai_consequence_feedback == 'pending'"/>
                         </group>
                         <field name="ai_consequence_recommendation" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -603,7 +597,6 @@
                                    decoration-success="ai_coverage_feedback == 'accepted'"
                                    decoration-danger="ai_coverage_feedback == 'rejected'"
                                    decoration-warning="ai_coverage_feedback == 'flagged'"
-                                   decoration-secondary="ai_coverage_feedback == 'pending'"/>
                         </group>
                         <field name="ai_coverage_assessment" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -661,7 +654,6 @@
                                    decoration-success="ai_renewal_letter_feedback == 'accepted'"
                                    decoration-danger="ai_renewal_letter_feedback == 'rejected'"
                                    decoration-warning="ai_renewal_letter_feedback == 'flagged'"
-                                   decoration-secondary="ai_renewal_letter_feedback == 'pending'"/>
                         </group>
                         <field name="ai_renewal_letter" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -717,7 +709,6 @@
                                    decoration-success="ai_performance_review_feedback == 'accepted'"
                                    decoration-danger="ai_performance_review_feedback == 'rejected'"
                                    decoration-warning="ai_performance_review_feedback == 'flagged'"
-                                   decoration-secondary="ai_performance_review_feedback == 'pending'"/>
                         </group>
                         <field name="ai_performance_review" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">
@@ -772,7 +763,6 @@
                                    decoration-success="ai_payslip_explanation_feedback == 'accepted'"
                                    decoration-danger="ai_payslip_explanation_feedback == 'rejected'"
                                    decoration-warning="ai_payslip_explanation_feedback == 'flagged'"
-                                   decoration-secondary="ai_payslip_explanation_feedback == 'pending'"/>
                         </group>
                         <field name="ai_payslip_explanation" widget="ai_output" readonly="1" nolabel="1"/>
                         <div class="d-flex flex-wrap gap-2 mt-3 pt-3" style="border-top:1px solid #f1f5f9;">

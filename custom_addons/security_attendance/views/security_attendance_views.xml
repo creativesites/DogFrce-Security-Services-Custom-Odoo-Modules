@@ -32,18 +32,15 @@
                        widget="badge"
                        decoration-danger="manual_presence == 'awol'"
                        decoration-warning="manual_presence == 'absent'"
-                       decoration-success="manual_presence == 'present'"
-                       decoration-secondary="manual_presence == 'not_marked'"/>
+                       decoration-success="manual_presence == 'present'"/>
                 <field name="absence_type" string="Absence" optional="show"
                        widget="badge"
                        decoration-danger="absence_type == 'awol'"
-                       decoration-warning="absence_type in ('authorised', 'no_show')"
-                       decoration-secondary="absence_type == 'none'"/>
+                       decoration-warning="absence_type in ('authorised', 'no_show')"/>
                 <field name="status" string="Status" widget="badge"
                        decoration-danger="status in ('absent', 'incomplete')"
                        decoration-warning="status in ('late', 'early_leave')"
-                       decoration-success="status == 'present'"
-                       decoration-secondary="status == 'scheduled'"/>
+                       decoration-success="status == 'present'"/>
                 <field name="missing_check_out" column_invisible="1"/>
                 <field name="premium_category" optional="hide"/>
                 <field name="is_night_shift" optional="hide"/>
@@ -181,18 +178,15 @@
                                decoration-danger="status in ('absent','incomplete')"
                                decoration-warning="status in ('late','early_leave')"
                                decoration-success="status == 'present'"
-                               decoration-secondary="status == 'scheduled'"
                                readonly="1"/>
                         <field name="manual_presence" widget="badge"
                                decoration-danger="manual_presence == 'awol'"
                                decoration-warning="manual_presence == 'absent'"
                                decoration-success="manual_presence == 'present'"
-                               decoration-secondary="manual_presence == 'not_marked'"
                                readonly="1"/>
                         <field name="absence_type" widget="badge"
                                decoration-danger="absence_type == 'awol'"
                                decoration-warning="absence_type in ('authorised','no_show')"
-                               decoration-secondary="absence_type == 'none'"
                                readonly="1"
                                invisible="absence_type == 'none'"/>
                         <span class="badge text-bg-secondary"
