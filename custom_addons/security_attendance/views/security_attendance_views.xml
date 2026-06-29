@@ -373,19 +373,17 @@
 
                 <separator/>
                 <!-- Group by options -->
-                <group string="Group By">
-                    <filter name="group_date"      string="Date"     context="{'group_by': 'shift_date:day'}"/>
-                    <filter name="group_week"       string="Week"     context="{'group_by': 'shift_date:week'}"/>
-                    <filter name="group_month"      string="Month"    context="{'group_by': 'shift_date:month'}"/>
-                    <filter name="group_employee"   string="Guard"    context="{'group_by': 'employee_id'}"/>
-                    <filter name="group_site"       string="Site"     context="{'group_by': 'site_id'}"/>
-                    <filter name="group_partner"    string="Client"   context="{'group_by': 'partner_id'}"/>
-                    <filter name="group_post"       string="Post"     context="{'group_by': 'post_id'}"/>
-                    <filter name="group_status"     string="Status"   context="{'group_by': 'status'}"/>
-                    <filter name="group_absence"    string="Absence Type" context="{'group_by': 'absence_type'}"/>
-                    <filter name="group_premium"    string="Premium Category" context="{'group_by': 'premium_category'}"/>
-                    <filter name="group_batch"      string="Posting Sheet" context="{'group_by': 'attendance_batch_id'}"/>
-                </group>
+                <filter name="group_date"      string="Date"     context="{'group_by': 'shift_date:day'}"/>
+                <filter name="group_week"       string="Week"     context="{'group_by': 'shift_date:week'}"/>
+                <filter name="group_month"      string="Month"    context="{'group_by': 'shift_date:month'}"/>
+                <filter name="group_employee"   string="Guard"    context="{'group_by': 'employee_id'}"/>
+                <filter name="group_site"       string="Site"     context="{'group_by': 'site_id'}"/>
+                <filter name="group_partner"    string="Client"   context="{'group_by': 'partner_id'}"/>
+                <filter name="group_post"       string="Post"     context="{'group_by': 'post_id'}"/>
+                <filter name="group_status"     string="Status"   context="{'group_by': 'status'}"/>
+                <filter name="group_absence"    string="Absence Type" context="{'group_by': 'absence_type'}"/>
+                <filter name="group_premium"    string="Premium Category" context="{'group_by': 'premium_category'}"/>
+                <filter name="group_batch"      string="Posting Sheet" context="{'group_by': 'attendance_batch_id'}"/>
             </search>
         </field>
     </record>
