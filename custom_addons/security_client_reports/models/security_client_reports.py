@@ -3,7 +3,7 @@ import csv
 import io
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class SecurityClientServiceReport(models.Model):
@@ -162,3 +162,102 @@ class SecurityClientServiceReport(models.Model):
             "url": f"/web/content/{attachment.id}?download=true",
             "target": "self",
         }
+
+    def action_export_attendance_excel(self):
+        self.ensure_one()
+        try:
+            import xlsxwriter
+        except ImportError:
+            raise UserError(
+                "xlsxwriter is not installed. "
+                "Ask your system administrator to install it: pip install xlsxwriter"
+            )
+        from .security_export_wizards import _make_formats, _att_status_fmt, _row_fmts, _attach_and_download
+
+        records = self.attendance_record_ids.sorted("shift_date")
+        output = io.BytesIO()
+        wb = xlsxwriter.Workbook(output, {"in_memory": True})
+        fmts = _make_formats(wb)
+
+        # Summary sheet
+        ws1 = wb.add_worksheet("Summary")
+        ws1.set_column(0, 0, 30)
+        ws1.set_column(1, 1, 18)
+        ws1.set_row(0, 28)
+        ws1.merge_range(0, 0, 0, 1, f"Service Report — {self.name or ''}", fmts["title"])
+        meta = [
+            ("Client", self.partner_id.name or ""),
+            ("Site", self.site_id.name or "All Sites"),
+            ("Period", f"{self.date_from} to {self.date_to}"),
+            ("Prepared By", self.prepared_by_id.name if self.prepared_by_id else ""),
+        ]
+        for ri, (lbl, val) in enumerate(meta, 1):
+            ws1.write(ri, 0, lbl, fmts["meta_label"])
+            ws1.write(ri, 1, val, fmts["meta_val"])
+
+        ws1.write(6, 0, "Summary", fmts["subheader"])
+        ws1.write(6, 1, "", fmts["subheader"])
+        stats = [
+            ("Scheduled Shifts", self.scheduled_shift_count),
+            ("Attended Shifts", self.attended_shift_count),
+            ("Absent Shifts", self.absent_shift_count),
+            ("AWOL Count", self.awol_count),
+            ("Total Scheduled Hours", self.total_scheduled_hours),
+            ("Total Payable Hours", self.total_payable_hours),
+            ("Total Unpaid Hours", self.total_unpaid_hours),
+        ]
+        for si, (lbl, val) in enumerate(stats):
+            tf, nf, if1, _ = _row_fmts(fmts, si)
+            ws1.write(7 + si, 0, lbl, tf)
+            ws1.write(7 + si, 1, val, nf if isinstance(val, float) else if1)
+
+        # Detail sheet
+        ws2 = wb.add_worksheet("Attendance Detail")
+        ws2.freeze_panes(2, 0)
+        col_defs = [
+            ("Date", 12), ("Guard", 22), ("Site", 18), ("Post", 18), ("Shift", 16),
+            ("Check-In", 16), ("Check-Out", 16), ("Status", 12),
+            ("Late (min)", 10), ("Early Dep (min)", 12),
+            ("Sched h", 9), ("Worked h", 10), ("Payable h", 10),
+        ]
+        for c, (_, w) in enumerate(col_defs):
+            ws2.set_column(c, c, w)
+        ws2.set_row(0, 20)
+        ws2.set_row(1, 18)
+        ws2.merge_range(0, 0, 0, len(col_defs) - 1, "Attendance Detail", fmts["title"])
+        for c, (h, _) in enumerate(col_defs):
+            ws2.write(1, c, h, fmts["header"])
+
+        for i, rec in enumerate(records):
+            r = 2 + i
+            tf, nf, if1, _ = _row_fmts(fmts, i)
+            sf = _att_status_fmt(fmts, rec.status)
+            ci_s = rec.check_in.strftime("%Y-%m-%d %H:%M") if rec.check_in else ""
+            co_s = rec.check_out.strftime("%Y-%m-%d %H:%M") if rec.check_out else ""
+            row_data = [
+                (str(rec.shift_date) if rec.shift_date else "", tf),
+                (rec.employee_id.name if rec.employee_id else "", tf),
+                (rec.site_id.name if rec.site_id else "", tf),
+                (rec.post_id.name if rec.post_id else "", tf),
+                (rec.shift_template_id.name if rec.shift_template_id else "", tf),
+                (ci_s, tf), (co_s, tf),
+                (rec.status or "", sf),
+                (rec.late_minutes or 0, if1),
+                (rec.early_departure_minutes or 0, if1),
+                (rec.scheduled_hours or 0.0, nf),
+                (rec.worked_hours or 0.0, nf),
+                (rec.payable_hours or 0.0, nf),
+            ]
+            for c, (val, fmt) in enumerate(row_data):
+                ws2.write(r, c, val, fmt)
+
+        ws2.autofilter(1, 0, 1 + len(records), len(col_defs) - 1)
+        tr = 2 + len(records)
+        ws2.write(tr, 0, "TOTAL", fmts["total_lbl"])
+        ws2.write(tr, 10, sum(records.mapped("scheduled_hours")), fmts["total"])
+        ws2.write(tr, 11, sum(records.mapped("worked_hours")), fmts["total"])
+        ws2.write(tr, 12, sum(records.mapped("payable_hours")), fmts["total"])
+
+        wb.close()
+        fname = f"ServiceReport_{(self.name or 'report').replace('/', '-').replace(' ', '_')[:40]}.xlsx"
+        return _attach_and_download(self.env, self._name, self.id, fname, output.getvalue())

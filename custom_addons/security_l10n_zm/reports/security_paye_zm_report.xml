@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- ZRA PAYE Employer Tax Schedule — QWeb PDF               -->
+    <!-- Model: security.payroll.period                          -->
+    <!-- Filters by code == 'PAYE' and code == 'NAPSA' on        -->
+    <!-- deduction lines. NAPSA is deducted before PAYE to give  -->
+    <!-- the correct taxable income figure.                       -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_paye_zm_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="period">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 11px;">
+
+                        <!-- Title block -->
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                                Zambia Revenue Authority
+                            </h2>
+                            <h3 style="margin: 4px 0 0 0;">
+                                Employer's Monthly PAYE Schedule
+                            </h3>
+                        </div>
+
+                        <!-- Header info box -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <tr>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Tax Year</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="period.date_from and period.date_from.year or ''"/>
+                                </td>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Month</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="period.date_from and period.date_from.strftime('%B %Y') or ''"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Employer Name</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="env.company.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Employer TPIN</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="env.company.vat or 'N/A'"/>
+                                </td>
+                                <td style="padding: 4px 8px;"><strong>PAYE Period</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="period.date_from"/> — <t t-esc="period.date_to"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Employee PAYE schedule table -->
+                        <t t-set="active_slips" t-value="period.payslip_ids.filtered(lambda p: p.state in ('confirmed', 'paid'))"/>
+
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <thead>
+                                <tr style="background-color: #1A6B3C; color: white;">
+                                    <th style="padding: 5px 6px; text-align: center; width: 4%;">#</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 22%;">Employee Name</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 14%;">NRC / Passport</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 14%;">Employee TPIN</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">Gross Pay (ZMW)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">NAPSA Deducted</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">Taxable Income</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 14%;">PAYE Deducted</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="active_slips" t-as="slip">
+                                    <t t-set="napsa_lines" t-value="slip.deduction_line_ids.filtered(lambda l: l.code == 'NAPSA')"/>
+                                    <t t-set="paye_lines" t-value="slip.deduction_line_ids.filtered(lambda l: l.code == 'PAYE')"/>
+                                    <t t-set="napsa_deduction" t-value="sum(napsa_lines.mapped('amount'))"/>
+                                    <t t-set="paye_deduction" t-value="sum(paye_lines.mapped('amount'))"/>
+                                    <t t-set="taxable_income" t-value="slip.total_earnings - napsa_deduction"/>
+                                    <tr>
+                                        <td style="padding: 4px 6px; text-align: center;">
+                                            <t t-esc="slip_index + 1"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.name"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.identification_id or '—'"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.security_tpin or '—'"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % slip.total_earnings"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % napsa_deduction"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % taxable_income"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % paye_deduction"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background-color: #e8e8e8; font-weight: bold;">
+                                    <td style="padding: 5px 6px; text-align: right;" colspan="4">TOTALS</td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(active_slips.mapped('total_earnings'))"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            sum(s.deduction_line_ids.filtered(lambda l: l.code == 'NAPSA').mapped('amount'))
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            (s.total_earnings - sum(s.deduction_line_ids.filtered(lambda l: l.code == 'NAPSA').mapped('amount')))
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            sum(s.deduction_line_ids.filtered(lambda l: l.code == 'PAYE').mapped('amount'))
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Declaration / signature block -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 24px;" border="0">
+                            <tr>
+                                <td style="width: 50%; padding-right: 16px; vertical-align: top;">
+                                    <p style="margin: 0; font-size: 10px; color: #555;">
+                                        I, the undersigned, hereby declare that the information
+                                        contained in this schedule is true and correct to the best
+                                        of my knowledge and belief.
+                                    </p>
+                                    <br/>
+                                    <p style="margin: 0;">Authorised Signatory: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Designation: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Date: ________________________</p>
+                                </td>
+                                <td style="width: 50%; padding-left: 16px; vertical-align: top; font-size: 10px; color: #555;">
+                                    <p style="margin: 0; font-style: italic;">
+                                        This schedule must be submitted to ZRA and full PAYE remitted
+                                        by the 10th of the following month.<br/>
+                                        Ref: Income Tax Act Cap 323 of the Laws of Zambia.<br/>
+                                        Late remittance attracts a penalty of 5% per month plus interest.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report action — bound to security.payroll.period (same as NA PAYE) -->
+    <record id="action_report_security_paye_zm" model="ir.actions.report">
+        <field name="name">ZRA PAYE Tax Schedule (Zambia)</field>
+        <field name="model">security.payroll.period</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_l10n_zm.report_security_paye_zm_document</field>
+        <field name="report_file">security_l10n_zm.report_security_paye_zm_document</field>
+        <field name="print_report_name">'ZRA_PAYE_%s' % (object.name or 'Schedule')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

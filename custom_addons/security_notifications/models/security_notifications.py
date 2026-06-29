@@ -1,5 +1,9 @@
+import logging
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+_logger = logging.getLogger(__name__)
 
 
 class SecurityNotification(models.Model):
@@ -15,6 +19,7 @@ class SecurityNotification(models.Model):
         ("invoice_overdue", "Invoice Overdue"),
         ("awol_alert", "AWOL Alert"),
         ("roster_gap", "Roster Gap"),
+        ("sms_alert", "SMS Alert"),
         ("system", "System"),
     ], default="system", required=True)
     severity = fields.Selection([
@@ -30,6 +35,7 @@ class SecurityNotification(models.Model):
     ], default="unread")
     related_model = fields.Char(string="Related Model")
     related_id = fields.Integer(string="Related Record ID")
+    sms_recipient = fields.Char(string="SMS Recipient Number")
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -70,6 +76,35 @@ class SecurityNotification(models.Model):
 
     def action_dismiss(self):
         self.state = "dismissed"
+
+    def _send_sms_alert_stub(self, phone_number, message):
+        """
+        SMS gateway stub — logs the payload for future integration.
+
+        Replace this body with a real gateway call (Twilio, Vonage, Africa's Talking,
+        etc.) once an SMS provider is contracted. The stub keeps the notification
+        record and audit trail in place without requiring a live provider.
+        """
+        _logger.info(
+            "SMS STUB | notification_id=%s | to=%s | message=%s",
+            self.id, phone_number, message
+        )
+        return True
+
+    @api.model
+    def action_send_sms(self, phone_number, message, severity="info"):
+        """Create an SMS notification record and dispatch via the stub."""
+        if not phone_number or not message:
+            return False
+        record = self.create({
+            "title": "SMS Alert",
+            "body": message,
+            "notification_type": "sms_alert",
+            "severity": severity,
+            "sms_recipient": phone_number,
+        })
+        record._send_sms_alert_stub(phone_number, message)
+        return record
 
     @api.model
     def action_scan_document_expiry(self):
@@ -134,3 +169,78 @@ class SecurityNotification(models.Model):
                     "related_model": "security.billing.invoice",
                     "related_id": inv.id,
                 })
+
+    @api.model
+    def action_scan_roster_gaps(self):
+        """Cron (every 10 min): alert on unassigned slots starting within 2 h and missing check-ins."""
+        from datetime import datetime, timedelta, time as _time
+        now_utc = datetime.utcnow()
+        gap_window_end = now_utc + timedelta(hours=2)
+        today = fields.Date.context_today(self)
+
+        slot_model = self.env.get("security.roster.slot")
+        if slot_model:
+            unassigned = slot_model.search([
+                ("shift_date", "=", today),
+                ("employee_id", "=", False),
+                ("state", "not in", ["cancelled"]),
+            ])
+            for slot in unassigned:
+                tmpl = slot.shift_template_id
+                if not tmpl:
+                    continue
+                h = int(tmpl.start_hour)
+                m = int(round((tmpl.start_hour - h) * 60))
+                slot_start = datetime.combine(today, _time(h, m))
+                if not (now_utc <= slot_start <= gap_window_end):
+                    continue
+                existing = self.search([
+                    ("notification_type", "=", "roster_gap"),
+                    ("related_model", "=", "security.roster.slot"),
+                    ("related_id", "=", slot.id),
+                    ("state", "!=", "dismissed"),
+                ], limit=1)
+                if not existing:
+                    site_name = slot.site_id.name if slot.site_id else "Unknown Site"
+                    self.create({
+                        "title": f"Unassigned Slot: {site_name}",
+                        "body": (
+                            f"Slot at {site_name} (post: {slot.post_id.name if slot.post_id else 'N/A'}, "
+                            f"shift: {tmpl.name}) starts within 2 hours with no guard assigned."
+                        ),
+                        "notification_type": "roster_gap",
+                        "severity": "critical",
+                        "related_model": "security.roster.slot",
+                        "related_id": slot.id,
+                    })
+
+        record_model = self.env.get("security.attendance.record")
+        if record_model:
+            cutoff_str = fields.Datetime.to_string(now_utc - timedelta(minutes=15))
+            late_records = record_model.search([
+                ("shift_date", "=", today),
+                ("check_in", "=", False),
+                ("manual_presence", "not in", ["absent", "awol"]),
+                ("scheduled_start", "!=", False),
+                ("scheduled_start", "<=", cutoff_str),
+            ])
+            for rec in late_records:
+                existing = self.search([
+                    ("notification_type", "=", "roster_gap"),
+                    ("related_model", "=", "security.attendance.record"),
+                    ("related_id", "=", rec.id),
+                    ("state", "!=", "dismissed"),
+                ], limit=1)
+                if not existing:
+                    self.create({
+                        "title": f"Missing Check-in: {rec.employee_id.name or 'Guard'}",
+                        "body": (
+                            f"{rec.employee_id.name or 'Guard'} at "
+                            f"{rec.site_id.name or 'unknown site'} was scheduled "
+                            f"but has not checked in."
+                        ),
+                        "notification_type": "roster_gap",
+                        "severity": "warning",
+                        "related_model": "security.attendance.record",
+                        "related_id": rec.id,
+                    })

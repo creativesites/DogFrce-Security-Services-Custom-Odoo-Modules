@@ -1,5 +1,6 @@
 from datetime import date, datetime, time, timedelta
 
+from odoo.exceptions import ValidationError
 
 MODULE = "security_demo_data"
 
@@ -33,7 +34,14 @@ class DemoBuilder:
         existing = self.ref(name)
         if existing and existing.exists():
             return existing
-        rec = self.env[model].create(vals)
+        try:
+            rec = self.env[model].create(vals)
+        except ValidationError:
+            if model == "security.roster.slot" and "employee_id" in vals:
+                fallback = {k: v for k, v in vals.items() if k != "employee_id"}
+                rec = self.env[model].create(fallback)
+            else:
+                raise
         self.env["ir.model.data"].create(
             {
                 "module": MODULE,

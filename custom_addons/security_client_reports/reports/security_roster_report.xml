@@ -1,0 +1,532 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── Roster Batch PDF Report ──────────────────────────────────────────── -->
+    <record id="action_report_security_roster_batch" model="ir.actions.report">
+        <field name="name">Roster Schedule</field>
+        <field name="model">security.roster.batch</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_client_reports.report_roster_batch</field>
+        <field name="report_file">security_client_reports.report_roster_batch</field>
+        <field name="binding_model_id" ref="security_operations.model_security_roster_batch"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_a4"/>
+    </record>
+
+    <template id="report_roster_batch">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Branding Header -->
+                        <div style="border-bottom: 3px solid #1B2040; margin-bottom: 16px; padding-bottom: 10px;">
+                            <table width="100%">
+                                <tr>
+                                    <td style="vertical-align: middle;">
+                                        <h1 style="margin: 0; color: #1B2040; font-size: 20px; font-weight: bold;">
+                                            DogForce Security Services
+                                        </h1>
+                                        <p style="margin: 2px 0 0; color: #64748B; font-size: 10px;">
+                                            Professional Security Solutions
+                                        </p>
+                                    </td>
+                                    <td style="text-align: right; vertical-align: middle;">
+                                        <h2 style="margin: 0; color: #1B2040; font-size: 15px;
+                                                   text-transform: uppercase; letter-spacing: 1px;">
+                                            Roster Schedule
+                                        </h2>
+                                        <p style="margin: 4px 0 0; color: #F5A523; font-size: 11px; font-weight: bold;">
+                                            CONFIDENTIAL
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Report Meta -->
+                        <table class="table table-sm" style="margin-bottom: 16px; font-size: 11px;">
+                            <tbody>
+                                <tr>
+                                    <td style="width:18%; font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Client</td>
+                                    <td style="width:32%;"><span t-field="doc.partner_id"/></td>
+                                    <td style="width:18%; font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Period</td>
+                                    <td>
+                                        <span t-field="doc.date_from"/> &amp;ndash; <span t-field="doc.date_to"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Site</td>
+                                    <td>
+                                        <t t-if="doc.site_id"><span t-field="doc.site_id"/></t>
+                                        <t t-else="">All Sites</t>
+                                    </td>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Status</td>
+                                    <td>
+                                        <span t-field="doc.state"
+                                              t-options='{"widget": "selection"}'/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Total Slots</td>
+                                    <td><span t-esc="len(doc.slot_ids)"/></td>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Filled</td>
+                                    <td>
+                                        <span t-esc="len(doc.slot_ids.filtered(lambda s: s.state in ('assigned','confirmed')))"/>
+                                        /
+                                        <span t-esc="len(doc.slot_ids)"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Slot Detail Table -->
+                        <h3 style="color:#1B2040; font-size:12px; text-transform:uppercase;
+                                   border-bottom:1px solid #1B2040; padding-bottom:4px; margin-bottom:8px;">
+                            Scheduled Slots
+                        </h3>
+                        <table class="table table-sm o_main_table" style="font-size: 10px;">
+                            <thead>
+                                <tr style="background-color:#1B2040; color:white;">
+                                    <th style="white-space:nowrap;">Date</th>
+                                    <th>Day</th>
+                                    <th>Post</th>
+                                    <th>Site</th>
+                                    <th>Shift</th>
+                                    <th>Start</th>
+                                    <th>End</th>
+                                    <th>Guard</th>
+                                    <th>Grade</th>
+                                    <th>State</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="days" t-value="['Mon','Tue','Wed','Thu','Fri','Sat','Sun']"/>
+                                <t t-foreach="doc.slot_ids.sorted(lambda s: (s.shift_date or '', s.site_id.name or '', s.post_id.name or ''))" t-as="slot">
+                                    <t t-set="is_odd" t-value="slot_index % 2 != 0"/>
+                                    <tr t-att-style="'background-color:#F0F2F7;' if is_odd else ''">
+                                        <td style="white-space:nowrap;">
+                                            <span t-field="slot.shift_date"/>
+                                        </td>
+                                        <td>
+                                            <t t-if="slot.shift_date">
+                                                <t t-esc="days[slot.shift_date.weekday()]"/>
+                                            </t>
+                                        </td>
+                                        <td><span t-field="slot.post_id"/></td>
+                                        <td><span t-field="slot.site_id"/></td>
+                                        <td><span t-field="slot.shift_template_id"/></td>
+                                        <td>
+                                            <t t-if="slot.shift_template_id">
+                                                <t t-set="sh" t-value="int(slot.shift_template_id.start_hour)"/>
+                                                <t t-set="sm" t-value="int(round((slot.shift_template_id.start_hour - sh) * 60))"/>
+                                                <t t-esc="'%02d:%02d' % (sh, sm)"/>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="slot.shift_template_id">
+                                                <t t-set="eh" t-value="int(slot.shift_template_id.end_hour)"/>
+                                                <t t-set="em" t-value="int(round((slot.shift_template_id.end_hour - eh) * 60))"/>
+                                                <t t-esc="'%02d:%02d' % (eh, em)"/>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="slot.employee_id">
+                                                <span t-field="slot.employee_id"/>
+                                            </t>
+                                            <t t-else="">
+                                                <em style="color:#9CA3AF;">Vacant</em>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="slot.employee_id and slot.employee_id.security_grade_id">
+                                                <span t-field="slot.employee_id.security_grade_id"/>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-set="state_colors" t-value="{
+                                                'draft': '#64748B',
+                                                'assigned': '#1D4ED8',
+                                                'confirmed': '#166534',
+                                                'cancelled': '#991B1B'
+                                            }"/>
+                                            <span t-field="slot.state"
+                                                  t-options='{"widget": "selection"}'
+                                                  t-att-style="'color:%s; font-weight:bold;' % state_colors.get(slot.state, '#333')"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Guard Summary -->
+                        <div style="page-break-before: always;"/>
+                        <h3 style="color:#1B2040; font-size:12px; text-transform:uppercase;
+                                   border-bottom:1px solid #1B2040; padding-bottom:4px; margin-bottom:8px;">
+                            Guard Assignment Summary
+                        </h3>
+                        <table class="table table-sm o_main_table" style="font-size: 10px;">
+                            <thead>
+                                <tr style="background-color:#1B2040; color:white;">
+                                    <th>Guard</th>
+                                    <th class="text-end">Total Slots</th>
+                                    <th class="text-end">Draft</th>
+                                    <th class="text-end">Assigned</th>
+                                    <th class="text-end">Confirmed</th>
+                                    <th class="text-end">Cancelled</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="guard_slots" t-value="doc.slot_ids.filtered(lambda s: s.employee_id)"/>
+                                <t t-set="guards" t-value="guard_slots.mapped('employee_id')"/>
+                                <t t-foreach="guards.sorted('name')" t-as="guard">
+                                    <t t-set="g_slots" t-value="doc.slot_ids.filtered(lambda s: s.employee_id == guard)"/>
+                                    <t t-set="is_odd2" t-value="guard_index % 2 != 0"/>
+                                    <tr t-att-style="'background-color:#F0F2F7;' if is_odd2 else ''">
+                                        <td><span t-field="guard.name"/></td>
+                                        <td class="text-end"><t t-esc="len(g_slots)"/></td>
+                                        <td class="text-end">
+                                            <t t-esc="len(g_slots.filtered(lambda s: s.state == 'draft'))"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="len(g_slots.filtered(lambda s: s.state == 'assigned'))"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="len(g_slots.filtered(lambda s: s.state == 'confirmed'))"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="len(g_slots.filtered(lambda s: s.state == 'cancelled'))"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-set="vacant_count" t-value="len(doc.slot_ids.filtered(lambda s: not s.employee_id))"/>
+                                <t t-if="vacant_count">
+                                    <tr style="color:#991B1B; font-style:italic;">
+                                        <td>Vacant Slots</td>
+                                        <td class="text-end"><t t-esc="vacant_count"/></td>
+                                        <td class="text-end">—</td>
+                                        <td class="text-end">—</td>
+                                        <td class="text-end">—</td>
+                                        <td class="text-end">—</td>
+                                    </tr>
+                                </t>
+                                <!-- Totals -->
+                                <tr style="background-color:#F5A523; color:#1B2040; font-weight:bold;">
+                                    <td>TOTAL</td>
+                                    <td class="text-end"><t t-esc="len(doc.slot_ids)"/></td>
+                                    <td class="text-end">
+                                        <t t-esc="len(doc.slot_ids.filtered(lambda s: s.state == 'draft'))"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <t t-esc="len(doc.slot_ids.filtered(lambda s: s.state == 'assigned'))"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <t t-esc="len(doc.slot_ids.filtered(lambda s: s.state == 'confirmed'))"/>
+                                    </td>
+                                    <td class="text-end">
+                                        <t t-esc="len(doc.slot_ids.filtered(lambda s: s.state == 'cancelled'))"/>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Footer -->
+                        <div style="margin-top:30px; border-top:1px solid #CBD5E1; padding-top:8px;
+                                    text-align:center; color:#94A3B8; font-size:9px;">
+                            This roster is confidential — DogForce Security Services
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- ─── Attendance Record PDF Report ────────────────────────────────────── -->
+    <record id="action_report_security_attendance_records" model="ir.actions.report">
+        <field name="name">Attendance Records</field>
+        <field name="model">security.attendance.record</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_client_reports.report_attendance_records</field>
+        <field name="report_file">security_client_reports.report_attendance_records</field>
+        <field name="binding_model_id" ref="security_attendance.model_security_attendance_record"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_a4"/>
+    </record>
+
+    <template id="report_attendance_records">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <!-- Branding Header -->
+                    <div style="border-bottom:3px solid #1B2040; margin-bottom:14px; padding-bottom:8px;">
+                        <table width="100%">
+                            <tr>
+                                <td style="vertical-align:middle;">
+                                    <h1 style="margin:0; color:#1B2040; font-size:18px; font-weight:bold;">
+                                        DogForce Security Services
+                                    </h1>
+                                    <p style="margin:2px 0 0; color:#64748B; font-size:10px;">
+                                        Professional Security Solutions
+                                    </p>
+                                </td>
+                                <td style="text-align:right; vertical-align:middle;">
+                                    <h2 style="margin:0; color:#1B2040; font-size:14px; text-transform:uppercase; letter-spacing:1px;">
+                                        Attendance Records
+                                    </h2>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <!-- Attendance Table -->
+                    <table class="table table-sm o_main_table" style="font-size:10px;">
+                        <thead>
+                            <tr style="background-color:#1B2040; color:white;">
+                                <th>Date</th>
+                                <th>Guard</th>
+                                <th>Site</th>
+                                <th>Post</th>
+                                <th>Shift</th>
+                                <th>Check-In</th>
+                                <th>Check-Out</th>
+                                <th>Status</th>
+                                <th class="text-end">Worked h</th>
+                                <th class="text-end">Normal h</th>
+                                <th class="text-end">Night h</th>
+                                <th class="text-end">OT h</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs.sorted('shift_date')" t-as="rec">
+                                <t t-set="is_odd" t-value="rec_index % 2 != 0"/>
+                                <t t-set="status_colors" t-value="{
+                                    'present': '#166534',
+                                    'late': '#854D0E',
+                                    'early_leave': '#854D0E',
+                                    'absent': '#991B1B',
+                                    'awol': '#6B21A8',
+                                    'incomplete': '#9A3412'
+                                }"/>
+                                <tr t-att-style="'background-color:#F0F2F7;' if is_odd else ''">
+                                    <td style="white-space:nowrap;"><span t-field="rec.shift_date"/></td>
+                                    <td><span t-field="rec.employee_id"/></td>
+                                    <td><span t-field="rec.site_id"/></td>
+                                    <td><span t-field="rec.post_id"/></td>
+                                    <td><span t-field="rec.shift_template_id"/></td>
+                                    <td style="white-space:nowrap;">
+                                        <t t-if="rec.check_in">
+                                            <t t-esc="rec.check_in.strftime('%H:%M')"/>
+                                        </t>
+                                    </td>
+                                    <td style="white-space:nowrap;">
+                                        <t t-if="rec.check_out">
+                                            <t t-esc="rec.check_out.strftime('%H:%M')"/>
+                                        </t>
+                                    </td>
+                                    <td>
+                                        <span t-field="rec.status"
+                                              t-options='{"widget": "selection"}'
+                                              t-att-style="'color:%s; font-weight:bold;' % status_colors.get(rec.status, '#333')"/>
+                                    </td>
+                                    <td class="text-end"><t t-esc="'%.2f' % (rec.worked_hours or 0.0)"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % (rec.normal_hours or 0.0)"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % (rec.night_hours or 0.0)"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % (rec.overtime_hours or 0.0)"/></td>
+                                </tr>
+                            </t>
+                        </tbody>
+                        <tfoot>
+                            <tr style="background-color:#F5A523; color:#1B2040; font-weight:bold;">
+                                <td colspan="8">TOTAL</td>
+                                <td class="text-end">
+                                    <t t-esc="'%.2f' % sum(docs.mapped('worked_hours'))"/>
+                                </td>
+                                <td class="text-end">
+                                    <t t-esc="'%.2f' % sum(docs.mapped('normal_hours'))"/>
+                                </td>
+                                <td class="text-end">
+                                    <t t-esc="'%.2f' % sum(docs.mapped('night_hours'))"/>
+                                </td>
+                                <td class="text-end">
+                                    <t t-esc="'%.2f' % sum(docs.mapped('overtime_hours'))"/>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <!-- Footer -->
+                    <div style="margin-top:24px; border-top:1px solid #CBD5E1; padding-top:8px;
+                                text-align:center; color:#94A3B8; font-size:9px;">
+                        This report is confidential — DogForce Security Services
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- ─── Billing Invoice PDF (standalone QWeb) ────────────────────────────── -->
+    <record id="action_report_security_billing_invoice" model="ir.actions.report">
+        <field name="name">Billing Invoice</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_client_reports.report_billing_invoice</field>
+        <field name="report_file">security_client_reports.report_billing_invoice</field>
+        <field name="binding_model_id" ref="security_billing.model_security_billing_invoice"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="base.paperformat_a4"/>
+    </record>
+
+    <template id="report_billing_invoice">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <!-- Branding Header -->
+                        <div style="border-bottom:3px solid #1B2040; margin-bottom:16px; padding-bottom:10px;">
+                            <table width="100%">
+                                <tr>
+                                    <td style="vertical-align:middle;">
+                                        <h1 style="margin:0; color:#1B2040; font-size:20px; font-weight:bold;">
+                                            DogForce Security Services
+                                        </h1>
+                                        <p style="margin:2px 0 0; color:#64748B; font-size:10px;">
+                                            Professional Security Solutions
+                                        </p>
+                                    </td>
+                                    <td style="text-align:right; vertical-align:middle;">
+                                        <h2 style="margin:0; color:#1B2040; font-size:15px; text-transform:uppercase; letter-spacing:1px;">
+                                            SECURITY INVOICE
+                                        </h2>
+                                        <p style="margin:4px 0 0; color:#F5A523; font-weight:bold; font-size:13px;">
+                                            <span t-field="doc.name"/>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Invoice Meta -->
+                        <table class="table table-sm" style="margin-bottom:16px; font-size:11px;">
+                            <tbody>
+                                <tr>
+                                    <td style="width:18%; font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Bill To</td>
+                                    <td style="width:32%;"><span t-field="doc.partner_id"/></td>
+                                    <td style="width:18%; font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Invoice Date</td>
+                                    <td><span t-field="doc.invoice_date"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Site</td>
+                                    <td><span t-field="doc.site_id"/></td>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Due Date</td>
+                                    <td><span t-field="doc.due_date"/></td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Service Period</td>
+                                    <td>
+                                        <span t-field="doc.service_date_from"/> &amp;ndash;
+                                        <span t-field="doc.service_date_to"/>
+                                    </td>
+                                    <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Status</td>
+                                    <td>
+                                        <span t-field="doc.state"
+                                              t-options='{"widget": "selection"}'
+                                              style="font-weight:bold; text-transform:uppercase;"/>
+                                    </td>
+                                </tr>
+                                <t t-if="doc.contract_id">
+                                    <tr>
+                                        <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">Contract</td>
+                                        <td colspan="3"><span t-field="doc.contract_id"/></td>
+                                    </tr>
+                                </t>
+                                <t t-if="doc.po_number">
+                                    <tr>
+                                        <td style="font-weight:bold; background-color:#F0F2F7; color:#1B2040;">PO Number</td>
+                                        <td colspan="3"><span t-field="doc.po_number"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Line Items -->
+                        <h3 style="color:#1B2040; font-size:12px; text-transform:uppercase;
+                                   border-bottom:1px solid #1B2040; padding-bottom:4px; margin-bottom:8px;">
+                            Services Rendered
+                        </h3>
+                        <table class="table table-sm o_main_table" style="font-size:11px;">
+                            <thead>
+                                <tr style="background-color:#1B2040; color:white;">
+                                    <th>Description</th>
+                                    <th>Site</th>
+                                    <th>Period From</th>
+                                    <th>Period To</th>
+                                    <th class="text-end">Qty (h)</th>
+                                    <th class="text-end">Unit Rate</th>
+                                    <th class="text-end">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="doc.line_ids" t-as="line">
+                                    <t t-set="is_odd" t-value="line_index % 2 != 0"/>
+                                    <tr t-att-style="'background-color:#F0F2F7;' if is_odd else ''">
+                                        <td><span t-field="line.name"/></td>
+                                        <td><span t-field="line.site_id"/></td>
+                                        <td><span t-field="line.service_date_from"/></td>
+                                        <td><span t-field="line.service_date_to"/></td>
+                                        <td class="text-end">
+                                            <t t-esc="'%.2f' % (line.quantity or 0.0)"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="'%.2f' % (line.unit_price or 0.0)"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <t t-esc="'%.2f' % (line.subtotal or 0.0)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <!-- Totals -->
+                        <table style="width:40%; margin-left:60%; font-size:11px; border-collapse:collapse;">
+                            <tr>
+                                <td style="padding:4px 8px; border:1px solid #CBD5E1;">Subtotal</td>
+                                <td style="padding:4px 8px; border:1px solid #CBD5E1; text-align:right;">
+                                    <t t-esc="'%.2f' % (doc.subtotal_amount or 0.0)"/>
+                                </td>
+                            </tr>
+                            <t t-if="doc.vat_amount">
+                                <tr>
+                                    <td style="padding:4px 8px; border:1px solid #CBD5E1;">VAT</td>
+                                    <td style="padding:4px 8px; border:1px solid #CBD5E1; text-align:right;">
+                                        <t t-esc="'%.2f' % doc.vat_amount"/>
+                                    </td>
+                                </tr>
+                            </t>
+                            <tr style="background-color:#F5A523; color:#1B2040; font-weight:bold;">
+                                <td style="padding:5px 8px; border:1px solid #F5A523;">TOTAL DUE</td>
+                                <td style="padding:5px 8px; border:1px solid #F5A523; text-align:right; font-size:13px;">
+                                    <t t-esc="'%.2f' % (doc.total_amount or 0.0)"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Notes -->
+                        <t t-if="doc.note">
+                            <div style="margin-top:16px; padding:10px; background-color:#F0F2F7;
+                                        border-left:3px solid #1B2040; font-size:10px;">
+                                <strong>Notes:</strong> <span t-field="doc.note"/>
+                            </div>
+                        </t>
+
+                        <!-- Footer -->
+                        <div style="margin-top:30px; border-top:1px solid #CBD5E1; padding-top:8px;
+                                    text-align:center; color:#94A3B8; font-size:9px;">
+                            Thank you for your business — DogForce Security Services
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>

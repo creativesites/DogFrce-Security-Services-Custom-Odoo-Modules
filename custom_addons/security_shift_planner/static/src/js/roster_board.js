@@ -24,9 +24,11 @@ class RosterBoard extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.action = useService("action");
 
         this.state = useState({
             loading: false,
+            autoFilling: false,
             batches: [],
             batchId: null,
             batchDateFrom: null,
@@ -36,16 +38,32 @@ class RosterBoard extends Component {
             posts: [],
             slots: [],
             filterSiteId: null,
+            showGapsOnly: false,
             selectedSlot: null,
             suggestions: [],
             suggestionsLoaded: false,
             loadingSuggestions: false,
-            stats: { assigned: 0, unassigned: 0 },
+            stats: { assigned: 0, unassigned: 0, criticalGaps: 0 },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
+            contextMenu: { visible: false, x: 0, y: 0, slot: null },
+            // Phase 4: drag-and-drop + swap dialog
+            dragOverSlotId: null,
+            swapDialog: { visible: false, slot: null, reason: "" },
+            // Create-batch dialog
+            allSites: [],
+            createDialog: {
+                visible: false,
+                partnerId: null,
+                siteId: null,
+                month: "",
+                year: "",
+                creating: false,
+                error: "",
+            },
         });
 
         onWillStart(async () => {
-            await this.loadBatches();
+            await Promise.all([this.loadBatches(), this.loadAllSites()]);
         });
     }
 
@@ -59,6 +77,16 @@ class RosterBoard extends Component {
             { order: "date_from desc", limit: 50 }
         );
         this.state.batches = batches;
+    }
+
+    async loadAllSites() {
+        const sites = await this.orm.searchRead(
+            "security.client.site",
+            [["active", "=", true]],
+            ["id", "name", "partner_id"],
+            { order: "name" }
+        );
+        this.state.allSites = sites;
     }
 
     async loadBoard() {
@@ -83,7 +111,7 @@ class RosterBoard extends Component {
             [
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning",
+                "fairness_warning", "critical_gap",
             ]
         );
 
@@ -116,6 +144,7 @@ class RosterBoard extends Component {
                 state: s.state,
                 suggestion_count: s.suggestion_count,
                 conflict: !!s.fairness_warning,
+                critical_gap: !!s.critical_gap,
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -138,11 +167,12 @@ class RosterBoard extends Component {
         const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
         this.state.stats.assigned = activeSlots.filter((s) => s.employee_id).length;
         this.state.stats.unassigned = activeSlots.filter((s) => !s.employee_id).length;
+        this.state.stats.criticalGaps = activeSlots.filter((s) => !s.employee_id && s.critical_gap).length;
 
         this.state.loading = false;
     }
 
-    // Reload only the slot data for the current batch (used after assign/unassign)
+    // Reload only the slot data for the current batch (used after assign/unassign/auto-fill)
     async loadSlots(batchId) {
         const slots = await this.orm.searchRead(
             "security.roster.slot",
@@ -150,7 +180,7 @@ class RosterBoard extends Component {
             [
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning",
+                "fairness_warning", "critical_gap",
             ]
         );
 
@@ -181,6 +211,7 @@ class RosterBoard extends Component {
                 state: s.state,
                 suggestion_count: s.suggestion_count,
                 conflict: !!s.fairness_warning,
+                critical_gap: !!s.critical_gap,
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -188,15 +219,20 @@ class RosterBoard extends Component {
         const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
         this.state.stats.assigned = activeSlots.filter((s) => s.employee_id).length;
         this.state.stats.unassigned = activeSlots.filter((s) => !s.employee_id).length;
+        this.state.stats.criticalGaps = activeSlots.filter((s) => !s.employee_id && s.critical_gap).length;
     }
 
     // ─── Computed getters ───────────────────────────────────────────
 
     get visibleSites() {
+        let sites = this.state.sites;
         if (this.state.filterSiteId) {
-            return this.state.sites.filter((s) => s.id === this.state.filterSiteId);
+            sites = sites.filter((s) => s.id === this.state.filterSiteId);
         }
-        return this.state.sites;
+        if (this.state.showGapsOnly) {
+            sites = sites.filter((s) => this._siteHasGap(s.id));
+        }
+        return sites;
     }
 
     get assignmentPercent() {
@@ -212,7 +248,27 @@ class RosterBoard extends Component {
     }
 
     getPostsForSite(siteId) {
-        return this.state.posts.filter((p) => p.site_id === siteId);
+        const posts = this.state.posts.filter((p) => p.site_id === siteId);
+        if (this.state.showGapsOnly) {
+            return posts.filter((p) => this._postHasGap(siteId, p.id));
+        }
+        return posts;
+    }
+
+    _siteHasGap(siteId) {
+        return this.state.slots.some(
+            (s) => s.site_id === siteId && !s.employee_id && s.state !== "cancelled"
+        );
+    }
+
+    _postHasGap(siteId, postId) {
+        return this.state.slots.some(
+            (s) => s.site_id === siteId && s.post_id === postId && !s.employee_id && s.state !== "cancelled"
+        );
+    }
+
+    toggleGapsOnly() {
+        this.state.showGapsOnly = !this.state.showGapsOnly;
     }
 
     getSlotsForCell(siteId, postId, dateStr) {
@@ -231,6 +287,40 @@ class RosterBoard extends Component {
         if (score >= 80) return "#16a34a";
         if (score >= 50) return "#f59e0b";
         return "#ef4444";
+    }
+
+    get createDialogPartners() {
+        const seen = new Set();
+        const partners = [];
+        for (const s of this.state.allSites) {
+            if (s.partner_id && !seen.has(s.partner_id[0])) {
+                seen.add(s.partner_id[0]);
+                partners.push({ id: s.partner_id[0], name: s.partner_id[1] });
+            }
+        }
+        return partners.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    get createDialogSites() {
+        const pid = this.state.createDialog.partnerId;
+        if (!pid) return [];
+        return this.state.allSites.filter((s) => s.partner_id && s.partner_id[0] === pid);
+    }
+
+    get dialogMonthOptions() {
+        return [
+            { value: "01", label: "January" }, { value: "02", label: "February" },
+            { value: "03", label: "March" }, { value: "04", label: "April" },
+            { value: "05", label: "May" }, { value: "06", label: "June" },
+            { value: "07", label: "July" }, { value: "08", label: "August" },
+            { value: "09", label: "September" }, { value: "10", label: "October" },
+            { value: "11", label: "November" }, { value: "12", label: "December" },
+        ];
+    }
+
+    get dialogYearOptions() {
+        const y = new Date().getFullYear();
+        return [String(y - 1), String(y), String(y + 1), String(y + 2)];
     }
 
     // ─── Event handlers ─────────────────────────────────────────────
@@ -256,6 +346,97 @@ class RosterBoard extends Component {
 
     async refreshBoard() {
         await this.loadBoard();
+    }
+
+    openCreateDialog() {
+        const now = new Date();
+        let nextM = now.getMonth() + 2;
+        let nextY = now.getFullYear();
+        if (nextM > 12) { nextM = 1; nextY++; }
+        const dlg = this.state.createDialog;
+        dlg.visible = true;
+        dlg.partnerId = null;
+        dlg.siteId = null;
+        dlg.month = String(nextM).padStart(2, "0");
+        dlg.year = String(nextY);
+        dlg.creating = false;
+        dlg.error = "";
+    }
+
+    closeCreateDialog() {
+        this.state.createDialog.visible = false;
+    }
+
+    onDialogPartnerChange(ev) {
+        const val = parseInt(ev.target.value);
+        this.state.createDialog.partnerId = isNaN(val) ? null : val;
+        this.state.createDialog.siteId = null;
+        this.state.createDialog.error = "";
+    }
+
+    onDialogSiteChange(ev) {
+        const val = parseInt(ev.target.value);
+        this.state.createDialog.siteId = isNaN(val) ? null : val;
+    }
+
+    onDialogMonthChange(ev) { this.state.createDialog.month = ev.target.value; }
+    onDialogYearChange(ev)  { this.state.createDialog.year  = ev.target.value; }
+
+    async confirmCreateBatch() {
+        const dlg = this.state.createDialog;
+        if (!dlg.partnerId) { dlg.error = "Please select a client."; return; }
+        if (!dlg.month || !dlg.year) { dlg.error = "Please select a month and year."; return; }
+        const y = parseInt(dlg.year);
+        const m = parseInt(dlg.month);
+        const dateFrom = `${y}-${String(m).padStart(2, "0")}-01`;
+        const lastDay = new Date(y, m, 0).getDate();
+        const dateTo = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+        dlg.creating = true;
+        dlg.error = "";
+        try {
+            const result = await this.orm.call(
+                "security.roster.batch",
+                "action_quick_create_batch",
+                [],
+                { partner_id: dlg.partnerId, site_id: dlg.siteId || false, date_from: dateFrom, date_to: dateTo }
+            );
+            dlg.visible = false;
+            await this.loadBatches();
+            this.state.batchId = result.batch_id;
+            await this.loadBoard();
+            this.notification.add(
+                `Roster created: ${result.batch_name} (${result.slot_count} slot${result.slot_count !== 1 ? "s" : ""})`,
+                { type: "success" }
+            );
+        } catch (e) {
+            dlg.error = e.message || "Failed to create roster. Ensure shift requirements are configured for this site.";
+            dlg.creating = false;
+        }
+    }
+
+    async autoFillSlots() {
+        if (!this.state.batchId || this.state.autoFilling) return;
+        this.state.autoFilling = true;
+        try {
+            const result = await this.orm.call(
+                "security.roster.batch",
+                "action_auto_fill_slots",
+                [[this.state.batchId]]
+            );
+            // Reload board so critical-gap cells and assignments are reflected
+            await this.loadBoard();
+            if (result && result.params) {
+                this.notification.add(result.params.message || "Auto-fill complete.", {
+                    title: result.params.title || "Auto-Fill",
+                    type: result.params.type || "success",
+                    sticky: !!result.params.sticky,
+                });
+            }
+        } catch (e) {
+            this.notification.add("Auto-fill failed: " + (e.message || e), { type: "danger" });
+        } finally {
+            this.state.autoFilling = false;
+        }
     }
 
     selectSlot(slot) {
@@ -383,6 +564,133 @@ class RosterBoard extends Component {
             this.notification.add("Guard unassigned.", { type: "info" });
         } catch (e) {
             this.notification.add("Unassign failed: " + (e.message || e), { type: "danger" });
+        }
+    }
+
+    // ─── Context menu ───────────────────────────────────────────────
+
+    onSlotContextMenu(slot, ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.state.contextMenu = { visible: true, x: ev.clientX, y: ev.clientY, slot };
+    }
+
+    closeContextMenu() {
+        this.state.contextMenu = { visible: false, x: 0, y: 0, slot: null };
+    }
+
+    async contextMenuSuggest() {
+        const slot = this.state.contextMenu.slot;
+        this.closeContextMenu();
+        this.selectSlot(slot);
+        await this.loadSuggestions();
+    }
+
+    async contextMenuUnassign() {
+        const slot = this.state.contextMenu.slot;
+        this.closeContextMenu();
+        this.state.selectedSlot = slot;
+        await this.unassignSlot();
+    }
+
+    contextMenuViewGuard() {
+        const slot = this.state.contextMenu.slot;
+        this.closeContextMenu();
+        if (!slot || !slot.employee_id) return;
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "hr.employee",
+            res_id: slot.employee_id,
+            views: [[false, "form"]],
+            target: "new",
+        });
+    }
+
+    openSwapDialog(slot) {
+        this.closeContextMenu();
+        this.state.swapDialog = { visible: true, slot, reason: "" };
+    }
+
+    closeSwapDialog() {
+        this.state.swapDialog = { visible: false, slot: null, reason: "" };
+    }
+
+    async confirmSwap() {
+        const { slot, reason } = this.state.swapDialog;
+        if (!slot) return;
+        this.closeSwapDialog();
+        try {
+            if (reason) {
+                await this.orm.call(
+                    "security.roster.slot",
+                    "action_log_override",
+                    [[slot.id], reason]
+                );
+            }
+            await this.orm.write("security.roster.slot", [slot.id], {
+                employee_id: false,
+                state: "draft",
+            });
+            await this.loadSlots(this.state.batchId);
+            const updated = this.state.slots.find((s) => s.id === slot.id);
+            if (updated) this.selectSlot(updated);
+            this.notification.add(
+                "Guard removed. Pick a replacement from the suggestions panel.",
+                { type: "info" }
+            );
+        } catch (e) {
+            this.notification.add("Swap failed: " + (e.message || e), { type: "danger" });
+        }
+    }
+
+    // ─── Drag-and-drop ──────────────────────────────────────────────
+
+    onDragStartSuggestion(sug, ev) {
+        ev.dataTransfer.setData(
+            "application/json",
+            JSON.stringify({ employee_id: sug.employee_id, employee_name: sug.employee_name })
+        );
+        ev.dataTransfer.effectAllowed = "move";
+    }
+
+    onDragOverSlot(slot, ev) {
+        if (slot.state === "cancelled" || slot.employee_id) return;
+        ev.preventDefault();
+        this.state.dragOverSlotId = slot.id;
+        ev.dataTransfer.dropEffect = "move";
+    }
+
+    onDragLeaveSlot() {
+        this.state.dragOverSlotId = null;
+    }
+
+    async onDropSlot(slot, ev) {
+        ev.preventDefault();
+        this.state.dragOverSlotId = null;
+        if (slot.state === "cancelled" || slot.employee_id) return;
+        let data;
+        try {
+            data = JSON.parse(ev.dataTransfer.getData("application/json"));
+        } catch {
+            return;
+        }
+        if (!data || !data.employee_id) return;
+        try {
+            await this.orm.write("security.roster.slot", [slot.id], {
+                employee_id: data.employee_id,
+                state: "assigned",
+                critical_gap: false,
+            });
+            await this.loadSlots(this.state.batchId);
+            this.notification.add(
+                `${data.employee_name} assigned to ${slot.post_name}.`,
+                { type: "success" }
+            );
+        } catch (e) {
+            this.notification.add(
+                "Drop assignment failed: " + (e.message || e),
+                { type: "danger" }
+            );
         }
     }
 

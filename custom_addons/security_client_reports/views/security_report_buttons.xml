@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── Roster Batch Form: Export Excel + Print PDF buttons ─────────────── -->
+    <record id="view_security_roster_batch_form_export_inherit" model="ir.ui.view">
+        <field name="name">security.roster.batch.form.export.inherit</field>
+        <field name="model">security.roster.batch</field>
+        <field name="inherit_id" ref="security_operations.view_security_roster_batch_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[last()]" position="after">
+                <button name="action_open_roster_export_wizard"
+                        type="object"
+                        string="Export Excel"
+                        class="btn-secondary"
+                        invisible="state == 'draft'"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ─── Client Service Report Form: Export Attendance Excel button ───────── -->
+    <record id="view_security_client_service_report_form_export_inherit" model="ir.ui.view">
+        <field name="name">security.client.service.report.form.export.inherit</field>
+        <field name="model">security.client.service.report</field>
+        <field name="inherit_id" ref="security_client_reports.view_security_client_service_report_form"/>
+        <field name="arch" type="xml">
+            <button name="action_export_csv" position="after">
+                <button name="action_export_attendance_excel"
+                        type="object"
+                        string="Export Excel"
+                        class="btn-secondary"
+                        invisible="state == 'draft'"/>
+            </button>
+        </field>
+    </record>
+
+    <!-- ─── Billing Invoice Form: Export Excel button ────────────────────────── -->
+    <record id="view_security_billing_invoice_form_export_inherit" model="ir.ui.view">
+        <field name="name">security.billing.invoice.form.export.inherit</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[last()]" position="after">
+                <button name="action_open_billing_export_wizard"
+                        type="object"
+                        string="Export Excel"
+                        class="btn-secondary"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

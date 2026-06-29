@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_security_zra_bulk_submit_form" model="ir.ui.view">
+        <field name="name">security.zra.bulk.submit.form</field>
+        <field name="model">security.zra.bulk.submit</field>
+        <field name="arch" type="xml">
+            <form string="Bulk Submit to ZRA">
+                <sheet>
+                    <div class="alert alert-info" role="alert" invisible="result_log">
+                        Select invoices below and click <strong>Submit to ZRA</strong>.
+                        Only invoices that have not yet been accepted by ZRA are shown.
+                    </div>
+                    <field name="invoice_ids" widget="many2many_list">
+                        <list>
+                            <field name="name"/>
+                            <field name="partner_id"/>
+                            <field name="invoice_date"/>
+                            <field name="total_amount" string="Total (ZMW)"/>
+                            <field name="zra_state" widget="badge"
+                                   decoration-success="zra_state == 'accepted'"
+                                   decoration-danger="zra_state in ('rejected', 'error')"
+                                   decoration-warning="zra_state == 'pending'"
+                                   decoration-muted="zra_state == 'not_submitted'"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+                    <div invisible="not result_log">
+                        <separator string="Submission Results"/>
+                        <field name="result_log" widget="text" readonly="1"
+                               style="font-family: monospace; font-size: 11px;"/>
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_submit_all" type="object"
+                            string="Submit to ZRA" class="btn-primary"
+                            invisible="result_log"/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_zra_bulk_submit" model="ir.actions.act_window">
+        <field name="name">Bulk Submit to ZRA</field>
+        <field name="res_model">security.zra.bulk.submit</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_zra_bulk_submit"
+              name="Bulk Submit"
+              parent="security_zra_invoice.menu_zra_root"
+              action="action_security_zra_bulk_submit"
+              sequence="15"/>
+
+</odoo>

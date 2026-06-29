@@ -10,7 +10,7 @@ For local setup, see [INSTALL.md](INSTALL.md). For API smoke-test payloads, see 
 
 | Layer | Test type | Tooling | Status |
 |-------|-----------|---------|--------|
-| Odoo models | Unit / integration | Odoo `TransactionCase` | **6 test files** across 4 modules |
+| Odoo models | Unit / integration | Odoo `TransactionCase` | **7 test files** across 5 modules |
 | Odoo HTTP API | Integration | Odoo `HttpCase` (recommended) | Not yet implemented |
 | Mobile TypeScript | Static analysis | `tsc` | Available |
 | Mobile UI | Unit | Jest / React Native Testing Library | Not yet configured |
@@ -27,6 +27,7 @@ For local setup, see [INSTALL.md](INSTALL.md). For API smoke-test payloads, see 
 | `security_attendance` | `tests/test_attendance_scenarios.py` | Present/AWOL/late scenarios, night shift hours, Sunday shift flag |
 | `security_equipment` | `tests/test_equipment.py` | Allocations, damage claims, payroll deduction injection |
 | `security_fleet` | `tests/test_fleet.py` | Inspections, shuttle runs, passenger manifests, odometer, fuel logs |
+| `security_l10n_zm` | `tests/test_zm_payroll.py` | NAPSA cap/no-cap, NHIMA, PAYE deductibility (NAPSA pre-tax), WCF floor, combined statutory scenario |
 
 ---
 
@@ -93,7 +94,7 @@ docker compose -f deploy/docker-compose.yml exec odoo odoo \
 ### Run all modules with tests
 
 ```bash
-./scripts/run-tests.sh security_payroll_core,security_attendance,security_equipment,security_fleet
+./scripts/run-tests.sh security_payroll_core,security_attendance,security_equipment,security_fleet,security_l10n_zm
 ```
 
 ### Run tests after upgrading (module already installed)
@@ -432,10 +433,12 @@ High-priority gaps remaining:
 | Module | Scenarios to automate |
 |--------|----------------------|
 | `security_l10n_na` | PAYE bracket boundaries, SSC cap, Sunday/holiday premium, shift split at midnight |
+| `security_l10n_zm` | 2026 budget bracket update validation (2025 brackets verified; 2026 rule set marked pending budget confirmation) |
 | `security_operations` | Roster eligibility (grade, cert, disqualification, rest rules) |
 | `security_mobile` | Auth, role enforcement, mark/checkin/submit happy paths |
 | `security_loans` | Deduction schedule on payslip |
 | `security_discipline` | Incident → reliability + payslip deduction |
+| `security_zra_invoice` | VSDC submission success/rejection, cancellation payload, retry backoff logic |
 
 ---
 

@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_operations.SiteHub">
+    <div class="sh-root o_action">
+
+        <!-- Loading -->
+        <t t-if="state.loading">
+            <div class="sh-loading d-flex align-items-center justify-content-center h-100 py-5">
+                <div class="spinner-border text-primary me-3" role="status"/>
+                <span class="fs-5 text-muted">Loading Site Hub…</span>
+            </div>
+        </t>
+
+        <!-- No site selected -->
+        <t t-elif="!state.site">
+            <div class="sh-no-site d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="fa fa-map-marker fa-3x mb-3"/>
+                <p class="fs-5">No site selected. Open a Client Site and click <strong>Site Hub</strong>.</p>
+            </div>
+        </t>
+
+        <!-- Main Hub -->
+        <t t-else="">
+            <!-- Header bar -->
+            <div class="sh-header d-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-white">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="fa fa-building-o fs-4" style="color: var(--df-navy);"/>
+                    <div>
+                        <h4 class="mb-0 fw-bold"><t t-esc="state.site.name"/></h4>
+                        <small class="text-muted">
+                            <t t-esc="state.site.partner_id[1]"/>
+                            <t t-if="state.site.location"> · <t t-esc="state.site.location"/></t>
+                        </small>
+                    </div>
+                </div>
+                <button class="btn btn-outline-secondary btn-sm" t-on-click="openSiteForm">
+                    <i class="fa fa-pencil me-1"/> Edit Site
+                </button>
+            </div>
+
+            <!-- Tab bar -->
+            <div class="sh-tabs nav nav-tabs px-4 bg-light border-bottom">
+                <button class="nav-link" t-att-class="state.activeTab === 'overview' ? 'active' : ''"
+                        t-on-click="() => this.setTab('overview')">
+                    <i class="fa fa-tachometer me-1"/> Overview
+                </button>
+                <button class="nav-link" t-att-class="state.activeTab === 'calendar' ? 'active' : ''"
+                        t-on-click="() => this.setTab('calendar')">
+                    <i class="fa fa-calendar me-1"/> Calendar
+                </button>
+                <button class="nav-link" t-att-class="state.activeTab === 'guards' ? 'active' : ''"
+                        t-on-click="() => this.setTab('guards')">
+                    <i class="fa fa-users me-1"/> Guards
+                    <span class="badge bg-secondary ms-1"><t t-esc="state.guards.length"/></span>
+                </button>
+                <button class="nav-link" t-att-class="state.activeTab === 'requirements' ? 'active' : ''"
+                        t-on-click="() => this.setTab('requirements')">
+                    <i class="fa fa-list me-1"/> Requirements
+                    <span class="badge bg-secondary ms-1"><t t-esc="state.requirements.length"/></span>
+                </button>
+            </div>
+
+            <!-- Tab content -->
+            <div class="sh-content p-4">
+
+                <!-- ── OVERVIEW ── -->
+                <t t-if="state.activeTab === 'overview'">
+                    <div class="row g-4">
+                        <!-- Today's Coverage card -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted text-uppercase small fw-bold">Today's Coverage</h6>
+                                    <div class="d-flex align-items-end gap-2 mb-2">
+                                        <span class="fs-2 fw-bold"
+                                              t-att-class="state.site.site_coverage_today >= 100 ? 'text-success' : state.site.site_coverage_today >= 50 ? 'text-warning' : 'text-danger'">
+                                            <t t-esc="Math.round(state.site.site_coverage_today)"/>%
+                                        </span>
+                                        <span class="text-muted mb-1">of slots filled</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar"
+                                             t-att-class="state.site.site_coverage_today >= 100 ? 'bg-success' : state.site.site_coverage_today >= 50 ? 'bg-warning' : 'bg-danger'"
+                                             t-att-style="'width:' + Math.min(state.site.site_coverage_today, 100) + '%'"/>
+                                    </div>
+                                    <t t-if="state.site.site_coverage_today &lt; 50">
+                                        <div class="mt-2 small text-danger fw-semibold">
+                                            <i class="fa fa-exclamation-triangle me-1"/>Critical — gaps detected
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Month Coverage card -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted text-uppercase small fw-bold">Month-to-Date Coverage</h6>
+                                    <div class="d-flex align-items-end gap-2 mb-2">
+                                        <span class="fs-2 fw-bold"
+                                              t-att-class="state.site.site_coverage_month >= 95 ? 'text-success' : state.site.site_coverage_month >= 75 ? 'text-warning' : 'text-danger'">
+                                            <t t-esc="Math.round(state.site.site_coverage_month)"/>%
+                                        </span>
+                                        <span class="text-muted mb-1">of slots filled</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar"
+                                             t-att-class="state.site.site_coverage_month >= 95 ? 'bg-success' : state.site.site_coverage_month >= 75 ? 'bg-warning' : 'bg-danger'"
+                                             t-att-style="'width:' + Math.min(state.site.site_coverage_month, 100) + '%'"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Site Details card -->
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h6 class="card-title text-muted text-uppercase small fw-bold">Site Details</h6>
+                                    <dl class="mb-0">
+                                        <dt class="small text-muted">Client</dt>
+                                        <dd><t t-esc="state.site.partner_id[1]"/></dd>
+                                        <dt class="small text-muted">Location</dt>
+                                        <dd><t t-esc="state.site.location || '—'"/></dd>
+                                        <dt class="small text-muted">Supervisor</dt>
+                                        <dd><t t-esc="state.site.supervisor_id ? state.site.supervisor_id[1] : '—'"/></dd>
+                                        <dt class="small text-muted">Posts</dt>
+                                        <dd><t t-esc="state.site.post_ids ? state.site.post_ids.length : 0"/> post positions</dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick links -->
+                        <div class="col-12">
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-outline-primary btn-sm" t-on-click="() => this.setTab('calendar')">
+                                    <i class="fa fa-calendar me-1"/> View Calendar
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.setTab('guards')">
+                                    <i class="fa fa-users me-1"/> View Guards
+                                </button>
+                                <button class="btn btn-outline-secondary btn-sm" t-on-click="() => this.setTab('requirements')">
+                                    <i class="fa fa-list me-1"/> View Requirements
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ── CALENDAR ── -->
+                <t t-if="state.activeTab === 'calendar'">
+                    <!-- Month navigation + Gaps Only toggle -->
+                    <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="prevMonth">
+                                <i class="fa fa-chevron-left"/>
+                            </button>
+                            <h5 class="mb-0 fw-semibold" style="min-width: 160px; text-align: center;">
+                                <t t-esc="monthLabel"/>
+                            </h5>
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="nextMonth">
+                                <i class="fa fa-chevron-right"/>
+                            </button>
+                        </div>
+                        <button
+                            class="btn btn-sm sh-gaps-only-btn"
+                            t-att-class="state.gapsOnly ? 'btn-outline-secondary active' : 'btn-outline-secondary'"
+                            t-on-click="toggleGapsOnly"
+                            title="Show only days with unfilled slots">
+                            <i class="fa fa-exclamation-triangle me-1"/>
+                            Gaps Only
+                            <t t-if="state.gapsOnly">
+                                <span class="ms-1 badge" style="background: var(--df-amber); color: #1B2040;">ON</span>
+                            </t>
+                        </button>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="d-flex gap-3 mb-3 flex-wrap small text-muted">
+                        <span><span class="sh-legend sh-legend-full"/>  All filled</span>
+                        <span><span class="sh-legend sh-legend-partial"/>  Partially filled</span>
+                        <span><span class="sh-legend sh-legend-none"/>  Unassigned</span>
+                        <span><span class="sh-legend sh-legend-empty"/>  No slots</span>
+                    </div>
+
+                    <t t-if="!state.calendarData">
+                        <div class="text-center text-muted py-4">
+                            <div class="spinner-border spinner-border-sm me-2"/>Loading calendar…
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div t-att-class="state.gapsOnly ? 'sh-calendar sh-gaps-only' : 'sh-calendar'">
+                            <!-- Day name header -->
+                            <div class="sh-cal-header">
+                                <t t-foreach="['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" t-as="dname" t-key="dname">
+                                    <div class="sh-cal-dayname"><t t-esc="dname"/></div>
+                                </t>
+                            </div>
+                            <!-- Weeks -->
+                            <t t-foreach="calendarGrid" t-as="week" t-key="week_index">
+                                <div class="sh-cal-week">
+                                    <t t-foreach="week" t-as="cell" t-key="cell_index">
+                                        <t t-if="!cell">
+                                            <div class="sh-day sh-day-filler"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div t-att-class="dayClass(cell)"
+                                                 t-on-click="() => this.togglePopover(cell)">
+                                                <span class="sh-day-num"><t t-esc="cell.day"/></span>
+                                                <t t-if="cell.data">
+                                                    <span class="sh-day-count">
+                                                        <t t-esc="cell.data.assigned"/>/<t t-esc="cell.data.total"/>
+                                                    </span>
+                                                    <!-- Mini coverage bar -->
+                                                    <t t-if="cell.data.total > 0">
+                                                        <div class="sh-day-bar-wrap">
+                                                            <div class="sh-day-bar-fill"
+                                                                 t-att-style="'width:' + coveragePct(cell) + '%'"/>
+                                                        </div>
+                                                    </t>
+                                                </t>
+                                                <!-- Popover -->
+                                                <t t-if="state.activePopoverDay === cell.key and cell.data">
+                                                    <div class="sh-popover shadow" t-on-click.stop="">
+                                                        <div class="sh-popover-header d-flex justify-content-between align-items-center">
+                                                            <strong><t t-esc="cell.key"/></strong>
+                                                            <button class="btn-close btn-close-white btn-sm" t-on-click="closePopover"/>
+                                                        </div>
+                                                        <t t-foreach="cell.data.slots" t-as="slot" t-key="slot.id">
+                                                            <div class="sh-popover-slot d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <div class="fw-semibold small"><t t-esc="slot.shift || slot.post || 'Shift'"/></div>
+                                                                    <div class="text-muted x-small">
+                                                                        <t t-if="slot.guard">
+                                                                            <i class="fa fa-user me-1"/><t t-esc="slot.guard"/>
+                                                                        </t>
+                                                                        <t t-else="">
+                                                                            <span class="text-danger"><i class="fa fa-exclamation-triangle me-1"/>Unassigned</span>
+                                                                        </t>
+                                                                    </div>
+                                                                </div>
+                                                                <button class="btn btn-outline-secondary btn-xs py-0 px-1 ms-2"
+                                                                        t-on-click="() => this.openSlotForm(slot.id)">
+                                                                    <i class="fa fa-external-link"/>
+                                                                </button>
+                                                            </div>
+                                                        </t>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- ── GUARDS ── -->
+                <t t-if="state.activeTab === 'guards'">
+                    <t t-if="state.guards.length === 0">
+                        <div class="text-center text-muted py-5">
+                            <i class="fa fa-user-times fa-2x mb-3 d-block"/>
+                            No guards currently assigned to this site.
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Guard</th>
+                                    <th>Post</th>
+                                    <th>Shift</th>
+                                    <th>Last Seen</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.guards" t-as="g" t-key="g.id">
+                                    <tr>
+                                        <td class="fw-semibold"><t t-esc="g.employee_id[1]"/></td>
+                                        <td class="text-muted small"><t t-esc="g.post_id ? g.post_id[1] : '—'"/></td>
+                                        <td class="text-muted small"><t t-esc="g.shift_template_id ? g.shift_template_id[1] : '—'"/></td>
+                                        <td class="text-muted small"><t t-esc="g.shift_date"/></td>
+                                        <td>
+                                            <span t-att-class="g.state === 'confirmed' ? 'badge bg-success' : g.state === 'assigned' ? 'badge bg-info' : 'badge bg-secondary'">
+                                                <t t-esc="g.state"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </t>
+
+                <!-- ── REQUIREMENTS ── -->
+                <t t-if="state.activeTab === 'requirements'">
+                    <t t-if="state.requirements.length === 0">
+                        <div class="text-center text-muted py-5">
+                            <i class="fa fa-list fa-2x mb-3 d-block"/>
+                            No active shift requirements for this site.
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="table table-sm table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Post</th>
+                                    <th>Shift</th>
+                                    <th>Guards</th>
+                                    <th>Bill Rate (N$)</th>
+                                    <th>Pay Rate (N$)</th>
+                                    <th>Multiplier</th>
+                                    <th>Preferred Guard</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.requirements" t-as="r" t-key="r.id">
+                                    <tr>
+                                        <td class="fw-semibold"><t t-esc="r.post_id ? r.post_id[1] : '—'"/></td>
+                                        <td><t t-esc="r.shift_template_id ? r.shift_template_id[1] : '—'"/></td>
+                                        <td class="text-center"><t t-esc="r.guard_count"/></td>
+                                        <td class="text-end"><t t-esc="r.bill_rate.toFixed(2)"/></td>
+                                        <td class="text-end"><t t-esc="r.pay_rate.toFixed(2)"/></td>
+                                        <td class="text-center">
+                                            <t t-if="r.rate_multiplier !== 1.0">
+                                                <span class="badge bg-warning text-dark">×<t t-esc="r.rate_multiplier"/></span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-muted">—</span>
+                                            </t>
+                                        </td>
+                                        <td class="text-muted small">
+                                            <t t-esc="r.preferred_employee_id ? r.preferred_employee_id[1] : '—'"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </t>
+
+            </div><!-- /sh-content -->
+        </t>
+    </div>
+</t>
+
+</templates>

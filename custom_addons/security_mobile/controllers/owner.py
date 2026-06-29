@@ -49,8 +49,8 @@ class OwnerController(http.Controller):
 
         # ── Attendance KPIs ────────────────────────────────────────────────
         all_records = env["security.attendance.record"].sudo().search([
-            ("batch_id.attendance_date", ">=", period_start),
-            ("batch_id.attendance_date", "<=", period_end),
+            ("attendance_batch_id.attendance_date", ">=", period_start),
+            ("attendance_batch_id.attendance_date", "<=", period_end),
         ])
         total_records  = len(all_records)
         present_count  = len(all_records.filtered(lambda r: r.manual_presence == "present"))
@@ -121,7 +121,7 @@ class OwnerController(http.Controller):
         sites = env["security.client.site"].sudo().search([("active", "=", True)])
         site_rates = []
         for site in sites:
-            site_recs = all_records.filtered(lambda r: r.batch_id.site_id.id == site.id)
+            site_recs = all_records.filtered(lambda r: r.attendance_batch_id.site_id.id == site.id)
             s_total   = len(site_recs)
             s_present = len(site_recs.filtered(lambda r: r.manual_presence == "present"))
             site_rates.append({

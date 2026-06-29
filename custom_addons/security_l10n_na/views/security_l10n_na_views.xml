@@ -63,7 +63,7 @@
                             <field name="ssc_salary_cap"/>
                         </group>
                     </group>
-                    <group string="Premium Rate Multipliers">
+                    <group name="premium_rate_multipliers" string="Premium Rate Multipliers">
                         <group>
                             <field name="sunday_multiplier"/>
                             <field name="public_holiday_multiplier"/>

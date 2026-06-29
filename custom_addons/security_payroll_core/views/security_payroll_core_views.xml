@@ -354,7 +354,7 @@
         <field name="arch" type="xml">
             <xpath expr="//notebook" position="inside">
                 <page string="Payroll &amp; Banking" invisible="not security_guard">
-                    <group string="Namibian Statutory Registration">
+                    <group name="na_statutory_registration" string="Namibian Statutory Registration">
                         <group>
                             <field name="security_ssc_number" placeholder="e.g. 1234567-8"/>
                             <field name="security_tax_number" placeholder="e.g. 9876543-2"/>

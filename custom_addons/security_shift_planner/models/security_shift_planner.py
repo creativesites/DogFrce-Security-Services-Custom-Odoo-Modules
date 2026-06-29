@@ -109,6 +109,158 @@ class SecuritySlotSuggestion(models.Model):
         return None
 
 
+class SecurityRosterBatch(models.Model):
+    _inherit = "security.roster.batch"
+
+    @api.model
+    def action_quick_create_batch(self, partner_id=False, site_id=False, date_from=False, date_to=False):
+        """Create a batch and generate slots in one call — used by the Roster Board create dialog."""
+        vals = {"date_from": date_from, "date_to": date_to}
+        if site_id:
+            vals["site_id"] = site_id
+            site = self.env["security.client.site"].browse(site_id)
+            vals["partner_id"] = site.partner_id.id
+        elif partner_id:
+            vals["partner_id"] = partner_id
+        batch = self.create(vals)
+        batch.action_generate_slots()
+        return {
+            "batch_id": batch.id,
+            "batch_name": batch.name,
+            "slot_count": len(batch.slot_ids),
+        }
+
+    unassigned_count = fields.Integer(
+        compute="_compute_gap_counts",
+        string="Unassigned Slots",
+    )
+    critical_gap_count = fields.Integer(
+        compute="_compute_gap_counts",
+        string="Critical Gaps",
+    )
+    fill_rate = fields.Float(
+        compute="_compute_gap_counts",
+        string="Fill Rate (%)",
+        digits=(5, 1),
+    )
+
+    @api.depends("slot_ids.employee_id", "slot_ids.state", "slot_ids.critical_gap")
+    def _compute_gap_counts(self):
+        for batch in self:
+            active = batch.slot_ids.filtered(lambda s: s.state != "cancelled")
+            unassigned = active.filtered(lambda s: not s.employee_id)
+            batch.unassigned_count = len(unassigned)
+            batch.critical_gap_count = len(unassigned.filtered(lambda s: s.critical_gap))
+            total = len(active)
+            assigned = total - len(unassigned)
+            batch.fill_rate = round(assigned / total * 100, 1) if total else 0.0
+
+    def action_auto_fill_slots(self):
+        """
+        Greedy auto-fill: assigns the highest-scoring eligible guard to each
+        unassigned slot, processing high-value shifts first.
+
+        assigned_today tracks within-run assignments to prevent double-booking.
+
+        NOTE: rest-hour constraints between slots filled in the same run are not
+        enforced here. Add a _is_still_eligible() check after each assignment
+        once rest-hour rules are implemented on SecurityRosterSlot (Phase 2).
+
+        Notification create calls use sudo() to avoid cascading writes if a
+        write listener on security.attendance.record recomputes batch fields and
+        tries to trigger further notifications (no_notify context pattern).
+        """
+        filled = 0
+        gaps = 0
+        for batch in self:
+            unassigned = batch.slot_ids.filtered(
+                lambda s: not s.employee_id and s.state != "cancelled"
+            )
+            # Hardest-to-fill slots first (difficulty = grade requirement + high-value flag),
+            # then by date and shift start time.
+            def _difficulty(s):
+                d = 0
+                if s.high_value_shift:
+                    d += 50
+                if s.post_id and s.post_id.post_type_id and s.post_id.post_type_id.min_grade_id:
+                    d += s.post_id.post_type_id.min_grade_id.sequence * 10
+                return d
+
+            unassigned = unassigned.sorted(
+                key=lambda s: (
+                    -_difficulty(s),
+                    str(s.shift_date) if s.shift_date else "",
+                    s.shift_template_id.start_hour if s.shift_template_id else 0,
+                )
+            )
+            # {shift_date_str: set(employee_id)} — prevents double-booking in this run
+            assigned_today = {}
+            for slot in unassigned:
+                slot.critical_gap = False
+                eligible = slot._get_eligible_guards(slot)
+                if not eligible:
+                    slot.critical_gap = True
+                    gaps += 1
+                    continue
+                # Exclude guards assigned in this run (DB query is already done in
+                # _get_eligible_guards; assigned_today covers intra-run assignments)
+                date_key = str(slot.shift_date)
+                run_assigned = assigned_today.get(date_key, set())
+                eligible = [(emp, sc) for emp, sc in eligible if emp.id not in run_assigned]
+                if not eligible:
+                    slot.critical_gap = True
+                    gaps += 1
+                    continue
+                # Score remaining candidates and assign the best
+                scored = []
+                for employee, _ in eligible:
+                    score, _breakdown = slot._score_guard(slot, employee)
+                    scored.append((score, employee))
+                scored.sort(key=lambda x: x[0], reverse=True)
+                _best_score, best_employee = scored[0]
+                slot.employee_id = best_employee.id
+                slot.state = "assigned"
+                slot.critical_gap = False
+                assigned_today.setdefault(date_key, set()).add(best_employee.id)
+                filled += 1
+            if gaps and "security.notification" in self.env:
+                manager_group = self.env.ref(
+                    "security_base.group_security_manager", raise_if_not_found=False
+                )
+                if manager_group:
+                    manager_users = self.env["res.users"].search(
+                        [("groups_id", "in", [manager_group.id])]
+                    )
+                else:
+                    manager_users = self.env["res.users"].browse()
+                self.env["security.notification"].sudo().create({
+                    "title": f"Auto-Fill: {gaps} Critical Gap(s) — {batch.name}",
+                    "body": (
+                        f"Auto-fill for '{batch.name}' left {gaps} slot(s) unfilled — "
+                        "no eligible guard was available. "
+                        "Review the red cells in the Roster Board and assign manually."
+                    ),
+                    "notification_type": "roster_gap",
+                    "severity": "critical",
+                    "recipient_ids": [(6, 0, manager_users.ids)],
+                    "related_model": "security.roster.batch",
+                    "related_id": batch.id,
+                })
+        msg = f"{filled} slot(s) filled automatically."
+        if gaps:
+            msg += f" {gaps} critical gap(s) could not be filled — review red cells."
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Auto-Fill Complete",
+                "message": msg,
+                "type": "success" if not gaps else "warning",
+                "sticky": gaps > 0,
+            },
+        }
+
+
 class SecurityRosterSlot(models.Model):
     _inherit = "security.roster.slot"
 
@@ -118,6 +270,11 @@ class SecurityRosterSlot(models.Model):
         string="Guard Suggestions",
     )
     suggestion_count = fields.Integer(compute="_compute_suggestion_count")
+    critical_gap = fields.Boolean(
+        default=False,
+        string="Critical Gap",
+        help="Set by auto-fill when no eligible guard was found for this slot.",
+    )
 
     def _compute_suggestion_count(self):
         for slot in self:
@@ -232,6 +389,19 @@ class SecurityRosterSlot(models.Model):
                 ("partner_id", "=", partner_id),
             ]).mapped("employee_id").ids)
 
+        # Pre-fetch fatigue constraints — min rest hours between shifts
+        min_rest_hours = 10.0
+        try:
+            param = self.env["ir.config_parameter"].sudo().get_param(
+                "security.min_rest_hours", "10"
+            )
+            min_rest_hours = float(param)
+        except (TypeError, ValueError):
+            pass
+
+        # For the shift start hour, compute from template
+        target_start_hour = slot.shift_template_id.start_hour if slot.shift_template_id else 0.0
+
         eligible = []
         for employee in all_guards:
             # Guard on leave
@@ -260,6 +430,26 @@ class SecurityRosterSlot(models.Model):
                 expired = employee.get_expired_certification_ids()
                 if required_certs & expired:
                     continue
+
+            # Fatigue check — minimum rest hours between shifts
+            if slot.shift_date and min_rest_hours > 0:
+                look_back_date = slot.shift_date - timedelta(days=2)
+                recent_slot = self.search([
+                    ("employee_id", "=", employee.id),
+                    ("shift_date", ">=", look_back_date),
+                    ("shift_date", "<", slot.shift_date),
+                    ("state", "not in", ("cancelled",)),
+                ], order="shift_date desc, id desc", limit=1)
+                if recent_slot:
+                    last_date = recent_slot.shift_date
+                    last_end_hour = (
+                        recent_slot.shift_template_id.end_hour
+                        if recent_slot.shift_template_id else 8.0
+                    )
+                    days_diff = (slot.shift_date - last_date).days
+                    rest_hours = days_diff * 24 - last_end_hour + target_start_hour
+                    if rest_hours < min_rest_hours:
+                        continue
 
             # Check required documents for the post type
             post_type_for_docs = slot.post_id.post_type_id if slot.post_id and slot.post_id.post_type_id else False
@@ -290,7 +480,7 @@ class SecurityRosterSlot(models.Model):
     def _score_guard(self, slot, employee):
         """Return (score, breakdown_text) for one eligible guard."""
         score = float(employee.security_reliability_score)
-        parts = [f"Reliability: {score:.0f}"]
+        parts = [f"✓ Reliability: {score:.0f}/100"]
 
         # Site familiarity bonus
         attendance_model = self.env["security.attendance.record"]
@@ -305,7 +495,7 @@ class SecurityRosterSlot(models.Model):
             ])
             if familiarity_count > 0:
                 score += 20
-                parts.append(f"+20 site familiarity ({familiarity_count} recent shifts)")
+                parts.append(f"✓ Site familiarity: +20 ({familiarity_count} recent shifts)")
 
         # Grade bonus (guard is better-qualified than minimum)
         if slot.post_id.post_type_id.min_grade_id and employee.security_grade_id:
@@ -313,7 +503,7 @@ class SecurityRosterSlot(models.Model):
             emp_seq = employee.security_grade_id.sequence
             if emp_seq > min_seq:
                 score += 10
-                parts.append("+10 above minimum grade")
+                parts.append("△ Above minimum grade: +10")
 
         # Fairness penalty (shifts already in this batch)
         if slot.batch_id:
@@ -326,7 +516,7 @@ class SecurityRosterSlot(models.Model):
             penalty = min(shifts_this_period * 5, 30)
             if penalty > 0:
                 score -= penalty
-                parts.append(f"-{penalty} fairness ({shifts_this_period} shifts this period)")
+                parts.append(f"⚠ Fairness penalty: -{penalty} ({shifts_this_period} shifts this period)")
 
         # AWOL / absence penalty
         attendance_model_avail = self.env["security.attendance.record"]
@@ -340,6 +530,18 @@ class SecurityRosterSlot(models.Model):
             if awol_count > 0:
                 penalty = min(awol_count * 10, 30)
                 score -= penalty
-                parts.append(f"-{penalty} AWOL in last 30 days ({awol_count}x)")
+                parts.append(f"⚠ AWOL penalty: -{penalty} ({awol_count}x in last 30 days)")
 
-        return max(0.0, score), " | ".join(parts)
+        return max(0.0, score), "\n".join(parts)
+
+    def action_log_override(self, reason):
+        """
+        Record a manual override on the slot: write override_reason and append
+        a timestamped entry to the note field for the full audit trail.
+        """
+        now = fields.Datetime.now()
+        user_name = self.env.user.name
+        for slot in self:
+            slot.override_reason = reason or ""
+            entry = f"[{now.strftime('%Y-%m-%d %H:%M')} UTC] Override by {user_name}: {reason or '(no reason given)'}"
+            slot.note = (slot.note + "\n" + entry).strip() if slot.note else entry

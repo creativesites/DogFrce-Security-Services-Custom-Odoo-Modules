@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="ir_cron_auto_generate_roster_batches" model="ir.cron">
+        <field name="name">Security: Auto-generate Next Month Roster Batches</field>
+        <field name="model_id" ref="model_security_roster_batch"/>
+        <field name="state">code</field>
+        <field name="code">model.action_cron_auto_generate_next_month_batches()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">months</field>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
+        <field name="active">True</field>
+    </record>
+</odoo>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- NHIMA Employer Levy Schedule — QWeb PDF                  -->
+    <!-- Model: security.payroll.period                          -->
+    <!-- Shows employee and employer NHIMA levies (0.5% each)    -->
+    <!-- with no earnings ceiling (full gross applies).          -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_nhima_zm_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="period">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 11px;">
+
+                        <!-- Title block -->
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                                National Health Insurance Management Authority (NHIMA)
+                            </h2>
+                            <h3 style="margin: 4px 0 0 0;">
+                                Employer Monthly Levy Schedule
+                            </h3>
+                        </div>
+
+                        <!-- Header info box -->
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <tr>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Levy Month</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="period.date_from and period.date_from.strftime('%B %Y') or ''"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Employer Name</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="env.company.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Period</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="period.date_from"/> — <t t-esc="period.date_to"/>
+                                </td>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Levy Rate (each)</strong></td>
+                                <td style="padding: 4px 8px;">0.5% employee + 0.5% employer</td>
+                            </tr>
+                        </table>
+
+                        <!-- Employee NHIMA schedule table -->
+                        <t t-set="active_slips" t-value="period.payslip_ids.filtered(lambda p: p.state in ('confirmed', 'paid'))"/>
+
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <thead>
+                                <tr style="background-color: #145A32; color: white;">
+                                    <th style="padding: 5px 6px; text-align: center; width: 4%;">#</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 26%;">Employee Name</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 18%;">NHIMA Member No.</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 16%;">Gross Pay (ZMW)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 16%;">Employee NHIMA (0.5%)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 16%;">Employer NHIMA (0.5%)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 4%;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="active_slips" t-as="slip">
+                                    <t t-set="nhima_lines" t-value="slip.deduction_line_ids.filtered(lambda l: l.code == 'NHIMA')"/>
+                                    <t t-set="employee_nhima" t-value="sum(nhima_lines.mapped('amount'))"/>
+                                    <t t-set="rule_set" t-value="period.rule_set_id"/>
+                                    <t t-set="er_rate" t-value="rule_set and rule_set.employer_nhima_rate or 0.005"/>
+                                    <t t-set="employer_nhima" t-value="round(slip.total_earnings * er_rate, 2)"/>
+                                    <tr>
+                                        <td style="padding: 4px 6px; text-align: center;">
+                                            <t t-esc="slip_index + 1"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.name"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.security_nhima_number or '—'"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % slip.total_earnings"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % employee_nhima"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % employer_nhima"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % (employee_nhima + employer_nhima)"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background-color: #e8e8e8; font-weight: bold;">
+                                    <td style="padding: 5px 6px; text-align: right;" colspan="3">TOTALS</td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(active_slips.mapped('total_earnings'))"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            sum(s.deduction_line_ids.filtered(lambda l: l.code == 'NHIMA').mapped('amount'))
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-set="er_rate_total" t-value="period.rule_set_id and period.rule_set_id.employer_nhima_rate or 0.005"/>
+                                        <t t-esc="'%.2f' % sum(round(s.total_earnings * er_rate_total, 2) for s in active_slips)"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-set="er_rate_sum" t-value="period.rule_set_id and period.rule_set_id.employer_nhima_rate or 0.005"/>
+                                        <t t-esc="'%.2f' % sum(
+                                            sum(s.deduction_line_ids.filtered(lambda l: l.code == 'NHIMA').mapped('amount')) +
+                                            round(s.total_earnings * er_rate_sum, 2)
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Remittance note -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;" border="0">
+                            <tr>
+                                <td style="width: 50%; padding-right: 16px; vertical-align: top;">
+                                    <p style="margin: 0; font-size: 10px; color: #555; font-style: italic;">
+                                        Both employee and employer levies must be remitted to NHIMA
+                                        by the 10th of the following month.<br/>
+                                        Ref: NHIMA Act No. 2 of 2018 (Zambia).<br/>
+                                        No monthly earnings ceiling applies to NHIMA contributions.
+                                    </p>
+                                </td>
+                                <td style="width: 50%; padding-left: 16px; vertical-align: top;">
+                                    <p style="margin: 0;">Authorised Signatory: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Designation: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Date: ________________________</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <!-- Report action — bound to security.payroll.period -->
+    <record id="action_report_security_nhima_zm" model="ir.actions.report">
+        <field name="name">NHIMA Levy Schedule (Zambia)</field>
+        <field name="model">security.payroll.period</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_l10n_zm.report_security_nhima_zm_document</field>
+        <field name="report_file">security_l10n_zm.report_security_nhima_zm_document</field>
+        <field name="print_report_name">'NHIMA_Schedule_%s' % (object.name or 'Schedule')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

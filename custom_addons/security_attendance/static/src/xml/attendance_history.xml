@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_attendance.AttendanceHistory" owl="1">
+    <div class="ah-root">
+
+        <!-- ── Header ─────────────────────────────────────────────────── -->
+        <div class="ah-header">
+            <div class="ah-header-left">
+                <span class="ah-header-icon"><i class="fa fa-history"/></span>
+                <div>
+                    <div class="ah-header-title">Attendance History</div>
+                    <div class="ah-header-sub">Guard attendance records and hour breakdowns</div>
+                </div>
+            </div>
+            <button class="ah-btn ah-btn-outline" t-on-click="reload">
+                <i class="fa fa-refresh me-1"/>Refresh
+            </button>
+        </div>
+
+        <!-- ── Filters bar ─────────────────────────────────────────────── -->
+        <div class="ah-filters">
+            <div class="ah-filter-group">
+                <label class="ah-filter-label">Date Range</label>
+                <select class="ah-select" t-att-value="state.filterDate" t-on-change="onFilterDateChange">
+                    <option value="7">Last 7 days</option>
+                    <option value="30">Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="custom">Custom…</option>
+                </select>
+            </div>
+            <t t-if="state.filterDate === 'custom'">
+                <div class="ah-filter-group">
+                    <label class="ah-filter-label">From</label>
+                    <input type="date" class="ah-input" t-att-value="state.dateFrom" t-on-change="onDateFromChange"/>
+                </div>
+                <div class="ah-filter-group">
+                    <label class="ah-filter-label">To</label>
+                    <input type="date" class="ah-input" t-att-value="state.dateTo" t-on-change="onDateToChange"/>
+                </div>
+                <button class="ah-btn ah-btn-navy" t-on-click="applyCustomRange">Apply</button>
+            </t>
+            <div class="ah-filter-group">
+                <label class="ah-filter-label">Site</label>
+                <select class="ah-select" t-att-value="state.filterSite" t-on-change="onSiteChange">
+                    <option value="all">All Sites</option>
+                    <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                        <option t-att-value="String(site.id)" t-esc="site.name"/>
+                    </t>
+                </select>
+            </div>
+            <div class="ah-filter-group">
+                <label class="ah-filter-label">Status</label>
+                <select class="ah-select" t-att-value="state.filterStatus" t-on-change="onStatusChange">
+                    <option value="all">All Statuses</option>
+                    <option value="present">Present</option>
+                    <option value="late">Late</option>
+                    <option value="early_leave">Early Leave</option>
+                    <option value="absent">Absent</option>
+                    <option value="awol">AWOL</option>
+                    <option value="incomplete">Incomplete</option>
+                    <option value="scheduled">Scheduled</option>
+                </select>
+            </div>
+            <div class="ah-search-wrap">
+                <i class="fa fa-search ah-search-icon"/>
+                <input class="ah-input ah-search-input" type="text"
+                    placeholder="Search guard, site, post…"
+                    t-att-value="state.search"
+                    t-on-input="onSearchInput"/>
+            </div>
+        </div>
+
+        <!-- ── Loading ─────────────────────────────────────────────────── -->
+        <t t-if="state.loading">
+            <div class="ah-loading">
+                <i class="fa fa-spinner fa-spin fa-2x"/>
+                <span>Loading attendance records…</span>
+            </div>
+        </t>
+
+        <t t-else="">
+            <!-- ── KPI Strip ──────────────────────────────────────────── -->
+            <div class="ah-kpi-strip">
+                <div class="ah-kpi ah-kpi-total">
+                    <div class="ah-kpi-value" t-esc="kpi.total"/>
+                    <div class="ah-kpi-label">Total</div>
+                </div>
+                <div class="ah-kpi ah-kpi-present">
+                    <div class="ah-kpi-value" t-esc="kpi.present"/>
+                    <div class="ah-kpi-label">Present</div>
+                </div>
+                <div class="ah-kpi ah-kpi-late">
+                    <div class="ah-kpi-value" t-esc="kpi.late"/>
+                    <div class="ah-kpi-label">Late</div>
+                </div>
+                <div class="ah-kpi ah-kpi-absent">
+                    <div class="ah-kpi-value" t-esc="kpi.absent"/>
+                    <div class="ah-kpi-label">Absent</div>
+                </div>
+                <div class="ah-kpi ah-kpi-awol">
+                    <div class="ah-kpi-value" t-esc="kpi.awol"/>
+                    <div class="ah-kpi-label">AWOL</div>
+                </div>
+                <div class="ah-kpi ah-kpi-incomplete">
+                    <div class="ah-kpi-value" t-esc="kpi.incomplete"/>
+                    <div class="ah-kpi-label">Incomplete</div>
+                </div>
+            </div>
+
+            <!-- ── Empty state ────────────────────────────────────────── -->
+            <t t-if="filteredRecords.length === 0">
+                <div class="ah-empty">
+                    <i class="fa fa-folder-open-o fa-3x"/>
+                    <p>No attendance records found for the selected filters.</p>
+                </div>
+            </t>
+
+            <!-- ── Date groups ────────────────────────────────────────── -->
+            <t t-foreach="groupedByDate" t-as="group" t-key="group[0]">
+                <div class="ah-date-group">
+                    <div class="ah-date-header">
+                        <span class="ah-date-label" t-esc="dateLabel(group[0])"/>
+                        <span class="ah-date-count" t-esc="group[1].length + ' records'"/>
+                    </div>
+
+                    <!-- ── Column headers ────────────────────────────── -->
+                    <div class="ah-row ah-row-header">
+                        <div class="ah-col-stripe"/>
+                        <div class="ah-col-avatar"/>
+                        <div class="ah-col-guard">Guard</div>
+                        <div class="ah-col-times">Scheduled / Actual</div>
+                        <div class="ah-col-hours">Hours</div>
+                        <div class="ah-col-status">Status</div>
+                        <div class="ah-col-flags">Flags</div>
+                        <div class="ah-col-expand"/>
+                    </div>
+
+                    <!-- ── Records ───────────────────────────────────── -->
+                    <t t-foreach="group[1]" t-as="rec" t-key="rec.id">
+                        <div t-attf-class="ah-row ah-row-data {{ state.expandedId === rec.id ? 'ah-row-expanded' : '' }}"
+                             t-on-click="() => toggleExpand(rec.id)">
+
+                            <!-- Status stripe -->
+                            <div t-attf-class="ah-col-stripe ah-stripe-{{ effStatus(rec) }}"/>
+
+                            <!-- Avatar -->
+                            <div class="ah-col-avatar">
+                                <div class="ah-avatar" t-esc="initials(rec)"/>
+                            </div>
+
+                            <!-- Guard info -->
+                            <div class="ah-col-guard">
+                                <div class="ah-guard-name" t-esc="rec.employee_id[1] || 'Unassigned'"/>
+                                <div class="ah-guard-meta">
+                                    <span t-esc="rec.site_id[1] || '—'"/>
+                                    <t t-if="rec.post_id">
+                                        <span class="ah-meta-sep">·</span>
+                                        <span t-esc="rec.post_id[1]"/>
+                                    </t>
+                                    <t t-if="gradeFor(rec)">
+                                        <span class="ah-meta-sep">·</span>
+                                        <span t-esc="gradeFor(rec)"/>
+                                    </t>
+                                </div>
+                            </div>
+
+                            <!-- Scheduled / Actual times -->
+                            <div class="ah-col-times">
+                                <div class="ah-times-sched">
+                                    <i class="fa fa-calendar-o me-1 ah-icon-muted"/>
+                                    <span t-esc="scheduledTimes(rec)"/>
+                                </div>
+                                <t t-if="actualTimes(rec)">
+                                    <div class="ah-times-actual">
+                                        <i class="fa fa-clock-o me-1 ah-icon-muted"/>
+                                        <span t-esc="actualTimes(rec)"/>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="ah-times-actual ah-text-muted">No check-in/out</div>
+                                </t>
+                            </div>
+
+                            <!-- Hours summary -->
+                            <div class="ah-col-hours">
+                                <div class="ah-hours-primary" t-esc="fmtHrs(rec.payable_hours)"/>
+                                <div class="ah-hours-sub">
+                                    <span class="ah-text-muted">of </span>
+                                    <span t-esc="fmtHrs(rec.scheduled_hours)"/>
+                                </div>
+                            </div>
+
+                            <!-- Status badge -->
+                            <div class="ah-col-status">
+                                <span t-att-class="statusClass(rec)" t-esc="statusLabel(rec)"/>
+                                <t t-if="effStatus(rec) === 'late' and rec.late_minutes">
+                                    <div class="ah-late-detail" t-esc="'+' + rec.late_minutes + 'm'"/>
+                                </t>
+                            </div>
+
+                            <!-- Flags -->
+                            <div class="ah-col-flags">
+                                <t t-foreach="flagList(rec)" t-as="flag" t-key="flag.label">
+                                    <span class="ah-flag" t-att-title="flag.label">
+                                        <i t-attf-class="fa {{ flag.icon }}"/>
+                                    </span>
+                                </t>
+                            </div>
+
+                            <!-- Expand toggle -->
+                            <div class="ah-col-expand">
+                                <i t-attf-class="fa {{ state.expandedId === rec.id ? 'fa-chevron-up' : 'fa-chevron-down' }} ah-expand-icon"/>
+                            </div>
+                        </div>
+
+                        <!-- ── Expanded detail panel ─────────────────── -->
+                        <t t-if="state.expandedId === rec.id">
+                            <div class="ah-detail-panel">
+                                <div class="ah-detail-grid">
+
+                                    <!-- Hour buckets -->
+                                    <div class="ah-detail-section">
+                                        <div class="ah-detail-section-title">Hour Buckets</div>
+                                        <div class="ah-bucket-row">
+                                            <div class="ah-bucket">
+                                                <div class="ah-bucket-val" t-esc="fmtHrs(rec.normal_hours)"/>
+                                                <div class="ah-bucket-lbl">Normal</div>
+                                            </div>
+                                            <div class="ah-bucket">
+                                                <div class="ah-bucket-val" t-esc="fmtHrs(rec.night_hours)"/>
+                                                <div class="ah-bucket-lbl">Night</div>
+                                            </div>
+                                            <div class="ah-bucket">
+                                                <div class="ah-bucket-val" t-esc="fmtHrs(rec.saturday_hours)"/>
+                                                <div class="ah-bucket-lbl">Saturday</div>
+                                            </div>
+                                            <div class="ah-bucket">
+                                                <div class="ah-bucket-val" t-esc="fmtHrs(rec.sunday_hours)"/>
+                                                <div class="ah-bucket-lbl">Sunday</div>
+                                            </div>
+                                            <div class="ah-bucket">
+                                                <div class="ah-bucket-val" t-esc="fmtHrs(rec.public_holiday_hours)"/>
+                                                <div class="ah-bucket-lbl">Public Hol.</div>
+                                            </div>
+                                            <div class="ah-bucket ah-bucket-ot">
+                                                <div class="ah-bucket-val" t-esc="fmtHrs(rec.overtime_hours)"/>
+                                                <div class="ah-bucket-lbl">Overtime</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Metrics -->
+                                    <div class="ah-detail-section">
+                                        <div class="ah-detail-section-title">Attendance Metrics</div>
+                                        <table class="ah-metrics-table">
+                                            <tr>
+                                                <td>Scheduled</td>
+                                                <td t-esc="fmtHrs(rec.scheduled_hours)"/>
+                                            </tr>
+                                            <tr>
+                                                <td>Worked</td>
+                                                <td t-esc="fmtHrs(rec.worked_hours)"/>
+                                            </tr>
+                                            <tr>
+                                                <td>Valid</td>
+                                                <td t-esc="fmtHrs(rec.valid_hours)"/>
+                                            </tr>
+                                            <tr>
+                                                <td>Payable</td>
+                                                <td class="ah-metric-highlight" t-esc="fmtHrs(rec.payable_hours)"/>
+                                            </tr>
+                                            <tr t-if="rec.unpaid_hours > 0">
+                                                <td>Unpaid</td>
+                                                <td class="ah-metric-warn" t-esc="fmtHrs(rec.unpaid_hours)"/>
+                                            </tr>
+                                            <tr t-if="rec.late_minutes">
+                                                <td>Late by</td>
+                                                <td class="ah-metric-warn" t-esc="rec.late_minutes + ' min'"/>
+                                            </tr>
+                                            <tr t-if="rec.early_departure_minutes">
+                                                <td>Early departure</td>
+                                                <td class="ah-metric-warn" t-esc="rec.early_departure_minutes + ' min'"/>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                    <!-- Notes & flags -->
+                                    <div class="ah-detail-section">
+                                        <div class="ah-detail-section-title">Notes &amp; Flags</div>
+                                        <div class="ah-flag-list">
+                                            <div t-if="rec.no_work_no_pay" class="ah-flag-item ah-flag-danger">
+                                                <i class="fa fa-ban me-1"/>No Work No Pay
+                                            </div>
+                                            <div t-if="rec.overtime_approved" class="ah-flag-item ah-flag-ok">
+                                                <i class="fa fa-check me-1"/>Overtime Approved
+                                            </div>
+                                            <div t-if="rec.missing_check_out" class="ah-flag-item ah-flag-warn">
+                                                <i class="fa fa-exclamation-triangle me-1"/>Missing Check-Out
+                                            </div>
+                                            <div t-if="rec.is_night_shift" class="ah-flag-item ah-flag-info">
+                                                <i class="fa fa-moon-o me-1"/>Night Shift
+                                            </div>
+                                        </div>
+                                        <t t-if="rec.note">
+                                            <div class="ah-note mt-2">
+                                                <i class="fa fa-comment-o me-1 ah-icon-muted"/>
+                                                <span t-esc="rec.note"/>
+                                            </div>
+                                        </t>
+                                        <t t-if="rec.override_reason">
+                                            <div class="ah-note mt-1 ah-text-muted">
+                                                <i class="fa fa-pencil me-1"/>
+                                                <span t-esc="rec.override_reason"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+
+                                <div class="ah-detail-footer">
+                                    <button class="ah-btn ah-btn-outline ah-btn-sm"
+                                        t-on-click.stop="() => openRecord(rec.id)">
+                                        <i class="fa fa-external-link me-1"/>Open Full Record
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </div>
+</t>
+
+</templates>

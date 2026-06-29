@@ -1,5 +1,7 @@
 from datetime import datetime, time, timedelta
 
+import pytz
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 from odoo.addons.security_attendance.utils.shift_split import split_shift_by_boundaries
@@ -12,8 +14,8 @@ class SecurityAttendanceBatch(models.Model):
 
     name = fields.Char(compute="_compute_name", store=True)
     attendance_date = fields.Date(required=True, default=fields.Date.context_today)
-    partner_id = fields.Many2one("res.partner", string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", string="Client", domain=[("is_company", "=", True)])
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     roster_batch_id = fields.Many2one("security.roster.batch", string="Roster Batch")
     captured_by_id = fields.Many2one(
         "res.users",
@@ -40,6 +42,7 @@ class SecurityAttendanceBatch(models.Model):
     record_count = fields.Integer(compute="_compute_record_count")
     absent_count = fields.Integer(compute="_compute_record_count")
     awol_count = fields.Integer(compute="_compute_record_count")
+    missing_checkin_count = fields.Integer(compute="_compute_record_count", string="Missing Check-ins")
     note = fields.Text()
 
     @api.depends("attendance_date", "partner_id", "site_id")
@@ -49,17 +52,36 @@ class SecurityAttendanceBatch(models.Model):
             batch.name = f"{batch.attendance_date} - {scope}" if batch.attendance_date else scope
 
     def _compute_record_count(self):
+        from datetime import datetime, timedelta
+        now_utc = datetime.utcnow()
+        cutoff = now_utc - timedelta(minutes=15)
         for batch in self:
             records = batch.attendance_record_ids
             batch.record_count = len(records)
             batch.absent_count = len(records.filtered(lambda record: record.status == "absent"))
             batch.awol_count = len(records.filtered(lambda record: record.absence_type == "awol"))
+            missing = 0
+            for rec in records:
+                if rec.manual_presence in ("absent", "awol"):
+                    continue
+                if rec.check_in:
+                    continue
+                sched = fields.Datetime.to_datetime(rec.scheduled_start)
+                if sched and sched <= cutoff:
+                    missing += 1
+            batch.missing_checkin_count = missing
 
     @api.onchange("site_id")
     def _onchange_site_id(self):
         for batch in self:
             if batch.site_id:
                 batch.partner_id = batch.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for batch in self:
+            if batch.site_id and batch.site_id.partner_id != batch.partner_id:
+                batch.site_id = False
 
     def action_generate_from_roster(self):
         record_model = self.env["security.attendance.record"]
@@ -316,6 +338,30 @@ class SecurityAttendanceRecord(models.Model):
     overtime_approved = fields.Boolean(default=False)
     overtime_approved_by_id = fields.Many2one("res.users", string="Overtime Approved By")
     overtime_approval_note = fields.Char()
+    billing_contract_id = fields.Many2one(
+        "security.client.contract",
+        compute="_compute_billing_amount",
+        string="Billing Contract",
+        store=False,
+    )
+    billing_amount = fields.Float(
+        compute="_compute_billing_amount",
+        string="Billing Amount",
+        digits=(10, 2),
+        store=False,
+    )
+    billing_approved = fields.Boolean(default=False, string="Billing Approved")
+    billing_approved_by_id = fields.Many2one("res.users", string="Approved By", readonly=True)
+    billing_approved_date = fields.Datetime(string="Approval Date", readonly=True)
+    has_billing_exception = fields.Boolean(
+        compute="_compute_has_billing_exception",
+        store=True,
+        string="Has Billing Exception",
+    )
+    billing_exception_reason = fields.Char(
+        compute="_compute_billing_exception_reason",
+        string="Exception Reason",
+    )
     status = fields.Selection(
         [
             ("scheduled", "Scheduled"),
@@ -350,19 +396,25 @@ class SecurityAttendanceRecord(models.Model):
             end_hour = int(template.end_hour)
             end_minute = int(round((template.end_hour - end_hour) * 60))
 
-            start_dt = datetime.combine(
+            tz_name = self.env.company.partner_id.tz or "UTC"
+            tz = pytz.timezone(tz_name)
+
+            start_dt_local = datetime.combine(
                 shift_date,
                 time(hour=start_hour, minute=start_minute),
             )
-            end_dt = datetime.combine(
+            end_dt_local = datetime.combine(
                 shift_date,
                 time(hour=end_hour, minute=end_minute),
             )
-            if end_dt <= start_dt:
-                end_dt += timedelta(days=1)
+            if end_dt_local <= start_dt_local:
+                end_dt_local += timedelta(days=1)
 
-            record.scheduled_start = fields.Datetime.to_string(start_dt)
-            record.scheduled_end = fields.Datetime.to_string(end_dt)
+            start_dt_utc = tz.localize(start_dt_local).astimezone(pytz.utc).replace(tzinfo=None)
+            end_dt_utc = tz.localize(end_dt_local).astimezone(pytz.utc).replace(tzinfo=None)
+
+            record.scheduled_start = fields.Datetime.to_string(start_dt_utc)
+            record.scheduled_end = fields.Datetime.to_string(end_dt_utc)
 
     @api.depends(
         "scheduled_start",
@@ -537,6 +589,96 @@ class SecurityAttendanceRecord(models.Model):
             record.night_hours = buckets["night_hours"]
             record.is_night_shift = buckets["night_hours"] > 0
 
+    @api.depends(
+        "normal_hours", "night_hours", "saturday_hours", "sunday_hours",
+        "public_holiday_hours", "overtime_hours", "overtime_approved",
+        "site_id", "shift_date", "employee_id",
+    )
+    def _compute_billing_amount(self):
+        contract_model = self.env.get("security.client.contract")
+        for record in self:
+            record.billing_contract_id = False
+            record.billing_amount = 0.0
+            if not contract_model or not record.site_id or not record.shift_date:
+                continue
+            contract = contract_model.get_active_for_site(record.site_id, record.shift_date)
+            if not contract:
+                continue
+            record.billing_contract_id = contract.id
+            grade = record.employee_id.security_grade_id if record.employee_id else None
+            amount = 0.0
+            buckets = {
+                "normal": record.normal_hours or 0.0,
+                "night": record.night_hours or 0.0,
+                "saturday": record.saturday_hours or 0.0,
+                "sunday": record.sunday_hours or 0.0,
+                "public_holiday": record.public_holiday_hours or 0.0,
+            }
+            for category, hours in buckets.items():
+                if hours > 0:
+                    rate = contract.get_rate_for(grade, category)
+                    amount += hours * rate
+            if record.overtime_approved and record.overtime_hours:
+                ot_rate = contract.get_rate_for(grade, "normal")
+                amount += record.overtime_hours * ot_rate
+            record.billing_amount = round(amount, 2)
+
+    @api.depends(
+        "status", "late_minutes", "early_departure_minutes",
+        "missing_check_out", "absence_type", "manual_presence",
+        "overtime_hours", "overtime_approved",
+    )
+    def _compute_has_billing_exception(self):
+        for record in self:
+            has_exc = False
+            if record.manual_presence == "awol" or record.absence_type == "awol":
+                has_exc = True
+            elif record.status == "absent" and record.absence_type not in ("authorised",):
+                has_exc = True
+            elif record.late_minutes > 0:
+                has_exc = True
+            elif record.early_departure_minutes > 0:
+                has_exc = True
+            elif record.missing_check_out:
+                has_exc = True
+            elif record.overtime_hours > 0 and not record.overtime_approved:
+                has_exc = True
+            record.has_billing_exception = has_exc
+
+    @api.depends(
+        "status", "late_minutes", "early_departure_minutes",
+        "missing_check_out", "absence_type", "manual_presence",
+        "overtime_hours", "overtime_approved",
+    )
+    def _compute_billing_exception_reason(self):
+        for record in self:
+            reasons = []
+            if record.manual_presence == "awol" or record.absence_type == "awol":
+                reasons.append("AWOL")
+            elif record.status == "absent":
+                reasons.append("Absent")
+            if record.late_minutes > 0:
+                reasons.append(f"Late {record.late_minutes}min")
+            if record.early_departure_minutes > 0:
+                reasons.append(f"Early leave {record.early_departure_minutes}min")
+            if record.missing_check_out:
+                reasons.append("Missing check-out")
+            if record.overtime_hours > 0 and not record.overtime_approved:
+                reasons.append("Unapproved OT")
+            record.billing_exception_reason = "; ".join(reasons) if reasons else ""
+
+    def action_approve_billing(self):
+        for record in self:
+            record.billing_approved = True
+            record.billing_approved_by_id = self.env.user
+            record.billing_approved_date = fields.Datetime.now()
+
+    def action_reset_billing_approval(self):
+        for record in self:
+            record.billing_approved = False
+            record.billing_approved_by_id = False
+            record.billing_approved_date = False
+
     @api.onchange("manual_presence")
     def _onchange_manual_presence(self):
         for record in self:
@@ -556,6 +698,70 @@ class SecurityAttendanceRecord(models.Model):
         for record in self:
             record.overtime_approved = True
             record.overtime_approved_by_id = self.env.user
+
+    @api.model
+    def _group_expand_status(self, statuses, domain, order):
+        return [key for key, _ in type(self).status.selection]
+
+    def write(self, vals):
+        awol_triggered = (
+            vals.get("manual_presence") == "awol"
+            or vals.get("absence_type") == "awol"
+        )
+        result = super().write(vals)
+        if awol_triggered:
+            self.sudo()._notify_awol()
+        return result
+
+    def _notify_awol(self):
+        notification_model = self.env.get("security.notification")
+        if not notification_model:
+            return
+        for rec in self:
+            if rec.manual_presence != "awol" and rec.absence_type != "awol":
+                continue
+            recipients = self.env["res.users"].browse()
+            site = rec.site_id
+            if site and site.supervisor_id and site.supervisor_id.user_id:
+                recipients |= site.supervisor_id.user_id
+            mgr_users = self.env["res.users"].search(
+                [("groups_id", "in", [self.env.ref("base.group_system").id])],
+                limit=3,
+            )
+            recipients |= mgr_users
+
+            replacement_hint = ""
+            slot = rec.roster_slot_id
+            if slot and hasattr(slot, "_get_eligible_guards"):
+                try:
+                    eligible = slot._get_eligible_guards(slot)
+                    if eligible:
+                        if hasattr(slot, "_score_guard"):
+                            scored = sorted(
+                                [(slot._score_guard(slot, e)[0], e) for e, _ in eligible[:5]],
+                                key=lambda x: x[0],
+                                reverse=True,
+                            )
+                            best_emp = scored[0][1]
+                        else:
+                            best_emp = eligible[0][0]
+                        replacement_hint = f" Suggested replacement: {best_emp.name}."
+                except Exception:
+                    pass
+
+            notification_model.create({
+                "title": f"AWOL: {rec.employee_id.name or 'Unknown Guard'}",
+                "body": (
+                    f"{rec.employee_id.name or 'Guard'} marked AWOL at "
+                    f"{rec.site_id.name or 'unknown site'} on {rec.shift_date}."
+                    f"{replacement_hint}"
+                ),
+                "notification_type": "awol_alert",
+                "severity": "critical",
+                "recipient_ids": [(6, 0, recipients.ids)],
+                "related_model": "security.attendance.record",
+                "related_id": rec.id,
+            })
 
     @api.depends("roster_slot_id", "employee_id", "shift_date")
     def _compute_name(self):

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- ZM Payslip Template Override                            -->
+    <!-- Inherits security_payroll_core.report_security_payslip  -->
+    <!-- Changes for ZM payrolls:                               -->
+    <!--   1. Company address — dynamic city/country             -->
+    <!--   2. SSC Number → NAPSA / NHIMA / TPIN                 -->
+    <!--   3. All hardcoded "NAD" currency labels replaced with  -->
+    <!--      the rule set's currency code (ZMW for ZM, NAD for  -->
+    <!--      NA, etc.) — works for any localization.            -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_zm_payslip" inherit_id="security_payroll_core.report_security_payslip">
+
+        <!-- ── 1. Company address ──────────────────────────────── -->
+        <xpath expr="//p[text()='Windhoek, Namibia']" position="replace">
+            <p class="text-muted small mb-0"
+               t-if="not (doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM')">
+                Windhoek, Namibia
+            </p>
+            <p class="text-muted small mb-0"
+               t-if="doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM'">
+                <t t-esc="env.company.city or 'Lusaka'"/>, <t t-esc="env.company.country_id.name or 'Zambia'"/>
+            </p>
+        </xpath>
+
+        <!-- ── 2. SSC Number → ZM statutory IDs ──────────────── -->
+        <xpath expr="//tr[td[text()='SSC Number:']]" position="replace">
+            <tr t-if="not (doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM')">
+                <td class="text-muted py-1">SSC Number:</td>
+                <td class="py-1">
+                    <span t-field="doc.employee_id.security_ssc_number"/>
+                    <span t-if="not doc.employee_id.security_ssc_number" class="text-muted">-</span>
+                </td>
+            </tr>
+            <t t-if="doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM'">
+                <tr>
+                    <td class="text-muted py-1">NAPSA Member No.:</td>
+                    <td class="py-1">
+                        <span t-field="doc.employee_id.security_napsa_number"/>
+                        <span t-if="not doc.employee_id.security_napsa_number" class="text-muted">-</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-muted py-1">NHIMA Member No.:</td>
+                    <td class="py-1">
+                        <span t-field="doc.employee_id.security_nhima_number"/>
+                        <span t-if="not doc.employee_id.security_nhima_number" class="text-muted">-</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="text-muted py-1">TPIN:</td>
+                    <td class="py-1">
+                        <span t-field="doc.employee_id.security_tpin"/>
+                        <span t-if="not doc.employee_id.security_tpin" class="text-muted">-</span>
+                    </td>
+                </tr>
+            </t>
+        </xpath>
+
+        <!-- ── 3a. Attendance table "Rate (NAD)" header ────────── -->
+        <xpath expr="//th[text()='Rate (NAD)']" position="replace">
+            <th class="py-2">
+                Rate (<t t-esc="doc.period_id.rule_set_id.currency_id.name or 'NAD'"/>)
+            </th>
+        </xpath>
+
+        <!-- ── 3b. Earnings column heading ─────────────────────── -->
+        <xpath expr="//h5[contains(.,'Earnings (NAD)')]" position="replace">
+            <h5 class="border-bottom pb-2 mb-3 fw-bold text-success">
+                <i class="fa fa-plus-circle me-1"/>
+                Earnings (<t t-esc="doc.period_id.rule_set_id.currency_id.name or 'NAD'"/>)
+            </h5>
+        </xpath>
+
+        <!-- ── 3c. Deductions column heading ───────────────────── -->
+        <xpath expr="//h5[contains(.,'Deductions (NAD)')]" position="replace">
+            <h5 class="border-bottom pb-2 mb-3 fw-bold text-danger">
+                <i class="fa fa-minus-circle me-1"/>
+                Deductions (<t t-esc="doc.period_id.rule_set_id.currency_id.name or 'NAD'"/>)
+            </h5>
+        </xpath>
+
+        <!-- ── 3d. Financial summary: Gross Earnings amount ─────── -->
+        <xpath expr="//div[span[@t-field='doc.total_earnings']]" position="replace">
+            <div class="col-5 text-end fw-bold text-success">
+                <span t-field="doc.total_earnings"/>
+                <t t-esc="' ' + (doc.period_id.rule_set_id.currency_id.name or 'NAD')"/>
+            </div>
+        </xpath>
+
+        <!-- ── 3e. Financial summary: Total Deductions amount ───── -->
+        <xpath expr="//div[span[@t-field='doc.total_deductions']]" position="replace">
+            <div class="col-5 text-end fw-bold text-danger">
+                <span t-field="doc.total_deductions"/>
+                <t t-esc="' ' + (doc.period_id.rule_set_id.currency_id.name or 'NAD')"/>
+            </div>
+        </xpath>
+
+        <!-- ── 3f. Net take-home pay amount ─────────────────────── -->
+        <xpath expr="//h3[span[@t-field='doc.net_pay']]" position="replace">
+            <h3 class="fw-bold mb-0 mt-1" style="font-size: 24px;">
+                <span t-field="doc.net_pay"/>
+                <t t-esc="' ' + (doc.period_id.rule_set_id.currency_id.name or 'NAD')"/>
+            </h3>
+        </xpath>
+
+    </template>
+
+</odoo>

@@ -1,40 +1,374 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Inject demo accounts panel above the login form -->
-    <template id="login_demo_panel" inherit_id="web.login">
-        <xpath expr="//div[@id='oe_structure_login_top']" position="after">
-            <t t-set="demo_enabled"
-               t-value="request.env['ir.config_parameter'].sudo().get_param('security.demo.panel_enabled', 'True')"/>
-            <t t-if="demo_enabled in ('True', '1', 'true')">
-                <t t-set="demo_title"
-                   t-value="request.env['ir.config_parameter'].sudo().get_param('security.demo.panel_title', 'Try the Live Demo')"/>
-                <t t-set="demo_accounts"
-                   t-value="request.env['security.demo.account'].sudo().search_read([('active', '=', True)], ['name', 'login', 'password_hint', 'description'], order='sequence asc')"/>
-                <t t-if="demo_accounts">
-                    <div class="dg_demo_panel">
-                        <div class="dg_demo_title">
-                            <t t-out="demo_title"/>
+    <!--
+        Custom login page — rendered directly by DemoSiteHome.web_login() (GET).
+        No longer inherits web.login via XPath (which broke in Odoo 19).
+        All styles and the autofill script are inlined so the page needs
+        no Odoo asset bundle to render correctly.
+    -->
+    <template id="login_page" name="DogForce Security — Sign In">
+        <html lang="en">
+        <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <title>Sign In — DogForce Security</title>
+            <link rel="icon" type="image/png" href="/web/static/img/favicon.ico"/>
+            <!-- Font Awesome (bundled with Odoo) -->
+            <link rel="stylesheet" href="/web/static/lib/fontawesome/css/font-awesome.min.css"/>
+            <style>
+                *, *::before, *::after { box-sizing: border-box; }
+                html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; }
+
+                /* ── Root split ── */
+                .dg-root { display: flex; min-height: 100vh; }
+
+                /* ══════════════════════════════════════
+                   LEFT PANEL — Branding + Demo Accounts
+                   ══════════════════════════════════════ */
+                .dg-left {
+                    flex: 0 0 56%;
+                    background: linear-gradient(150deg, #091726 0%, #102238 45%, #0d1f38 100%);
+                    display: flex;
+                    flex-direction: column;
+                    padding: 48px 52px;
+                    position: relative;
+                    overflow: hidden;
+                    color: #e2e8f0;
+                }
+                /* Ambient glow layers */
+                .dg-left::before {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background:
+                        radial-gradient(ellipse 60% 50% at 80% 15%, rgba(37,99,235,0.14) 0%, transparent 70%),
+                        radial-gradient(ellipse 40% 40% at 10% 85%, rgba(15,40,70,0.6) 0%, transparent 60%);
+                    pointer-events: none;
+                    z-index: 0;
+                }
+                /* Subtle grid texture */
+                .dg-left::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background-image:
+                        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+                    background-size: 40px 40px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+
+                .dg-left-inner { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
+
+                /* Brand */
+                .dg-brand { display: flex; align-items: center; gap: 13px; margin-bottom: 56px; }
+                .dg-brand-shield {
+                    width: 46px; height: 46px;
+                    background: rgba(59,130,246,0.12);
+                    border: 1px solid rgba(96,165,250,0.28);
+                    border-radius: 12px;
+                    display: flex; align-items: center; justify-content: center;
+                    color: #60a5fa; font-size: 20px;
+                    box-shadow: 0 0 20px rgba(59,130,246,0.15);
+                }
+                .dg-brand-name { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1; }
+                .dg-brand-tag { font-size: 11px; color: #475569; letter-spacing: 0.04em; margin-top: 3px; }
+
+                /* Hero */
+                .dg-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 440px; }
+                .dg-eyebrow {
+                    display: flex; align-items: center; gap: 10px;
+                    font-size: 11px; font-weight: 700; text-transform: uppercase;
+                    letter-spacing: 0.12em; color: #3b82f6; margin-bottom: 18px;
+                }
+                .dg-eyebrow::before { content: ''; width: 20px; height: 2px; background: #3b82f6; border-radius: 1px; }
+                .dg-headline {
+                    font-size: 36px; font-weight: 900; color: #fff;
+                    line-height: 1.12; margin: 0 0 16px;
+                    letter-spacing: -0.8px;
+                }
+                .dg-headline em { font-style: normal; color: #60a5fa; }
+                .dg-sub { font-size: 14px; color: #94a3b8; line-height: 1.65; margin-bottom: 36px; }
+
+                /* Feature list */
+                .dg-features { display: flex; flex-direction: column; gap: 13px; margin-bottom: 40px; }
+                .dg-feature { display: flex; align-items: flex-start; gap: 12px; }
+                .dg-feat-icon {
+                    width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; margin-top: 1px;
+                    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);
+                    display: flex; align-items: center; justify-content: center;
+                    color: #60a5fa; font-size: 12px;
+                }
+                .dg-feat-body { font-size: 13px; color: #94a3b8; line-height: 1.5; }
+                .dg-feat-body strong { color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 1px; }
+
+                /* Demo panel */
+                .dg-demo {
+                    background: rgba(255,255,255,0.05);
+                    border: 1px solid rgba(255,255,255,0.1);
+                    border-radius: 12px;
+                    padding: 16px 18px;
+                    backdrop-filter: blur(8px);
+                }
+                .dg-demo-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+                .dg-live-dot {
+                    width: 7px; height: 7px; border-radius: 50%;
+                    background: #22c55e; flex-shrink: 0;
+                    animation: dgpulse 2.2s ease-in-out infinite;
+                }
+                @keyframes dgpulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+                    50%       { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+                }
+                .dg-demo-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; }
+                .dg-demo-accounts { display: flex; flex-direction: column; gap: 3px; }
+                .dg-acc {
+                    display: flex; align-items: center;
+                    padding: 8px 10px; border-radius: 8px; cursor: pointer;
+                    border: 1px solid transparent;
+                    transition: background 0.12s, border-color 0.12s;
+                    text-decoration: none;
+                }
+                .dg-acc:hover { background: rgba(255,255,255,0.1); border-color: rgba(96,165,250,0.25); }
+                .dg-acc:active { background: rgba(59,130,246,0.18); }
+                .dg-acc-role { font-size: 12px; font-weight: 600; color: #e2e8f0; min-width: 100px; }
+                .dg-acc-email { font-size: 11px; color: #64748b; font-family: 'Courier New', Courier, monospace; flex: 1; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+                .dg-acc-pw { font-size: 10px; color: #475569; white-space: nowrap; }
+                .dg-demo-tip { font-size: 10px; color: #334155; text-align: center; margin-top: 9px; }
+                .dg-demo-tip span { opacity: 0.7; }
+
+                /* ══════════════════════════════════════
+                   RIGHT PANEL — Sign-In Form
+                   ══════════════════════════════════════ */
+                .dg-right {
+                    flex: 1;
+                    background: #ffffff;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 48px 56px;
+                    position: relative;
+                }
+                /* Subtle top border accent */
+                .dg-right::before {
+                    content: '';
+                    position: absolute;
+                    top: 0; left: 0; right: 0;
+                    height: 3px;
+                    background: linear-gradient(90deg, #1e3a5f, #3b82f6, #1e3a5f);
+                }
+                .dg-form-wrap { width: 100%; max-width: 360px; }
+                .dg-form-eyebrow { font-size: 12px; font-weight: 600; color: #94a3b8; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
+                .dg-form-title { font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; margin-bottom: 6px; }
+                .dg-form-desc { font-size: 13px; color: #64748b; margin-bottom: 28px; line-height: 1.5; }
+
+                /* Error banner */
+                .dg-error {
+                    display: flex; align-items: flex-start; gap: 10px;
+                    background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
+                    padding: 11px 14px; margin-bottom: 18px;
+                    font-size: 13px; color: #b91c1c; line-height: 1.45;
+                }
+                .dg-error i { flex-shrink: 0; margin-top: 1px; }
+
+                /* Fields */
+                .dg-field { margin-bottom: 18px; }
+                .dg-label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; letter-spacing: 0.01em; }
+                .dg-input {
+                    width: 100%; padding: 10px 14px;
+                    border: 1.5px solid #e2e8f0; border-radius: 8px;
+                    font-size: 14px; color: #1e293b; background: #f8fafc;
+                    outline: none; font-family: inherit;
+                    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+                }
+                .dg-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+                .dg-input::placeholder { color: #cbd5e1; }
+
+                /* Submit */
+                .dg-btn {
+                    display: block; width: 100%;
+                    padding: 11px 20px; margin-top: 6px;
+                    background: #1e3a5f; color: #fff; border: none; border-radius: 8px;
+                    font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
+                    cursor: pointer; font-family: inherit;
+                    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+                }
+                .dg-btn:hover { background: #234a77; box-shadow: 0 4px 16px rgba(30,58,92,0.28); }
+                .dg-btn:active { transform: scale(0.99); }
+
+                /* Footer */
+                .dg-footer { text-align: center; margin-top: 36px; }
+                .dg-powered { font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; }
+                .dg-divider { height: 1px; background: #f1f5f9; margin: 28px 0; }
+
+                /* ── Responsive ── */
+                @media (max-width: 860px) {
+                    .dg-left { display: none; }
+                    .dg-right { min-height: 100vh; padding: 40px 28px; }
+                }
+                @media (max-width: 480px) {
+                    .dg-right { padding: 32px 20px; }
+                    .dg-form-title { font-size: 22px; }
+                }
+            </style>
+        </head>
+        <body>
+        <div class="dg-root">
+
+            <!-- ══ LEFT: Branding + Demo Accounts ══ -->
+            <div class="dg-left">
+                <div class="dg-left-inner">
+
+                    <!-- Brand -->
+                    <div class="dg-brand">
+                        <div class="dg-brand-shield">
+                            <i class="fa fa-shield"/>
                         </div>
-                        <t t-foreach="demo_accounts" t-as="account">
-                            <div class="dg_demo_account"
-                                 t-att-data-login="account['login']"
-                                 t-att-data-password="account['password_hint']"
-                                 title="Click to auto-fill credentials">
-                                <span class="dg_demo_account_role">
-                                    <t t-out="account['name']"/>
-                                </span>
-                                <span class="dg_demo_account_login">
-                                    <t t-out="account['login']"/>
-                                </span>
-                                <span class="dg_demo_account_hint">
-                                    <t t-out="account['password_hint']"/>
-                                </span>
+                        <div>
+                            <div class="dg-brand-name">DogForce</div>
+                            <div class="dg-brand-tag">Security Operations Suite</div>
+                        </div>
+                    </div>
+
+                    <!-- Hero -->
+                    <div class="dg-hero">
+                        <div class="dg-eyebrow">Enterprise Guard Management</div>
+                        <h1 class="dg-headline">Guard Rostering,<br/><em>Reimagined.</em></h1>
+                        <p class="dg-sub">
+                            End-to-end workforce management for physical security teams —
+                            from monthly roster planning to live attendance and automated client billing.
+                        </p>
+
+                        <div class="dg-features">
+                            <div class="dg-feature">
+                                <div class="dg-feat-icon"><i class="fa fa-calendar-check-o"/></div>
+                                <div class="dg-feat-body">
+                                    <strong>Smart Rostering</strong>
+                                    AI-scored assignments with conflict detection and one-click auto-fill
+                                </div>
+                            </div>
+                            <div class="dg-feature">
+                                <div class="dg-feat-icon"><i class="fa fa-map-marker"/></div>
+                                <div class="dg-feat-body">
+                                    <strong>Live Attendance</strong>
+                                    Real-time check-in tracking with AWOL alerts and shift metrics
+                                </div>
+                            </div>
+                            <div class="dg-feature">
+                                <div class="dg-feat-icon"><i class="fa fa-file-text-o"/></div>
+                                <div class="dg-feat-body">
+                                    <strong>Automated Billing</strong>
+                                    Premium hour buckets, multipliers and one-click invoice generation
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Demo accounts -->
+                        <t t-if="demo_accounts">
+                            <div class="dg-demo">
+                                <div class="dg-demo-hdr">
+                                    <div class="dg-live-dot"/>
+                                    <div class="dg-demo-title"><t t-esc="demo_title"/></div>
+                                </div>
+                                <div class="dg-demo-accounts">
+                                    <t t-foreach="demo_accounts" t-as="account">
+                                        <div class="dg-acc dg_demo_account"
+                                             t-att-data-login="account['login']"
+                                             t-att-data-password="account.get('password_hint', 'Demo2026!')"
+                                             title="Click to auto-fill credentials">
+                                            <span class="dg-acc-role"><t t-esc="account['name']"/></span>
+                                            <span class="dg-acc-email"><t t-esc="account['login']"/></span>
+                                            <span class="dg-acc-pw"><t t-esc="account.get('password_hint', '••••••••')"/></span>
+                                        </div>
+                                    </t>
+                                </div>
+                                <div class="dg-demo-tip"><span>&#x25B2; Click any row to auto-fill and sign in</span></div>
                             </div>
                         </t>
-                        <div class="dg_demo_hint">↑ Click any row to auto-fill</div>
+
+                    </div><!-- /dg-hero -->
+                </div><!-- /dg-left-inner -->
+            </div><!-- /dg-left -->
+
+            <!-- ══ RIGHT: Sign-In Form ══ -->
+            <div class="dg-right">
+                <div class="dg-form-wrap">
+
+                    <div class="dg-form-eyebrow">Welcome back</div>
+                    <div class="dg-form-title">Sign in to your account</div>
+                    <div class="dg-form-desc">Enter your credentials to access the platform</div>
+
+                    <!-- Error -->
+                    <t t-if="error">
+                        <div class="dg-error">
+                            <i class="fa fa-exclamation-circle"/>
+                            <span><t t-esc="error"/></span>
+                        </div>
+                    </t>
+
+                    <form method="post" action="/web/login">
+                        <input name="csrf_token" type="hidden" t-att-value="request.csrf_token()"/>
+                        <t t-if="redirect">
+                            <input name="redirect" type="hidden" t-att-value="redirect"/>
+                        </t>
+
+                        <div class="dg-field">
+                            <label class="dg-label" for="login">Email address</label>
+                            <input id="login" name="login" type="email"
+                                   class="dg-input"
+                                   placeholder="you@company.com"
+                                   t-att-value="login or ''"
+                                   autocomplete="username email"
+                                   autofocus="autofocus"
+                                   required="required"/>
+                        </div>
+
+                        <div class="dg-field">
+                            <label class="dg-label" for="password">Password</label>
+                            <input id="password" name="password" type="password"
+                                   class="dg-input"
+                                   placeholder="&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;"
+                                   autocomplete="current-password"
+                                   required="required"/>
+                        </div>
+
+                        <button type="submit" class="dg-btn">
+                            <i class="fa fa-sign-in me-2"/>Sign In
+                        </button>
+                    </form>
+
+                    <div class="dg-footer">
+                        <div class="dg-powered">
+                            <i class="fa fa-shield" style="font-size:12px; color:#e2e8f0;"/>
+                            Powered by DogForce Security Suite
+                        </div>
                     </div>
-                </t>
-            </t>
-        </xpath>
+
+                </div><!-- /dg-form-wrap -->
+            </div><!-- /dg-right -->
+
+        </div><!-- /dg-root -->
+
+        <!-- Auto-fill: click a demo account row to fill the form -->
+        <script>
+            (function () {
+                function fill(login, password) {
+                    var l = document.getElementById('login');
+                    var p = document.getElementById('password');
+                    if (l) { l.value = login;    l.dispatchEvent(new Event('input')); }
+                    if (p) { p.value = password; p.dispatchEvent(new Event('input')); }
+                    if (l) l.form.querySelector('[type=submit]').focus();
+                }
+                document.addEventListener('click', function (e) {
+                    var row = e.target.closest('.dg_demo_account[data-login]');
+                    if (!row) return;
+                    fill(row.dataset.login, row.dataset.password || 'Demo2026!');
+                });
+            })();
+        </script>
+        </body>
+        </html>
     </template>
 </odoo>

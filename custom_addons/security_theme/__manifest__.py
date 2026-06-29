@@ -3,7 +3,7 @@
     'version': '19.0.1.0.0',
     'category': 'Customization',
     'summary': 'Branding, theme presets, login white-label, and PDF report theming',
-    'depends': ['web', 'base_setup'],
+    'depends': ['web', 'base_setup', 'security_base'],
     'data': [
         'security/ir.model.access.csv',
         'data/ir_config_parameter.xml',

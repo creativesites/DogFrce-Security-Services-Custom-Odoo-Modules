@@ -14,4 +14,19 @@
         sequence="5"
         groups="hr.group_hr_user"
     />
+
+    <record id="action_weekly_checkin" model="ir.actions.client">
+        <field name="name">Weekly Check-in</field>
+        <field name="tag">security_shift_planner.weekly_checkin</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_weekly_checkin"
+        name="Weekly Check-in"
+        parent="security_operations.menu_security_roster"
+        action="action_weekly_checkin"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
 </odoo>

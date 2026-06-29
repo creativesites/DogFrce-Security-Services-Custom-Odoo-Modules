@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ======================================================= -->
+    <!-- WCF Employer Levy Schedule — QWeb PDF                   -->
+    <!-- Model: security.payroll.period                          -->
+    <!-- Employer-only Workers' Compensation Fund levy.          -->
+    <!-- Rate is industry-specific; configured on the rule set.  -->
+    <!-- ======================================================= -->
+
+    <template id="report_security_wcf_zm_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="period">
+                <t t-call="web.external_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 11px;">
+
+                        <!-- Title block -->
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                                Workers' Compensation Fund (WCF)
+                            </h2>
+                            <h3 style="margin: 4px 0 0 0;">
+                                Employer Levy Schedule
+                            </h3>
+                        </div>
+
+                        <!-- Header info box -->
+                        <t t-set="rule_set" t-value="period.rule_set_id"/>
+                        <t t-set="wcf_rate" t-value="rule_set and rule_set.employer_wcf_rate or 0.0"/>
+                        <t t-set="wcf_cap" t-value="rule_set and rule_set.wcf_salary_cap or 0.0"/>
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <tr>
+                                <td style="padding: 4px 8px; width: 25%;"><strong>Contribution Month</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="period.date_from and period.date_from.strftime('%B %Y') or ''"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Employer Name</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="env.company.name"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 8px;"><strong>Period</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="period.date_from"/> — <t t-esc="period.date_to"/>
+                                </td>
+                                <td style="padding: 4px 8px; width: 22%;"><strong>WCF Rate</strong></td>
+                                <td style="padding: 4px 8px;">
+                                    <t t-esc="'%.4f' % wcf_rate"/>
+                                    (<t t-esc="'%.2f' % (wcf_rate * 100.0)"/>%)
+                                </td>
+                            </tr>
+                            <tr t-if="wcf_cap > 0">
+                                <td style="padding: 4px 8px;"><strong>Earnings Ceiling (ZMW)</strong></td>
+                                <td style="padding: 4px 8px;" colspan="3">
+                                    <t t-esc="'%.2f' % wcf_cap"/>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Levy table -->
+                        <t t-set="active_slips" t-value="period.payslip_ids.filtered(lambda p: p.state in ('confirmed', 'paid'))"/>
+
+                        <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;" border="1">
+                            <thead>
+                                <tr style="background-color: #7D3C98; color: white;">
+                                    <th style="padding: 5px 6px; text-align: center; width: 4%;">#</th>
+                                    <th style="padding: 5px 6px; text-align: left; width: 34%;">Employee Name</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 18%;">Gross Pay (ZMW)</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 18%;">Assessable Earnings</th>
+                                    <th style="padding: 5px 6px; text-align: right; width: 16%;">Employer WCF Levy</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="active_slips" t-as="slip">
+                                    <t t-set="assessable" t-value="min(slip.total_earnings, wcf_cap) if wcf_cap > 0 else slip.total_earnings"/>
+                                    <t t-set="wcf_levy" t-value="round(assessable * wcf_rate, 2)"/>
+                                    <tr>
+                                        <td style="padding: 4px 6px; text-align: center;">
+                                            <t t-esc="slip_index + 1"/>
+                                        </td>
+                                        <td style="padding: 4px 6px;">
+                                            <t t-esc="slip.employee_id.name"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % slip.total_earnings"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % assessable"/>
+                                        </td>
+                                        <td style="padding: 4px 6px; text-align: right;">
+                                            <t t-esc="'%.2f' % wcf_levy"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                            <tfoot>
+                                <tr style="background-color: #e8e8e8; font-weight: bold;">
+                                    <td style="padding: 5px 6px; text-align: right;" colspan="2">TOTALS</td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(active_slips.mapped('total_earnings'))"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            (min(s.total_earnings, wcf_cap) if wcf_cap > 0 else s.total_earnings)
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                    <td style="padding: 5px 6px; text-align: right;">
+                                        <t t-esc="'%.2f' % sum(
+                                            round((min(s.total_earnings, wcf_cap) if wcf_cap > 0 else s.total_earnings) * wcf_rate, 2)
+                                            for s in active_slips
+                                        )"/>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <!-- Notes and signature -->
+                        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;" border="0">
+                            <tr>
+                                <td style="width: 55%; padding-right: 16px; vertical-align: top;">
+                                    <p style="margin: 0; font-size: 10px; color: #555; font-style: italic;">
+                                        The WCF levy is an employer-only obligation — no deduction is made from
+                                        the employee's salary.<br/>
+                                        Ref: Workers' Compensation Act Cap 271 of the Laws of Zambia.<br/>
+                                        Confirm the correct risk-category rate for private security guarding
+                                        from the WCF schedule before filing this return.
+                                    </p>
+                                </td>
+                                <td style="width: 45%; padding-left: 16px; vertical-align: top;">
+                                    <p style="margin: 0;">Authorised Signatory: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Designation: ________________________</p>
+                                    <p style="margin: 4px 0 0 0;">Date: ________________________</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_security_wcf_zm" model="ir.actions.report">
+        <field name="name">WCF Employer Levy Schedule (Zambia)</field>
+        <field name="model">security.payroll.period</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_l10n_zm.report_security_wcf_zm_document</field>
+        <field name="report_file">security_l10n_zm.report_security_wcf_zm_document</field>
+        <field name="print_report_name">'WCF_Schedule_%s' % (object.name or 'Schedule')</field>
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

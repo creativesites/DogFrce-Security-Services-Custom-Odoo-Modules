@@ -5,7 +5,7 @@
     "category": "Security",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_documents", "security_leave", "security_billing", "mail"],
+    "depends": ["security_documents", "security_leave", "security_billing", "security_attendance", "mail"],
     "data": [
         "security/ir.model.access.csv",
         "data/security_notifications_cron.xml",

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ======================== -->
+    <!-- CLIENT ONBOARDING WIZARD -->
+    <!-- ======================== -->
+
+    <record id="view_client_onboarding_wizard_form" model="ir.ui.view">
+        <field name="name">security.client.onboarding.wizard.form</field>
+        <field name="model">security.client.onboarding.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Onboard New Client">
+
+                <!-- Progress indicator -->
+                <div class="o_field_widget text-center mb-3">
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background: #1B2040; color: #fff;"
+                              invisible="step != 'client'">1 · Client</span>
+                        <span class="badge rounded-pill px-3 py-2 text-bg-secondary"
+                              invisible="step == 'client'">1 · Client</span>
+
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background: #1B2040; color: #fff;"
+                              invisible="step != 'site'">2 · Site</span>
+                        <span class="badge rounded-pill px-3 py-2 text-bg-secondary"
+                              invisible="step == 'site'">2 · Site</span>
+
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background: #1B2040; color: #fff;"
+                              invisible="step != 'posts'">3 · Posts</span>
+                        <span class="badge rounded-pill px-3 py-2 text-bg-secondary"
+                              invisible="step == 'posts'">3 · Posts</span>
+
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background: #1B2040; color: #fff;"
+                              invisible="step != 'requirements'">4 · Requirements</span>
+                        <span class="badge rounded-pill px-3 py-2 text-bg-secondary"
+                              invisible="step == 'requirements'">4 · Requirements</span>
+
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background: #F5A523; color: #1B2040; font-weight: 700;"
+                              invisible="step != 'generate'">5 · Generate</span>
+                        <span class="badge rounded-pill px-3 py-2 text-bg-secondary"
+                              invisible="step == 'generate'">5 · Generate</span>
+                    </div>
+                </div>
+
+                <!-- Step 1: Client -->
+                <group string="Select Client" invisible="step != 'client'">
+                    <field name="partner_id" placeholder="Select existing client company..."/>
+                </group>
+
+                <!-- Step 2: Site Details -->
+                <group string="New Site Details" invisible="step != 'site'">
+                    <field name="site_name" placeholder="e.g. Windhoek Head Office"/>
+                    <field name="location" placeholder="e.g. Independence Ave, Windhoek"/>
+                    <field name="supervisor_id"/>
+                </group>
+
+                <!-- Step 3: Posts -->
+                <group string="Security Posts" invisible="step != 'posts'">
+                    <div class="alert alert-info">
+                        <p class="mb-1">
+                            <strong>Site created: </strong><field name="site_id" readonly="1" nolabel="1"/>
+                        </p>
+                        <p class="mb-0">
+                            Add security posts for this site (e.g. Main Gate, Reception, Perimeter Patrol).
+                            Click <strong>Open Posts</strong> to configure them, then return here to continue.
+                        </p>
+                    </div>
+                    <field name="post_count" readonly="1"/>
+                </group>
+
+                <!-- Step 4: Requirements -->
+                <group string="Shift Requirements" invisible="step != 'requirements'">
+                    <div class="alert alert-info">
+                        <p class="mb-0">
+                            Define how many guards are needed per post per shift.
+                            Click <strong>Open Requirements</strong> to configure them, then continue.
+                        </p>
+                    </div>
+                    <field name="requirement_count" readonly="1"/>
+                </group>
+
+                <!-- Step 5: Generate Roster -->
+                <group string="Generate First Roster" invisible="step != 'generate'">
+                    <div class="alert alert-success mb-3">
+                        <i class="fa fa-check me-1"/>
+                        Site configured with
+                        <strong><field name="post_count" readonly="1" nolabel="1"/> posts</strong> and
+                        <strong><field name="requirement_count" readonly="1" nolabel="1"/> requirements</strong>.
+                        Select a date range and generate the first roster batch.
+                    </div>
+                    <field name="batch_date_from"/>
+                    <field name="batch_date_to"/>
+                </group>
+
+                <footer>
+                    <!-- Step 1 actions -->
+                    <button name="action_go_to_site" type="object" string="Next: Site Details →"
+                            class="btn-primary" invisible="step != 'client'"/>
+
+                    <!-- Step 2 actions -->
+                    <button name="action_back" type="object" string="← Back"
+                            class="btn-secondary" invisible="step == 'client'"/>
+                    <button name="action_create_site_and_continue" type="object" string="Create Site →"
+                            class="btn-primary" invisible="step != 'site'"/>
+
+                    <!-- Step 3 actions -->
+                    <button name="action_open_posts" type="object" string="Open Posts"
+                            class="btn-secondary" invisible="step != 'posts'"/>
+                    <button name="action_go_to_requirements" type="object" string="Next: Requirements →"
+                            class="btn-primary" invisible="step != 'posts'"/>
+
+                    <!-- Step 4 actions -->
+                    <button name="action_open_requirements" type="object" string="Open Requirements"
+                            class="btn-secondary" invisible="step != 'requirements'"/>
+                    <button name="action_go_to_generate" type="object" string="Next: Generate →"
+                            class="btn-primary" invisible="step != 'requirements'"/>
+
+                    <!-- Step 5 actions -->
+                    <button name="action_generate_roster" type="object" string="Generate Roster"
+                            class="btn-primary" invisible="step != 'generate'"/>
+
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_client_onboarding_wizard" model="ir.actions.act_window">
+        <field name="name">Onboard New Client</field>
+        <field name="res_model">security.client.onboarding.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ======================== -->
+    <!-- ROSTER SETUP CHECK       -->
+    <!-- ======================== -->
+
+    <record id="view_roster_setup_wizard_form" model="ir.ui.view">
+        <field name="name">security.roster.setup.wizard.form</field>
+        <field name="model">security.roster.setup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Roster Setup Check">
+                <group string="Site &amp; Period">
+                    <field name="site_id"/>
+                    <field name="date_from"/>
+                    <field name="date_to"/>
+                </group>
+                <group invisible="not check_result" string="Diagnostic Results">
+                    <field name="check_result" nolabel="1" readonly="1" widget="text"/>
+                </group>
+                <footer>
+                    <button name="action_check" type="object"
+                            string="Run Check" class="btn-primary"/>
+                    <button special="cancel" string="Close" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_roster_setup_wizard" model="ir.actions.act_window">
+        <field name="name">Roster Setup Check</field>
+        <field name="res_model">security.roster.setup.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ======================== -->
+    <!-- OPERATIONS SUB-MENUS     -->
+    <!-- ======================== -->
+
+    <menuitem
+        id="menu_client_onboarding_wizard"
+        name="Onboard New Client"
+        parent="security_operations.menu_security_operations_root"
+        action="action_client_onboarding_wizard"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_roster_setup_wizard"
+        name="Roster Setup Check"
+        parent="security_operations.menu_security_operations_root"
+        action="action_roster_setup_wizard"
+        sequence="20"
+        groups="hr.group_hr_user"
+    />
+
+</odoo>
