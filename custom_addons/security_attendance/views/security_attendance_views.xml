@@ -94,15 +94,15 @@
                             </div>
                             <div class="o_kanban_record_body">
                                 <div class="text-muted" style="font-size:12px;">
-                                    <i class="fa fa-building-o me-1"/>
+                                    <i class="fa fa-building-o me-1" title="Site"/>
                                     <t t-esc="record.site_id.value"/> — <t t-esc="record.post_id.value"/>
                                 </div>
                                 <div class="text-muted" style="font-size:12px;">
-                                    <i class="fa fa-calendar me-1"/>
+                                    <i class="fa fa-calendar me-1" title="Date"/>
                                     <field name="shift_date" widget="date"/>
                                 </div>
                                 <div t-if="record.check_in.raw_value" class="mt-1" style="font-size:12px;">
-                                    <i class="fa fa-clock-o me-1 text-success"/>
+                                    <i class="fa fa-clock-o me-1 text-success" title="Clock-in"/>
                                     <field name="check_in" widget="datetime"/>
                                     <t t-if="record.check_out.raw_value">
                                         — <field name="check_out" widget="datetime"/>
@@ -373,7 +373,7 @@
 
                 <separator/>
                 <!-- Group by options -->
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter name="group_date"      string="Date"     context="{'group_by': 'shift_date:day'}"/>
                     <filter name="group_week"       string="Week"     context="{'group_by': 'shift_date:week'}"/>
                     <filter name="group_month"      string="Month"    context="{'group_by': 'shift_date:month'}"/>
