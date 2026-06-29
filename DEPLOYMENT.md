@@ -22,6 +22,74 @@ This guide describes the **target operating model** and what is available today.
 
 ---
 
+## Live server (Alibaba Cloud ECS) — current active environment
+
+> The server hosts two Docker Compose projects. Only the `dogforce-demo` project is active and serving traffic.
+
+| Detail | Value |
+|--------|-------|
+| Provider | Alibaba Cloud ECS, Ubuntu 22.04 LTS |
+| Internal IP | `172.21.166.25` |
+| Project root | `/opt/dogforce` |
+| Compose file | `/opt/dogforce/docker-compose.yml` |
+| Compose project | `dogforce-demo` |
+
+### Active containers
+
+| Container | Role | Ports |
+|-----------|------|-------|
+| `dogforce-demo-odoo-1` | **Active Odoo — use this** | `0.0.0.0:8069`, `0.0.0.0:8072` |
+| `dogforce-demo-db-1` | **Active PostgreSQL** | internal only |
+| `dogforce-odoo-1` | Old/backup Odoo (not serving) | none |
+| `dogforce-db-1` | Old PostgreSQL (paired with above) | internal only |
+
+### Active database
+
+| Detail | Value |
+|--------|-------|
+| Database | `dogforce-demo-two` |
+| DB user | `odoo` / password `odoo_secure_2026` |
+| Host (inside container) | `db:5432` |
+
+### Volume mounts
+
+| Host | Container | Purpose |
+|------|-----------|---------|
+| `/opt/dogforce/conf/odoo.conf` | `/etc/odoo/odoo.conf` | Odoo config |
+| `/opt/dogforce/custom_addons` | `/mnt/extra-addons` | Custom modules |
+| `/opt/dogforce/filestore` | `/var/lib/odoo` | Filestore / attachments |
+
+### Pull + install/upgrade workflow
+
+```bash
+# 1. Pull latest code
+cd /opt/dogforce && git pull origin main
+
+# 2. Install all custom modules on dogforce-demo-two (fresh DB)
+docker exec dogforce-demo-odoo-1 odoo \
+  -c /etc/odoo/odoo.conf \
+  -d dogforce-demo-two \
+  -i security_base,security_operations,security_attendance,security_accounting_controls,security_ai_engine,security_billing,security_client_reports,security_demo_data,security_demo_site,security_discipline,security_documents,security_dogforce_migration,security_equipment,security_fleet,security_help,security_leave,security_licensing,security_loans,security_mobile,security_notifications,security_payroll_core,security_reporting,security_shift_planner,security_suite,security_theme,security_zra_invoice \
+  --stop-after-init --no-http --workers 0 2>&1 | tee /tmp/install.log
+
+# 3. Upgrade specific modules after a code change
+docker exec dogforce-demo-odoo-1 odoo \
+  -c /etc/odoo/odoo.conf \
+  -d dogforce-demo-two \
+  -u security_operations,security_shift_planner \
+  --stop-after-init --no-http --workers 0
+
+# 4. Restart Odoo after upgrades
+docker restart dogforce-demo-odoo-1
+
+# 5. Tail logs
+docker logs -f dogforce-demo-odoo-1
+```
+
+> `--no-http --workers 0` is required when running a second `odoo` process inside an already-running container (avoids port 8069 conflict).
+
+---
+
 ## Environment overview
 
 ```text
