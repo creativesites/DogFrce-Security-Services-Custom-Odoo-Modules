@@ -247,4 +247,153 @@
         <field name="country_code">NA</field>
         <field name="holiday_date">2026-12-26</field>
     </record>
+
+    <!-- ─── Guard Grades (DFSS structure) ─── -->
+    <record id="security_grade_a" model="security.grade">
+        <field name="name">Grade A — Operations Supervisor</field>
+        <field name="code">A</field>
+        <field name="sequence">1</field>
+        <field name="hourly_rate">35.00</field>
+        <field name="responsibility_level">critical</field>
+    </record>
+    <record id="security_grade_b" model="security.grade">
+        <field name="name">Grade B — Senior Officer / Specialist</field>
+        <field name="code">B</field>
+        <field name="sequence">2</field>
+        <field name="hourly_rate">25.00</field>
+        <field name="responsibility_level">high</field>
+    </record>
+    <record id="security_grade_c" model="security.grade">
+        <field name="name">Grade C — Security Officer</field>
+        <field name="code">C</field>
+        <field name="sequence">3</field>
+        <field name="hourly_rate">18.00</field>
+        <field name="responsibility_level">medium</field>
+    </record>
+    <record id="security_grade_d" model="security.grade">
+        <field name="name">Grade D — Junior Security Officer</field>
+        <field name="code">D</field>
+        <field name="sequence">4</field>
+        <field name="hourly_rate">14.00</field>
+        <field name="responsibility_level">low</field>
+    </record>
+    <record id="security_grade_e" model="security.grade">
+        <field name="name">Grade E — Security Trainee</field>
+        <field name="code">E</field>
+        <field name="sequence">5</field>
+        <field name="hourly_rate">11.00</field>
+        <field name="responsibility_level">low</field>
+    </record>
+
+    <!-- ─── Leave Types (Namibia Labour Act) ─── -->
+    <record id="security_leave_type_annual" model="security.leave.type">
+        <field name="name">Annual Leave</field>
+        <field name="code">ANN</field>
+        <field name="accrual_method">worked_time</field>
+        <field name="accrual_rate">1.25</field>
+        <field name="accrual_denominator">17.0</field>
+        <field name="annual_cap_days">30.0</field>
+        <field name="carryover_policy">carry</field>
+        <field name="max_carryover_days">15.0</field>
+    </record>
+    <record id="security_leave_type_sick" model="security.leave.type">
+        <field name="name">Sick Leave</field>
+        <field name="code">SICK</field>
+        <field name="accrual_method">manual</field>
+        <field name="annual_cap_days">30.0</field>
+        <field name="carryover_policy">forfeit</field>
+    </record>
+    <record id="security_leave_type_compassionate" model="security.leave.type">
+        <field name="name">Compassionate Leave</field>
+        <field name="code">COMP</field>
+        <field name="accrual_method">manual</field>
+        <field name="annual_cap_days">5.0</field>
+        <field name="carryover_policy">forfeit</field>
+    </record>
+    <record id="security_leave_type_study" model="security.leave.type">
+        <field name="name">Study Leave</field>
+        <field name="code">STUD</field>
+        <field name="accrual_method">manual</field>
+        <field name="annual_cap_days">5.0</field>
+        <field name="carryover_policy">forfeit</field>
+    </record>
+    <record id="security_leave_type_maternity" model="security.leave.type">
+        <field name="name">Maternity Leave</field>
+        <field name="code">MAT</field>
+        <field name="accrual_method">manual</field>
+        <field name="annual_cap_days">84.0</field>
+        <field name="carryover_policy">forfeit</field>
+    </record>
+    <record id="security_leave_type_unpaid" model="security.leave.type">
+        <field name="name">Unpaid Leave</field>
+        <field name="code">UNPD</field>
+        <field name="accrual_method">manual</field>
+        <field name="annual_cap_days">0.0</field>
+        <field name="carryover_policy">forfeit</field>
+    </record>
+
+    <!-- ─── Shift Templates ─── -->
+    <record id="security_shift_day_12h" model="security.shift.template">
+        <field name="name">Day Shift (06:00–18:00)</field>
+        <field name="start_hour">6.0</field>
+        <field name="end_hour">18.0</field>
+    </record>
+    <record id="security_shift_night_12h" model="security.shift.template">
+        <field name="name">Night Shift (18:00–06:00)</field>
+        <field name="start_hour">18.0</field>
+        <field name="end_hour">6.0</field>
+    </record>
+    <record id="security_shift_morning_8h" model="security.shift.template">
+        <field name="name">Morning Shift (06:00–14:00)</field>
+        <field name="start_hour">6.0</field>
+        <field name="end_hour">14.0</field>
+    </record>
+    <record id="security_shift_afternoon_8h" model="security.shift.template">
+        <field name="name">Afternoon Shift (14:00–22:00)</field>
+        <field name="start_hour">14.0</field>
+        <field name="end_hour">22.0</field>
+    </record>
+    <record id="security_shift_24h" model="security.shift.template">
+        <field name="name">24-Hour Post</field>
+        <field name="start_hour">6.0</field>
+        <field name="end_hour">6.0</field>
+    </record>
+
+    <!-- ─── Post Types ─── -->
+    <record id="security_post_type_main_gate" model="security.post.type">
+        <field name="name">Main Gate / Access Control</field>
+        <field name="code">ACCESS</field>
+        <field name="description">Primary access control point; vehicle and pedestrian screening.</field>
+        <field name="min_grade_id" ref="security_l10n_na.security_grade_c"/>
+    </record>
+    <record id="security_post_type_roving" model="security.post.type">
+        <field name="name">Roving Patrol</field>
+        <field name="code">ROVER</field>
+        <field name="description">Mobile patrol of site perimeter and internal areas.</field>
+        <field name="min_grade_id" ref="security_l10n_na.security_grade_c"/>
+    </record>
+    <record id="security_post_type_cro" model="security.post.type">
+        <field name="name">Control Room Operator</field>
+        <field name="code">CRO</field>
+        <field name="description">CCTV monitoring and radio communication coordination.</field>
+        <field name="min_grade_id" ref="security_l10n_na.security_grade_b"/>
+    </record>
+    <record id="security_post_type_aro" model="security.post.type">
+        <field name="name">Armed Response Officer</field>
+        <field name="code">ARO</field>
+        <field name="description">Armed rapid response to alarm activations.</field>
+        <field name="min_grade_id" ref="security_l10n_na.security_grade_b"/>
+    </record>
+    <record id="security_post_type_foot_patrol" model="security.post.type">
+        <field name="name">Foot Patrol</field>
+        <field name="code">FOOT</field>
+        <field name="description">Static or foot patrol of designated zones.</field>
+        <field name="min_grade_id" ref="security_l10n_na.security_grade_c"/>
+    </record>
+    <record id="security_post_type_supervisor" model="security.post.type">
+        <field name="name">Supervisor / Team Leader</field>
+        <field name="code">SUP</field>
+        <field name="description">On-site supervision of guard team and incident reporting.</field>
+        <field name="min_grade_id" ref="security_l10n_na.security_grade_a"/>
+    </record>
 </odoo>

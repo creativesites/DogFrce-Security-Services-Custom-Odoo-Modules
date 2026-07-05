@@ -680,6 +680,7 @@ class SecurityPayslipDeductionLine(models.Model):
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
+    security_employment_number = fields.Char(string="Employment Number", index=True)
     security_ssc_number = fields.Char(string="SSC Number")
     security_tax_number = fields.Char(string="Income Tax / PAYE Number")
     security_bank_name = fields.Char(string="Bank Name")

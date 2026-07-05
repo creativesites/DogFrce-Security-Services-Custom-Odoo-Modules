@@ -1,10 +1,56 @@
 import base64
 import csv
 import io
-from datetime import date
+import re
+from datetime import date, datetime
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+
+
+# ── helpers ──────────────────────────────────────────────────────────────────
+
+def _parse_bank(raw):
+    """Parse 'FNB-62104036133-SAV' → ('FNB', '62104036133').
+    Handles spaces, branch suffixes, and account-type tags."""
+    if not raw:
+        return "", ""
+    s = str(raw).strip()
+    parts = s.split("-", 1)
+    bank = parts[0].strip()
+    if len(parts) < 2:
+        return bank, ""
+    rest = parts[1].strip()
+    # Account number is the first segment; ignore anything after a second dash or space-alpha suffix
+    acct_raw = rest.split("-")[0].strip()
+    # Strip trailing non-digit branch codes (e.g. "8025388571 CHK" → "8025388571")
+    acct = re.sub(r"\s+[A-Za-z]+$", "", acct_raw).replace(" ", "")
+    return bank, acct
+
+
+def _parse_date(raw):
+    """Normalise dates from datetime objects or DD/MM/YYYY / YYYY-MM-DD strings → date."""
+    if not raw:
+        return None
+    if isinstance(raw, (date, datetime)):
+        return raw.date() if isinstance(raw, datetime) else raw
+    s = str(raw).strip()
+    for fmt in ("%d/%m/%Y", "%Y-%m-%d", "%m/%d/%Y"):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def _normalise_phone(raw):
+    """Turn integer or string Namibian phone numbers into '0XXXXXXXX' strings."""
+    if not raw:
+        return ""
+    s = str(raw).strip().replace(" ", "").replace("+264", "0").replace("264", "")
+    if s and not s.startswith("0"):
+        s = "0" + s
+    return s
 
 
 class SecurityMigrationJob(models.Model):
@@ -104,8 +150,22 @@ class SecurityMigrationJob(models.Model):
 
     # ------------------------------------------------------------------
     # Importer: Guards / Employees
-    # Expected columns: name, work_email, mobile_phone, grade_code,
-    #                   ssc_number, tax_number, bank_name, bank_account_number
+    #
+    # Required columns:
+    #   name
+    #
+    # Optional columns (all formats accepted):
+    #   employment_number   — DFSS-style ID, stored on security_employment_number
+    #   work_email          — unique match key on re-imports
+    #   mobile_phone        — accepts integers; Namibian prefix added automatically
+    #   grade_code          — must match a security.grade code
+    #   ssc_number          — SSC / NAPSA number
+    #   tax_number          — PAYE / income tax number
+    #   national_id         — national identity document number
+    #   employment_date     — DD/MM/YYYY or YYYY-MM-DD; stored as date_start
+    #   position            — job title string
+    #   bank_name + bank_account_number  — explicit separate columns
+    #   bank_raw            — combined e.g. "FNB-62104036133-SAV"; auto-parsed
     # ------------------------------------------------------------------
 
     def _import_employees(self):
@@ -121,18 +181,29 @@ class SecurityMigrationJob(models.Model):
                 if not name:
                     raise ValueError("Column 'name' is required and must not be empty.")
 
+                employment_number = (row.get("employment_number") or "").strip()
                 work_email = (row.get("work_email") or "").strip()
-                mobile_phone = (row.get("mobile_phone") or "").strip()
+                mobile_phone = _normalise_phone(row.get("mobile_phone") or "")
                 grade_code = (row.get("grade_code") or "").strip()
                 ssc_number = (row.get("ssc_number") or "").strip()
                 tax_number = (row.get("tax_number") or "").strip()
-                bank_name = (row.get("bank_name") or "").strip()
-                bank_account_number = (row.get("bank_account_number") or "").strip()
+                national_id = (row.get("national_id") or "").strip()
+                position = (row.get("position") or "").strip()
 
-                vals = {
-                    "name": name,
-                    "security_guard": True,
-                }
+                # Employment date
+                emp_date = _parse_date(row.get("employment_date") or "")
+
+                # Bank: accept either pre-split or raw combined column
+                bank_raw = (row.get("bank_raw") or "").strip()
+                if bank_raw:
+                    bank_name, bank_account_number = _parse_bank(bank_raw)
+                else:
+                    bank_name = (row.get("bank_name") or "").strip()
+                    bank_account_number = (row.get("bank_account_number") or "").strip()
+
+                vals = {"name": name, "security_guard": True}
+                if employment_number:
+                    vals["security_employment_number"] = employment_number
                 if work_email:
                     vals["work_email"] = work_email
                 if mobile_phone:
@@ -141,6 +212,12 @@ class SecurityMigrationJob(models.Model):
                     vals["security_ssc_number"] = ssc_number
                 if tax_number:
                     vals["security_tax_number"] = tax_number
+                if national_id:
+                    vals["identification_id"] = national_id
+                if position:
+                    vals["job_title"] = position
+                if emp_date:
+                    vals["date_start"] = emp_date
                 if bank_name:
                     vals["security_bank_name"] = bank_name
                 if bank_account_number:
@@ -153,11 +230,18 @@ class SecurityMigrationJob(models.Model):
                     if grade:
                         vals["security_grade_id"] = grade.id
                     else:
-                        logs.append("Row %d: Grade code '%s' not found — skipped grade mapping." % (row_num, grade_code))
+                        logs.append(
+                            "Row %d: Grade code '%s' not found — skipped grade mapping."
+                            % (row_num, grade_code)
+                        )
 
-                # Create or update by work_email if provided
+                # Match priority: employment_number → work_email → name
                 existing = False
-                if work_email:
+                if employment_number:
+                    existing = self.env["hr.employee"].search(
+                        [("security_employment_number", "=", employment_number)], limit=1
+                    )
+                if not existing and work_email:
                     existing = self.env["hr.employee"].search(
                         [("work_email", "=", work_email)], limit=1
                     )
@@ -168,10 +252,10 @@ class SecurityMigrationJob(models.Model):
 
                 if existing:
                     existing.write(vals)
-                    logs.append("Row %d: Updated employee '%s'." % (row_num, name))
+                    logs.append("Row %d: Updated '%s' (%s)." % (row_num, name, employment_number or "no emp#"))
                 else:
                     self.env["hr.employee"].create(vals)
-                    logs.append("Row %d: Created employee '%s'." % (row_num, name))
+                    logs.append("Row %d: Created '%s' (%s)." % (row_num, name, employment_number or "no emp#"))
 
                 imported += 1
 

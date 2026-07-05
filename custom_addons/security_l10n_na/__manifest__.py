@@ -5,7 +5,7 @@
     "category": "Localization",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_leave"],
+    "depends": ["security_leave", "security_operations"],
     "data": [
         "security/ir.model.access.csv",
         "data/security_l10n_na_data.xml",
