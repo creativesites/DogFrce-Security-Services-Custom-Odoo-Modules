@@ -1,6 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ─── Security Guards list (filtered hr.employee) ─── -->
+    <record id="action_security_guards" model="ir.actions.act_window">
+        <field name="name">Security Guards</field>
+        <field name="res_model">hr.employee</field>
+        <field name="view_mode">list,form,kanban</field>
+        <field name="domain">[('security_guard', '=', True)]</field>
+        <field name="context">{'default_security_guard': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add your first security guard!
+            </p>
+            <p>
+                Create guard profiles here. Each guard can be assigned a grade, bank details,
+                certifications, and availability for rostering.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_guards"
+        name="Security Guards"
+        parent="security_operations.menu_security_workforce"
+        action="action_security_guards"
+        sequence="5"
+        groups="hr.group_hr_user"
+    />
+
     <record id="view_security_guard_availability_list" model="ir.ui.view">
         <field name="name">security.guard.availability.list</field>
         <field name="model">security.guard.availability</field>
