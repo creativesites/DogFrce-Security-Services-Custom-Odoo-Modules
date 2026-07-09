@@ -1,0 +1,895 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shift_planner.RosteringHub" owl="1">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     ROSTERING HUB — Mobile-first single-page rostering workspace
+     Shell:  [sidebar (desktop)] [main area] [guard panel (desktop)]
+             [bottom-sheet (mobile)] [bottom-nav (mobile)]
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="rh-shell">
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       CREATE BATCH MODAL
+       ─────────────────────────────────────────────────────────────────────── -->
+  <t t-if="state.showCreate">
+    <div class="rh-modal-backdrop" t-on-click="closeCreateModal">
+      <div class="rh-modal" t-on-click.stop="">
+        <div class="rh-modal-header">
+          <span class="rh-modal-title"><i class="fa fa-plus-circle me-2"/>New Roster Batch</span>
+          <button class="rh-icon-btn" t-on-click="closeCreateModal"><i class="fa fa-times"/></button>
+        </div>
+        <div class="rh-modal-body">
+          <div class="rh-field-group">
+            <label class="rh-label">Start Date <span class="text-danger">*</span></label>
+            <input type="date" class="rh-input"
+                   t-att-value="state.newBatch.date_from"
+                   t-on-change="ev => this.onNewField('date_from', ev)"/>
+          </div>
+          <div class="rh-field-group">
+            <label class="rh-label">End Date <span class="text-danger">*</span></label>
+            <input type="date" class="rh-input"
+                   t-att-value="state.newBatch.date_to"
+                   t-on-change="ev => this.onNewField('date_to', ev)"/>
+          </div>
+          <div class="rh-field-group">
+            <label class="rh-label">Notes</label>
+            <textarea class="rh-input" rows="2" placeholder="Optional notes…"
+                      t-att-value="state.newBatch.note"
+                      t-on-input="ev => this.onNewField('note', ev)"/>
+          </div>
+        </div>
+        <div class="rh-modal-footer">
+          <button class="rh-btn rh-btn-ghost" t-on-click="closeCreateModal">Cancel</button>
+          <button class="rh-btn rh-btn-primary" t-on-click="createBatch"
+                  t-att-disabled="state.creating">
+            <i t-att-class="state.creating ? 'fa fa-spinner fa-spin me-1' : 'fa fa-check me-1'"/>
+            <t t-if="state.creating">Creating…</t>
+            <t t-else="">Create Batch</t>
+          </button>
+        </div>
+      </div>
+    </div>
+  </t>
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       LEFT SIDEBAR  (hidden on mobile — shown md+)
+       ─────────────────────────────────────────────────────────────────────── -->
+  <aside class="rh-sidebar">
+    <!-- Brand -->
+    <div class="rh-brand">
+      <div class="rh-brand-logo"><i class="fa fa-shield rh-brand-icon"/>DogForce</div>
+      <div class="rh-brand-sub">Rostering Hub</div>
+    </div>
+
+    <!-- Batch selector -->
+    <div class="rh-sidebar-section">
+      <div class="rh-sidebar-label">Roster Batch</div>
+      <select class="rh-select" t-on-change="onBatchChange">
+        <option value="">— Select Batch —</option>
+        <t t-foreach="state.batches" t-as="b" t-key="b.id">
+          <option t-att-value="b.id" t-att-selected="b.id === state.batchId">
+            <t t-esc="b.name"/>
+          </option>
+        </t>
+      </select>
+
+      <!-- Batch state pill -->
+      <t t-if="state.batch">
+        <div class="rh-state-pill mt-2"
+             t-att-style="'background:' + batchStateBg(state.batch.state) + '; color:' + batchStateColor(state.batch.state) + '; border:1px solid ' + batchStateColor(state.batch.state) + '22;'">
+          <span class="rh-state-dot" t-att-style="'background:' + batchStateColor(state.batch.state)"/>
+          <t t-esc="(state.batch.state || '').toUpperCase()"/>
+        </div>
+      </t>
+    </div>
+
+    <!-- Site filter (only when batch loaded) -->
+    <t t-if="state.batchId and state.sites.length">
+      <div class="rh-sidebar-section">
+        <div class="rh-sidebar-label">Filter Site</div>
+        <select class="rh-select" t-on-change="onSiteFilter">
+          <option value="">All Sites</option>
+          <t t-foreach="state.sites" t-as="site" t-key="site.id">
+            <option t-att-value="site.id" t-att-selected="site.id === state.filterSiteId"
+                    t-esc="site.name"/>
+          </t>
+        </select>
+      </div>
+    </t>
+
+    <!-- Coverage stats -->
+    <t t-if="state.batchId and state.stats.total">
+      <div class="rh-sidebar-section">
+        <div class="rh-sidebar-label">Coverage</div>
+        <div class="rh-progress-bar">
+          <div class="rh-progress-fill" t-att-style="'width:' + coveragePercent + '%'"/>
+        </div>
+        <div class="rh-stat-row"><span class="rh-stat-dot rh-dot-green"/>Assigned
+          <strong t-esc="state.stats.assigned"/>
+        </div>
+        <div class="rh-stat-row"><span class="rh-stat-dot rh-dot-amber"/>Unassigned
+          <strong t-esc="state.stats.unassigned"/>
+        </div>
+        <div class="rh-stat-row"><span class="rh-stat-dot rh-dot-red"/>Conflicts
+          <strong t-esc="state.stats.conflicts"/>
+        </div>
+        <div class="rh-coverage-big" t-esc="coveragePercent + '%'"/>
+      </div>
+    </t>
+
+    <div style="flex:1"/>
+
+    <!-- Sidebar nav links -->
+    <div class="rh-sidebar-nav">
+      <button t-att-class="'rh-nav-btn' + (state.view === 'dashboard' ? ' rh-nav-active' : '')"
+              t-on-click="() => this.setView('dashboard')">
+        <i class="fa fa-tachometer rh-nav-icon"/>Dashboard
+      </button>
+      <button t-att-class="'rh-nav-btn' + (state.view === 'roster' ? ' rh-nav-active' : '')"
+              t-on-click="() => this.setView('roster')">
+        <i class="fa fa-calendar rh-nav-icon"/>Monthly Roster
+      </button>
+      <button t-att-class="'rh-nav-btn' + (state.view === 'setup' ? ' rh-nav-active' : '')"
+              t-on-click="() => this.setView('setup')">
+        <i class="fa fa-cog rh-nav-icon"/>Setup
+      </button>
+    </div>
+  </aside>
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       MAIN AREA
+       ─────────────────────────────────────────────────────────────────────── -->
+  <div class="rh-main">
+
+    <!-- ── Top bar ── -->
+    <div class="rh-topbar">
+      <div class="rh-topbar-left">
+        <!-- Mobile batch selector -->
+        <select class="rh-select rh-mobile-batch-select d-md-none" t-on-change="onBatchChange">
+          <option value="">— Select Batch —</option>
+          <t t-foreach="state.batches" t-as="b" t-key="b.id">
+            <option t-att-value="b.id" t-att-selected="b.id === state.batchId"
+                    t-esc="b.name"/>
+          </t>
+        </select>
+        <!-- Desktop batch title -->
+        <div class="d-none d-md-block">
+          <div class="rh-topbar-title">
+            <t t-if="state.batch" t-esc="state.batch.name"/>
+            <span t-else="" class="text-muted">Select a Roster Batch</span>
+            <t t-if="state.batch">
+              <span class="rh-top-state-pill ms-2"
+                    t-att-style="'background:' + batchStateColor(state.batch.state) + ';'">
+                <t t-esc="(state.batch.state || '').toUpperCase()"/>
+              </span>
+            </t>
+          </div>
+          <div t-if="state.batch" class="rh-topbar-sub">
+            <t t-esc="fmtDateFull(state.batch.date_from)"/>
+            <span class="mx-1">–</span>
+            <t t-esc="fmtDateFull(state.batch.date_to)"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="rh-topbar-actions">
+        <button class="rh-btn rh-btn-ghost rh-btn-sm"
+                t-on-click="openCreateModal">
+          <i class="fa fa-plus me-1"/>
+          <span class="d-none d-sm-inline">New Batch</span>
+        </button>
+        <t t-if="state.batchId and unassignedCount > 0">
+          <button class="rh-btn rh-btn-success rh-btn-sm"
+                  t-on-click="autoAssignAll"
+                  t-att-disabled="state.autoAssigning or state.loading">
+            <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin me-1' : 'fa fa-bolt me-1'"/>
+            <t t-if="state.autoAssigning">Assigning…</t>
+            <t t-else="">
+              Auto-Assign
+              <span class="rh-count-badge" t-esc="unassignedCount"/>
+            </t>
+          </button>
+        </t>
+        <button class="rh-btn rh-btn-ghost rh-btn-sm"
+                t-on-click="loadBoardData"
+                t-att-disabled="state.loading">
+          <i t-att-class="state.loading ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Alerts strip ── -->
+    <t t-if="state.alerts.length and state.batchId">
+      <div class="rh-alerts-strip">
+        <t t-foreach="state.alerts" t-as="alert" t-key="alert_index">
+          <div class="rh-alert-item"
+               t-att-style="'background:' + alertBg(alert.type) + '; color:' + alertColor(alert.type)">
+            <i t-att-class="'fa ' + alert.icon + ' me-2'"/>
+            <t t-esc="alert.text"/>
+          </div>
+        </t>
+      </div>
+    </t>
+
+    <!-- ── Body (content + right panel) ── -->
+    <div class="rh-body">
+
+      <!-- Content area -->
+      <div class="rh-content">
+
+        <!-- ══════════════════════════════════════════════════════════════
+             DASHBOARD VIEW
+             ══════════════════════════════════════════════════════════════ -->
+        <t t-if="state.view === 'dashboard'">
+
+          <!-- No batch selected -->
+          <t t-if="!state.batchId">
+            <div class="rh-empty-state">
+              <i class="fa fa-calendar-o rh-empty-icon"/>
+              <div class="rh-empty-title">No Batch Selected</div>
+              <div class="rh-empty-sub">Choose a roster batch or create a new one to get started.</div>
+              <button class="rh-btn rh-btn-primary mt-3" t-on-click="openCreateModal">
+                <i class="fa fa-plus me-2"/>Create First Batch
+              </button>
+            </div>
+          </t>
+
+          <t t-else="">
+            <!-- Stats cards row -->
+            <div class="rh-cards-row">
+              <div class="rh-stat-card rh-card-blue">
+                <div class="rh-stat-card-label">Total Slots</div>
+                <div class="rh-stat-card-value" t-esc="state.stats.total"/>
+                <div class="rh-stat-card-foot">this batch</div>
+              </div>
+              <div class="rh-stat-card rh-card-green">
+                <div class="rh-stat-card-label">Assigned</div>
+                <div class="rh-stat-card-value" t-esc="state.stats.assigned"/>
+                <div class="rh-stat-card-foot" t-esc="coveragePercent + '% coverage'"/>
+              </div>
+              <div class="rh-stat-card rh-card-amber">
+                <div class="rh-stat-card-label">Unassigned</div>
+                <div class="rh-stat-card-value" t-esc="state.stats.unassigned"/>
+                <div class="rh-stat-card-foot">
+                  <t t-if="state.stats.unassigned > 0">needs attention</t>
+                  <t t-else="">fully covered</t>
+                </div>
+              </div>
+              <div class="rh-stat-card rh-card-red">
+                <div class="rh-stat-card-label">Conflicts</div>
+                <div class="rh-stat-card-value" t-esc="state.stats.conflicts"/>
+                <div class="rh-stat-card-foot">fairness warnings</div>
+              </div>
+            </div>
+
+            <!-- Coverage bar -->
+            <div class="rh-coverage-section">
+              <div class="rh-coverage-header">
+                <span class="rh-section-title">Coverage Progress</span>
+                <span class="rh-coverage-pct" t-esc="coveragePercent + '%'"/>
+              </div>
+              <div class="rh-big-progress">
+                <div class="rh-big-progress-fill"
+                     t-att-style="'width:' + coveragePercent + '%; background:' + (coveragePercent >= 80 ? '#16a34a' : coveragePercent >= 50 ? '#f59e0b' : '#ef4444')"/>
+              </div>
+            </div>
+
+            <!-- Today's shifts -->
+            <div class="rh-section-card">
+              <div class="rh-section-title mb-2">
+                <i class="fa fa-sun-o me-2" style="color:#f59e0b;"/>
+                Today's Assignments
+                <span class="rh-count-badge ms-2" t-esc="state.todaySlots.length"/>
+              </div>
+              <t t-if="state.todaySlots.length === 0">
+                <div class="rh-empty-inline">No shifts scheduled for today in this batch.</div>
+              </t>
+              <t t-else="">
+                <div class="rh-today-list">
+                  <t t-foreach="state.todaySlots" t-as="s" t-key="s.id">
+                    <div t-on-click="() => this.selectSlot(s)"
+                         t-att-class="'rh-today-row' + (s.conflict ? ' rh-today-conflict' : s.employee_id ? ' rh-today-assigned' : ' rh-today-empty')">
+                      <div class="rh-today-post">
+                        <div class="rh-today-post-name" t-esc="s.post_name"/>
+                        <div class="rh-today-site-name" t-esc="s.site_name"/>
+                      </div>
+                      <div class="rh-today-guard">
+                        <t t-if="s.employee_name">
+                          <span class="rh-guard-chip rh-chip-green">
+                            <i class="fa fa-user-check me-1"/><t t-esc="s.employee_name"/>
+                          </span>
+                        </t>
+                        <t t-else="">
+                          <span class="rh-guard-chip rh-chip-grey">
+                            <i class="fa fa-user-plus me-1"/>Unassigned
+                          </span>
+                        </t>
+                      </div>
+                      <div t-if="s.shift_label" class="rh-today-time" t-esc="s.shift_label"/>
+                    </div>
+                  </t>
+                </div>
+              </t>
+            </div>
+
+            <!-- Quick actions -->
+            <div class="rh-section-card">
+              <div class="rh-section-title mb-2">
+                <i class="fa fa-rocket me-2" style="color:#3b82f6;"/>Quick Actions
+              </div>
+              <div class="rh-quick-actions">
+                <button class="rh-quick-btn" t-on-click="() => this.setView('roster')">
+                  <i class="fa fa-calendar rh-quick-icon"/>
+                  <span>View Roster</span>
+                </button>
+                <t t-if="unassignedCount > 0">
+                  <button class="rh-quick-btn rh-quick-green"
+                          t-on-click="autoAssignAll"
+                          t-att-disabled="state.autoAssigning">
+                    <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin rh-quick-icon' : 'fa fa-bolt rh-quick-icon'"/>
+                    <span>Auto-Assign All</span>
+                  </button>
+                </t>
+                <button class="rh-quick-btn" t-on-click="() => this.setView('setup')">
+                  <i class="fa fa-cog rh-quick-icon"/>
+                  <span>Batch Setup</span>
+                </button>
+                <button class="rh-quick-btn" t-on-click="openCreateModal">
+                  <i class="fa fa-plus rh-quick-icon"/>
+                  <span>New Batch</span>
+                </button>
+              </div>
+            </div>
+          </t>
+        </t>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             MONTHLY ROSTER VIEW
+             ══════════════════════════════════════════════════════════════ -->
+        <t t-elif="state.view === 'roster'">
+
+          <t t-if="!state.batchId or state.slots.length === 0">
+            <div class="rh-empty-state">
+              <i class="fa fa-calendar rh-empty-icon"/>
+              <div class="rh-empty-title">
+                <t t-if="!state.batchId">No Batch Selected</t>
+                <t t-elif="state.batch and state.batch.state === 'draft'">No Slots Generated Yet</t>
+                <t t-else="">No Roster Slots Found</t>
+              </div>
+              <div class="rh-empty-sub">
+                <t t-if="!state.batchId">Select or create a batch to see the roster.</t>
+                <t t-elif="state.batch and state.batch.state === 'draft'">Go to Setup to generate slots for this batch.</t>
+                <t t-else="">This batch has no slots. Generate slots in Setup.</t>
+              </div>
+              <button t-if="state.batch and state.batch.state === 'draft'"
+                      class="rh-btn rh-btn-primary mt-3"
+                      t-on-click="() => this.setView('setup')">
+                <i class="fa fa-cog me-2"/>Go to Setup
+              </button>
+            </div>
+          </t>
+
+          <t t-else="">
+
+            <!-- ── MOBILE: Day navigator + per-day list ── (visible only on mobile) -->
+            <div class="d-md-none">
+              <div class="rh-day-nav">
+                <button class="rh-day-nav-btn" t-on-click="prevDay"
+                        t-att-disabled="state.mobileDayIdx === 0">
+                  <i class="fa fa-chevron-left"/>
+                </button>
+                <div class="rh-day-nav-label">
+                  <t t-if="currentMobileDate">
+                    <div class="rh-day-date" t-esc="fmtDateMed(currentMobileDate)"/>
+                    <div t-if="isToday(currentMobileDate)" class="rh-today-badge">Today</div>
+                  </t>
+                </div>
+                <button class="rh-day-nav-btn" t-on-click="nextDay"
+                        t-att-disabled="state.mobileDayIdx >= state.dates.length - 1">
+                  <i class="fa fa-chevron-right"/>
+                </button>
+              </div>
+
+              <!-- Day progress mini bar -->
+              <t t-if="currentMobileDate">
+                <t t-set="daySlots" t-value="getSlotsForDay(currentMobileDate)"/>
+                <t t-set="dayAssigned" t-value="daySlots.filter(s => s.employee_id).length"/>
+                <div class="rh-day-summary">
+                  <span t-esc="dayAssigned + ' / ' + daySlots.length + ' assigned'"/>
+                  <div class="rh-mini-progress">
+                    <div class="rh-mini-fill"
+                         t-att-style="'width:' + (daySlots.length ? Math.round(dayAssigned/daySlots.length*100) : 0) + '%'"/>
+                  </div>
+                </div>
+
+                <!-- Mobile day slot list -->
+                <div class="rh-mobile-slots">
+                  <t t-foreach="visibleSites" t-as="site" t-key="site.id">
+                    <div class="rh-mobile-site-header">
+                      <i class="fa fa-building me-1" style="color:#3b82f6;"/>
+                      <t t-esc="site.name"/>
+                    </div>
+                    <t t-foreach="getPostsForSite(site.id)" t-as="post" t-key="post.id">
+                      <t t-set="cellSlots" t-value="getSlotsForCell(site.id, post.id, currentMobileDate)"/>
+                      <t t-if="cellSlots.length > 0">
+                        <t t-foreach="cellSlots" t-as="slot" t-key="slot.id">
+                          <div t-on-click="() => this.selectSlot(slot)"
+                               t-att-class="'rh-mobile-slot-row' + (slot.conflict ? ' rh-slot-conflict' : slot.employee_id ? ' rh-slot-assigned' : ' rh-slot-empty')">
+                            <div class="rh-mobile-slot-post">
+                              <div class="rh-mobile-slot-name" t-esc="post.name"/>
+                              <div t-if="slot.shift_label" class="rh-mobile-slot-time" t-esc="slot.shift_label"/>
+                            </div>
+                            <div class="rh-mobile-slot-guard">
+                              <t t-if="slot.employee_name">
+                                <span class="rh-guard-chip rh-chip-green" t-esc="slot.employee_name"/>
+                              </t>
+                              <t t-else="">
+                                <span class="rh-guard-chip rh-chip-empty">
+                                  <i class="fa fa-plus me-1"/>Assign
+                                </span>
+                              </t>
+                              <t t-if="slot.conflict">
+                                <span class="rh-conflict-badge ms-1">!</span>
+                              </t>
+                            </div>
+                          </div>
+                        </t>
+                      </t>
+                    </t>
+                  </t>
+                </div>
+
+                <!-- Dots pagination -->
+                <div class="rh-day-dots">
+                  <t t-foreach="state.dates" t-as="d" t-key="d">
+                    <span t-on-click="() => { this.state.mobileDayIdx = d_index; }"
+                          t-att-class="'rh-dot' + (d_index === state.mobileDayIdx ? ' rh-dot-active' : '') + (isToday(d) ? ' rh-dot-today' : '')"/>
+                  </t>
+                </div>
+              </t>
+            </div>
+
+            <!-- ── DESKTOP: Full monthly grid ── (hidden on mobile) -->
+            <div class="d-none d-md-block rh-grid-wrapper">
+
+              <!-- Site filter bar (desktop) -->
+              <div class="rh-grid-toolbar">
+                <select class="rh-select rh-select-sm" t-on-change="onSiteFilter">
+                  <option value="">All Sites</option>
+                  <t t-foreach="state.sites" t-as="site" t-key="site.id">
+                    <option t-att-value="site.id"
+                            t-att-selected="site.id === state.filterSiteId"
+                            t-esc="site.name"/>
+                  </t>
+                </select>
+                <div class="rh-grid-legend">
+                  <span class="rh-legend-dot rh-dot-green"/>Assigned
+                  <span class="rh-legend-dot rh-dot-amber ms-2"/>Unassigned
+                  <span class="rh-legend-dot rh-dot-red ms-2"/>Conflict
+                </div>
+              </div>
+
+              <!-- Grid table -->
+              <div class="rh-grid-scroll">
+                <table class="rh-grid-table">
+                  <thead>
+                    <tr>
+                      <th class="rh-th-label">Site / Post</th>
+                      <t t-foreach="state.dates" t-as="d" t-key="d">
+                        <th t-att-class="'rh-th-date' + (isToday(d) ? ' rh-th-today' : isWeekend(d) ? ' rh-th-weekend' : '')">
+                          <div class="rh-th-day" t-esc="fmtDateShort(d)"/>
+                          <div class="rh-th-dow" t-esc="dayName(d)"/>
+                          <div t-if="isToday(d)" class="rh-today-dot"/>
+                        </th>
+                      </t>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <t t-foreach="visibleSites" t-as="site" t-key="site.id">
+                      <!-- Site header row -->
+                      <tr>
+                        <td class="rh-td-site-header" colspan="999">
+                          <i class="fa fa-building me-1" style="color:#3b82f6;"/>
+                          <t t-esc="site.name"/>
+                        </td>
+                      </tr>
+                      <!-- Post rows -->
+                      <t t-foreach="getPostsForSite(site.id)" t-as="post" t-key="post.id">
+                        <tr>
+                          <td class="rh-td-post-label">
+                            <i class="fa fa-map-marker me-1" style="color:#94a3b8;"/>
+                            <t t-esc="post.name"/>
+                          </td>
+                          <t t-foreach="state.dates" t-as="d" t-key="d">
+                            <t t-set="cellSlots" t-value="getSlotsForCell(site.id, post.id, d)"/>
+                            <td t-att-class="'rh-td-cell' + (isToday(d) ? ' rh-cell-today' : isWeekend(d) ? ' rh-cell-weekend' : '')">
+                              <t t-if="cellSlots.length === 0">
+                                <div class="rh-cell-empty">—</div>
+                              </t>
+                              <t t-foreach="cellSlots" t-as="slot" t-key="slot.id">
+                                <t t-if="slot.state === 'cancelled'">
+                                  <div class="rh-slot rh-slot-cancelled">
+                                    <span class="rh-slot-text">Cancelled</span>
+                                  </div>
+                                </t>
+                                <t t-elif="slot.employee_id">
+                                  <div t-on-click="() => this.selectSlot(slot)"
+                                       t-att-class="'rh-slot rh-slot-assigned' + (slot.conflict ? ' rh-slot-conflict' : '')">
+                                    <t t-if="slot.conflict">
+                                      <span class="rh-conflict-tag">!</span>
+                                    </t>
+                                    <div class="rh-slot-name" t-esc="slot.employee_name"/>
+                                    <div t-if="slot.shift_label" class="rh-slot-time" t-esc="slot.shift_label"/>
+                                  </div>
+                                </t>
+                                <t t-else="">
+                                  <div t-on-click="() => this.selectSlot(slot)"
+                                       class="rh-slot rh-slot-empty">
+                                    <div class="rh-slot-unassigned">+</div>
+                                    <div t-if="slot.shift_label" class="rh-slot-time" t-esc="slot.shift_label"/>
+                                  </div>
+                                </t>
+                              </t>
+                            </td>
+                          </t>
+                        </tr>
+                      </t>
+                    </t>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </t>
+        </t>
+
+        <!-- ══════════════════════════════════════════════════════════════
+             SETUP VIEW
+             ══════════════════════════════════════════════════════════════ -->
+        <t t-elif="state.view === 'setup'">
+          <div class="rh-setup-grid">
+
+            <!-- Batch info card -->
+            <div class="rh-setup-card">
+              <div class="rh-setup-card-title">
+                <i class="fa fa-folder-open me-2" style="color:#3b82f6;"/>Batch Details
+              </div>
+              <t t-if="!state.batch">
+                <div class="rh-empty-inline">No batch selected. Use the batch selector above.</div>
+              </t>
+              <t t-else="">
+                <div class="rh-info-row">
+                  <span class="rh-info-label">Name</span>
+                  <span class="rh-info-value" t-esc="state.batch.name"/>
+                </div>
+                <div class="rh-info-row">
+                  <span class="rh-info-label">Period</span>
+                  <span class="rh-info-value">
+                    <t t-esc="fmtDateShort(state.batch.date_from)"/>
+                    <span class="mx-1">–</span>
+                    <t t-esc="fmtDateShort(state.batch.date_to)"/>
+                  </span>
+                </div>
+                <div class="rh-info-row">
+                  <span class="rh-info-label">Status</span>
+                  <span class="rh-state-pill-inline"
+                        t-att-style="'background:' + batchStateBg(state.batch.state) + '; color:' + batchStateColor(state.batch.state) + ';'">
+                    <t t-esc="(state.batch.state || '').toUpperCase()"/>
+                  </span>
+                </div>
+                <div class="rh-info-row">
+                  <span class="rh-info-label">Slots</span>
+                  <span class="rh-info-value">
+                    <t t-esc="state.stats.assigned"/> / <t t-esc="state.stats.total"/> assigned
+                  </span>
+                </div>
+              </t>
+            </div>
+
+            <!-- Workflow actions card -->
+            <div class="rh-setup-card">
+              <div class="rh-setup-card-title">
+                <i class="fa fa-sitemap me-2" style="color:#8b5cf6;"/>Workflow Actions
+              </div>
+              <t t-if="!state.batch">
+                <div class="rh-empty-inline">Select a batch to see available actions.</div>
+              </t>
+              <t t-else="">
+                <div class="rh-workflow-steps">
+                  <div t-att-class="'rh-step' + (['draft','generated','submitted','approved','confirmed'].indexOf(state.batch.state) >= 0 ? ' rh-step-done' : '')">
+                    <span class="rh-step-num">1</span>Draft
+                  </div>
+                  <div t-att-class="'rh-step' + (['generated','submitted','approved','confirmed'].indexOf(state.batch.state) >= 0 ? ' rh-step-done' : '')">
+                    <span class="rh-step-num">2</span>Generated
+                  </div>
+                  <div t-att-class="'rh-step' + (['submitted','approved','confirmed'].indexOf(state.batch.state) >= 0 ? ' rh-step-done' : '')">
+                    <span class="rh-step-num">3</span>Submitted
+                  </div>
+                  <div t-att-class="'rh-step' + (['approved','confirmed'].indexOf(state.batch.state) >= 0 ? ' rh-step-done' : '')">
+                    <span class="rh-step-num">4</span>Approved
+                  </div>
+                  <div t-att-class="'rh-step' + (state.batch.state === 'confirmed' ? ' rh-step-done' : '')">
+                    <span class="rh-step-num">5</span>Confirmed
+                  </div>
+                </div>
+                <div class="rh-workflow-btns mt-3">
+                  <t t-foreach="batchWorkflowActions" t-as="wa" t-key="wa.method">
+                    <button t-att-class="'rh-btn ' + wa.cls"
+                            t-on-click="() => this.runWorkflowAction(wa.method)"
+                            t-att-disabled="state.generating">
+                      <i t-att-class="'fa ' + wa.icon + ' me-1'"/>
+                      <t t-if="wa.method === '_generateSlots' and state.generating">Generating…</t>
+                      <t t-else="" t-esc="wa.label"/>
+                    </button>
+                  </t>
+                </div>
+              </t>
+            </div>
+
+            <!-- Copy / import card -->
+            <div class="rh-setup-card" t-if="state.batch and state.batch.state === 'generated'">
+              <div class="rh-setup-card-title">
+                <i class="fa fa-copy me-2" style="color:#0891b2;"/>Import Assignments
+              </div>
+              <p class="rh-setup-hint">
+                Copy guard assignments from the previous month's confirmed batch into this one.
+                Existing assignments are not overwritten.
+              </p>
+              <button class="rh-btn rh-btn-primary" t-on-click="_copyPrevious">
+                <i class="fa fa-copy me-1"/>Copy From Previous Month
+              </button>
+            </div>
+
+            <!-- New batch shortcut card -->
+            <div class="rh-setup-card">
+              <div class="rh-setup-card-title">
+                <i class="fa fa-plus-circle me-2" style="color:#16a34a;"/>Create New Batch
+              </div>
+              <p class="rh-setup-hint">Start a fresh roster batch for a new month or period.</p>
+              <button class="rh-btn rh-btn-success" t-on-click="openCreateModal">
+                <i class="fa fa-plus me-1"/>New Roster Batch
+              </button>
+            </div>
+
+          </div>
+        </t>
+
+      </div><!-- /rh-content -->
+
+      <!-- ── DESKTOP: Guard panel (right drawer) ── -->
+      <t t-if="state.panelOpen and state.selectedSlot">
+        <div class="rh-guard-panel d-none d-md-flex">
+          <div class="rh-panel-header">
+            <div>
+              <div class="rh-panel-post" t-esc="state.selectedSlot.post_name"/>
+              <div class="rh-panel-meta">
+                <i class="fa fa-building me-1"/><t t-esc="state.selectedSlot.site_name"/>
+              </div>
+              <div class="rh-panel-meta">
+                <i class="fa fa-calendar me-1"/><t t-esc="fmtDateMed(state.selectedSlot.shift_date)"/>
+                <t t-if="state.selectedSlot.shift_label">
+                  <span class="mx-1">·</span><i class="fa fa-clock-o me-1"/>
+                  <t t-esc="state.selectedSlot.shift_label"/>
+                </t>
+              </div>
+            </div>
+            <button class="rh-icon-btn" t-on-click="closePanel"><i class="fa fa-times"/></button>
+          </div>
+
+          <!-- Currently assigned guard -->
+          <t t-if="state.selectedSlot.employee_name">
+            <div class="rh-assigned-badge">
+              <div class="rh-assigned-label"><i class="fa fa-user-check me-1"/>Assigned Guard</div>
+              <div class="rh-assigned-name" t-esc="state.selectedSlot.employee_name"/>
+            </div>
+          </t>
+
+          <!-- Panel actions -->
+          <div class="rh-panel-actions">
+            <button class="rh-btn rh-btn-primary flex-fill"
+                    t-on-click="loadSuggestions"
+                    t-att-disabled="state.loadingSuggestions">
+              <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-magic me-1'"/>
+              <t t-if="state.loadingSuggestions">Scoring…</t>
+              <t t-elif="state.selectedSlot.employee_name">Find Replacement</t>
+              <t t-elif="state.suggestionsLoaded">Refresh</t>
+              <t t-else="">Suggest Guards</t>
+            </button>
+            <t t-if="state.selectedSlot.employee_name">
+              <button class="rh-btn rh-btn-danger" t-on-click="unassignSlot">
+                <i class="fa fa-user-times"/>
+              </button>
+            </t>
+          </div>
+
+          <!-- Error banner -->
+          <t t-if="state.assignError">
+            <div class="rh-assign-error">
+              <i class="fa fa-exclamation-triangle me-2"/>
+              <div>
+                <div class="rh-assign-error-name" t-esc="state.assignError.guardName + ' cannot be assigned'"/>
+                <div class="rh-assign-error-msg" t-esc="state.assignError.message"/>
+              </div>
+            </div>
+          </t>
+
+          <!-- Suggestions list -->
+          <div class="rh-suggestions-body">
+            <t t-if="state.loadingSuggestions">
+              <div class="rh-loading-center">
+                <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>Scoring guards…
+              </div>
+            </t>
+            <t t-elif="state.suggestions.length">
+              <div class="rh-sug-header">
+                <i class="fa fa-list-ol me-1"/>Ranked Suggestions (<t t-esc="state.suggestions.length"/>)
+              </div>
+              <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
+                <div class="rh-sug-card">
+                  <div class="rh-sug-top">
+                    <div class="rh-sug-meta">
+                      <span class="rh-rank-badge">#<t t-esc="sug.rank"/></span>
+                      <span class="rh-sug-name" t-esc="sug.employee_name"/>
+                    </div>
+                    <div class="rh-sug-score"
+                         t-att-style="'color:' + scoreColor(sug.score)"
+                         t-esc="Math.round(sug.score)"/>
+                  </div>
+                  <t t-if="sug.grade">
+                    <div class="rh-sug-grade"><i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/></div>
+                  </t>
+                  <div class="rh-score-bar-track">
+                    <div class="rh-score-bar-fill"
+                         t-att-style="'width:' + Math.min(100, sug.score/150*100) + '%; background:' + scoreBarColor(sug.score)"/>
+                  </div>
+                  <div t-if="sug.score_breakdown" class="rh-sug-breakdown" t-esc="sug.score_breakdown"/>
+                  <button class="rh-btn rh-btn-assign w-100 mt-2"
+                          t-on-click="() => this.assignGuard(sug)">
+                    <i class="fa fa-check me-1"/>Assign
+                  </button>
+                </div>
+              </t>
+            </t>
+            <t t-elif="state.suggestionsLoaded">
+              <div class="rh-loading-center">
+                <i class="fa fa-exclamation-circle d-block mb-2" style="color:#fbbf24; font-size:28px;"/>
+                <div style="font-weight:600; color:#475569;">No Eligible Guards</div>
+                <div style="font-size:11px; color:#94a3b8;">No guards matched the criteria for this slot.</div>
+              </div>
+            </t>
+            <t t-else="">
+              <div class="rh-loading-center" style="color:#94a3b8;">
+                <i class="fa fa-magic d-block mb-2" style="font-size:28px; color:#cbd5e1;"/>
+                Click "Suggest Guards" to run the scoring engine.
+              </div>
+            </t>
+          </div>
+        </div>
+      </t>
+
+    </div><!-- /rh-body -->
+  </div><!-- /rh-main -->
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       MOBILE BOTTOM SHEET (guard assignment) — hidden on desktop
+       ─────────────────────────────────────────────────────────────────────── -->
+  <t t-if="state.panelOpen and state.selectedSlot">
+    <div class="rh-bottom-overlay d-md-none" t-on-click="closePanel"/>
+    <div class="rh-bottom-sheet d-md-none">
+      <div class="rh-bottom-drag-handle"/>
+
+      <div class="rh-panel-header">
+        <div>
+          <div class="rh-panel-post" t-esc="state.selectedSlot.post_name"/>
+          <div class="rh-panel-meta">
+            <i class="fa fa-building me-1"/><t t-esc="state.selectedSlot.site_name"/>
+            <span class="mx-1">·</span>
+            <i class="fa fa-calendar me-1"/><t t-esc="fmtDateMed(state.selectedSlot.shift_date)"/>
+          </div>
+        </div>
+        <button class="rh-icon-btn" t-on-click="closePanel"><i class="fa fa-times"/></button>
+      </div>
+
+      <t t-if="state.selectedSlot.employee_name">
+        <div class="rh-assigned-badge">
+          <div class="rh-assigned-label"><i class="fa fa-user-check me-1"/>Currently Assigned</div>
+          <div class="rh-assigned-name" t-esc="state.selectedSlot.employee_name"/>
+        </div>
+      </t>
+
+      <div class="rh-panel-actions">
+        <button class="rh-btn rh-btn-primary flex-fill"
+                t-on-click="loadSuggestions"
+                t-att-disabled="state.loadingSuggestions">
+          <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-magic me-1'"/>
+          <t t-if="state.loadingSuggestions">Scoring…</t>
+          <t t-elif="state.selectedSlot.employee_name">Find Replacement</t>
+          <t t-else="">Suggest Guards</t>
+        </button>
+        <t t-if="state.selectedSlot.employee_name">
+          <button class="rh-btn rh-btn-danger" t-on-click="unassignSlot">
+            <i class="fa fa-user-times"/>
+          </button>
+        </t>
+      </div>
+
+      <t t-if="state.assignError">
+        <div class="rh-assign-error">
+          <i class="fa fa-exclamation-triangle me-2"/>
+          <div>
+            <div class="rh-assign-error-name" t-esc="state.assignError.guardName + ' cannot be assigned'"/>
+            <div class="rh-assign-error-msg" t-esc="state.assignError.message"/>
+          </div>
+        </div>
+      </t>
+
+      <div class="rh-suggestions-body rh-suggestions-mobile">
+        <t t-if="state.loadingSuggestions">
+          <div class="rh-loading-center"><i class="fa fa-spinner fa-spin fa-lg"/>  Scoring guards…</div>
+        </t>
+        <t t-elif="state.suggestions.length">
+          <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
+            <div class="rh-sug-card">
+              <div class="rh-sug-top">
+                <div class="rh-sug-meta">
+                  <span class="rh-rank-badge">#<t t-esc="sug.rank"/></span>
+                  <span class="rh-sug-name" t-esc="sug.employee_name"/>
+                </div>
+                <div class="rh-sug-score"
+                     t-att-style="'color:' + scoreColor(sug.score)"
+                     t-esc="Math.round(sug.score)"/>
+              </div>
+              <t t-if="sug.grade">
+                <div class="rh-sug-grade"><i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/></div>
+              </t>
+              <div class="rh-score-bar-track">
+                <div class="rh-score-bar-fill"
+                     t-att-style="'width:' + Math.min(100, sug.score/150*100) + '%; background:' + scoreBarColor(sug.score)"/>
+              </div>
+              <button class="rh-btn rh-btn-assign w-100 mt-2"
+                      t-on-click="() => this.assignGuard(sug)">
+                <i class="fa fa-check me-1"/>Assign
+              </button>
+            </div>
+          </t>
+        </t>
+        <t t-elif="state.suggestionsLoaded">
+          <div class="rh-loading-center">
+            <i class="fa fa-exclamation-circle d-block mb-1" style="color:#fbbf24; font-size:24px;"/>
+            No eligible guards for this slot.
+          </div>
+        </t>
+        <t t-else="">
+          <div class="rh-loading-center" style="color:#94a3b8; font-size:13px;">
+            Tap "Suggest Guards" to find the best available guards.
+          </div>
+        </t>
+      </div>
+    </div>
+  </t>
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       MOBILE BOTTOM NAV  — hidden on desktop
+       ─────────────────────────────────────────────────────────────────────── -->
+  <nav class="rh-bottom-nav d-md-none">
+    <button t-att-class="'rh-bnav-btn' + (state.view === 'dashboard' ? ' rh-bnav-active' : '')"
+            t-on-click="() => this.setView('dashboard')">
+      <i class="fa fa-tachometer rh-bnav-icon"/>
+      <span>Dashboard</span>
+    </button>
+    <button t-att-class="'rh-bnav-btn' + (state.view === 'roster' ? ' rh-bnav-active' : '')"
+            t-on-click="() => this.setView('roster')">
+      <i class="fa fa-calendar rh-bnav-icon"/>
+      <span>Roster</span>
+    </button>
+    <button t-att-class="'rh-bnav-btn' + (state.view === 'setup' ? ' rh-bnav-active' : '')"
+            t-on-click="() => this.setView('setup')">
+      <i class="fa fa-cog rh-bnav-icon"/>
+      <span>Setup</span>
+    </button>
+  </nav>
+
+</div><!-- /rh-shell -->
+
+</t>
+</templates>

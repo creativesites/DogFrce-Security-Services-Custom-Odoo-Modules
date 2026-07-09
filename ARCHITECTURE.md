@@ -100,6 +100,10 @@ graph TD
     BILL --> NOTIF
     BILL --> MIG[security_dogforce_migration]
     LEAVE --> MIG
+
+    PAY --> ZM[security_l10n_zm]
+    BILL --> ZRA[security_zra_invoice]
+    BASE --> HELP[security_help]
 ```
 
 **Parallel branches** attach at different layers:
@@ -146,9 +150,10 @@ Developers add structure; administrators configure behavior.
 | Core operations | Any country | `security_base`, `security_operations`, `security_attendance`, `security_leave` |
 | Payroll engine | Country-agnostic computation pipeline | `security_payroll_core` |
 | Namibia rules | PAYE, SSC, holidays, premiums | `security_l10n_na` |
+| Zambia rules | NAPSA, NHIMA, WCF levy, PAYE brackets, ZRA Smart Invoice | `security_l10n_zm`, `security_zra_invoice` |
 | Client-specific | Migration, defaults, imports | `security_dogforce_migration` — CSV import for guards, clients, leave balances, loans |
 
-Future Zambia deployment would add `security_l10n_zm` depending on the same payroll core, without rewriting roster or attendance logic.
+Both `security_l10n_na` and `security_l10n_zm` depend on the same `security_payroll_core` engine. Country-specific rules are data records, not engine logic — adding a new market means adding a new localization pack, not rewriting roster or attendance.
 
 ### 2.6 Workflow Actions and Computed Fields
 
@@ -214,21 +219,26 @@ Metrics computed: scheduled hours, worked hours, valid hours, late minutes, earl
 
 Leave types, employee balances, and approval workflow. Approved leave links to payslip computation and can block roster assignment via roster slot extension.
 
-### 3.5 Payroll — `security_l10n_na` + `security_payroll_core`
+### 3.5 Payroll — `security_l10n_na` + `security_l10n_zm` + `security_payroll_core`
 
-**Localization** provides Namibia-specific configuration: rule sets, PAYE brackets, SSC parameters, public holidays.
-
-**Core engine** runs the payroll pipeline:
+**Core engine** (`security_payroll_core`) runs the payroll pipeline:
 
 1. Open a payroll period
 2. Generate payslips for active guards
 3. Pull attendance records in the date range
 4. Apply hour categorization (normal, Sunday, holiday, night, overtime)
-5. Calculate statutory deductions (SSC, PAYE)
+5. Calculate statutory deductions from the active rule set
 6. Pull cross-module deductions (loans, incidents, equipment damage, no-work-no-pay)
 7. Produce PDF payslip via QWeb report
 
-Payroll calculations are **test-driven** — `security_payroll_core/tests/test_payroll.py` covers statutory and premium scenarios.
+**Namibia localization** (`security_l10n_na`) provides country-specific configuration: rule sets, PAYE brackets, SSC parameters, public holidays. Payroll calculations are **test-driven** — `security_payroll_core/tests/test_payroll.py` covers statutory and premium scenarios.
+
+**Zambia localization** (`security_l10n_zm`) provides separate country configuration and overrides:
+
+- Statutory deductions: NAPSA (5 % employee + 5 % employer, capped at ZMW 34,164 p.a.), NHIMA (0.5 % + 0.5 %, no cap), WCF levy (employer-only, Class IX WCFCB rate, updatable per assessment)
+- PAYE: annual progressive brackets with NAPSA deductible before tax calculation
+- ZM payslip PDF: XPath overrides replace SSC lines with NAPSA/NHIMA/WCF lines and localize currency
+- Tests: `security_l10n_zm/tests/test_zm_payroll.py` — 7 scenarios (NAPSA cap, no-cap, NHIMA, PAYE deductibility, floor cap, combined)
 
 ### 3.6 Deductions and Discipline — `security_loans`, `security_discipline`
 
@@ -246,7 +256,28 @@ Billing uses a **custom invoice model** (`security.billing.invoice`), not Odoo A
 - Accounting controls track client payments and ageing
 - Client reports aggregate attendance into service summaries for client delivery
 
-### 3.8 Supporting Domains
+### 3.8 Fiscal Compliance — `security_zra_invoice`
+
+Wraps Zambia's ZRA Smart Invoice (VSDC API) for fiscally-compliant invoicing:
+
+- Extends `security.billing.invoice` with TPIN and VSDC fields; warning banner on form if TPIN is not configured
+- `_submit_to_zra()` — builds ZRA JSON payload and posts to VSDC API; stores raw request/response
+- `_submit_zra_cancellation()` and `action_cancel()` override — sends cancellation to VSDC before voiding the local invoice
+- `security.zra.submission` log model — tracks state (`pending` / `accepted` / `rejected` / `error`), receipt number, signature, and audit trail
+- Exponential backoff cron (`action_retry_pending`) — retry schedule: 2 → 10 → 30 → 120 → 240 minutes; stops after 5 retries
+- Bulk submission wizard (`security.zra.bulk.submit`) — select and submit multiple invoices in one action from the Billing menu
+
+### 3.9 In-App Help Centre — `security_help`
+
+OWL-based searchable help portal surfaced as an Odoo client action:
+
+- `security.help.category` and `security.help.article` models with `country_code` field; blank = visible everywhere
+- `get_company_country_code()` API returns `company.country_id.code` for client-side filtering
+- `search_articles(query, country_code)` — full-text search across title, summary, and tags with country domain intersection
+- OWL component `HelpPortal` — category browser, article reader, 300 ms debounced search, Escape to clear
+- Seeded content: Namibia onboarding articles (categories: Payroll, Operations, System Setup) + Zambia payroll and ZRA Smart Invoice articles (only shown to ZM-country tenants)
+
+### 3.10 Supporting Domains
 
 | Module | Role |
 |--------|------|
@@ -255,10 +286,12 @@ Billing uses a **custom invoice model** (`security.billing.invoice`), not Odoo A
 | `security_fleet` | Vehicles, shuttle routes/runs/passengers, fuel logs, inspections, service logs |
 | `security_reporting` | Pivot/graph views only — no new models; dashboards on existing data |
 | `security_demo_data` | Post-install hook seeds a full Namibian demo company |
+| `security_demo_site` | Demo site login panel and demo account management for sandbox environments |
 | `security_shift_planner` | Constraint-satisfaction guard scoring, roster suggestions, Roster Board OWL |
 | `security_ai_engine` | Multi-provider AI facade (Claude/OpenAI/Gemini); anomaly detection, risk profiling, billing audit, roster optimizer |
 | `security_notifications` | Internal alert model; daily crons scan document expiry and overdue invoices |
 | `security_dogforce_migration` | CSV import tools for guards, clients, leave balances, and loans with row-level error logging |
+| `security_suite` | Meta-module that installs the complete Security Suite (all 26 modules) in one step |
 
 ---
 
@@ -430,6 +463,7 @@ Workflow actions record state changes on models (batch review states, override r
 | **PostgreSQL 16** | Primary data store | Via Docker Compose |
 | **Docker / Docker Compose** | Local dev and deployment packaging | Implemented |
 | **Expo / React Native** | Mobile field app | Scaffolded, connected to API |
+| **ZRA VSDC API** | Zambia ZRA Smart Invoice fiscal signing | Implemented (`security_zra_invoice`); endpoint configurable via `ir.config_parameter` |
 | **Odoo Enterprise** | DogForce production environment | Not a repo dependency; integration points deferred |
 | **Odoo Accounting (`account`)** | General ledger, bank reconciliation | Not a module dependency; owner KPI optionally reads `account.move` if installed |
 | **OCA modules** | Community payroll/accounting supplements | Referenced in planning docs; none vendored |
@@ -478,6 +512,7 @@ Summary:
 | Attendance scenarios | Odoo `TransactionCase` | `security_attendance/tests/test_attendance_scenarios.py` |
 | Equipment deductions | Model integration | `security_equipment/tests/test_equipment.py` |
 | Fleet operations | Model integration | `security_fleet/tests/test_fleet.py` |
+| Zambia statutory payroll | Odoo `TransactionCase` | `security_l10n_zm/tests/test_zm_payroll.py` — 7 scenarios (NAPSA cap/no-cap, NHIMA, PAYE deductibility, WCF floor, combined) |
 | Mobile API | Manual | No automated controller tests |
 | CI | Not configured | Run via `odoo --test-enable` |
 
@@ -488,6 +523,13 @@ Summary:
 ### Built
 
 The full module chain from base through billing, plus equipment, fleet, mobile API, client reports, and demo data, exists in `custom_addons/`. Maturity varies — core operational and payroll paths are the most complete.
+
+**Recently completed:**
+- Zambia localization (`security_l10n_zm`) — NAPSA, NHIMA, WCF, PAYE, ZM payslip PDF, 7 unit tests
+- ZRA Smart Invoice (`security_zra_invoice`) — VSDC API integration, cancellation, bulk wizard, exponential backoff cron
+- In-app Help Centre (`security_help`) — OWL portal, country-aware articles, Zambia content seeded
+- `security_suite` meta-module for one-step install
+- `security_demo_site` demo environment panel
 
 ### Planned but not implemented
 

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── Roster Export Wizard ────────────────────────────────────────────── -->
+    <record id="view_security_roster_export_wizard_form" model="ir.ui.view">
+        <field name="name">security.roster.export.wizard.form</field>
+        <field name="model">security.roster.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Roster to Excel">
+                <group>
+                    <field name="batch_id"/>
+                    <field name="include_financials"/>
+                </group>
+                <footer>
+                    <button name="action_export_excel" type="object"
+                            string="Export Excel" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_roster_export_wizard" model="ir.actions.act_window">
+        <field name="name">Export Roster to Excel</field>
+        <field name="res_model">security.roster.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="context">{'default_batch_id': active_id}</field>
+    </record>
+
+    <!-- ─── Attendance Export Wizard ────────────────────────────────────────── -->
+    <record id="view_security_attendance_export_wizard_form" model="ir.ui.view">
+        <field name="name">security.attendance.export.wizard.form</field>
+        <field name="model">security.attendance.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Attendance Records to Excel">
+                <group string="Filters">
+                    <field name="date_from" required="1"/>
+                    <field name="date_to" required="1"/>
+                    <field name="partner_id"/>
+                    <field name="site_id"/>
+                </group>
+                <group string="Options">
+                    <field name="include_billing"/>
+                </group>
+                <footer>
+                    <button name="action_export_excel" type="object"
+                            string="Export Excel" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_attendance_export_wizard" model="ir.actions.act_window">
+        <field name="name">Export Attendance to Excel</field>
+        <field name="res_model">security.attendance.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ─── Billing Export Wizard ────────────────────────────────────────────── -->
+    <record id="view_security_billing_export_wizard_form" model="ir.ui.view">
+        <field name="name">security.billing.export.wizard.form</field>
+        <field name="model">security.billing.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Billing Data to Excel">
+                <group string="Filters">
+                    <field name="date_from" required="1"/>
+                    <field name="date_to" required="1"/>
+                    <field name="partner_id"/>
+                </group>
+                <group string="Options">
+                    <field name="include_exceptions"/>
+                </group>
+                <footer>
+                    <button name="action_export_excel" type="object"
+                            string="Export Excel" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_billing_export_wizard" model="ir.actions.act_window">
+        <field name="name">Export Billing to Excel</field>
+        <field name="res_model">security.billing.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ─── Guard Hours Export Wizard ───────────────────────────────────────── -->
+    <record id="view_security_guard_hours_export_wizard_form" model="ir.ui.view">
+        <field name="name">security.guard.hours.export.wizard.form</field>
+        <field name="model">security.guard.hours.export.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Export Guard Hours to Excel">
+                <group string="Filters">
+                    <field name="date_from" required="1"/>
+                    <field name="date_to" required="1"/>
+                    <field name="partner_id"/>
+                    <field name="site_id"/>
+                </group>
+                <group string="Options">
+                    <field name="include_billing"/>
+                </group>
+                <footer>
+                    <button name="action_export_excel" type="object"
+                            string="Export Excel" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_guard_hours_export_wizard" model="ir.actions.act_window">
+        <field name="name">Export Guard Hours to Excel</field>
+        <field name="res_model">security.guard.hours.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ─── Export Menu Items (under Reporting) ─────────────────────────────── -->
+    <menuitem
+        id="menu_security_exports"
+        name="Exports"
+        parent="security_reporting.menu_security_reporting"
+        sequence="90"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_attendance_export"
+        name="Attendance Export"
+        parent="menu_security_exports"
+        action="action_security_attendance_export_wizard"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_billing_export"
+        name="Billing Export"
+        parent="menu_security_exports"
+        action="action_security_billing_export_wizard"
+        sequence="20"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_guard_hours_export"
+        name="Guard Hours Export"
+        parent="menu_security_exports"
+        action="action_security_guard_hours_export_wizard"
+        sequence="30"
+        groups="hr.group_hr_user"
+    />
+
+</odoo>

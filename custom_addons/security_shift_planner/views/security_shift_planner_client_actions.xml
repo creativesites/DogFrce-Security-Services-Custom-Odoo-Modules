@@ -1,5 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Rostering Hub — primary rostering workspace (sequence 1 = first in menu) -->
+    <record id="action_rostering_hub" model="ir.actions.client">
+        <field name="name">Rostering Hub</field>
+        <field name="tag">security_shift_planner.rostering_hub</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_rostering_hub"
+        name="Rostering Hub"
+        parent="security_operations.menu_security_roster"
+        action="action_rostering_hub"
+        sequence="1"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- Roster Board — legacy kanban/drag-drop view -->
     <record id="action_roster_board" model="ir.actions.client">
         <field name="name">Roster Board</field>
         <field name="tag">security_shift_planner.roster_board</field>
@@ -11,7 +28,22 @@
         name="Roster Board"
         parent="security_operations.menu_security_roster"
         action="action_roster_board"
-        sequence="5"
+        sequence="10"
+        groups="hr.group_hr_user"
+    />
+
+    <record id="action_weekly_checkin" model="ir.actions.client">
+        <field name="name">Weekly Check-in</field>
+        <field name="tag">security_shift_planner.weekly_checkin</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_weekly_checkin"
+        name="Weekly Check-in"
+        parent="security_operations.menu_security_roster"
+        action="action_weekly_checkin"
+        sequence="10"
         groups="hr.group_hr_user"
     />
 </odoo>

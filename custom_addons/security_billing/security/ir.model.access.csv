@@ -7,3 +7,4 @@ access_security_billing_credit_note_manager,security.billing.credit.note manager
 access_security_billing_credit_note_user,security.billing.credit.note user,model_security_billing_credit_note,base.group_user,1,1,1,0
 access_security_billing_invoice_wizard,security.billing.invoice.wizard,model_security_billing_invoice_wizard,base.group_user,1,1,1,1
 access_security_billing_dashboard,security.billing.dashboard,model_security_billing_dashboard,base.group_user,1,0,0,0
+access_security_contract_invoice_wizard,security.contract.invoice.wizard,model_security_contract_invoice_wizard,hr.group_hr_user,1,1,1,1

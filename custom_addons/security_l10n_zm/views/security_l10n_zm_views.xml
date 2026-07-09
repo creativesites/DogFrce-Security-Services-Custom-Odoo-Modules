@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ============================================================ -->
+    <!-- Extend payroll rule set form — Zambia Statutory section      -->
+    <!-- Only visible when country_code = ZM                          -->
+    <!-- ============================================================ -->
+    <record id="view_security_payroll_rule_set_form_zm" model="ir.ui.view">
+        <field name="name">security.payroll.rule.set.form.zm</field>
+        <field name="model">security.payroll.rule.set</field>
+        <field name="inherit_id" ref="security_l10n_na.view_security_payroll_rule_set_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='premium_rate_multipliers']" position="before">
+                <group string="Zambia Statutory Deductions" invisible="country_code != 'ZM'">
+                    <group string="NAPSA (National Pension Scheme Authority)">
+                        <field name="employee_napsa_rate" widget="percentage"/>
+                        <field name="employer_napsa_rate" widget="percentage"/>
+                        <field name="napsa_salary_cap"
+                               string="Monthly Earnings Ceiling (ZMW)"
+                               help="NAPSA contributions are capped at this gross monthly amount. Update annually."/>
+                    </group>
+                    <group string="NHIMA (National Health Insurance)">
+                        <field name="employee_nhima_rate" widget="percentage"/>
+                        <field name="employer_nhima_rate" widget="percentage"/>
+                    </group>
+                    <group string="WCF (Workers' Compensation Fund)">
+                        <field name="employer_wcf_rate" widget="percentage"
+                               help="Employer-only levy. Confirm the rate for the private security risk category before activating."/>
+                        <field name="wcf_salary_cap"
+                               string="WCF Monthly Earnings Ceiling (ZMW)"
+                               help="Leave at 0.0 if the WCF levy is uncapped."/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- Extend employee form — Zambian Statutory Registration tab     -->
+    <!-- Added inside the existing "Payroll & Banking" page           -->
+    <!-- ============================================================ -->
+    <record id="view_hr_employee_form_zm_payroll" model="ir.ui.view">
+        <field name="name">hr.employee.form.zm.payroll</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="security_payroll_core.view_employee_form_security_payroll"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='na_statutory_registration']" position="after">
+                <group string="Zambian Statutory Registration">
+                    <group>
+                        <field name="security_napsa_number" placeholder="e.g. 1000012345"/>
+                        <field name="security_tpin" placeholder="e.g. 1234567890"/>
+                    </group>
+                    <group>
+                        <field name="security_nhima_number" placeholder="e.g. NH-0012345"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_security_client_contract_form" model="ir.ui.view">
+        <field name="name">security.client.contract.form</field>
+        <field name="model">security.client.contract</field>
+        <field name="arch" type="xml">
+            <form string="Client Contract">
+                <header>
+                    <button name="action_activate" type="object" string="Activate"
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_terminate" type="object" string="Terminate"
+                            invisible="state not in ('draft', 'active')"/>
+                    <button name="action_reset_to_draft" type="object" string="Reset to Draft"
+                            invisible="state == 'draft'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,active,expired,terminated"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. CTR-2026-001"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Client">
+                            <field name="partner_id"/>
+                            <field name="site_id"/>
+                        </group>
+                        <group string="Term">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="monthly_value"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                    </group>
+                    <group invisible="not billing_this_period and not cap_used_pct">
+                        <group string="Billing (This Month)">
+                            <field name="billing_this_period" readonly="1" widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                            <field name="cap_used_pct" readonly="1" string="Cap Used"/>
+                            <field name="cap_exceeded" readonly="1" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Rate Card" name="rate_card">
+                            <div class="alert alert-info mb-2" invisible="rate_line_ids">
+                                Add billing rates for each shift category. The system uses these rates to calculate planned revenue on rosters and billing amounts on attendance records.
+                            </div>
+                            <field name="rate_line_ids" nolabel="1">
+                                <list editable="bottom">
+                                    <field name="shift_category"/>
+                                    <field name="grade_id" optional="show"/>
+                                    <field name="hourly_rate"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note" placeholder="Contract terms and notes…"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_client_contract_list" model="ir.ui.view">
+        <field name="name">security.client.contract.list</field>
+        <field name="model">security.client.contract</field>
+        <field name="arch" type="xml">
+            <list string="Client Contracts"
+                  decoration-success="state == 'active'"
+                  decoration-warning="state == 'draft'"
+                  decoration-danger="state in ('expired', 'terminated')">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="monthly_value"/>
+                <field name="state" widget="badge"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'draft'"
+                       decoration-danger="state in ('expired', 'terminated')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_client_contract_search" model="ir.ui.view">
+        <field name="name">security.client.contract.search</field>
+        <field name="model">security.client.contract</field>
+        <field name="arch" type="xml">
+            <search string="Client Contracts">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <filter name="filter_active" string="Active"
+                        domain="[('state','=','active')]"/>
+                <filter name="filter_draft" string="Draft"
+                        domain="[('state','=','draft')]"/>
+                <filter name="filter_expired" string="Expired / Terminated"
+                        domain="[('state','in',['expired','terminated'])]"/>
+                <separator/>
+                <filter name="group_by_partner" string="Client"
+                        context="{'group_by': 'partner_id'}"/>
+                <filter name="group_by_state" string="Status"
+                        context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_client_contract" model="ir.actions.act_window">
+        <field name="name">Client Contracts</field>
+        <field name="res_model">security.client.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+    </record>
+
+    <menuitem id="menu_security_client_contracts"
+              name="Client Contracts"
+              parent="security_operations.menu_security_billing_root"
+              action="action_security_client_contract"
+              sequence="5"
+              groups="hr.group_hr_user"/>
+
+</odoo>

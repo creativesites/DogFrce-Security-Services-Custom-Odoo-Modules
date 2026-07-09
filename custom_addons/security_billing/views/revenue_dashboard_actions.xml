@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_revenue_dashboard" model="ir.actions.client">
+        <field name="name">Revenue Dashboard</field>
+        <field name="tag">security_billing.revenue_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_revenue_dashboard"
+        name="Revenue Dashboard"
+        parent="security_operations.menu_security_billing_root"
+        action="action_revenue_dashboard"
+        sequence="1"
+        groups="hr.group_hr_user"
+    />
+</odoo>

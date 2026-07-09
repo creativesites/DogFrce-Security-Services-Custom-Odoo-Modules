@@ -1414,4 +1414,506 @@
     ]]></field>
 </record>
 
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ZAMBIA — PAYROLL (ZM only)
+════════════════════════════════════════════════════════ -->
+
+<record id="cat_zambia_payroll" model="security.help.category">
+    <field name="name">Zambia Payroll</field>
+    <field name="icon">fa-flag</field>
+    <field name="color">#15803d</field>
+    <field name="sequence">11</field>
+    <field name="country_code">ZM</field>
+</record>
+
+<record id="art_zm_payroll_setup" model="security.help.article">
+    <field name="category_id" ref="cat_zambia_payroll"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Setting Up Zambia Payroll</field>
+    <field name="summary">How to create and configure a Zambian payroll rule set</field>
+    <field name="sequence">1</field>
+    <field name="tags">zambia payroll setup rule set ZMW configuration NAPSA NHIMA PAYE</field>
+    <field name="body"><![CDATA[
+<h2>Setting Up Zambia Payroll</h2>
+<p>DogForce includes a Zambia-specific payroll localization that handles NAPSA, NHIMA, WCF, and PAYE automatically. Before processing your first Zambian payroll, you need a correctly configured rule set.</p>
+
+<h3>Step 1 — Open Payroll Rule Sets</h3>
+<p>Go to <strong>Payroll → Configuration → Payroll Rule Sets</strong>.</p>
+
+<h3>Step 2 — Find or Create the Zambia Rule Set</h3>
+<p>A default <strong>Zambia Default Rule Set</strong> is pre-installed. Open it to review the settings. If you need a separate rule set (e.g. for different company entities), click <strong>New</strong> and set the Country Code to <code>ZM</code>.</p>
+
+<h3>Step 3 — Configure Zambia Statutory Deductions</h3>
+<p>In the rule set form, find the <strong>Zambia Statutory Deductions</strong> section:</p>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Field</th><th style="padding:8px 12px; text-align:left;">Default</th><th style="padding:8px 12px; text-align:left;">Notes</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">Employee NAPSA Rate</td><td style="padding:8px 12px;">5%</td><td style="padding:8px 12px;">Standard statutory rate</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;">Employer NAPSA Rate</td><td style="padding:8px 12px;">5%</td><td style="padding:8px 12px;">Company cost, not deducted from guard</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">NAPSA Monthly Earnings Ceiling</td><td style="padding:8px 12px;">ZMW 34,164</td><td style="padding:8px 12px;">Update annually from NAPSA gazette</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;">Employee NHIMA Rate</td><td style="padding:8px 12px;">0.5%</td><td style="padding:8px 12px;">No earnings ceiling applies</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">Employer NHIMA Rate</td><td style="padding:8px 12px;">0.5%</td><td style="padding:8px 12px;">Company cost</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;">Employer WCF Rate</td><td style="padding:8px 12px;">1.75%</td><td style="padding:8px 12px;">Confirm your actual rate via WCFCB portal</td></tr>
+    <tr><td style="padding:8px 12px;">PAYE Tax Brackets</td><td style="padding:8px 12px;">2025 ZRA brackets</td><td style="padding:8px 12px;">Select the correct year's bracket set</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 4 — Set the Currency to ZMW</h3>
+<p>On the rule set form, confirm the <strong>Currency</strong> is set to <strong>ZMW (Zambian Kwacha)</strong>. All payslips for this rule set will display amounts in ZMW.</p>
+
+<h3>Step 5 — Create a Payroll Period</h3>
+<p>Go to <strong>Payroll → Payroll Periods → New</strong> and link the period to your Zambia rule set. The system will then apply ZM statutory deductions automatically when payslips are processed.</p>
+
+<div style="background:#dcfce7; border-left:4px solid #15803d; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Annual Update Reminder:</strong> At the start of each year, check NAPSA's gazette notice for the new earnings ceiling, and the ZRA Budget bulletin for any PAYE bracket changes. Update these in the rule set before the January payroll run.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_zm_napsa" model="security.help.article">
+    <field name="category_id" ref="cat_zambia_payroll"/>
+    <field name="country_code">ZM</field>
+    <field name="title">NAPSA Contributions Explained</field>
+    <field name="summary">National Pension Scheme Authority — rates, ceiling, and how it appears on payslips</field>
+    <field name="sequence">2</field>
+    <field name="tags">NAPSA pension contribution 5% ceiling cap ZMW employee employer</field>
+    <field name="body"><![CDATA[
+<h2>NAPSA — National Pension Scheme Authority</h2>
+<p>NAPSA is Zambia's mandatory national pension fund, governed by the NAPSA Act Cap 256. Both the employee and employer contribute each month.</p>
+
+<h3>Contribution Rates</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Contributor</th><th style="padding:8px 12px; text-align:left;">Rate</th><th style="padding:8px 12px; text-align:left;">Paid by</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">Employee</td><td style="padding:8px 12px;"><strong>5%</strong> of monthly gross earnings</td><td style="padding:8px 12px;">Deducted from guard's pay</td></tr>
+    <tr><td style="padding:8px 12px;">Employer</td><td style="padding:8px 12px;"><strong>5%</strong> of monthly gross earnings</td><td style="padding:8px 12px;">Company cost — not on the payslip deductions</td></tr>
+  </tbody>
+</table>
+
+<h3>Monthly Earnings Ceiling</h3>
+<p>NAPSA contributions are capped — both employee and employer contributions are calculated on a <strong>maximum of ZMW 34,164 per month</strong> (2025 ceiling). If a guard earns more than this, the contribution is calculated only on ZMW 34,164.</p>
+
+<div style="background:#f1f5f9; border-radius:8px; padding:16px; font-family:monospace; font-size:0.9rem; margin:12px 0;">
+  Example — Guard earning ZMW 20,000/month:<br/>
+  Employee NAPSA = 20,000 × 5% = <strong>ZMW 1,000</strong><br/><br/>
+  Example — Guard earning ZMW 40,000/month (above ceiling):<br/>
+  Employee NAPSA = 34,164 × 5% = <strong>ZMW 1,708.20</strong>
+</div>
+
+<h3>NAPSA and PAYE</h3>
+<p>Under the Zambia Income Tax Act Cap 323, NAPSA contributions are <strong>tax-deductible</strong>. The system automatically deducts NAPSA before calculating PAYE, reducing the taxable income. This is handled automatically — no manual adjustment needed.</p>
+
+<h3>NAPSA Member Number on Guard Profiles</h3>
+<p>Each guard who has a NAPSA number should have it recorded. Go to <strong>Workforce → Guards</strong>, open the guard's profile, and find the <strong>Zambian Statutory Registration</strong> section. Enter the NAPSA Member Number in the field provided. This number appears on the ZM payslip.</p>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Annual Update:</strong> NAPSA publishes a new monthly earnings ceiling each year via gazette notice. Update this value in the Payroll Rule Set before January's payroll run.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_zm_nhima" model="security.help.article">
+    <field name="category_id" ref="cat_zambia_payroll"/>
+    <field name="country_code">ZM</field>
+    <field name="title">NHIMA Levy Explained</field>
+    <field name="summary">National Health Insurance Management Authority — 0.5% levy, no ceiling</field>
+    <field name="sequence">3</field>
+    <field name="tags">NHIMA health insurance levy 0.5% employee employer no ceiling</field>
+    <field name="body"><![CDATA[
+<h2>NHIMA — National Health Insurance Management Authority</h2>
+<p>NHIMA is Zambia's national health insurance scheme, established by NHIMA Act No. 2 of 2018. Like NAPSA, both the employee and employer contribute.</p>
+
+<h3>Contribution Rates</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Contributor</th><th style="padding:8px 12px; text-align:left;">Rate</th><th style="padding:8px 12px; text-align:left;">Ceiling</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">Employee</td><td style="padding:8px 12px;"><strong>0.5%</strong> of monthly gross</td><td style="padding:8px 12px;">None — applied to full gross</td></tr>
+    <tr><td style="padding:8px 12px;">Employer</td><td style="padding:8px 12px;"><strong>0.5%</strong> of monthly gross</td><td style="padding:8px 12px;">None — applied to full gross</td></tr>
+  </tbody>
+</table>
+
+<h3>Key Difference from NAPSA</h3>
+<p>Unlike NAPSA, NHIMA has <strong>no monthly earnings ceiling</strong>. The 0.5% levy is applied to the guard's full gross pay regardless of how much they earn.</p>
+
+<h3>NHIMA and PAYE</h3>
+<p>NHIMA contributions are <strong>not tax-deductible</strong> (unlike NAPSA). PAYE is calculated on gross minus NAPSA only — NHIMA does not reduce taxable income.</p>
+
+<h3>NHIMA Member Number</h3>
+<p>Record each guard's NHIMA member number in their profile under <strong>Zambian Statutory Registration → NHIMA Member Number</strong>. Format is typically <em>NH-XXXXXXX</em>. This number appears on the guard's ZM payslip.</p>
+
+<div style="background:#f1f5f9; border-radius:8px; padding:16px; font-family:monospace; font-size:0.9rem; margin:12px 0;">
+  Example — Guard earning ZMW 8,000/month:<br/>
+  Employee NHIMA = 8,000 × 0.5% = <strong>ZMW 40.00</strong><br/><br/>
+  Example — Guard earning ZMW 45,000/month:<br/>
+  Employee NHIMA = 45,000 × 0.5% = <strong>ZMW 225.00</strong>
+</div>
+    ]]></field>
+</record>
+
+<record id="art_zm_paye" model="security.help.article">
+    <field name="category_id" ref="cat_zambia_payroll"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Zambia PAYE (Pay As You Earn)</field>
+    <field name="summary">How PAYE is calculated — annual brackets, NAPSA deductibility, and TPIN</field>
+    <field name="sequence">4</field>
+    <field name="tags">PAYE income tax bracket annual ZMW NAPSA deductible taxable TPIN ZRA</field>
+    <field name="body"><![CDATA[
+<h2>Zambia PAYE — Pay As You Earn</h2>
+<p>PAYE is withheld monthly and remitted to the Zambia Revenue Authority (ZRA). DogForce calculates PAYE automatically when a Zambian payroll is processed.</p>
+
+<h3>How PAYE is Calculated</h3>
+<ol>
+  <li><strong>Start with monthly gross pay</strong></li>
+  <li><strong>Deduct NAPSA</strong> — NAPSA is tax-deductible under the Income Tax Act Cap 323. Monthly NAPSA is subtracted from gross to get taxable income.</li>
+  <li><strong>Annualise</strong> — multiply monthly taxable income by 12 to get the annual equivalent</li>
+  <li><strong>Apply tax brackets</strong> — look up the annual figure in the ZRA bracket table to find annual tax</li>
+  <li><strong>Monthly PAYE</strong> — divide annual tax by 12</li>
+</ol>
+
+<h3>2025 PAYE Brackets (ZMW)</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+  <thead><tr style="background:#1a3a5c; color:white;"><th style="padding:8px 12px; text-align:left;">Annual Taxable Income</th><th style="padding:8px 12px; text-align:left;">Rate</th><th style="padding:8px 12px; text-align:left;">Fixed Amount</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">0 – 61,200</td><td style="padding:8px 12px;">0% (exempt)</td><td style="padding:8px 12px;">—</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;">61,201 – 85,200</td><td style="padding:8px 12px;">20%</td><td style="padding:8px 12px;">ZMW 0</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">85,201 – 110,400</td><td style="padding:8px 12px;">30%</td><td style="padding:8px 12px;">ZMW 4,800</td></tr>
+    <tr><td style="padding:8px 12px;">Above 110,400</td><td style="padding:8px 12px;">37%</td><td style="padding:8px 12px;">ZMW 12,360</td></tr>
+  </tbody>
+</table>
+<p style="font-size:0.8rem; color:#64748b; margin-top:8px;">Thresholds are for annual taxable income. Source: ZRA Budget 2025. Update annually under Configuration → Payroll Rule Sets → Tax Brackets.</p>
+
+<h3>Worked Example</h3>
+<div style="background:#f1f5f9; border-radius:8px; padding:16px; font-family:monospace; font-size:0.85rem; margin:12px 0; line-height:1.8;">
+  Monthly gross = ZMW 9,000<br/>
+  NAPSA = min(9,000, 34,164) × 5% = ZMW 450<br/>
+  Monthly taxable = 9,000 − 450 = ZMW 8,550<br/>
+  Annual taxable = 8,550 × 12 = ZMW 102,600<br/>
+  Bracket: 85,201–110,400 → fixed ZMW 4,800 + (102,600 − 85,200) × 30%<br/>
+  Annual PAYE = 4,800 + 5,220 = ZMW 10,020<br/>
+  Monthly PAYE = 10,020 ÷ 12 = <strong>ZMW 835.00</strong>
+</div>
+
+<h3>TPIN Requirement</h3>
+<p>Each guard should have their TPIN (Taxpayer Identification Number) recorded in their profile under <strong>Zambian Statutory Registration → TPIN</strong>. The TPIN appears on the payslip and is required for ZRA compliance.</p>
+    ]]></field>
+</record>
+
+<record id="art_zm_wcf" model="security.help.article">
+    <field name="category_id" ref="cat_zambia_payroll"/>
+    <field name="country_code">ZM</field>
+    <field name="title">WCF — Workers' Compensation Fund</field>
+    <field name="summary">Employer-only WCFCB levy — Class IX risk classification, 1.25–2.00%, no ceiling</field>
+    <field name="sequence">5</field>
+    <field name="tags">WCF WCFCB workers compensation employer levy class IX risk rate eWorkers</field>
+    <field name="body"><![CDATA[
+<h2>WCF — Workers' Compensation Fund</h2>
+<p>The Workers' Compensation Fund Control Board (WCFCB) levy is an <strong>employer-only</strong> contribution under the Workers' Compensation Act Cap 271. Unlike NAPSA and NHIMA, it is <em>not</em> deducted from the guard's pay — it is a company cost.</p>
+
+<h3>Who Sets Your Rate?</h3>
+<p>The WCFCB assigns each employer a rate based on their specific operational risk profile. Private security companies typically fall under <strong>Class IX (Miscellaneous/Services)</strong>.</p>
+
+<h3>Rate Ranges for Private Security</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Operations Profile</th><th style="padding:8px 12px; text-align:left;">Rate Range</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;">Predominantly unarmed static guarding</td><td style="padding:8px 12px;">1.25% – 1.50%</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;">Mixed operations (static + patrol)</td><td style="padding:8px 12px;">1.50% – 1.75%</td></tr>
+    <tr><td style="padding:8px 12px;">Armed operations, cash-in-transit, or high-risk sites</td><td style="padding:8px 12px;">1.75% – 2.00%</td></tr>
+  </tbody>
+</table>
+<p style="font-size:0.8rem; color:#64748b; margin-top:6px;">The default in the system is 1.75% — suitable for mixed/armed operations. Confirm your exact rate with WCFCB.</p>
+
+<h3>Assessable Earnings</h3>
+<p>WCF is levied on <strong>total gross payroll</strong> including basic salary, allowances, overtime, and bonuses. There is <strong>no earnings ceiling</strong> — unlike NAPSA, WCF applies to the full gross.</p>
+
+<h3>WCF Report</h3>
+<p>DogForce can generate a WCF Employer Levy Report per payroll period. Go to <strong>Payroll → Reports → WCF Employer Levy</strong> and select the period. The report shows each guard's gross pay, assessable earnings, and the employer WCF levy amount — ready for WCFCB submission.</p>
+
+<h3>Annual Update Process</h3>
+<ol>
+  <li>Log in to the <strong>WCFCB eWorkers Portal</strong> at <code>eworkers.wcf.org.zm</code></li>
+  <li>Submit your annual wage returns</li>
+  <li>Confirm your new assessment rate for the coming year</li>
+  <li>Update the <strong>Employer WCF Rate</strong> field in your Payroll Rule Set</li>
+</ol>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Reminder:</strong> WCF returns and payments are typically due annually. Late submissions attract penalties. Set a reminder to file by the WCFCB deadline each year.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_zm_payslip" model="security.help.article">
+    <field name="category_id" ref="cat_zambia_payroll"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Reading a Zambian Payslip</field>
+    <field name="summary">How to interpret the ZMW payslip — NAPSA, NHIMA, PAYE entries and net pay</field>
+    <field name="sequence">6</field>
+    <field name="tags">payslip ZMW NAPSA NHIMA PAYE read understand ZM zambia kwacha</field>
+    <field name="body"><![CDATA[
+<h2>Reading a Zambian Payslip</h2>
+<p>Zambian payslips differ from Namibian ones — they show ZMW amounts and different statutory deductions. Here is how to read each section.</p>
+
+<h3>Header Information</h3>
+<ul>
+  <li><strong>Company address</strong> — shows your company city and country (e.g. Lusaka, Zambia)</li>
+  <li><strong>NAPSA Member No.</strong> — guard's NAPSA registration number</li>
+  <li><strong>NHIMA Member No.</strong> — guard's NHIMA registration number</li>
+  <li><strong>TPIN</strong> — guard's Taxpayer Identification Number from ZRA</li>
+</ul>
+
+<h3>Earnings Section (ZMW)</h3>
+<p>All amounts are in Zambian Kwacha (ZMW). Earnings include:</p>
+<ul>
+  <li>Normal Hours at base hourly rate</li>
+  <li>Saturday/Sunday/Public Holiday premiums</li>
+  <li>Night shift allowance (if applicable)</li>
+  <li>Overtime</li>
+</ul>
+<p><strong>Gross Pay</strong> = total of all earning lines</p>
+
+<h3>Deductions Section (ZMW)</h3>
+<ul>
+  <li><strong>NAPSA Contribution</strong> — 5% of gross, capped at 5% of ZMW 34,164</li>
+  <li><strong>NHIMA Levy</strong> — 0.5% of full gross (no ceiling)</li>
+  <li><strong>Pay As You Earn (PAYE)</strong> — income tax, calculated on gross minus NAPSA</li>
+  <li><strong>Loan Repayment</strong> (if applicable)</li>
+  <li><strong>Discipline</strong> (if applicable)</li>
+</ul>
+
+<h3>Net Take-Home Pay</h3>
+<p><strong>Net Pay (ZMW)</strong> = Gross Pay − Total Deductions</p>
+<p>The system enforces a <strong>30% net pay floor</strong> — if statutory deductions and other deductions would leave the guard with less than 30% of their gross, non-statutory deductions (loans, discipline) are capped first to protect take-home pay.</p>
+
+<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Why no SSC line?</strong> Namibia uses SSC (Social Security Commission). Zambia uses NAPSA and NHIMA instead. The system automatically applies the correct statutory scheme based on the payroll rule set's country code.
+</div>
+    ]]></field>
+</record>
+
+
+<!-- ═══════════════════════════════════════════════════════
+     ZRA SMART INVOICE (ZM only)
+════════════════════════════════════════════════════════ -->
+
+<record id="cat_zra" model="security.help.category">
+    <field name="name">ZRA Smart Invoice</field>
+    <field name="icon">fa-qrcode</field>
+    <field name="color">#0f766e</field>
+    <field name="sequence">12</field>
+    <field name="country_code">ZM</field>
+</record>
+
+<record id="art_zra_overview" model="security.help.article">
+    <field name="category_id" ref="cat_zra"/>
+    <field name="country_code">ZM</field>
+    <field name="title">What is ZRA Smart Invoice?</field>
+    <field name="summary">Overview of ZRA's electronic fiscal invoicing requirement for Zambian businesses</field>
+    <field name="sequence">1</field>
+    <field name="tags">ZRA smart invoice fiscal VSDC electronic Zambia requirement</field>
+    <field name="body"><![CDATA[
+<h2>ZRA Smart Invoice</h2>
+<p>The <strong>Zambia Revenue Authority (ZRA) Smart Invoice</strong> system is a mandatory electronic fiscal invoicing requirement for registered VAT taxpayers in Zambia. Every invoice issued to a client must be submitted to ZRA's VSDC (Virtual Sales Data Controller) servers and receive a fiscal receipt number before it can be considered a valid tax invoice.</p>
+
+<h3>Why is it Required?</h3>
+<p>ZRA's Smart Invoice system is part of Zambia's digital tax compliance initiative. It ensures:</p>
+<ul>
+  <li>Real-time reporting of all sales transactions to ZRA</li>
+  <li>Unique fiscal receipt numbers on every invoice</li>
+  <li>QR codes on invoices for client verification</li>
+  <li>A tamper-evident audit trail</li>
+</ul>
+
+<h3>How DogForce Integrates</h3>
+<p>DogForce connects directly to the ZRA VSDC API. When you click <strong>Submit to ZRA</strong> on a confirmed invoice, the system:</p>
+<ol>
+  <li>Formats the invoice data according to ZRA specifications</li>
+  <li>Sends it to the VSDC server over a secure HTTPS connection</li>
+  <li>Receives the fiscal signature, receipt number, and internal data</li>
+  <li>Records the ZRA receipt number on the invoice</li>
+  <li>The invoice is now a valid fiscal document</li>
+</ol>
+
+<h3>Sandbox vs Production</h3>
+<p>ZRA provides a <strong>Sandbox environment</strong> for testing. Test all your integrations in sandbox first before switching to production. See the Configuration article for how to set this up.</p>
+
+<div style="background:#fee2e2; border-left:4px solid #dc2626; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Legal Requirement:</strong> Failure to submit invoices to ZRA is a compliance violation. Ensure all confirmed invoices are submitted promptly. DogForce will automatically retry failed submissions up to 5 times.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_zra_config" model="security.help.article">
+    <field name="category_id" ref="cat_zra"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Configuring the ZRA Connection</field>
+    <field name="summary">How to enter your TPIN, Branch ID, device serial, and choose sandbox or production</field>
+    <field name="sequence">2</field>
+    <field name="tags">ZRA config TPIN BHF ID device serial sandbox production VSDC URL setup</field>
+    <field name="body"><![CDATA[
+<h2>Configuring the ZRA Connection</h2>
+<p>Before you can submit invoices to ZRA, an administrator must set up the VSDC connection. You will need your ZRA onboarding credentials.</p>
+
+<h3>Step 1 — Open ZRA Configuration</h3>
+<p>Go to <strong>ZRA Smart Invoice → Configuration</strong>. You need to be a system administrator.</p>
+
+<h3>Step 2 — Create a Configuration Record</h3>
+<p>Click <strong>New</strong>. Fill in the following fields:</p>
+
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">Field</th><th style="padding:8px 12px; text-align:left;">Description</th><th style="padding:8px 12px; text-align:left;">Example</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><strong>Name</strong></td><td style="padding:8px 12px;">Label for this config</td><td style="padding:8px 12px;">DogForce ZRA Production</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;"><strong>Company</strong></td><td style="padding:8px 12px;">Your Zambian company</td><td style="padding:8px 12px;">DogForce Security (ZM)</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><strong>Environment</strong></td><td style="padding:8px 12px;">Sandbox or Production</td><td style="padding:8px 12px;">Start with Sandbox</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;"><strong>Base URL</strong></td><td style="padding:8px 12px;">VSDC server address</td><td style="padding:8px 12px;">https://sandbox.zra.org.zm:38083/sandboxvsdc</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><strong>TPIN</strong></td><td style="padding:8px 12px;">Your company's 10-digit TPIN</td><td style="padding:8px 12px;">1234567890</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;"><strong>Branch ID (BHF ID)</strong></td><td style="padding:8px 12px;">Branch code from ZRA onboarding</td><td style="padding:8px 12px;">000</td></tr>
+    <tr><td style="padding:8px 12px;"><strong>Device Serial No.</strong></td><td style="padding:8px 12px;">VSDC device serial from ZRA</td><td style="padding:8px 12px;">Provided in your onboarding letter</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 3 — Test the Connection</h3>
+<p>Click the <strong>Test Connection</strong> button. If successful, you will see a confirmation message. If it fails, check:</p>
+<ul>
+  <li>Is the TPIN correct (exactly 10 digits)?</li>
+  <li>Is the Base URL correct for your environment (sandbox vs production)?</li>
+  <li>Does your server have outbound internet access to the ZRA VSDC endpoint?</li>
+</ul>
+
+<h3>Step 4 — Switch to Production</h3>
+<p>Once you have tested in sandbox and are ready to go live:</p>
+<ol>
+  <li>Change the <strong>Environment</strong> field to <strong>Production</strong></li>
+  <li>Update the <strong>Base URL</strong> to the production VSDC address (provided by ZRA)</li>
+  <li>Click <strong>Test Connection</strong> again to confirm</li>
+  <li>A red warning banner will appear on the config form reminding you this is live</li>
+</ol>
+
+<div style="background:#fef3c7; border-left:4px solid #d97706; padding:12px 16px; border-radius:6px; margin-top:16px;">
+  <strong>Important:</strong> Never use production credentials in the sandbox environment or vice versa. Submitting test invoices to production will create real fiscal records at ZRA.
+</div>
+    ]]></field>
+</record>
+
+<record id="art_zra_submit_invoice" model="security.help.article">
+    <field name="category_id" ref="cat_zra"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Submitting an Invoice to ZRA</field>
+    <field name="summary">Step-by-step: confirming, submitting, and reading the ZRA receipt number</field>
+    <field name="sequence">3</field>
+    <field name="tags">ZRA submit invoice receipt number accepted TPIN button fiscal</field>
+    <field name="body"><![CDATA[
+<h2>Submitting an Invoice to ZRA</h2>
+
+<h3>Before You Submit</h3>
+<p>Make sure the following are in place:</p>
+<ul>
+  <li>The invoice is in <strong>Confirmed</strong> status (not Draft)</li>
+  <li>The customer has a <strong>TPIN</strong> set on their contact record (required by ZRA for a valid fiscal invoice)</li>
+  <li>A ZRA config record exists and has been tested successfully</li>
+</ul>
+
+<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-bottom:16px;">
+  <strong>Missing Customer TPIN?</strong> If the customer has no TPIN, a blue warning banner will appear on the invoice. Open the customer record and enter their TPIN in the <strong>Company Tax ID (VAT)</strong> field before submitting.
+</div>
+
+<h3>Step 1 — Open the Invoice</h3>
+<p>Go to <strong>Billing → Invoices</strong> and open the invoice you want to submit.</p>
+
+<h3>Step 2 — Click "Submit to ZRA"</h3>
+<p>In the header, click the <strong>Submit to ZRA</strong> button (green, primary). The system connects to the ZRA VSDC server and submits the invoice data.</p>
+
+<h3>Step 3 — Check the Result</h3>
+<p>One of two things will happen:</p>
+<ul>
+  <li><span style="color:#16a34a;"><strong>Success (green banner)</strong></span> — the invoice is fiscally accepted. A ZRA Receipt Number is shown on the invoice. The <strong>ZRA Accepted</strong> banner appears with the receipt number.</li>
+  <li><span style="color:#dc2626;"><strong>Error (amber/red banner)</strong></span> — the submission failed. Click <strong>ZRA Submissions</strong> to see the error message. Fix the issue and retry.</li>
+</ul>
+
+<h3>Bulk Submission</h3>
+<p>To submit multiple invoices at once, go to <strong>ZRA Smart Invoice → Bulk Submit</strong>. Select the invoices and click <strong>Submit All</strong>. The result log shows success/failure per invoice.</p>
+
+<h3>Automatic Retry</h3>
+<p>If a submission fails due to a temporary network issue, the system automatically retries up to 5 times using exponential backoff (waiting 2, 10, 30, 120, and 240 minutes between attempts). You do not need to manually retry transient failures.</p>
+    ]]></field>
+</record>
+
+<record id="art_zra_credit_notes" model="security.help.article">
+    <field name="category_id" ref="cat_zra"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Submitting Credit Notes to ZRA</field>
+    <field name="summary">How to fiscally submit a credit note after a ZRA-accepted invoice is reversed</field>
+    <field name="sequence">4</field>
+    <field name="tags">ZRA credit note submit fiscal reverse refund CN</field>
+    <field name="body"><![CDATA[
+<h2>Submitting Credit Notes to ZRA</h2>
+<p>When you issue a credit note against a ZRA-accepted invoice, the credit note must also be submitted to ZRA as a fiscal credit note. This closes the loop in ZRA's records.</p>
+
+<h3>When to Submit a Credit Note</h3>
+<ul>
+  <li>A client was overcharged and a refund is being processed</li>
+  <li>Services were not rendered and the invoice needs to be reversed</li>
+  <li>A billing error was discovered after the invoice was fiscally signed</li>
+</ul>
+
+<h3>Step 1 — Create the Credit Note</h3>
+<p>Go to <strong>Billing → Credit Notes → New</strong>. Link it to the original invoice. Confirm the credit note.</p>
+
+<h3>Step 2 — Submit to ZRA</h3>
+<p>On the confirmed credit note, click <strong>Submit Credit Note to ZRA</strong>. The system sends the credit note data to the VSDC server, referencing the original invoice's receipt number.</p>
+
+<h3>Step 3 — Confirm Acceptance</h3>
+<p>Once accepted, the credit note shows a <strong>ZRA Accepted</strong> status. The submission record is visible under <strong>ZRA Smart Invoice → Submission Log</strong>.</p>
+
+<h3>Cancelling a ZRA-Accepted Invoice</h3>
+<p>If you cancel an invoice that was already accepted by ZRA, the system automatically sends a cancellation request to ZRA (salesStsCd = 05) before cancelling the Odoo record. This keeps ZRA's records in sync. Note: cancellations are logged but do not block the Odoo cancellation if the ZRA request fails.</p>
+    ]]></field>
+</record>
+
+<record id="art_zra_submission_log" model="security.help.article">
+    <field name="category_id" ref="cat_zra"/>
+    <field name="country_code">ZM</field>
+    <field name="title">Reading the ZRA Submission Log</field>
+    <field name="summary">How to find, read, and act on entries in the ZRA submission log</field>
+    <field name="sequence">5</field>
+    <field name="tags">ZRA submission log state accepted rejected error pending retry</field>
+    <field name="body"><![CDATA[
+<h2>The ZRA Submission Log</h2>
+<p>Every submission attempt — successful or not — is recorded in the <strong>ZRA Submission Log</strong>. Go to <strong>ZRA Smart Invoice → Submission Log</strong>.</p>
+
+<h3>Submission States</h3>
+<table style="width:100%; border-collapse:collapse; font-size:0.9rem; margin-top:8px;">
+  <thead><tr style="background:#f1f5f9;"><th style="padding:8px 12px; text-align:left;">State</th><th style="padding:8px 12px; text-align:left;">Meaning</th><th style="padding:8px 12px; text-align:left;">Action</th></tr></thead>
+  <tbody>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><span style="background:#dcfce7; padding:2px 8px; border-radius:4px; color:#14532d;">Accepted</span></td><td style="padding:8px 12px;">ZRA confirmed the invoice is fiscally signed</td><td style="padding:8px 12px;">No action needed</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0; background:#fafafa;"><td style="padding:8px 12px;"><span style="background:#fef3c7; padding:2px 8px; border-radius:4px; color:#78350f;">Pending</span></td><td style="padding:8px 12px;">Submission in progress or awaiting retry</td><td style="padding:8px 12px;">Wait — system retries automatically</td></tr>
+    <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:8px 12px;"><span style="background:#fee2e2; padding:2px 8px; border-radius:4px; color:#7f1d1d;">Error</span></td><td style="padding:8px 12px;">Technical failure (network, timeout)</td><td style="padding:8px 12px;">System retries; check after 5 retries</td></tr>
+    <tr><td style="padding:8px 12px;"><span style="background:#fee2e2; padding:2px 8px; border-radius:4px; color:#7f1d1d;">Rejected</span></td><td style="padding:8px 12px;">ZRA returned a business rejection</td><td style="padding:8px 12px;">Fix the underlying data issue (see error message)</td></tr>
+  </tbody>
+</table>
+
+<h3>Reading a Submission Record</h3>
+<p>Open any submission to see:</p>
+<ul>
+  <li><strong>ZRA Receipt No.</strong> — the fiscal receipt number (only for accepted submissions)</li>
+  <li><strong>ZRA Signature</strong> — cryptographic signature from ZRA</li>
+  <li><strong>Error Message</strong> — details of why a submission failed</li>
+  <li><strong>Request / Response tabs</strong> — the raw JSON sent to and received from ZRA</li>
+  <li><strong>Retry Count</strong> — how many times the system has attempted this submission</li>
+</ul>
+
+<h3>What to Do After 5 Failed Retries</h3>
+<p>After 5 automatic retry attempts, the system stops retrying. At this point:</p>
+<ol>
+  <li>Open the failed submission and read the <strong>Error Message</strong></li>
+  <li>Common causes: expired TPIN, ZRA VSDC server maintenance, invalid invoice data</li>
+  <li>Fix the root cause</li>
+  <li>Open the linked invoice and click <strong>Submit to ZRA</strong> again to create a fresh submission</li>
+</ol>
+    ]]></field>
+</record>
+
 </odoo>

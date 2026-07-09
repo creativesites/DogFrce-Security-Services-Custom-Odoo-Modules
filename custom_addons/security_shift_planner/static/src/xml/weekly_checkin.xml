@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates>
+    <t t-name="security_shift_planner.WeeklyCheckIn">
+        <div class="o_action wc-root">
+
+            <!-- Header bar -->
+            <div class="wc-header">
+                <div class="wc-header-left">
+                    <h2 class="wc-title">Weekly Operations Check-in</h2>
+                    <span class="wc-week-range" t-esc="state.weekLabel"/>
+                </div>
+                <div class="wc-header-right">
+                    <t t-if="state.weekState !== 'confirmed'">
+                        <button class="rb-btn rb-btn-primary"
+                                t-on-click="confirmWeek"
+                                t-att-disabled="state.confirming or state.loading">
+                            <t t-if="state.confirming">Confirming…</t>
+                            <t t-else="">Confirm Week</t>
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <span class="wc-confirmed-badge">&#10003; Week Confirmed</span>
+                    </t>
+                    <button class="rb-btn rb-btn-ghost ms-2"
+                            t-on-click="loadData"
+                            t-att-disabled="state.loading"
+                            title="Refresh">&#8635; Refresh</button>
+                </div>
+            </div>
+
+            <!-- Loading state -->
+            <div t-if="state.loading" class="wc-loading-msg">
+                Loading operational data…
+            </div>
+
+            <div t-else="">
+
+                <!-- Stats strip -->
+                <div class="wc-stats-strip">
+                    <div class="wc-stat">
+                        <div class="wc-stat-value" t-esc="state.stats.totalSlots"/>
+                        <div class="wc-stat-label">Week Slots</div>
+                    </div>
+                    <div t-att-class="'wc-stat' + (state.stats.unassigned ? ' wc-stat--warn' : ' wc-stat--ok')">
+                        <div class="wc-stat-value" t-esc="state.stats.unassigned"/>
+                        <div class="wc-stat-label">Unassigned</div>
+                    </div>
+                    <div t-att-class="'wc-stat' + (state.stats.criticalGaps ? ' wc-stat--danger' : ' wc-stat--ok')">
+                        <div class="wc-stat-value" t-esc="state.stats.criticalGaps"/>
+                        <div class="wc-stat-label">Critical Gaps</div>
+                    </div>
+                    <div class="wc-stat wc-stat--divider"/>
+                    <div t-att-class="'wc-stat' + (state.stats.awolToday ? ' wc-stat--danger' : ' wc-stat--ok')">
+                        <div class="wc-stat-value" t-esc="state.stats.awolToday"/>
+                        <div class="wc-stat-label">AWOL Today</div>
+                    </div>
+                    <div t-att-class="'wc-stat' + (state.stats.missingCheckins ? ' wc-stat--warn' : ' wc-stat--ok')">
+                        <div class="wc-stat-value" t-esc="state.stats.missingCheckins"/>
+                        <div class="wc-stat-label">Missing Check-ins</div>
+                    </div>
+                    <div class="wc-stat wc-stat--ok">
+                        <div class="wc-stat-value" t-esc="state.stats.presentToday"/>
+                        <div class="wc-stat-label">Present Today</div>
+                    </div>
+                    <div class="wc-stat wc-stat--fill">
+                        <div class="wc-stat-value"><t t-esc="fillRatePct"/>%</div>
+                        <div class="wc-stat-label">Fill Rate</div>
+                    </div>
+                </div>
+
+                <!-- Alert panel -->
+                <div t-if="hasAlerts" class="wc-alerts">
+                    <div class="wc-alerts-hdr">
+                        <span class="wc-alerts-title">
+                            <t t-if="hasCriticalAlerts">&#9888; </t>Active Alerts
+                        </span>
+                        <span class="wc-alerts-count" t-esc="state.alerts.length"/>
+                    </div>
+                    <div class="wc-alert-list">
+                        <div t-foreach="state.alerts" t-as="alert" t-key="alert.id"
+                             t-att-class="'wc-alert wc-alert--' + alert.severity">
+                            <div class="wc-alert-icon">
+                                <t t-if="alert.severity === 'critical'">&#9888;</t>
+                                <t t-elif="alert.severity === 'warning'">&#9432;</t>
+                                <t t-else="">&#8226;</t>
+                            </div>
+                            <div class="wc-alert-body">
+                                <div class="wc-alert-title" t-esc="alert.title"/>
+                                <div class="wc-alert-text" t-esc="alert.body"/>
+                            </div>
+                            <button class="wc-dismiss-btn"
+                                    t-on-click="() => this.dismissAlert(alert.id)"
+                                    title="Dismiss">&#10005;</button>
+                        </div>
+                    </div>
+                </div>
+                <div t-else="" class="wc-no-alerts">
+                    &#10003; No active alerts — operations are clear.
+                </div>
+
+            </div>
+        </div>
+    </t>
+</templates>

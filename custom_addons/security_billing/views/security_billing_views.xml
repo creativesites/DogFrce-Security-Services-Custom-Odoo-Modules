@@ -9,7 +9,7 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="partner_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
                             <field name="billing_mode"/>
                             <field name="active"/>
                         </group>
@@ -173,8 +173,9 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_generate_from_roster" type="object" string="Generate From Roster" class="oe_highlight" invisible="state != 'draft'"/>
-                    <button name="action_generate_from_attendance" type="object" string="Generate From Attendance" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_generate_from_approved_attendance" type="object" string="Generate (Contract Rates)" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_generate_from_roster" type="object" string="Generate From Roster" invisible="state != 'draft'"/>
+                    <button name="action_generate_from_attendance" type="object" string="Generate From Attendance (Legacy)" invisible="state != 'draft'"/>
                     <button name="action_send_invoice_email" type="object" string="Send Invoice" class="btn-primary" invisible="state not in ['draft', 'sent']"/>
                     <button name="action_mark_sent" type="object" string="Mark Sent" invisible="state != 'draft'"/>
                     <button name="action_mark_paid" type="object" string="Mark Paid" invisible="state not in ('draft', 'sent')"/>
@@ -189,8 +190,9 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="partner_id"/>
-                            <field name="site_id"/>
+                            <field name="partner_id" domain="[('is_company','=',True)]"/>
+                            <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
+                            <field name="contract_id" domain="[('partner_id','=',partner_id)]"/>
                             <field name="billing_plan_id"/>
                             <field name="currency_id"/>
                         </group>
@@ -425,4 +427,56 @@
               sequence="1"
               groups="hr.group_hr_manager,base.group_system"/>
 
+    <!-- Contract Invoice Generation Wizard -->
+    <record id="view_security_contract_invoice_wizard_form" model="ir.ui.view">
+        <field name="name">security.contract.invoice.wizard.form</field>
+        <field name="model">security.contract.invoice.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Contract Invoice">
+                <group>
+                    <group>
+                        <field name="contract_id" domain="[('state','=','active')]"/>
+                        <field name="partner_id" readonly="1"/>
+                        <field name="site_id" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="period_month"/>
+                        <field name="vat_rate"/>
+                        <field name="po_number"/>
+                    </group>
+                </group>
+                <div class="alert alert-warning" invisible="not warning_message">
+                    <strong>Pre-Invoice Warnings:</strong>
+                    <p><field name="warning_message" readonly="1"/></p>
+                </div>
+                <div class="alert alert-danger" invisible="not warning_exception_count">
+                    <field name="warning_exception_count" readonly="1" nolabel="1"/>
+                    unapproved exception(s) will be excluded from this invoice.
+                    Approve them in the Billing Exception Queue first.
+                </div>
+                <footer>
+                    <button name="action_generate" type="object"
+                            string="Generate Invoice" class="btn-primary"/>
+                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_contract_invoice_wizard" model="ir.actions.act_window">
+        <field name="name">Generate Contract Invoice</field>
+        <field name="res_model">security.contract.invoice.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_security_contract_invoice_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem
+        id="menu_security_contract_invoice_wizard"
+        name="Generate Contract Invoice"
+        parent="security_operations.menu_security_billing_root"
+        action="action_security_contract_invoice_wizard"
+        sequence="25"
+        groups="hr.group_hr_user"
+    />
 </odoo>

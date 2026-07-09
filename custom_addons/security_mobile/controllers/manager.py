@@ -208,7 +208,7 @@ class ManagerController(http.Controller):
 
         vals = {"overtime_approved": bool(body.get("approved", True))}
         if body.get("note"):
-            vals["overtime_note"] = body["note"]
+            vals["overtime_approval_note"] = body["note"]
         record.write(vals)
 
         return _json_ok({"record_id": record.id,

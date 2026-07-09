@@ -38,6 +38,15 @@
             </select>
         </div>
 
+        <!-- New Roster button -->
+        <div class="px-3 pb-2">
+            <button class="rb-btn"
+                    style="width:100%; font-size:12px; background:#1d4ed8; color:#fff; border-radius:7px;"
+                    t-on-click="openCreateDialog">
+                <i class="fa fa-plus me-1"/>New Roster
+            </button>
+        </div>
+
         <!-- Site Filter -->
         <div t-if="state.batchId" class="px-3 pb-2">
             <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px; color:#94a3b8; margin-bottom:6px;">
@@ -88,6 +97,15 @@
                     </span>
                 </div>
                 <div class="d-flex justify-content-between align-items-center">
+                    <span style="font-size:11px; color:#94a3b8;">
+                        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ef4444; margin-right:5px;"/>
+                        Critical Gaps
+                    </span>
+                    <span class="fw-semibold" style="font-size:12px; color:#fca5a5;">
+                        <t t-esc="state.stats.criticalGaps"/>
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
                     <span style="font-size:11px; color:#94a3b8;">Coverage</span>
                     <span class="fw-bold" style="font-size:13px; color:#fff;">
                         <t t-esc="assignmentPercent"/>%
@@ -118,11 +136,16 @@
         <!-- Top header bar -->
         <div class="rb-header d-flex align-items-center px-4 py-2">
             <div style="flex:1;">
-                <div class="fw-bold" style="font-size:16px; color:#1e293b;">
-                    <t t-if="selectedBatchName" t-esc="selectedBatchName"/>
-                    <span t-else="" style="color:#94a3b8;">Select a Roster Batch</span>
+                <div class="d-flex align-items-center gap-2">
+                    <t t-if="selectedBatch">
+                        <span class="fw-bold" style="font-size:16px; color:#1e293b;"
+                              t-esc="selectedBatch.name"/>
+                        <span t-att-style="'font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; padding:2px 8px; border-radius:10px; color:#fff; background:' + batchStateColor(selectedBatch.state)"
+                              t-esc="selectedBatch.state"/>
+                    </t>
+                    <span t-else="" style="font-size:16px; font-weight:600; color:#94a3b8;">Select a Roster Batch</span>
                 </div>
-                <div t-if="state.batchDateFrom" style="font-size:11px; color:#64748b;">
+                <div t-if="state.batchDateFrom" style="font-size:11px; color:#64748b; margin-top:2px;">
                     <t t-esc="formatDateLong(state.batchDateFrom)"/>
                     <span class="mx-1">–</span>
                     <t t-esc="formatDateLong(state.batchDateTo)"/>
@@ -130,9 +153,24 @@
                 </div>
             </div>
             <div t-if="state.batchId" class="d-flex gap-2 align-items-center">
+                <button class="rb-btn rb-btn-success"
+                        t-on-click="autoAssignAll"
+                        t-att-disabled="state.autoAssigning or state.loading or unassignedCount === 0">
+                    <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin me-1' : 'fa fa-bolt me-1'"/>
+                    <t t-if="state.autoAssigning">Auto-Assigning…</t>
+                    <t t-elif="unassignedCount > 0">Auto-Assign All (<t t-esc="unassignedCount"/>)</t>
+                    <t t-else="">All Assigned</t>
+                </button>
+                <button t-att-class="state.showGapsOnly ? 'rb-btn rb-btn-toggle-active' : 'rb-btn rb-btn-ghost'"
+                        t-on-click="toggleGapsOnly"
+                        t-att-disabled="state.loading">
+                    <i class="fa fa-filter me-1"/>
+                    <t t-if="state.showGapsOnly">Show All</t>
+                    <t t-else="">Gaps Only</t>
+                </button>
                 <button class="rb-btn rb-btn-ghost"
                         t-on-click="refreshBoard"
-                        t-att-disabled="state.loading">
+                        t-att-disabled="state.loading or state.autoFilling">
                     <i t-att-class="state.loading ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
                     <span class="ms-1">Refresh</span>
                 </button>
@@ -227,41 +265,66 @@
                                                 </t>
                                                 <t t-foreach="slots" t-as="slot" t-key="slot.id">
 
-                                                    <!-- CANCELLED slot -->
+                                                    <!-- CANCELLED slot (no context menu) -->
                                                     <t t-if="slot.state === 'cancelled'">
                                                         <div style="background:#f8fafc; border-left:3px solid #cbd5e1; border-radius:4px; padding:4px 7px; margin-bottom:2px; opacity:.5; font-size:11px; min-height:30px;">
                                                             <span style="color:#94a3b8; font-style:italic; font-size:10px;">Cancelled</span>
                                                         </div>
                                                     </t>
 
-                                                    <!-- ASSIGNED slot -->
-                                                    <t t-elif="slot.employee_id">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             t-att-style="'background:' + (slot.conflict ? '#fee2e2' : '#dcfce7') + '; border-left:3px solid ' + (slot.conflict ? '#dc2626' : '#16a34a') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
-                                                            <t t-if="slot.conflict">
-                                                                <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
-                                                            </t>
-                                                            <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.conflict ? '#991b1b' : '#15803d') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
-                                                                 t-esc="slot.employee_name"/>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#86efac; margin-top:1px;" t-esc="slot.shift_label"/>
-                                                        </div>
-                                                    </t>
-
-                                                    <!-- UNASSIGNED confirmed slot -->
-                                                    <t t-elif="slot.state === 'confirmed'">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             style="background:#fef9c3; border-left:3px solid #ca8a04; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
-                                                            <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
-                                                        </div>
-                                                    </t>
-
-                                                    <!-- UNASSIGNED draft slot -->
+                                                    <!-- Active slots: right-click opens context menu -->
                                                     <t t-else="">
-                                                        <div t-on-click="() => this.selectSlot(slot)"
-                                                             style="background:#f1f5f9; border-left:3px solid #94a3b8; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;">
-                                                            <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
-                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        <div t-on-contextmenu="(ev) => this.onSlotContextMenu(slot, ev)">
+
+                                                            <!-- ASSIGNED slot -->
+                                                            <t t-if="slot.employee_id">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     t-att-style="'background:' + (slot.conflict ? '#fee2e2' : '#dcfce7') + '; border-left:3px solid ' + (slot.conflict ? '#dc2626' : '#16a34a') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                                    <t t-if="slot.conflict">
+                                                                        <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
+                                                                    </t>
+                                                                    <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.conflict ? '#991b1b' : '#15803d') + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
+                                                                         t-esc="slot.employee_name"/>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#86efac; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
+                                                            <!-- CRITICAL GAP — auto-fill found no eligible guard -->
+                                                            <t t-elif="slot.critical_gap">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                                     t-on-dragleave="onDragLeaveSlot"
+                                                                     t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                                     t-att-class="state.dragOverSlotId === slot.id ? 'rb-cell-critical-gap rb-drop-hover' : 'rb-cell-critical-gap'">
+                                                                    <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">CRITICAL GAP</span>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#f87171; margin-top:2px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
+                                                            <!-- UNASSIGNED confirmed slot -->
+                                                            <t t-elif="slot.state === 'confirmed'">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                                     t-on-dragleave="onDragLeaveSlot"
+                                                                     t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                                     t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : '#fef9c3') + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : '#ca8a04') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                                    <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
+                                                            <!-- UNASSIGNED draft slot -->
+                                                            <t t-else="">
+                                                                <div t-on-click="() => this.selectSlot(slot)"
+                                                                     t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                                     t-on-dragleave="onDragLeaveSlot"
+                                                                     t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                                     t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : '#f1f5f9') + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : '#94a3b8') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                                    <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
+                                                                    <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                                </div>
+                                                            </t>
+
                                                         </div>
                                                     </t>
 
@@ -314,7 +377,8 @@
                     </div>
 
                     <!-- Action buttons -->
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <!-- Unassigned slot: suggest guards -->
                         <button t-if="!state.selectedSlot.employee_name and state.selectedSlot.state !== 'cancelled'"
                                 class="rb-btn rb-btn-primary"
                                 style="flex:1;"
@@ -322,13 +386,24 @@
                                 t-att-disabled="state.loadingSuggestions">
                             <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-magic me-1'"/>
                             <t t-if="state.loadingSuggestions">Loading…</t>
+                            <t t-elif="state.suggestionsLoaded">Refresh Suggestions</t>
                             <t t-else="">Suggest Guards</t>
                         </button>
-                        <button t-if="state.selectedSlot.employee_name"
-                                class="rb-btn rb-btn-danger"
-                                t-on-click="unassignSlot">
-                            <i class="fa fa-user-times me-1"/>Unassign
-                        </button>
+                        <!-- Assigned slot: find replacement + unassign -->
+                        <t t-if="state.selectedSlot.employee_name">
+                            <button class="rb-btn rb-btn-ghost"
+                                    style="flex:1;"
+                                    t-on-click="loadSuggestions"
+                                    t-att-disabled="state.loadingSuggestions">
+                                <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-exchange me-1'"/>
+                                <t t-if="state.loadingSuggestions">Loading…</t>
+                                <t t-else="">Find Replacement</t>
+                            </button>
+                            <button class="rb-btn rb-btn-danger"
+                                    t-on-click="unassignSlot">
+                                <i class="fa fa-user-times me-1"/>Unassign
+                            </button>
+                        </t>
                     </div>
                 </div>
 
@@ -365,7 +440,9 @@
 
                         <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
                             <div class="rb-suggestion-card"
-                                 style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:8px; transition:box-shadow .15s, border-color .15s;">
+                                 draggable="true"
+                                 t-on-dragstart="(ev) => this.onDragStartSuggestion(sug, ev)"
+                                 style="background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; margin-bottom:8px; transition:box-shadow .15s, border-color .15s; cursor:grab;">
 
                                 <!-- Rank + Name row -->
                                 <div class="d-flex align-items-start justify-content-between mb-2">
@@ -566,6 +643,244 @@
 
         </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         CONTEXT MENU — right-click on any active slot
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.contextMenu.visible">
+        <!-- Transparent backdrop to close menu on outside click -->
+        <div style="position:fixed; inset:0; z-index:9998;"
+             t-on-click="closeContextMenu"
+             t-on-contextmenu.prevent="closeContextMenu"/>
+
+        <!-- Menu panel -->
+        <div class="rb-ctx-panel"
+             t-att-style="'position:fixed; z-index:9999; left:' + state.contextMenu.x + 'px; top:' + state.contextMenu.y + 'px;'">
+
+            <t t-if="state.contextMenu.slot">
+                <!-- Slot label -->
+                <div class="rb-ctx-label">
+                    <i class="fa fa-map-marker me-1" style="color:#94a3b8;"/>
+                    <t t-esc="state.contextMenu.slot.post_name"/>
+                </div>
+                <div class="rb-ctx-divider"/>
+
+                <!-- Suggest Guards (only for unassigned, non-cancelled) -->
+                <button t-if="!state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="contextMenuSuggest">
+                    <i class="fa fa-magic me-2" style="color:#3b82f6;"/>Suggest Guards
+                </button>
+
+                <!-- Swap Guard (opens override-reason dialog, then suggestion panel) -->
+                <button t-if="state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="() => this.openSwapDialog(state.contextMenu.slot)">
+                    <i class="fa fa-exchange me-2" style="color:#8b5cf6;"/>Swap Guard
+                </button>
+
+                <!-- Unassign Guard -->
+                <button t-if="state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="contextMenuUnassign">
+                    <i class="fa fa-user-times me-2" style="color:#ef4444;"/>Unassign Guard
+                </button>
+
+                <!-- View Guard Profile -->
+                <button t-if="state.contextMenu.slot.employee_id"
+                        class="rb-ctx-item"
+                        t-on-click="contextMenuViewGuard">
+                    <i class="fa fa-user me-2" style="color:#64748b;"/>View Guard Profile
+                </button>
+
+                <div class="rb-ctx-divider"/>
+                <button class="rb-ctx-item rb-ctx-close"
+                        t-on-click="closeContextMenu">
+                    <i class="fa fa-times me-2"/>Close
+                </button>
+            </t>
+        </div>
+    </t>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SWAP DIALOG — override reason before re-assigning guard
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.swapDialog.visible">
+        <div style="position:fixed; inset:0; z-index:10000; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center;"
+             t-on-click.self="closeSwapDialog">
+            <div style="background:#fff; border-radius:14px; padding:28px; width:420px; max-width:92vw; box-shadow:0 24px 64px rgba(0,0,0,.28);">
+
+                <!-- Header -->
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <div style="font-size:16px; font-weight:700; color:#1e293b;">Swap Guard</div>
+                        <div t-if="state.swapDialog.slot" style="font-size:12px; color:#64748b; margin-top:2px;">
+                            <t t-esc="state.swapDialog.slot.post_name"/>
+                            <span class="mx-1">·</span>
+                            <t t-esc="formatDateShort(state.swapDialog.slot.shift_date)"/>
+                        </div>
+                    </div>
+                    <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; line-height:1; padding:4px;"
+                            t-on-click="closeSwapDialog">
+                        <i class="fa fa-times"/>
+                    </button>
+                </div>
+
+                <!-- Current guard info -->
+                <div t-if="state.swapDialog.slot and state.swapDialog.slot.employee_name"
+                     style="background:#fef9c3; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; margin-bottom:16px; font-size:12px; color:#92400e;">
+                    <i class="fa fa-user me-1"/>
+                    Replacing: <strong t-esc="state.swapDialog.slot.employee_name"/>
+                </div>
+
+                <!-- Reason textarea -->
+                <div style="font-size:12px; font-weight:600; color:#334155; margin-bottom:6px;">Override Reason</div>
+                <textarea
+                    style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:12px; resize:vertical; min-height:90px; font-family:inherit; color:#1e293b; outline:none;"
+                    placeholder="e.g. Guard requested swap, client preference, medical leave, training conflict…"
+                    t-on-input="(ev) => { state.swapDialog.reason = ev.target.value; }"
+                    t-on-focus="(ev) => { ev.target.style.borderColor = '#3b82f6'; }"
+                    t-on-blur="(ev) => { ev.target.style.borderColor = '#e2e8f0'; }"
+                />
+                <div style="font-size:10px; color:#94a3b8; margin-top:4px; margin-bottom:16px;">
+                    Reason is optional but helps the compliance audit trail.
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex gap-2 justify-content-end">
+                    <button class="rb-btn rb-btn-ghost" t-on-click="closeSwapDialog">Cancel</button>
+                    <button class="rb-btn rb-btn-primary" t-on-click="confirmSwap">
+                        <i class="fa fa-exchange me-1"/>Confirm Swap
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </t>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         CREATE ROSTER BATCH DIALOG
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.createDialog.visible">
+        <div style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center;"
+             t-on-click="closeCreateDialog">
+            <div style="background:#fff; border-radius:14px; width:420px; max-width:92vw; box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden;"
+                 t-on-click.stop="">
+
+                <!-- Modal header -->
+                <div style="background:#1e3a5f; padding:18px 22px 16px; display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <div style="font-size:15px; font-weight:700; color:#fff; letter-spacing:.2px;">
+                            <i class="fa fa-calendar-plus-o me-2" style="color:#60a5fa;"/>New Roster Batch
+                        </div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:3px;">
+                            Generate slots from shift requirements
+                        </div>
+                    </div>
+                    <button style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer; line-height:1; padding:2px 6px;"
+                            t-on-click="closeCreateDialog">&#x2715;</button>
+                </div>
+
+                <!-- Modal body -->
+                <div style="padding:22px;">
+
+                    <!-- Client -->
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#64748b; margin-bottom:6px;">
+                            Client <span style="color:#ef4444;">*</span>
+                        </label>
+                        <select class="form-select form-select-sm"
+                                style="border-color:#e2e8f0; font-size:13px; border-radius:8px;"
+                                t-on-change="onDialogPartnerChange">
+                            <option value="">-- Select client --</option>
+                            <t t-foreach="createDialogPartners" t-as="p" t-key="p.id">
+                                <option t-att-value="p.id"
+                                        t-att-selected="p.id === state.createDialog.partnerId"
+                                        t-esc="p.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <!-- Site (optional) -->
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#64748b; margin-bottom:6px;">
+                            Site <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#94a3b8;">(leave blank for all client sites)</span>
+                        </label>
+                        <select class="form-select form-select-sm"
+                                style="border-color:#e2e8f0; font-size:13px; border-radius:8px;"
+                                t-att-disabled="!state.createDialog.partnerId"
+                                t-on-change="onDialogSiteChange">
+                            <option value="">All sites for this client</option>
+                            <t t-foreach="createDialogSites" t-as="s" t-key="s.id">
+                                <option t-att-value="s.id"
+                                        t-att-selected="s.id === state.createDialog.siteId"
+                                        t-esc="s.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <!-- Month / Year -->
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#64748b; margin-bottom:6px;">
+                            Roster Month <span style="color:#ef4444;">*</span>
+                        </label>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm"
+                                    style="border-color:#e2e8f0; font-size:13px; border-radius:8px; flex:2;"
+                                    t-on-change="onDialogMonthChange">
+                                <option value="">Month</option>
+                                <t t-foreach="dialogMonthOptions" t-as="mo" t-key="mo.value">
+                                    <option t-att-value="mo.value"
+                                            t-att-selected="mo.value === state.createDialog.month"
+                                            t-esc="mo.label"/>
+                                </t>
+                            </select>
+                            <select class="form-select form-select-sm"
+                                    style="border-color:#e2e8f0; font-size:13px; border-radius:8px; flex:1;"
+                                    t-on-change="onDialogYearChange">
+                                <option value="">Year</option>
+                                <t t-foreach="dialogYearOptions" t-as="yr" t-key="yr">
+                                    <option t-att-value="yr"
+                                            t-att-selected="yr === state.createDialog.year"
+                                            t-esc="yr"/>
+                                </t>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Info note -->
+                    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 13px; font-size:12px; color:#1e40af; margin-bottom:18px;">
+                        <i class="fa fa-info-circle me-1"/>
+                        Slots are generated from the <strong>Shift Requirements</strong> configured for each site. Make sure requirements are set up before creating a roster.
+                    </div>
+
+                    <!-- Error -->
+                    <div t-if="state.createDialog.error"
+                         style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:9px 13px; font-size:12px; color:#b91c1c; margin-bottom:14px;">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <t t-esc="state.createDialog.error"/>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-2 justify-content-end">
+                        <button class="rb-btn rb-btn-ghost"
+                                t-on-click="closeCreateDialog"
+                                t-att-disabled="state.createDialog.creating">
+                            Cancel
+                        </button>
+                        <button class="rb-btn rb-btn-autofill"
+                                t-on-click="confirmCreateBatch"
+                                t-att-disabled="state.createDialog.creating">
+                            <i t-att-class="state.createDialog.creating ? 'fa fa-spinner fa-spin me-1' : 'fa fa-calendar-check-o me-1'"/>
+                            <t t-if="state.createDialog.creating">Creating…</t>
+                            <t t-else="">Create &amp; Generate</t>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </t>
 
 </div><!-- /o_roster_board -->
 

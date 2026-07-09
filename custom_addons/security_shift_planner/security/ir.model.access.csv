@@ -1,2 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_security_slot_suggestion_user,security.slot.suggestion user,model_security_slot_suggestion,hr.group_hr_user,1,1,1,1
+access_security_roster_week_user,security.roster.week user,model_security_roster_week,hr.group_hr_user,1,1,1,0
+access_security_roster_week_manager,security.roster.week manager,model_security_roster_week,base.group_system,1,1,1,1

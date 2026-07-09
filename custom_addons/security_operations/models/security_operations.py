@@ -1,9 +1,9 @@
-from datetime import timedelta, date
 import calendar
+from datetime import date, timedelta
 
+from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
-from dateutil.relativedelta import relativedelta
 
 
 class SecurityPostType(models.Model):
@@ -47,7 +47,7 @@ class SecurityClientSite(models.Model):
 
     name = fields.Char(required=True)
     code = fields.Char()
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     location = fields.Char()
     supervisor_id = fields.Many2one(
         "hr.employee",
@@ -66,6 +66,140 @@ class SecurityClientSite(models.Model):
         string="Guard Exclusions",
     )
     note = fields.Text()
+    site_coverage_today = fields.Float(
+        compute="_compute_site_coverage_today",
+        string="Today's Coverage (%)",
+    )
+    site_coverage_month = fields.Float(
+        compute="_compute_site_coverage_month",
+        string="Month-to-Date Coverage (%)",
+    )
+    contract_status = fields.Selection(
+        [
+            ("valid", "Contract Valid"),
+            ("expiring_soon", "Expiring Soon"),
+            ("expired", "Expired"),
+            ("none", "No Contract"),
+        ],
+        compute="_compute_contract_status",
+        string="Contract Status",
+    )
+    risk_level = fields.Selection(
+        [
+            ("low", "Low Risk"),
+            ("medium", "Medium Risk"),
+            ("high", "High Risk"),
+            ("critical", "Critical"),
+        ],
+        compute="_compute_risk_level",
+        string="Risk Level",
+    )
+
+    def _compute_contract_status(self):
+        today = fields.Date.today()
+        contract_model = self.env.get("security.client.contract")
+        for site in self:
+            if not contract_model:
+                site.contract_status = "none"
+                continue
+            contract = contract_model.get_active_for_site(site, today)
+            if not contract:
+                site.contract_status = "none"
+            elif contract.date_end and (contract.date_end - today).days <= 30:
+                site.contract_status = "expiring_soon"
+            else:
+                site.contract_status = "valid"
+        # Mark expired contracts for sites with no active contract but a past one
+        for site in self:
+            if site.contract_status == "none" and contract_model:
+                past = contract_model.search([
+                    ("site_id", "=", site.id),
+                    ("state", "in", ("active", "expired")),
+                    ("date_end", "<", today),
+                ], limit=1)
+                if past:
+                    site.contract_status = "expired"
+
+    def _compute_risk_level(self):
+        for site in self:
+            today_cov = site.site_coverage_today
+            month_cov = site.site_coverage_month
+            if today_cov < 50 or month_cov < 60:
+                site.risk_level = "critical"
+            elif today_cov < 75 or month_cov < 75:
+                site.risk_level = "high"
+            elif today_cov < 90 or month_cov < 85:
+                site.risk_level = "medium"
+            else:
+                site.risk_level = "low"
+
+    def _compute_site_coverage_today(self):
+        today = fields.Date.today()
+        slot_model = self.env["security.roster.slot"]
+        for site in self:
+            slots = slot_model.search([
+                ("site_id", "=", site.id),
+                ("shift_date", "=", today),
+                ("state", "!=", "cancelled"),
+            ])
+            total = len(slots)
+            assigned = len(slots.filtered(
+                lambda s: s.employee_id and s.state in ("assigned", "confirmed")
+            ))
+            site.site_coverage_today = (assigned / total * 100.0) if total else 0.0
+
+    def _compute_site_coverage_month(self):
+        today = fields.Date.today()
+        first_day = today.replace(day=1)
+        slot_model = self.env["security.roster.slot"]
+        for site in self:
+            slots = slot_model.search([
+                ("site_id", "=", site.id),
+                ("shift_date", ">=", first_day),
+                ("shift_date", "<=", today),
+                ("state", "!=", "cancelled"),
+            ])
+            total = len(slots)
+            assigned = len(slots.filtered(
+                lambda s: s.employee_id and s.state in ("assigned", "confirmed")
+            ))
+            site.site_coverage_month = (assigned / total * 100.0) if total else 0.0
+
+    @api.model
+    def get_calendar_data(self, site_id, month_str):
+        year, month = map(int, month_str.split("-"))
+        days_in_month = calendar.monthrange(year, month)[1]
+        first_weekday = calendar.weekday(year, month, 1)
+
+        date_from = date(year, month, 1)
+        date_to = date(year, month, days_in_month)
+        slots = self.env["security.roster.slot"].search([
+            ("site_id", "=", site_id),
+            ("shift_date", ">=", date_from),
+            ("shift_date", "<=", date_to),
+            ("state", "!=", "cancelled"),
+        ])
+
+        days_data = {}
+        for slot in slots:
+            key = str(slot.shift_date)
+            if key not in days_data:
+                days_data[key] = {"total": 0, "assigned": 0, "slots": []}
+            days_data[key]["total"] += 1
+            if slot.employee_id and slot.state in ("assigned", "confirmed"):
+                days_data[key]["assigned"] += 1
+            days_data[key]["slots"].append({
+                "id": slot.id,
+                "shift": slot.shift_template_id.name if slot.shift_template_id else "",
+                "post": slot.post_id.name if slot.post_id else "",
+                "guard": slot.employee_id.name if slot.employee_id else "",
+            })
+
+        return {
+            "days_in_month": days_in_month,
+            "first_weekday": first_weekday,
+            "days": days_data,
+        }
 
     # Live coverage stats (non-stored, computed on demand)
     site_coverage_today = fields.Float(
@@ -169,10 +303,11 @@ class SecurityPost(models.Model):
     name = fields.Char(required=True)
     code = fields.Char()
     active = fields.Boolean(default=True)
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     partner_id = fields.Many2one(
         "res.partner",
         string="Client",
+        domain=[("is_company", "=", True)],
     )
     post_type_id = fields.Many2one("security.post.type", required=True)
     location = fields.Char()
@@ -193,6 +328,12 @@ class SecurityPost(models.Model):
         for post in self:
             if post.site_id:
                 post.partner_id = post.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for post in self:
+            if post.site_id and post.site_id.partner_id != post.partner_id:
+                post.site_id = False
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -293,6 +434,23 @@ class SecurityShiftRequirement(models.Model):
     )
     active = fields.Boolean(default=True)
     note = fields.Text()
+    contract_active = fields.Boolean(
+        compute="_compute_contract_active",
+        string="Contract Active",
+        help="Whether the client has an active contract covering this site today.",
+    )
+
+    @api.depends("site_id")
+    def _compute_contract_active(self):
+        today = fields.Date.context_today(self)
+        contract_model = self.env.get("security.client.contract")
+        for req in self:
+            if contract_model and req.site_id and req.site_id.partner_id:
+                req.contract_active = bool(
+                    contract_model.get_active_for_site(req.site_id, today)
+                )
+            else:
+                req.contract_active = True  # no contract module installed — no gate
 
     def _is_active_on_date(self, target_date):
         self.ensure_one()
@@ -342,10 +500,10 @@ class SecuritySiteRequirement(models.Model):
     _order = "partner_id, post_type_id"
 
     name = fields.Char(compute="_compute_name", store=True)
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     post_type_id = fields.Many2one("security.post.type", required=True)
     minimum_guard_count = fields.Integer(default=1)
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     minimum_reliability_score = fields.Integer(default=0)
     required_language_ids = fields.Many2many(
         "security.language",
@@ -371,6 +529,18 @@ class SecuritySiteRequirement(models.Model):
     )
     note = fields.Text()
 
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for req in self:
+            if req.site_id and req.site_id.partner_id:
+                req.partner_id = req.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for req in self:
+            if req.site_id and req.site_id.partner_id != req.partner_id:
+                req.site_id = False
+
     @api.depends("partner_id", "post_type_id")
     def _compute_name(self):
         for requirement in self:
@@ -390,8 +560,8 @@ class SecurityGuardExclusion(models.Model):
         domain=[("security_guard", "=", True)],
         string="Guard",
     )
-    partner_id = fields.Many2one("res.partner", string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", string="Client", domain=[("is_company", "=", True)])
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     reason = fields.Char(required=True)
     active = fields.Boolean(default=True)
     note = fields.Text()
@@ -401,6 +571,12 @@ class SecurityGuardExclusion(models.Model):
         for exclusion in self:
             if exclusion.site_id:
                 exclusion.partner_id = exclusion.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for exclusion in self:
+            if exclusion.site_id and exclusion.site_id.partner_id != exclusion.partner_id:
+                exclusion.site_id = False
 
     @api.constrains("partner_id", "site_id")
     def _check_scope(self):
@@ -417,8 +593,8 @@ class SecurityRosterBatch(models.Model):
     name = fields.Char(compute="_compute_name", store=True)
     date_from = fields.Date(required=True)
     date_to = fields.Date(required=True)
-    partner_id = fields.Many2one("res.partner", string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", string="Client", domain=[("is_company", "=", True)])
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id','=',partner_id)]")
     state = fields.Selection(
         [
             ("draft", "Draft"),
@@ -433,6 +609,11 @@ class SecurityRosterBatch(models.Model):
     )
     slot_ids = fields.One2many("security.roster.slot", "batch_id", string="Roster Slots")
     generated_slot_count = fields.Integer(compute="_compute_generated_slot_count")
+    planned_revenue = fields.Float(
+        compute="_compute_planned_revenue",
+        string="Planned Revenue",
+        digits=(10, 2),
+    )
     submitted_by_id = fields.Many2one("res.users", readonly=True, string="Submitted By")
     approved_by_id = fields.Many2one("res.users", readonly=True, string="Approved By")
     rejection_reason = fields.Text(string="Rejection Reason")
@@ -451,11 +632,64 @@ class SecurityRosterBatch(models.Model):
         for batch in self:
             batch.generated_slot_count = len(batch.slot_ids)
 
+    def _compute_planned_revenue(self):
+        contract_model = self.env.get("security.client.contract")
+        holiday_model = self.env.get("security.public.holiday")
+        for batch in self:
+            if not contract_model:
+                batch.planned_revenue = 0.0
+                continue
+            total = 0.0
+            for slot in batch.slot_ids:
+                if slot.state == "cancelled":
+                    continue
+                if not slot.shift_date or not slot.shift_template_id:
+                    continue
+                site = slot.site_id
+                if not site:
+                    continue
+                contract = contract_model.get_active_for_site(site, slot.shift_date)
+                if not contract:
+                    continue
+                # Determine primary billing category for this slot
+                category = "normal"
+                if holiday_model and slot.shift_date:
+                    if holiday_model.search_count([
+                        ("holiday_date", "=", slot.shift_date),
+                        ("active", "=", True),
+                    ]):
+                        category = "public_holiday"
+                if category == "normal":
+                    weekday = slot.shift_date.weekday()
+                    if weekday == 6:
+                        category = "sunday"
+                    elif weekday == 5:
+                        category = "saturday"
+                    else:
+                        start = slot.shift_template_id.start_hour
+                        if start >= 18 or start < 6:
+                            category = "night"
+                grade = slot.employee_id.security_grade_id if slot.employee_id else None
+                rate = contract.get_rate_for(grade, category)
+                hours = slot.shift_template_id.duration_hours or max(
+                    0.0, slot.shift_template_id.end_hour - slot.shift_template_id.start_hour
+                )
+                if hours <= 0:
+                    hours += 24.0
+                total += hours * rate
+            batch.planned_revenue = round(total, 2)
+
     @api.onchange("site_id")
     def _onchange_site_id(self):
         for batch in self:
             if batch.site_id:
                 batch.partner_id = batch.site_id.partner_id
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        for batch in self:
+            if batch.site_id and batch.site_id.partner_id != batch.partner_id:
+                batch.site_id = False
 
     @api.constrains("date_from", "date_to")
     def _check_dates(self):
@@ -515,9 +749,44 @@ class SecurityRosterBatch(models.Model):
                 raise ValidationError("No new roster slots were created. Check dates or existing slots.")
 
     def action_confirm(self):
+        contract_model = self.env.get("security.client.contract")
         for batch in self:
+            if contract_model:
+                # Validate every site in this batch has an active contract on date_from.
+                # Mid-month expiry is caught here — ops managers see the problem via the
+                # contract_active badge on ShiftRequirement before generating a new batch.
+                sites = batch.slot_ids.mapped("site_id")
+                for site in sites:
+                    if not site.partner_id:
+                        continue
+                    contract = contract_model.get_active_for_site(site, batch.date_from)
+                    if not contract:
+                        raise ValidationError(
+                            f"No active contract for site '{site.name}' "
+                            f"(client: {site.partner_id.name}). "
+                            "Activate a client contract before confirming this roster."
+                        )
             batch.slot_ids.write({"state": "confirmed"})
             batch.state = "confirmed"
+            if "security.notification" in self.env:
+                sites = batch.slot_ids.mapped("site_id")
+                supervisor_users = self.env["res.users"].browse()
+                for site in sites:
+                    if site.supervisor_id and site.supervisor_id.user_id:
+                        supervisor_users |= site.supervisor_id.user_id
+                if supervisor_users:
+                    self.env["security.notification"].sudo().create({
+                        "title": f"Roster Confirmed: {batch.name}",
+                        "body": (
+                            f"Roster '{batch.name}' has been confirmed. "
+                            "Your shift assignments are now locked in."
+                        ),
+                        "notification_type": "roster_gap",
+                        "severity": "info",
+                        "recipient_ids": [(6, 0, supervisor_users.ids)],
+                        "related_model": "security.roster.batch",
+                        "related_id": batch.id,
+                    })
 
     def action_cancel(self):
         for batch in self:
@@ -554,8 +823,6 @@ class SecurityRosterBatch(models.Model):
     def action_copy_from_previous_month(self):
         """Copy all confirmed slots from the most recent previous batch."""
         self.ensure_one()
-        from dateutil.relativedelta import relativedelta
-
         prev_batch = self.search(
             [("id", "!=", self.id), ("date_from", "<", self.date_from)],
             order="date_from desc",
@@ -586,6 +853,7 @@ class SecurityRosterBatch(models.Model):
                     "post_id": slot.post_id.id,
                     "shift_date": new_date,
                     "shift_template_id": slot.shift_template_id.id,
+                    "shift_requirement_id": slot.shift_requirement_id.id if slot.shift_requirement_id else False,
                     "state": "draft",
                 }
                 if slot.employee_id:
@@ -658,6 +926,61 @@ class SecurityRosterBatch(models.Model):
                     "type": "success" if filled == len(open_slots) else "warning",
                 },
             }
+
+    def action_auto_fill_slots(self):
+        """Auto-assign available guards to all empty (unassigned) slots in this batch."""
+        self.ensure_one()
+        empty_slots = self.slot_ids.filtered(lambda s: not s.employee_id and s.state == "draft")
+        if not empty_slots:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Gaps Found",
+                    "message": "All slots in this batch already have guards assigned.",
+                    "type": "info",
+                },
+            }
+        guards = self.env["hr.employee"].search([("security_guard", "=", True), ("active", "=", True)])
+        if not guards:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Guards Available",
+                    "message": "No active security guards found in the system.",
+                    "type": "warning",
+                },
+            }
+        assigned = 0
+        skipped = 0
+        for slot in empty_slots:
+            busy_guard_ids = set(
+                self.env["security.roster.slot"].search([
+                    ("shift_date", "=", slot.shift_date),
+                    ("employee_id", "!=", False),
+                    ("state", "not in", ["cancelled"]),
+                    ("id", "!=", slot.id),
+                ]).mapped("employee_id").ids
+            )
+            available = guards.filtered(lambda g: g.id not in busy_guard_ids)
+            if not available:
+                skipped += 1
+                continue
+            slot.write({"employee_id": available[0].id, "state": "assigned"})
+            assigned += 1
+        msg = f"{assigned} slot(s) filled."
+        if skipped:
+            msg += f" {skipped} slot(s) could not be filled (no available guard)."
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Auto-Fill Complete",
+                "message": msg,
+                "type": "success" if assigned else "warning",
+            },
+        }
 
     @api.model
     def action_cron_auto_generate_next_month_batches(self):
@@ -861,19 +1184,20 @@ class SecurityRosterSlot(models.Model):
                 raise ValidationError(
                     "Disqualified guards cannot be assigned to roster slots."
                 )
-            exclusion_domain = [
-                ("employee_id", "=", employee.id),
-                ("active", "=", True),
-                "|",
-                ("site_id", "=", slot.site_id.id or False),
-                ("partner_id", "=", slot.partner_id.id or False),
-            ]
-            if self.env["security.guard.exclusion"].search_count(exclusion_domain):
-                raise ValidationError(
-                    "This guard is excluded from this client or site."
-                )
+            if slot.site_id or slot.partner_id:
+                exclusion_domain = [
+                    ("employee_id", "=", employee.id),
+                    ("active", "=", True),
+                    "|",
+                    ("site_id", "=", slot.site_id.id or False),
+                    ("partner_id", "=", slot.partner_id.id or False),
+                ]
+                if self.env["security.guard.exclusion"].search_count(exclusion_domain):
+                    raise ValidationError(
+                        "This guard is excluded from this client or site."
+                    )
             if post_type.min_grade_id and employee.security_grade_id:
-                if employee.security_grade_id.sequence > post_type.min_grade_id.sequence:
+                if employee.security_grade_id.sequence < post_type.min_grade_id.sequence:
                     raise ValidationError(
                         "The assigned guard does not meet the minimum grade for this post type."
                     )
@@ -956,7 +1280,10 @@ class SecurityRosterSlot(models.Model):
                 skipped.append(f"{slot.name} ({e.args[0]})")
         msg_parts = [f"{len(assigned)} slot(s) assigned to {employee.name}."]
         if skipped:
-            msg_parts.append(f"{len(skipped)} skipped: {'; '.join(skipped[:3])}{'…' if len(skipped) > 3 else ''}")
+            msg_parts.append(
+                f"{len(skipped)} skipped: {'; '.join(skipped[:3])}"
+                f"{'…' if len(skipped) > 3 else ''}"
+            )
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
