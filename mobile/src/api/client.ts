@@ -1,59 +1,80 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-export const ODOO_BASE_URL = 'http://localhost:8069'; // Fallback / Local development
+const DEFAULT_BASE_URL = process.env.EXPO_PUBLIC_ODOO_BASE_URL || 'http://47.84.205.81:8069';
 
 const client = axios.create({
-  baseURL: ODOO_BASE_URL,
-  timeout: 10000,
+  baseURL: DEFAULT_BASE_URL,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
-  withCredentials: true, // Necessary for Odoo session cookie management
+  withCredentials: true,
 });
 
-// Intercept requests to inject session header or custom credentials if needed
-client.interceptors.request.use(async (config) => {
-  try {
-    const session = await SecureStore.getItemAsync('odoo_session_id');
-    if (session) {
-      // In mobile environments, we also pass the Session-Id header just in case,
-      // though standard cookie headers handles this automatically if withCredentials is true.
-      config.headers['X-Openerp-Session-Id'] = session;
-      config.headers['Cookie'] = `session_id=${session}`;
-    }
-  } catch (err) {
-    console.error('Request interceptor SecureStore lookup failed', err);
+export function updateBaseUrl(url: string) {
+  client.defaults.baseURL = url.replace(/\/$/, '');
+}
+
+// Stores and injects the Odoo session_id explicitly instead of relying on the
+// native cookie jar, which behaves inconsistently in Android release builds.
+let _sessionId: string | null = null;
+
+export async function setSessionId(id: string | null): Promise<void> {
+  _sessionId = id;
+  if (id) {
+    await SecureStore.setItemAsync('odoo_session_id', id);
+  } else {
+    await SecureStore.deleteItemAsync('odoo_session_id');
+  }
+}
+
+export async function loadSessionId(): Promise<void> {
+  const stored = await SecureStore.getItemAsync('odoo_session_id');
+  _sessionId = stored ?? null;
+}
+
+// Inject session_id as both a Cookie header and X-Openerp-Session-Id header.
+client.interceptors.request.use((config) => {
+  if (_sessionId) {
+    config.headers['Cookie'] = `session_id=${_sessionId}`;
+    config.headers['X-Openerp-Session-Id'] = _sessionId;
   }
   return config;
-}, (error) => {
-  return Promise.reject(error);
 });
 
-// Module-level offline state flag — avoids circular imports with the Zustand store
+let _onSessionExpired: (() => void) | null = null;
+export function registerSessionExpiredHandler(fn: () => void) {
+  _onSessionExpired = fn;
+}
+
 export let isOffline = false;
 
-// Intercept responses to automatically capture or handle auth expiration
 client.interceptors.response.use(
   (response) => {
-    // Mark as online on successful response
     isOffline = false;
-    // If Odoo returns a JSON response containing an error or status=403, we handle it
-    if (response.data && response.data.error) {
-      console.warn('API returned logic error:', response.data.error);
+    const odooError = response.data?.error;
+    if (odooError) {
+      const msg: string = odooError?.data?.message || odooError?.message || '';
+      const isSessionError =
+        odooError.code === 100 ||
+        msg.toLowerCase().includes('session') ||
+        msg.toLowerCase().includes('not logged');
+      if (isSessionError) {
+        _sessionId = null; // clear immediately so in-flight requests stop retrying
+        SecureStore.deleteItemAsync('user_profile').catch(() => {});
+        SecureStore.deleteItemAsync('odoo_session_id').catch(() => {});
+        _onSessionExpired?.();
+        return Promise.reject(new Error('Session expired. Please sign in again.'));
+      }
     }
     return response;
   },
   async (error) => {
     if (!error.response) {
-      // Network error — no HTTP response received, mark as offline
       isOffline = true;
-    }
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-      console.warn('Session expired or unauthorized. Cleared storage.');
-      await SecureStore.deleteItemAsync('odoo_session_id');
-      await SecureStore.deleteItemAsync('user_profile');
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   }

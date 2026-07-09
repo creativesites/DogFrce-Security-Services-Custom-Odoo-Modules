@@ -4,50 +4,76 @@
 <div class="o_awol_heatmap" style="display:flex; flex-direction:column; height:100%; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
 
     <!-- Header -->
-    <div class="awh-header" style="background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 100%); padding:16px 24px; display:flex; align-items:center; justify-content:space-between;">
+    <div class="awh-header" style="background:linear-gradient(135deg,#1e3a5f 0%,#0d6e6e 100%); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
         <div style="display:flex; align-items:center; gap:12px;">
-            <i class="fa fa-th fa-2x" style="color:rgba(255,255,255,0.9);"/>
+            <i class="fa fa-th fa-2x" style="color:rgba(255,255,255,0.9);" title="Heatmap"/>
             <div>
                 <h3 style="margin:0;color:white;font-weight:700;">Attendance Heatmap</h3>
-                <span style="color:rgba(255,255,255,0.7);font-size:12px;">Last 30 days — AWOL and absence overview</span>
+                <span style="color:rgba(255,255,255,0.7);font-size:12px;">
+                    Last <t t-esc="state.dayRange"/> days · AWOL &amp; absence overview
+                </span>
             </div>
         </div>
-        <!-- Site filter -->
-        <div style="display:flex; align-items:center; gap:8px;">
-            <span style="color:rgba(255,255,255,0.7);font-size:12px;">Filter by site:</span>
-            <select style="border-radius:8px;padding:4px 8px;font-size:13px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;"
-                    t-on-change="(e) => this.setFilterSite(parseInt(e.target.value) || null)">
+        <!-- Controls row -->
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <!-- Day range -->
+            <div style="display:flex; gap:4px;">
+                <t t-foreach="[7, 14, 30, 60]" t-as="r" t-key="r">
+                    <button t-att-style="'padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.4);cursor:pointer;background:' + (state.dayRange === r ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.15)') + ';color:' + (state.dayRange === r ? '#1e3a5f' : 'white') + ';'"
+                            t-on-click="() => this.setDayRange(r)">
+                        <t t-esc="r"/>d
+                    </button>
+                </t>
+            </div>
+            <!-- Guard search -->
+            <input type="text" placeholder="Search guard…" t-on-input="onGuardSearchInput"
+                   style="padding:4px 10px;border-radius:6px;font-size:12px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;width:140px;"
+                   class="awh-search-input"/>
+            <!-- Site filter -->
+            <select style="border-radius:6px;padding:4px 8px;font-size:12px;border:1px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:white;"
+                    t-on-change="onFilterSiteChange">
                 <option value="">All Sites</option>
                 <t t-foreach="state.sites" t-as="site" t-key="site.id">
                     <option t-att-value="site.id"><t t-esc="site.name"/></option>
                 </t>
             </select>
+            <!-- Export CSV -->
+            <button t-on-click="exportCsv"
+                    style="padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid rgba(255,255,255,0.4);cursor:pointer;background:rgba(255,255,255,0.15);color:white;">
+                <i class="fa fa-download me-1" title="Export CSV"/>CSV
+            </button>
         </div>
     </div>
 
-    <!-- Legend + summary -->
+    <!-- Legend + totals bar -->
     <div class="awh-legend" style="background:white;padding:8px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-            <span style="width:14px;height:14px;border-radius:3px;background:#16a34a;display:inline-block;"/>Present
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+            <span style="width:13px;height:13px;border-radius:3px;background:#16a34a;display:inline-block;"/>
+            Present <strong style="margin-left:4px;color:#16a34a;"><t t-esc="countByStatus('present')"/></strong>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-            <span style="width:14px;height:14px;border-radius:3px;background:#d97706;display:inline-block;"/>Absent
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+            <span style="width:13px;height:13px;border-radius:3px;background:#d97706;display:inline-block;"/>
+            Absent <strong style="margin-left:4px;color:#d97706;"><t t-esc="countByStatus('absent')"/></strong>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-            <span style="width:14px;height:14px;border-radius:3px;background:#dc2626;display:inline-block;"/>AWOL
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+            <span style="width:13px;height:13px;border-radius:3px;background:#dc2626;display:inline-block;"/>
+            AWOL <strong style="margin-left:4px;color:#dc2626;"><t t-esc="countByStatus('awol')"/></strong>
         </div>
-        <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
-            <span style="width:14px;height:14px;border-radius:3px;background:#e2e8f0;border:1px solid #cbd5e1;display:inline-block;"/>No Record
+        <div style="display:flex;align-items:center;gap:5px;font-size:12px;">
+            <span style="width:13px;height:13px;border-radius:3px;background:#e2e8f0;border:1px solid #cbd5e1;display:inline-block;"/>
+            No Record
         </div>
         <div style="margin-left:auto;font-size:12px;color:#64748b;">
-            <t t-esc="visibleGuards.length"/> guards shown
+            <strong><t t-esc="visibleGuards.length"/></strong> guard(s)
+            <t t-if="state.filterSiteId"> · filtered by site</t>
         </div>
     </div>
 
     <!-- Loading -->
     <t t-if="state.loading">
-        <div style="display:flex;justify-content:center;align-items:center;flex:1;">
-            <div class="spinner-border text-primary" role="status"/>
+        <div style="display:flex;justify-content:center;align-items:center;flex:1;gap:12px;color:#64748b;">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"/>
+            Loading heatmap…
         </div>
     </t>
 
@@ -55,7 +81,10 @@
     <t t-else="">
         <div class="awh-grid" style="flex:1;overflow:auto;padding:16px;">
             <t t-if="visibleGuards.length === 0">
-                <div style="text-align:center;color:#64748b;padding:40px;">No guards found.</div>
+                <div style="text-align:center;color:#64748b;padding:48px;">
+                    <i class="fa fa-search fa-2x mb-3 d-block"/>
+                    No guards match the current filters.
+                </div>
             </t>
             <t t-else="">
             <table style="border-collapse:collapse;font-size:11px;min-width:100%;">
@@ -63,7 +92,7 @@
                     <tr>
                         <th style="position:sticky;left:0;background:white;z-index:2;padding:4px 8px;text-align:left;min-width:160px;border-bottom:2px solid #e2e8f0;color:#64748b;font-weight:600;">Guard</th>
                         <t t-foreach="dateHeaders" t-as="dh" t-key="dh.date">
-                            <th style="padding:2px 1px;text-align:center;min-width:20px;border-bottom:2px solid #e2e8f0;color:#94a3b8;font-weight:500;white-space:nowrap;font-size:10px;">
+                            <th style="padding:2px 1px;text-align:center;min-width:22px;border-bottom:2px solid #e2e8f0;color:#94a3b8;font-weight:500;white-space:nowrap;font-size:10px;">
                                 <t t-esc="dh.label"/>
                             </th>
                         </t>
@@ -78,11 +107,23 @@
                             <t t-foreach="state.days" t-as="day" t-key="day">
                                 <td t-att-title="getCellTooltip(guard.id, day)"
                                     t-on-click="() => this.openRecord(guard.id, day)"
-                                    t-att-style="'width:20px;height:20px;border-radius:3px;cursor:pointer;background:' + getCellColor(guard.id, day) + ';border-bottom:1px solid #f1f5f9;'">
+                                    t-att-style="'width:22px;height:22px;border-radius:3px;cursor:pointer;background:' + getCellColor(guard.id, day) + ';border-bottom:1px solid #f1f5f9;'">
                                 </td>
                             </t>
                         </tr>
                     </t>
+                    <!-- Summary row: daily attendance % -->
+                    <tr style="border-top:2px solid #e2e8f0;">
+                        <td style="position:sticky;left:0;background:#f8fafc;z-index:1;padding:4px 8px;font-weight:700;font-size:11px;color:#475569;">
+                            Daily %
+                        </td>
+                        <t t-foreach="state.days" t-as="day" t-key="day">
+                            <td t-att-title="'Coverage on ' + day"
+                                t-att-style="'width:22px;height:22px;border-radius:3px;background:' + getDaySummary(day).color + ';opacity:0.85;'">
+                                <t t-set="summary" t-value="getDaySummary(day)"/>
+                            </td>
+                        </t>
+                    </tr>
                 </tbody>
             </table>
             </t>

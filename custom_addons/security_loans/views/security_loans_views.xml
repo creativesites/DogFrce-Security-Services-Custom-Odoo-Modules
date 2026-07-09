@@ -111,7 +111,7 @@
                         <page string="Deduction Schedule">
                             <button name="action_generate_schedule" type="object"
                                     string="Generate Schedule" class="btn btn-secondary mb-2"
-                                    invisible="state != 'approved'"/>
+                                    invisible="state not in ('approved', 'active')"/>
                             <field name="deduction_line_ids">
                                 <list editable="bottom">
                                     <field name="deduction_date"/>

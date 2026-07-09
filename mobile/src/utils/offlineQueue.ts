@@ -1,8 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const QUEUE_KEY = 'dogforce_offline_queue';
+const QUEUE_KEY = 'deployguard_offline_queue';
+
+// ── Queue item types ──────────────────────────────────────────────────────────
 
 export interface QueuedMark {
+  type: 'mark';
   id: string;
   recordId: number;
   presence: 'present' | 'absent' | 'awol' | 'not_marked';
@@ -12,50 +15,88 @@ export interface QueuedMark {
   timestamp: string;
 }
 
-export const enqueuePresenceMark = async (mark: Omit<QueuedMark, 'id' | 'timestamp'>): Promise<void> => {
-  try {
-    const existing = await getQueue();
-    const newItem: QueuedMark = {
-      ...mark,
-      id: `${mark.recordId}_${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    };
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify([...existing, newItem]));
-  } catch (e) {
-    console.warn('Enqueue failed:', e);
-  }
-};
+export type QueuedAction = QueuedMark;
 
-export const getQueue = async (): Promise<QueuedMark[]> => {
+// ── Core queue operations ─────────────────────────────────────────────────────
+
+export const getQueue = async (): Promise<QueuedAction[]> => {
   try {
     const raw = await AsyncStorage.getItem(QUEUE_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) return [];
+    const items = JSON.parse(raw) as any[];
+    // Migrate legacy entries that have no `type` field
+    return items.map((item) => (item.type ? item : { ...item, type: 'mark' }));
   } catch {
     return [];
   }
 };
 
-export const removeFromQueue = async (id: string): Promise<void> => {
+const saveQueue = async (queue: QueuedAction[]): Promise<void> => {
   try {
-    const existing = await getQueue();
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(existing.filter(item => item.id !== id)));
+    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
   } catch (e) {
-    console.warn('Queue remove failed:', e);
+    console.warn('Queue save failed:', e);
   }
 };
 
-export const flushQueue = async (markFn: (mark: QueuedMark) => Promise<void>): Promise<{ synced: number; failed: number }> => {
+export const enqueuePresenceMark = async (
+  mark: Omit<QueuedMark, 'id' | 'timestamp' | 'type'>
+): Promise<void> => {
+  const existing = await getQueue();
+  // Replace any earlier pending mark for the same record
+  const filtered = existing.filter(
+    (item) => !(item.type === 'mark' && item.recordId === mark.recordId)
+  );
+  const newItem: QueuedMark = {
+    ...mark,
+    type: 'mark',
+    id: `mark_${mark.recordId}_${Date.now()}`,
+    timestamp: new Date().toISOString(),
+  };
+  await saveQueue([...filtered, newItem]);
+};
+
+export const removeFromQueue = async (id: string): Promise<void> => {
+  const existing = await getQueue();
+  await saveQueue(existing.filter((item) => item.id !== id));
+};
+
+export const clearQueue = async (): Promise<void> => {
+  await AsyncStorage.removeItem(QUEUE_KEY);
+};
+
+export const getQueuedRecordIds = async (): Promise<Set<number>> => {
+  const queue = await getQueue();
+  return new Set(queue.filter((i) => i.type === 'mark').map((i) => i.recordId));
+};
+
+// ── Flush ─────────────────────────────────────────────────────────────────────
+
+export interface FlushResult {
+  synced: number;
+  failed: number;
+  remaining: number;
+}
+
+export const flushQueue = async (
+  handlers: {
+    mark: (item: QueuedMark) => Promise<void>;
+  }
+): Promise<FlushResult> => {
   const queue = await getQueue();
   let synced = 0;
   let failed = 0;
+
   for (const item of queue) {
     try {
-      await markFn(item);
+      if (item.type === 'mark') await handlers.mark(item);
       await removeFromQueue(item.id);
       synced++;
     } catch {
       failed++;
     }
   }
-  return { synced, failed };
+
+  const remaining = (await getQueue()).length;
+  return { synced, failed, remaining };
 };

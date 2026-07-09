@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_client_onboarding_wizard,security.client.onboarding.wizard,model_security_client_onboarding_wizard,hr.group_hr_user,1,1,1,1
+access_security_client_onboarding_site,security.client.onboarding.site,model_security_client_onboarding_site,hr.group_hr_user,1,1,1,1
+access_security_client_onboarding_requirement,security.client.onboarding.requirement,model_security_client_onboarding_requirement,hr.group_hr_user,1,1,1,1
+access_security_roster_setup_wizard,security.roster.setup.wizard,model_security_roster_setup_wizard,hr.group_hr_user,1,1,1,1
+access_security_roster_setup_issue,security.roster.setup.issue,model_security_roster_setup_issue,hr.group_hr_user,1,1,1,1

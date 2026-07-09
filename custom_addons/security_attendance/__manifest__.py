@@ -11,6 +11,7 @@
         "views/security_attendance_views.xml",
         "views/security_attendance_client_actions.xml",
         "views/security_awol_heatmap_actions.xml",
+        "views/security_attendance_grid_actions.xml",
     ],
     "assets": {
         "web.assets_backend": [
@@ -20,6 +21,9 @@
             "security_attendance/static/src/css/awol_heatmap.css",
             "security_attendance/static/src/js/awol_heatmap.js",
             "security_attendance/static/src/xml/awol_heatmap.xml",
+            "security_attendance/static/src/css/attendance_grid.css",
+            "security_attendance/static/src/js/attendance_grid.js",
+            "security_attendance/static/src/xml/attendance_grid.xml",
         ],
     },
     "installable": True,

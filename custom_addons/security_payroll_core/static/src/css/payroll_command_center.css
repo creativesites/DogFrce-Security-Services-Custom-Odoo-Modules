@@ -487,12 +487,12 @@
    scrollable period-tab strip at the top.
 ══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-    /* Flip outer shell to column (compound selector beats Bootstrap d-flex) */
+    /* Flip outer shell to column — keep height:100% and overflow:hidden so
+       inner .overflow-auto panels have a scroll boundary to work against */
     .o_payroll_command_center.d-flex {
         flex-direction: column !important;
-        overflow: visible !important;
-        height: auto !important;
-        min-height: 100% !important;
+        overflow: hidden !important;
+        height: 100% !important;
     }
     /* Sidebar: full-width horizontal scrollable strip */
     .o_pcc_sidebar.d-flex {
@@ -539,6 +539,12 @@
     .o_period_item .fw-bold {
         font-size: 11.5px !important;
         white-space: nowrap !important;
+    }
+    /* Main area: min-height:0 allows it to shrink in column flex so the
+       inner .overflow-auto panel can create a real scroll boundary */
+    .o_pcc_main.flex-grow-1 {
+        flex: 1 1 0 !important;
+        min-height: 0 !important;
     }
     .o_pcc_header {
         padding: 10px 14px !important;

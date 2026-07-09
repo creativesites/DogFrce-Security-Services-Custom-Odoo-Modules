@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_fleet.FleetDashboard">
+<div class="fd-root o_action" style="background:#f0f2f5;min-height:100vh;font-size:0.875rem;">
+
+    <t t-if="state.loading">
+        <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">
+            <div class="spinner-border text-primary"/><span class="fs-5">Loading Fleet Dashboard…</span>
+        </div>
+    </t>
+
+    <t t-elif="state.data">
+        <t t-set="d" t-value="state.data"/>
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1a3a1a,#2e6b2e);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <i class="fa fa-car fa-2x" style="color:rgba(255,255,255,0.9);" title="Fleet"/>
+                <div>
+                    <h3 style="margin:0;color:white;font-weight:700;">Fleet Management</h3>
+                    <span style="color:rgba(255,255,255,0.7);font-size:12px;">Vehicle &amp; shuttle overview</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- KPIs -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Total Vehicles</div>
+                            <div class="fs-1 fw-bold text-primary"><t t-esc="d.total_vehicles"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Available</div>
+                            <div class="fs-1 fw-bold text-success"><t t-esc="d.active_count"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">In Service</div>
+                            <div t-att-class="'fs-1 fw-bold ' + (d.in_service_count > 0 ? 'text-warning' : 'text-muted')">
+                                <t t-esc="d.in_service_count"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100 text-center">
+                        <div class="card-body">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Fuel Cost MTD</div>
+                            <div class="fs-5 fw-bold text-dark"><t t-esc="fmt(d.fuel_cost_mtd)"/></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <!-- Today's Runs -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white fw-semibold py-2">
+                            <i class="fa fa-road me-2 text-muted"/>Today's Runs
+                        </div>
+                        <div class="card-body p-0">
+                            <t t-if="d.today_runs.length === 0">
+                                <div class="text-center text-muted py-4">No runs scheduled for today.</div>
+                            </t>
+                            <t t-else="">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Vehicle</th>
+                                            <th>Route</th>
+                                            <th>Departure</th>
+                                            <th class="text-center">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="d.today_runs" t-as="run" t-key="run.id">
+                                            <tr style="cursor:pointer;" t-on-click="() => this.openRun(run.id)">
+                                                <td class="fw-semibold"><t t-esc="run.vehicle"/></td>
+                                                <td class="text-muted small"><t t-esc="run.route || '—'"/></td>
+                                                <td class="text-muted small"><t t-esc="run.departure ? run.departure.slice(11, 16) : '—'"/></td>
+                                                <td class="text-center">
+                                                    <span t-att-class="runStateClass(run.state)">
+                                                        <t t-esc="run.state"/>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vehicle Status -->
+                <div class="col-lg-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white fw-semibold py-2">
+                            <i class="fa fa-car me-2 text-muted"/>Vehicle Status
+                        </div>
+                        <div class="card-body p-0">
+                            <t t-if="d.vehicles.length === 0">
+                                <div class="text-center text-muted py-4">No vehicles registered.</div>
+                            </t>
+                            <t t-else="">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Vehicle</th>
+                                            <th>Plate</th>
+                                            <th>Driver</th>
+                                            <th class="text-center">State</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="d.vehicles" t-as="v" t-key="v.id">
+                                            <tr style="cursor:pointer;" t-on-click="() => this.openVehicle(v.id)">
+                                                <td class="fw-semibold"><t t-esc="v.name"/></td>
+                                                <td class="text-muted small"><t t-esc="v.plate"/></td>
+                                                <td class="text-muted small"><t t-esc="v.driver || '—'"/></td>
+                                                <td class="text-center">
+                                                    <span t-att-class="stateBadgeClass(v.state)">
+                                                        <t t-esc="stateLabel(v.state)"/>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </t>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</div>
+</t>
+</templates>

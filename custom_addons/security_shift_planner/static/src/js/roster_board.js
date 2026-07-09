@@ -504,6 +504,18 @@ class RosterBoard extends Component {
         this.state.createSlot.form.post_id = null;
     }
 
+    onCreatePostChange(ev) {
+        this.state.createSlot.form.post_id = ev.target.value ? parseInt(ev.target.value) : null;
+    }
+
+    onCreateShiftTemplateChange(ev) {
+        this.state.createSlot.form.shift_template_id = ev.target.value ? parseInt(ev.target.value) : null;
+    }
+
+    onCreateEmployeeChange(ev) {
+        this.state.createSlot.form.employee_id = ev.target.value ? parseInt(ev.target.value) : null;
+    }
+
     async submitCreateSlot() {
         const { form } = this.state.createSlot;
         if (!form.post_id) {

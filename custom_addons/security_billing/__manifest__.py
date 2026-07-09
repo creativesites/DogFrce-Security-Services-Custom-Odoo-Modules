@@ -15,6 +15,12 @@
         "reports/security_invoice_report.xml",
         "reports/security_invoice_aging_report.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "security_billing/static/src/js/billing_dashboard.js",
+            "security_billing/static/src/xml/billing_dashboard.xml",
+        ],
+    },
     "installable": True,
     "application": False,
 }

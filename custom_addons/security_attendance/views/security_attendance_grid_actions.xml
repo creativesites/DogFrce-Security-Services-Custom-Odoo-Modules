@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_attendance_summary_grid" model="ir.actions.client">
+        <field name="name">Attendance Summary Grid</field>
+        <field name="tag">security_attendance.attendance_summary_grid</field>
+    </record>
+
+    <menuitem id="menu_attendance_summary_grid"
+              name="Summary Grid"
+              parent="security_operations.menu_security_workforce"
+              action="action_attendance_summary_grid"
+              sequence="30"/>
+</odoo>

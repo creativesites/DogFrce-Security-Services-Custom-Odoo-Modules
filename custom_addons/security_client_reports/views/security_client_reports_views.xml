@@ -26,6 +26,12 @@
             <form>
                 <header>
                     <button name="action_generate" type="object" string="Generate Report" class="oe_highlight" invisible="state == 'sent'"/>
+                    <button name="action_send_to_client" type="object" string="Send to Client" class="btn-primary"
+                            invisible="state == 'sent'"
+                            title="Generate PDF and email to client's billing contact"/>
+                    <button name="action_preview_pdf" type="object" string="Preview PDF" class="btn-secondary"
+                            invisible="state == 'draft'"
+                            title="Open report as HTML in a new tab"/>
                     <button name="action_mark_sent" type="object" string="Mark Sent" invisible="state != 'generated'"/>
                     <button name="action_export_csv" type="object" string="Export CSV" invisible="state == 'draft'"/>
                     <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
@@ -98,10 +104,37 @@
         </field>
     </record>
 
+    <record id="view_security_client_service_report_search" model="ir.ui.view">
+        <field name="name">security.client.service.report.search</field>
+        <field name="model">security.client.service.report</field>
+        <field name="arch" type="xml">
+            <search string="Search Client Reports">
+                <field name="partner_id" string="Client"/>
+                <field name="site_id" string="Site"/>
+                <field name="date_from" string="From Date"/>
+                <field name="date_to" string="To Date"/>
+                <separator/>
+                <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
+                <filter name="generated" string="Generated" domain="[('state','=','generated')]"/>
+                <filter name="sent" string="Sent" domain="[('state','=','sent')]"/>
+                <separator/>
+                <filter name="this_month" string="This Month"
+                        domain="[('date_from','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('date_from','&gt;=', (context_today().replace(day=1) - datetime.timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')),('date_from','&lt;', (context_today()).strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter name="group_client" string="By Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_site" string="By Site" context="{'group_by': 'site_id'}"/>
+                <filter name="group_state" string="By Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
     <record id="action_security_client_service_report" model="ir.actions.act_window">
         <field name="name">Client Service Reports</field>
         <field name="res_model">security.client.service.report</field>
         <field name="view_mode">list,form,pivot</field>
+        <field name="search_view_id" ref="view_security_client_service_report_search"/>
     </record>
 
     <menuitem

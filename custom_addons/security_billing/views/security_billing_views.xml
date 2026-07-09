@@ -179,6 +179,8 @@
                     <button name="action_mark_sent" type="object" string="Mark Sent" invisible="state != 'draft'"/>
                     <button name="action_mark_paid" type="object" string="Mark Paid" invisible="state not in ('draft', 'sent')"/>
                     <button name="action_create_credit_note" type="object" string="Issue Credit Note" class="btn-secondary" invisible="state not in ['sent', 'paid']"/>
+                    <button name="action_preview_pdf" type="object" string="Preview PDF"
+                            class="btn-secondary" title="Open invoice as HTML in a new tab"/>
                     <button name="action_cancel" type="object" string="Cancel" invisible="state == 'cancelled'"/>
                     <button name="action_reset_to_draft" type="object" string="Reset to Draft" invisible="state == 'draft'"/>
                     <field name="state" widget="statusbar"/>
@@ -409,4 +411,18 @@
             </xpath>
         </field>
     </record>
+
+    <!-- Billing Command Center OWL client action -->
+    <record id="action_billing_command_center" model="ir.actions.client">
+        <field name="name">Billing Command Center</field>
+        <field name="tag">security_billing.billing_command_center</field>
+    </record>
+
+    <menuitem id="menu_billing_command_center"
+              name="Command Center"
+              parent="security_operations.menu_security_billing_root"
+              action="action_billing_command_center"
+              sequence="1"
+              groups="hr.group_hr_manager,base.group_system"/>
+
 </odoo>

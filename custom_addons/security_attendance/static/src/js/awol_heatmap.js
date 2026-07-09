@@ -4,13 +4,6 @@ import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 
-/**
- * Tier-3 OWL client action: AWOL / Absence Heatmap
- *
- * Renders a 30-day colour-coded attendance grid for all active security guards.
- * Green = present/late/early_leave, Amber = absent (authorised/no-show),
- * Red = AWOL, Grey = no scheduled shift recorded.
- */
 class AWOLHeatmap extends Component {
     static props = { "*": true };
     static template = "security_attendance.AWOLHeatmap";
@@ -21,11 +14,14 @@ class AWOLHeatmap extends Component {
 
         this.state = useState({
             loading: true,
-            days: [],       // array of date strings "YYYY-MM-DD" for last 30 days
-            guards: [],     // [{id, name}]
-            cells: {},      // key: "guardId_date" → {status, absence_type, record_id}
+            days: [],
+            guards: [],
+            cells: {},      // key: "guardId_date" → {status, absence_type, record_id, site_id}
+            guardSiteIds: {}, // key: guardId → Set of siteIds seen in range
             filterSiteId: null,
+            guardSearch: "",
             sites: [],
+            dayRange: 30,   // 7 | 14 | 30 | 60
         });
 
         onWillStart(async () => {
@@ -34,9 +30,7 @@ class AWOLHeatmap extends Component {
         });
     }
 
-    // -------------------------------------------------------------------------
-    // Data loading
-    // -------------------------------------------------------------------------
+    // ─── Data loading ────────────────────────────────────────────────────────
 
     _toDateString(date) {
         const y = date.getFullYear();
@@ -45,106 +39,90 @@ class AWOLHeatmap extends Component {
         return `${y}-${m}-${d}`;
     }
 
-    async _loadAll() {
-        // 1. Generate last 30 days (29 days ago → today)
+    _buildDays(numDays) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const days = [];
-        for (let i = 29; i >= 0; i--) {
+        for (let i = numDays - 1; i >= 0; i--) {
             const d = new Date(today);
             d.setDate(today.getDate() - i);
             days.push(this._toDateString(d));
         }
+        return days;
+    }
+
+    async _loadAll() {
+        const days = this._buildDays(this.state.dayRange);
         this.state.days = days;
+        const fromDate = days[0];
+        const toDate = days[days.length - 1];
 
-        const thirtyDaysAgo = days[0];
-        const todayStr = days[days.length - 1];
+        const [guards, records, sites] = await Promise.all([
+            this.orm.searchRead(
+                "hr.employee",
+                [["security_guard", "=", true], ["active", "=", true]],
+                ["id", "name"],
+                { order: "name" }
+            ),
+            this.orm.searchRead(
+                "security.attendance.record",
+                [["shift_date", ">=", fromDate], ["shift_date", "<=", toDate]],
+                ["employee_id", "shift_date", "status", "absence_type", "id", "site_id"],
+                { order: "shift_date" }
+            ),
+            this.orm.searchRead(
+                "security.client.site",
+                [["active", "=", true]],
+                ["id", "name"],
+                { order: "name" }
+            ),
+        ]);
 
-        // 2. Load active security guards
-        const guards = await this.orm.searchRead(
-            "hr.employee",
-            [["security_guard", "=", true], ["active", "=", true]],
-            ["id", "name"],
-            { order: "name" }
-        );
         this.state.guards = guards;
-
-        // 3. Load attendance records for the date range
-        const records = await this.orm.searchRead(
-            "security.attendance.record",
-            [
-                ["shift_date", ">=", thirtyDaysAgo],
-                ["shift_date", "<=", todayStr],
-            ],
-            ["employee_id", "shift_date", "status", "absence_type", "id"],
-            { order: "shift_date" }
-        );
-
-        // 4. Load active sites
-        const sites = await this.orm.searchRead(
-            "security.client.site",
-            [["active", "=", true]],
-            ["id", "name"],
-            { order: "name" }
-        );
         this.state.sites = sites;
 
-        // 5. Build cells map
         const cells = {};
+        const guardSiteIds = {};
         for (const rec of records) {
-            const employeeId = Array.isArray(rec.employee_id) ? rec.employee_id[0] : rec.employee_id;
-            if (!employeeId) continue;
-            const dateStr = rec.shift_date;
-            const key = `${employeeId}_${dateStr}`;
+            const eid = Array.isArray(rec.employee_id) ? rec.employee_id[0] : rec.employee_id;
+            if (!eid) continue;
+            const key = `${eid}_${rec.shift_date}`;
+            const siteId = Array.isArray(rec.site_id) ? rec.site_id[0] : (rec.site_id || null);
             cells[key] = {
                 status: rec.status,
                 absence_type: rec.absence_type,
                 record_id: rec.id,
+                site_id: siteId,
             };
+            if (siteId) {
+                if (!guardSiteIds[eid]) guardSiteIds[eid] = new Set();
+                guardSiteIds[eid].add(siteId);
+            }
         }
         this.state.cells = cells;
+        this.state.guardSiteIds = guardSiteIds;
     }
 
-    // -------------------------------------------------------------------------
-    // Cell helpers
-    // -------------------------------------------------------------------------
+    // ─── Cell helpers ─────────────────────────────────────────────────────────
 
     getCellColor(guardId, date) {
         const cell = this.state.cells[`${guardId}_${date}`];
-        if (!cell) {
-            return "#e2e8f0"; // light grey — no scheduled shift
-        }
-        if (cell.absence_type === "awol") {
-            return "#dc2626"; // red — AWOL
-        }
-        if (cell.status === "absent") {
-            return "#d97706"; // amber — absent (authorised / no-show)
-        }
-        if (
-            cell.status === "present" ||
-            cell.status === "late" ||
-            cell.status === "early_leave"
-        ) {
-            return "#16a34a"; // green — present / on time / late / early leave
-        }
-        return "#e2e8f0"; // fallback grey
+        if (!cell) return "#e2e8f0";
+        if (cell.absence_type === "awol") return "#dc2626";
+        if (cell.status === "absent") return "#d97706";
+        if (["present", "late", "early_leave"].includes(cell.status)) return "#16a34a";
+        return "#e2e8f0";
     }
 
     getCellTooltip(guardId, date) {
         const cell = this.state.cells[`${guardId}_${date}`];
-        if (!cell) {
-            return `${date}: No record`;
-        }
+        if (!cell) return `${date}: No record`;
         const statusLabel = {
-            scheduled: "Scheduled",
-            present: "Present",
-            late: "Late",
-            early_leave: "Early Leave",
-            absent: "Absent",
-            incomplete: "Incomplete",
+            scheduled: "Scheduled", present: "Present", late: "Late",
+            early_leave: "Early Leave", absent: "Absent", incomplete: "Incomplete",
         }[cell.status] || cell.status;
         const absenceLabel = cell.absence_type && cell.absence_type !== "none"
-            ? ` (${cell.absence_type === "awol" ? "AWOL" : cell.absence_type === "authorised" ? "Authorised" : cell.absence_type === "no_show" ? "No Show" : cell.absence_type})`
+            ? ` (${cell.absence_type === "awol" ? "AWOL" : cell.absence_type === "authorised" ? "Authorised" : "No Show"})`
             : "";
         return `${date}: ${statusLabel}${absenceLabel}`;
     }
@@ -161,56 +139,105 @@ class AWOLHeatmap extends Component {
         });
     }
 
-    setFilterSite(siteId) {
-        this.state.filterSiteId = siteId || null;
+    onFilterSiteChange(ev) {
+        this.state.filterSiteId = parseInt(ev.target.value) || null;
     }
 
-    // -------------------------------------------------------------------------
-    // Computed / getters
-    // -------------------------------------------------------------------------
+    onGuardSearchInput(ev) {
+        this.state.guardSearch = ev.target.value.toLowerCase();
+    }
+
+    async setDayRange(numDays) {
+        this.state.dayRange = numDays;
+        this.state.loading = true;
+        await this._loadAll();
+        this.state.loading = false;
+    }
+
+    exportCsv() {
+        const guards = this.visibleGuards;
+        const days = this.state.days;
+        const rows = [["Guard", ...days]];
+        for (const g of guards) {
+            const row = [g.name];
+            for (const d of days) {
+                const cell = this.state.cells[`${g.id}_${d}`];
+                if (!cell) row.push("");
+                else if (cell.absence_type === "awol") row.push("AWOL");
+                else if (cell.status === "absent") row.push("Absent");
+                else if (["present", "late", "early_leave"].includes(cell.status)) row.push("Present");
+                else row.push("Scheduled");
+            }
+            rows.push(row);
+        }
+        const csv = rows.map(r => r.map(v => `"${v}"`).join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `attendance_heatmap_${days[0]}_to_${days[days.length - 1]}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // ─── Computed getters ─────────────────────────────────────────────────────
 
     get visibleGuards() {
-        if (!this.state.filterSiteId) {
-            return this.state.guards;
+        let guards = this.state.guards;
+
+        // Site filter — keep guards who appeared at the selected site in the date range
+        if (this.state.filterSiteId) {
+            guards = guards.filter(g => {
+                const siteSet = this.state.guardSiteIds[g.id];
+                return siteSet && siteSet.has(this.state.filterSiteId);
+            });
         }
-        // Filter by site: guards whose any cell in the range belongs to the site.
-        // Since guards don't carry site info directly from hr.employee here,
-        // we fall back to showing all guards when a site filter is active unless
-        // the guard list was enriched with site data. For now this is a no-op
-        // placeholder that can be wired once site_ids is added to the guard query.
-        return this.state.guards;
+
+        // Name search
+        if (this.state.guardSearch) {
+            guards = guards.filter(g => g.name.toLowerCase().includes(this.state.guardSearch));
+        }
+
+        return guards;
     }
 
     get dateHeaders() {
-        const MONTH_LABELS = [
-            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-        ];
-        return this.state.days.map((dateStr) => {
-            const [, monthStr, dayStr] = dateStr.split("-");
-            const month = MONTH_LABELS[parseInt(monthStr, 10) - 1];
-            return { date: dateStr, label: `${month} ${dayStr}` };
+        const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        return this.state.days.map(dateStr => {
+            const [, mm, dd] = dateStr.split("-");
+            return { date: dateStr, label: `${MONTHS[parseInt(mm) - 1]} ${parseInt(dd)}` };
         });
     }
 
     countByStatus(status) {
         const todayStr = this.state.days[this.state.days.length - 1];
         let count = 0;
-        for (const guard of this.visibleGuards) {
-            const cell = this.state.cells[`${guard.id}_${todayStr}`];
+        for (const g of this.visibleGuards) {
+            const cell = this.state.cells[`${g.id}_${todayStr}`];
             if (!cell) continue;
-            if (status === "awol" && cell.absence_type === "awol") {
-                count++;
-            } else if (status === "absent" && cell.status === "absent" && cell.absence_type !== "awol") {
-                count++;
-            } else if (
-                status === "present" &&
-                (cell.status === "present" || cell.status === "late" || cell.status === "early_leave")
-            ) {
-                count++;
-            }
+            if (status === "awol" && cell.absence_type === "awol") count++;
+            else if (status === "absent" && cell.status === "absent" && cell.absence_type !== "awol") count++;
+            else if (status === "present" && ["present","late","early_leave"].includes(cell.status)) count++;
         }
         return count;
+    }
+
+    // Summary row: per-day attendance % across visible guards
+    getDaySummary(date) {
+        const guards = this.visibleGuards;
+        if (!guards.length) return { pct: 0, color: "#e2e8f0" };
+        let present = 0;
+        let scheduled = 0;
+        for (const g of guards) {
+            const cell = this.state.cells[`${g.id}_${date}`];
+            if (!cell) continue;
+            scheduled++;
+            if (["present","late","early_leave"].includes(cell.status)) present++;
+        }
+        if (!scheduled) return { pct: null, color: "#f8f9fa" };
+        const pct = Math.round((present / scheduled) * 100);
+        const color = pct >= 90 ? "#16a34a" : pct >= 80 ? "#d97706" : "#dc2626";
+        return { pct, color };
     }
 }
 

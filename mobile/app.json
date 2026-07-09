@@ -1,33 +1,49 @@
 {
-  "expo": {
-    "name": "DogForce Mobile",
-    "slug": "dogforce-mobile",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#121212"
-    },
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.dogforce.security.mobile"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#121212"
-      },
-      "package": "com.dogforce.security.mobile"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-router"
-    ],
-    "scheme": "dogforce"
-  }
+    "expo": {
+        "name": "DeployGuard",
+        "slug": "deployguard-mobile",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "light",
+        "splash": {
+            "image": "./assets/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#F8FAFC"
+        },
+        "ios": {
+            "supportsTablet": false,
+            "bundleIdentifier": "com.deployguard.security.mobile"
+        },
+        "android": {
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#F8FAFC"
+            },
+            "package": "com.deployguard.security.mobile",
+            "usesCleartextTraffic": true
+        },
+        "web": {
+            "favicon": "./assets/favicon.png"
+        },
+        "plugins": [
+            "expo-router",
+            [
+                "expo-notifications",
+                {
+                    "icon": "./assets/icon.png",
+                    "color": "#1A56DB",
+                    "defaultChannel": "default"
+                }
+            ],
+            "./plugins/withNetworkSecurityConfig"
+        ],
+        "scheme": "dogforce",
+        "extra": {
+            "router": {},
+            "eas": {
+                "projectId": "49cdb70c-319f-4b20-8d8e-aab4cc3a02a0"
+            }
+        }
+    }
 }

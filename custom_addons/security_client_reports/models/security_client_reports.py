@@ -126,6 +126,69 @@ class SecurityClientServiceReport(models.Model):
         for report in self:
             report.state = "sent"
 
+    def action_preview_pdf(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/report/html/security_client_reports.report_security_client_service/{self.id}",
+            "target": "new",
+        }
+
+    def action_send_to_client(self):
+        self.ensure_one()
+        if self.state == "draft":
+            self.action_generate()
+        partner = self.partner_id
+        email_to = partner.email
+        if not email_to:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Email Address",
+                    "message": f"{partner.name} has no email address configured.",
+                    "type": "warning",
+                },
+            }
+        try:
+            report = self.env.ref("security_client_reports.action_report_security_client_service")
+            pdf_content, _ = report._render_qweb_pdf([self.id])
+            attachment = self.env["ir.attachment"].create({
+                "name": f"ServiceReport_{self.name.replace('/', '_').replace(':', '')}.pdf",
+                "type": "binary",
+                "datas": base64.b64encode(pdf_content),
+                "res_model": "security.client.service.report",
+                "res_id": self.id,
+            })
+            mail = self.env["mail.mail"].create({
+                "subject": f"Service Report — {self.name}",
+                "email_to": email_to,
+                "body_html": (
+                    f"<p>Dear {partner.name},</p>"
+                    f"<p>Please find attached your service report for the period "
+                    f"{self.date_from} to {self.date_to}.</p>"
+                    f"<p>DogForce Security Services</p>"
+                ),
+                "attachment_ids": [(4, attachment.id)],
+            })
+            mail.send()
+            self.state = "sent"
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "Report Sent",
+                    "message": f"Service report emailed to {email_to}.",
+                    "type": "success",
+                },
+            }
+        except Exception as e:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {"title": "Send Failed", "message": str(e)[:200], "type": "danger"},
+            }
+
     def action_reset_to_draft(self):
         for report in self:
             report.state = "draft"

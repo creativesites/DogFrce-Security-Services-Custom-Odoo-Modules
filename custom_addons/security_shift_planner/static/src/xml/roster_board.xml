@@ -455,7 +455,7 @@
                     <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
                         Client (filter)
                     </label>
-                    <select t-on-change="onCreateClientChange"
+                    <select t-on-change="(ev) => this.onCreateClientChange(ev)"
                             style="width:100%;background:#fff;border:1px solid #cbd5e1;color:#1e293b;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
                         <option value="">-- All Clients --</option>
                         <t t-foreach="clientsForCreate" t-as="client" t-key="client.id">
@@ -469,7 +469,7 @@
                     <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
                         Site (filter)
                     </label>
-                    <select t-on-change="onCreateSiteChange"
+                    <select t-on-change="(ev) => this.onCreateSiteChange(ev)"
                             style="width:100%;background:#fff;border:1px solid #cbd5e1;color:#1e293b;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
                         <option value="">-- All Sites --</option>
                         <t t-foreach="sitesForCreate" t-as="site" t-key="site.id">
@@ -483,7 +483,7 @@
                     <label style="display:block;font-size:11px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
                         Post <span style="color:#ef4444;">*</span>
                     </label>
-                    <select t-on-change="(e) => { this.state.createSlot.form.post_id = e.target.value ? parseInt(e.target.value) : null; }"
+                    <select t-on-change="onCreatePostChange"
                             style="width:100%;background:#fff;border:1.5px solid #1d4ed8;color:#1e293b;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
                         <option value="">-- Select Post --</option>
                         <t t-foreach="postsForCreate" t-as="post" t-key="post.id">
@@ -500,7 +500,7 @@
                     <label style="display:block;font-size:11px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
                         Shift Template <span style="color:#ef4444;">*</span>
                     </label>
-                    <select t-on-change="(e) => { this.state.createSlot.form.shift_template_id = e.target.value ? parseInt(e.target.value) : null; }"
+                    <select t-on-change="onCreateShiftTemplateChange"
                             style="width:100%;background:#fff;border:1.5px solid #1d4ed8;color:#1e293b;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
                         <option value="">-- Select Shift --</option>
                         <t t-foreach="state.createSlot.shiftTemplates" t-as="tmpl" t-key="tmpl.id">
@@ -514,7 +514,7 @@
                     <label style="display:block;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">
                         Assign Guard <span style="color:#94a3b8;">(optional)</span>
                     </label>
-                    <select t-on-change="(e) => { this.state.createSlot.form.employee_id = e.target.value ? parseInt(e.target.value) : null; }"
+                    <select t-on-change="onCreateEmployeeChange"
                             style="width:100%;background:#fff;border:1px solid #cbd5e1;color:#1e293b;border-radius:6px;padding:8px 10px;font-size:13px;outline:none;">
                         <option value="">-- Assign Later --</option>
                         <t t-foreach="state.createSlot.employees" t-as="emp" t-key="emp.id">

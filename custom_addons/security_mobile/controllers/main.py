@@ -65,6 +65,36 @@ def _employee_for_user(user=None):
     return employee or request.env["hr.employee"]
 
 
+class AuthController(http.Controller):
+
+    @http.route(
+        "/api/security/mobile/auth/me",
+        auth="user",
+        methods=["GET"],
+        type="http",
+        csrf=False,
+    )
+    def auth_me(self, **kw):
+        """Return current user's role (from Odoo groups) and employee info."""
+        user = request.env.user
+
+        if user.has_group(GROUP_OWNER):
+            role = "owner"
+        elif user.has_group(GROUP_MANAGER):
+            role = "manager"
+        else:
+            role = "supervisor"
+
+        employee = _employee_for_user(user)
+
+        return _json_ok({
+            "uid": user.id,
+            "name": user.name,
+            "role": role,
+            "employee_id": employee.id if employee.exists() else None,
+        })
+
+
 class PinController(http.Controller):
 
     @http.route(

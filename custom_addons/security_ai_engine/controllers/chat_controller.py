@@ -421,6 +421,45 @@ def _parse_components(text: str) -> list:
 
 # ── Agentic loop — Claude ─────────────────────────────────────────────────────
 
+def _build_messages_from_history(history_msgs) -> list:
+    """
+    Reconstruct an alternating user/assistant message list from DB history.
+    Always emits an assistant placeholder even if components_json can't be
+    parsed — this prevents consecutive user messages which Claude rejects.
+    """
+    messages = []
+    for hm in history_msgs:
+        if hm.role == "user":
+            messages.append({"role": "user", "content": hm.content or ""})
+        elif hm.role == "assistant":
+            content = "[previous response]"
+            if hm.components_json:
+                try:
+                    comps = json.loads(hm.components_json)
+                    summary = next(
+                        (c.get("message") or c.get("body") or c.get("summary", "")
+                         for c in comps
+                         if c.get("type") in ("alert", "section", "finding", "bullet_list")),
+                        "",
+                    )
+                    if summary:
+                        content = summary[:500]
+                except Exception:
+                    pass
+            messages.append({"role": "assistant", "content": content})
+
+    # Ensure strict alternation: deduplicate consecutive same-role messages
+    deduped = []
+    for msg in messages:
+        if deduped and deduped[-1]["role"] == msg["role"]:
+            if msg["role"] == "user":
+                deduped[-1] = msg          # keep latest user turn
+            # else: discard duplicate assistant (shouldn't happen)
+        else:
+            deduped.append(msg)
+    return deduped
+
+
 def _run_claude_agent(session, user_message: str, context: dict, config, env) -> tuple:
     system = _build_system_prompt(context)
 
@@ -428,28 +467,14 @@ def _run_claude_agent(session, user_message: str, context: dict, config, env) ->
         [("session_id", "=", session.id), ("role", "in", ("user", "assistant"))],
         order="id asc", limit=60,
     )
-    messages = []
-    for hm in history_msgs:
-        if hm.role == "user":
-            messages.append({"role": "user", "content": hm.content or ""})
-        elif hm.role == "assistant":
-            prev = hm.components_json
-            if prev:
-                try:
-                    comps = json.loads(prev)
-                    summary = next((c.get("message") or c.get("body") or c.get("summary", "")
-                                    for c in comps if c.get("type") in ("alert", "section")), "")
-                    messages.append({"role": "assistant", "content": summary[:500] or "[previous response]"})
-                except Exception:
-                    pass
+    messages = _build_messages_from_history(history_msgs)
 
-    has_last_user_msg = False
-    if messages and messages[-1]["role"] == "user":
-        if messages[-1].get("content") == user_message:
-            has_last_user_msg = True
-
-    if not has_last_user_msg:
+    # The user message is saved to DB before the agent runs, so history
+    # already contains it as the last entry. Only add it if missing.
+    if not (messages and messages[-1]["role"] == "user"
+            and messages[-1].get("content") == user_message):
         messages.append({"role": "user", "content": user_message})
+
     all_tool_calls = []
 
     for _round in range(8):
@@ -457,7 +482,8 @@ def _run_claude_agent(session, user_message: str, context: dict, config, env) ->
             response = _claude_chat(messages, system, config)
         except requests.HTTPError as exc:
             return [{"type": "alert", "variant": "danger", "title": "API Error",
-                     "message": f"Claude returned an error: {exc.response.status_code}"}], all_tool_calls
+                     "message": f"Claude returned HTTP {exc.response.status_code}. "
+                                 f"Check your API key and quota."}], all_tool_calls
         except Exception as exc:
             return [{"type": "alert", "variant": "danger", "title": "Connection Error",
                      "message": str(exc)[:200]}], all_tool_calls
@@ -465,9 +491,13 @@ def _run_claude_agent(session, user_message: str, context: dict, config, env) ->
         stop_reason = response.get("stop_reason")
         content_blocks = response.get("content", [])
 
-        if stop_reason == "end_turn":
+        if stop_reason in ("end_turn", "max_tokens"):
             text = "".join(b.get("text", "") for b in content_blocks if b.get("type") == "text")
-            return _parse_components(text), all_tool_calls
+            if text:
+                return _parse_components(text), all_tool_calls
+            if stop_reason == "max_tokens":
+                return [{"type": "alert", "variant": "warning", "title": "Response Truncated",
+                         "message": "The response hit the token limit. Try a shorter or more specific query."}], all_tool_calls
 
         if stop_reason == "tool_use":
             tool_results = []
@@ -505,28 +535,22 @@ def _run_gemini_agent(session, user_message: str, context: dict, config, env) ->
         [("session_id", "=", session.id), ("role", "in", ("user", "assistant"))],
         order="id asc", limit=60,
     )
+    # Reuse the same robust history builder, then convert to Gemini format
+    raw_messages = _build_messages_from_history(history_msgs)
     messages = []
-    for hm in history_msgs:
-        if hm.role == "user":
-            messages.append({"role": "user", "parts": [{"text": hm.content or ""}]})
-        elif hm.role == "assistant":
-            prev = hm.components_json
-            if prev:
-                try:
-                    comps = json.loads(prev)
-                    summary = next((c.get("message") or c.get("body") or c.get("summary", "")
-                                    for c in comps if c.get("type") in ("alert", "section")), "")
-                    messages.append({"role": "model", "parts": [{"text": summary[:500] or "[previous response]"}]})
-                except Exception:
-                    pass
+    for m in raw_messages:
+        if m["role"] == "user":
+            messages.append({"role": "user", "parts": [{"text": m["content"]}]})
+        else:
+            messages.append({"role": "model", "parts": [{"text": m["content"]}]})
 
-    has_last_user_msg = False
-    if messages and messages[-1]["role"] == "user":
-        last_parts = messages[-1].get("parts", [])
-        if last_parts and last_parts[0].get("text") == user_message:
-            has_last_user_msg = True
-
-    if not has_last_user_msg:
+    # Add current user message if not already last entry
+    already_present = (
+        messages
+        and messages[-1]["role"] == "user"
+        and messages[-1].get("parts", [{}])[0].get("text") == user_message
+    )
+    if not already_present:
         messages.append({"role": "user", "parts": [{"text": user_message}]})
     all_tool_calls = []
 
@@ -561,18 +585,30 @@ def _run_gemini_agent(session, user_message: str, context: dict, config, env) ->
         for fc in func_calls:
             tool_name = fc["name"]
             tool_args = fc.get("args", {})
+            fc_id = fc.get("id")
 
             result = _execute_tool(tool_name, tool_args, session, env)
             all_tool_calls.append({"tool": tool_name, "input": tool_args, "result": result})
 
-            model_parts.append({"functionCall": {"name": tool_name, "args": tool_args}})
-            result_parts.append({"functionResponse": {"name": tool_name, "response": result}})
+            model_part = {"functionCall": {"name": tool_name, "args": tool_args}}
+            if fc_id:
+                model_part["functionCall"]["id"] = fc_id
+            model_parts.append(model_part)
+
+            response_part = {"functionResponse": {"name": tool_name, "response": result}}
+            if fc_id:
+                response_part["functionResponse"]["id"] = fc_id
+            result_parts.append(response_part)
 
         messages.append({"role": "model", "parts": model_parts})
         messages.append({"role": "user", "parts": result_parts})
 
-        if finish_reason == "STOP":
-            break
+        if finish_reason == "MAX_TOKENS":
+            return [{"type": "alert", "variant": "warning", "title": "Response Truncated",
+                     "message": "The response hit the token limit. Try a shorter or more specific query."}], all_tool_calls
+        elif finish_reason not in ("STOP", "MAX_TOKENS"):
+            return [{"type": "alert", "variant": "danger", "title": "Generation Blocked",
+                     "message": f"Gemini content generation was blocked. Reason: {finish_reason}"}], all_tool_calls
 
     return [{"type": "alert", "variant": "warning", "title": "Limit Reached",
              "message": "The assistant reached the maximum reasoning steps for this query."}], all_tool_calls
@@ -601,29 +637,168 @@ def _run_agent(session, user_message: str, context: dict, env) -> tuple:
     return _run_claude_agent(session, user_message, context, config, env)
 
 
+# ── Lite mode — single-turn, no tools, fast ───────────────────────────────────
+
+_LITE_SYSTEM = """You are the DogForce Security AI Assistant — a helpful, conversational assistant for DogForce Security Services in Namibia.
+
+You help managers and administrators with questions about the DogForce platform: guard management, shift scheduling, attendance, payroll, billing, incidents, leave, and general security operations.
+
+IMPORTANT — you are in Fast Chat mode. You have NO access to live system data. For questions that need real numbers, specific employee names, attendance records, payslip figures, roster slots, or invoice details, tell the user to switch to Full AI mode (the ⚡ button in the header).
+
+Guidelines:
+- Answer conversationally and concisely (2-4 sentences when possible)
+- Explain concepts, processes, and how-tos confidently
+- When asked for specific data you don't have, say so clearly and suggest Full AI mode
+- Plain language only — no markdown, no bullet symbols, no formatting characters"""
+
+
+def _run_lite_agent(message: str, history: list, config) -> str:
+    """Single API call, no tools, 30-second timeout — the Fast Chat engine."""
+    provider = config.active_provider or "claude"
+
+    if provider == "gemini":
+        # Build Gemini message list from history
+        contents = []
+        for m in history:
+            role = "user" if m["role"] == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": m["content"]}]})
+        contents.append({"role": "user", "parts": [{"text": message}]})
+
+        # Use a fast model for lite mode
+        model = config.gemini_model or "gemini-2.0-flash"
+        if "2.5" in model:
+            model = "gemini-2.0-flash"
+
+        try:
+            resp = requests.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                params={"key": config.gemini_api_key or ""},
+                headers={"content-type": "application/json"},
+                json={
+                    "system_instruction": {"parts": [{"text": _LITE_SYSTEM}]},
+                    "contents": contents,
+                    "generationConfig": {"maxOutputTokens": 600, "temperature": 0.4},
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            parts = resp.json().get("candidates", [{}])[0].get("content", {}).get("parts", [])
+            return "".join(p.get("text", "") for p in parts) or "I couldn't generate a response. Please try again."
+        except requests.HTTPError as exc:
+            return f"API error {exc.response.status_code}. Check your Gemini API key."
+        except Exception as exc:
+            return f"Connection error: {str(exc)[:120]}"
+
+    else:  # Claude (default for claude or openai fallback)
+        claude_messages = [{"role": m["role"], "content": m["content"]} for m in history]
+        claude_messages.append({"role": "user", "content": message})
+
+        # Use Haiku for lite mode — 3-5× faster and cheaper than Sonnet
+        model = config.claude_model or "claude-haiku-4-5-20251001"
+        if "opus" in model or "sonnet" in model:
+            model = "claude-haiku-4-5-20251001"
+
+        try:
+            resp = requests.post(
+                "https://api.anthropic.com/v1/messages",
+                headers={
+                    "x-api-key": config.claude_api_key or "",
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "max_tokens": 600,
+                    "system": _LITE_SYSTEM,
+                    "messages": claude_messages,
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            return resp.json()["content"][0]["text"]
+        except requests.HTTPError as exc:
+            return f"API error {exc.response.status_code}. Check your Anthropic API key."
+        except Exception as exc:
+            return f"Connection error: {str(exc)[:120]}"
+
+
+def _resolve_session(env, session_id, context):
+    """Find or create a chat session. Returns the session record."""
+    session = None
+    if session_id:
+        candidate = env["security.ai.chat.session"].sudo().browse(int(session_id))
+        if candidate.exists() and candidate.user_id.id == env.uid:
+            session = candidate
+    if not session:
+        session = env["security.ai.chat.session"].sudo().create({
+            "user_id": env.uid,
+            "context_model": context.get("url_slug") or "",
+            "context_id": int(context.get("url_id") or 0),
+        })
+    return session
+
+
 # ── HTTP Controller ───────────────────────────────────────────────────────────
 
 class AIChatController(http.Controller):
 
-    # ── Send a message and get a response ──────────────────────────────────
+    # ── Fast Chat (lite) — single-turn, no tools ──────────────────────────
+
+    @http.route("/web/ai-chat/message-lite", type="jsonrpc", auth="user", methods=["POST"])
+    def chat_message_lite(self, session_id=None, message="", context=None):
+        env = request.env
+        context = context or {}
+        session = _resolve_session(env, session_id, context)
+
+        env["security.ai.chat.message"].sudo().create({
+            "session_id": session.id,
+            "role": "user",
+            "content": message,
+        })
+
+        # Get config
+        try:
+            config = env["security.ai.config"].get_active_config()
+        except Exception:
+            text = "AI Engine is not configured. Please go to Configuration → AI Engine to add your API key."
+            components = [{"type": "section", "title": "", "body": text}]
+            ai_msg = env["security.ai.chat.message"].sudo().create({
+                "session_id": session.id,
+                "role": "assistant",
+                "components_json": json.dumps(components),
+            })
+            return {"session_id": session.id, "message_id": ai_msg.id, "components": components}
+
+        # Build slim conversation history (last 10 messages, text only)
+        history_msgs = env["security.ai.chat.message"].search(
+            [("session_id", "=", session.id), ("role", "in", ("user", "assistant"))],
+            order="id asc", limit=20,
+        )
+        raw = _build_messages_from_history(history_msgs)
+        # Strip the current message if already at end (just saved it above)
+        if raw and raw[-1]["role"] == "user" and raw[-1].get("content") == message:
+            history = raw[:-1]
+        else:
+            history = raw
+
+        text = _run_lite_agent(message, history[-10:], config)
+        components = [{"type": "section", "title": "", "body": text}]
+
+        ai_msg = env["security.ai.chat.message"].sudo().create({
+            "session_id": session.id,
+            "role": "assistant",
+            "components_json": json.dumps(components),
+        })
+        session.sudo().write({"last_activity": fields.Datetime.now()})
+        return {"session_id": session.id, "message_id": ai_msg.id, "components": components}
+
+    # ── Full AI — agentic loop with tools ──────────────────────────────────
 
     @http.route("/web/ai-chat/message", type="jsonrpc", auth="user", methods=["POST"])
     def chat_message(self, session_id=None, message="", context=None):
         env = request.env
         context = context or {}
-
-        # Resolve or create session
-        session = None
-        if session_id:
-            candidate = env["security.ai.chat.session"].sudo().browse(int(session_id))
-            if candidate.exists() and candidate.user_id.id == env.uid:
-                session = candidate
-        if not session:
-            session = env["security.ai.chat.session"].sudo().create({
-                "user_id": env.uid,
-                "context_model": context.get("url_slug") or "",
-                "context_id": int(context.get("url_id") or 0),
-            })
+        session = _resolve_session(env, session_id, context)
 
         # Persist user message BEFORE running agent (so history includes it)
         env["security.ai.chat.message"].sudo().create({

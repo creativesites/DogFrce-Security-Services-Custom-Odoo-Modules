@@ -82,15 +82,15 @@
 
 <record id="art_welcome" model="security.help.article">
     <field name="category_id" ref="cat_getting_started"/>
-    <field name="title">Welcome to DogForce</field>
-    <field name="summary">What DogForce is, who uses it, and how it all fits together</field>
+    <field name="title">Welcome to DeployGuard</field>
+    <field name="summary">What DeployGuard is, who uses it, and how it all fits together</field>
     <field name="sequence">1</field>
     <field name="tags">intro overview platform welcome</field>
     <field name="body"><![CDATA[
-<h2>Welcome to DogForce Security Services Platform</h2>
-<p>DogForce is a complete management system built specifically for security companies in Namibia. It handles every part of running a security business — from scheduling guards to paying them, billing clients, and tracking everything in between.</p>
+<h2>Welcome to DeployGuard Security Services Platform</h2>
+<p>DeployGuard is a complete management system built specifically for security companies in Namibia. It handles every part of running a security business — from scheduling guards to paying them, billing clients, and tracking everything in between.</p>
 
-<h3>Who uses DogForce?</h3>
+<h3>Who uses DeployGuard?</h3>
 <ul>
   <li><strong>Operations Managers</strong> — Build rosters, review attendance, handle AWOL guards</li>
   <li><strong>HR / Admin Staff</strong> — Manage guard profiles, documents, leave requests</li>
@@ -215,11 +215,11 @@
     <field name="sequence">4</field>
     <field name="tags">concepts glossary guard post site slot batch roster</field>
     <field name="body"><![CDATA[
-<h2>Key Concepts in DogForce</h2>
+<h2>Key Concepts in DeployGuard</h2>
 <p>Before you dive in, it helps to understand how the main building blocks connect.</p>
 
 <h3>Guards (Employees)</h3>
-<p>A <strong>guard</strong> is any person employed to provide security services. In DogForce, each guard has a profile that includes their grade, certifications, reliability score, and document status. Guards are the core of everything.</p>
+<p>A <strong>guard</strong> is any person employed to provide security services. In DeployGuard, each guard has a profile that includes their grade, certifications, reliability score, and document status. Guards are the core of everything.</p>
 
 <h3>Client Sites</h3>
 <p>A <strong>client site</strong> is a physical location that your company guards — a shopping mall, a bank, a construction site. Each site belongs to a client and can have multiple posts.</p>
@@ -392,7 +392,7 @@
     <field name="tags">documents identity licence firearm medical expiry verification</field>
     <field name="body"><![CDATA[
 <h2>Managing Guard Documents</h2>
-<p>DogForce tracks all compliance documents for each guard and alerts you before they expire.</p>
+<p>DeployGuard tracks all compliance documents for each guard and alerts you before they expire.</p>
 
 <h3>Document Types</h3>
 <ul>
@@ -439,7 +439,7 @@
     <field name="tags">roster lifecycle draft generated submitted approved confirmed</field>
     <field name="body"><![CDATA[
 <h2>How Rosters Work</h2>
-<p>DogForce uses a structured roster workflow to ensure every shift is properly planned, reviewed, and approved before the month begins.</p>
+<p>DeployGuard uses a structured roster workflow to ensure every shift is properly planned, reviewed, and approved before the month begins.</p>
 
 <h3>The Roster Lifecycle</h3>
 <div style="display:flex; gap:8px; flex-wrap:wrap; margin:16px 0;">
@@ -754,7 +754,7 @@
     <field name="tags">payroll overview period payslip gross net process</field>
     <field name="body"><![CDATA[
 <h2>How Payroll Works</h2>
-<p>DogForce automates the Namibian payroll process, calculating gross pay from attendance, then deducting SSC, PAYE, loans, and discipline deductions to arrive at net pay.</p>
+<p>DeployGuard automates the Namibian payroll process, calculating gross pay from attendance, then deducting SSC, PAYE, loans, and discipline deductions to arrive at net pay.</p>
 
 <h3>The Payroll Process (in order)</h3>
 <ol>
@@ -787,7 +787,7 @@
 </ul>
 
 <div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
-  <strong>Net Pay Floor:</strong> DogForce enforces a minimum net pay floor of 30% of gross. If deductions would leave the guard with less than 30%, the deductions are capped.
+  <strong>Net Pay Floor:</strong> DeployGuard enforces a minimum net pay floor of 30% of gross. If deductions would leave the guard with less than 30%, the deductions are capped.
 </div>
     ]]></field>
 </record>
@@ -890,7 +890,7 @@
     <field name="tags">PAYE SSC tax Namibia income social security contribution bracket</field>
     <field name="body"><![CDATA[
 <h2>Namibian PAYE &amp; SSC</h2>
-<p>DogForce is configured with Namibian payroll rules. Here is how the two main statutory deductions work.</p>
+<p>DeployGuard is configured with Namibian payroll rules. Here is how the two main statutory deductions work.</p>
 
 <h3>SSC — Social Security Commission</h3>
 <p>Both the employee and employer contribute to the Namibian Social Security Commission:</p>
@@ -935,7 +935,7 @@
     <field name="tags">leave type annual sick compassionate accrual balance</field>
     <field name="body"><![CDATA[
 <h2>Types of Leave</h2>
-<p>DogForce supports multiple leave types, each with its own accrual policy and rules.</p>
+<p>DeployGuard supports multiple leave types, each with its own accrual policy and rules.</p>
 
 <h3>Common Leave Types</h3>
 <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
@@ -1019,7 +1019,7 @@
     <field name="tags">billing plan contract client recurring per-shift invoice setup</field>
     <field name="body"><![CDATA[
 <h2>Setting Up a Client Contract</h2>
-<p>A <strong>Billing Plan</strong> is the contract between DogForce and a client — it defines what services are provided and how much to charge.</p>
+<p>A <strong>Billing Plan</strong> is the contract between DeployGuard and a client — it defines what services are provided and how much to charge.</p>
 
 <h3>Billing Modes</h3>
 <ul>
@@ -1178,7 +1178,7 @@
     <field name="tags">appeal incident overturn upheld discipline fairness</field>
     <field name="body"><![CDATA[
 <h2>The Incident Appeal Process</h2>
-<p>DogForce supports a formal appeal process for incidents, ensuring fairness and allowing guards to contest decisions they believe are unjust.</p>
+<p>DeployGuard supports a formal appeal process for incidents, ensuring fairness and allowing guards to contest decisions they believe are unjust.</p>
 
 <h3>Filing an Appeal</h3>
 <ol>
@@ -1217,7 +1217,7 @@
     <field name="tags">equipment issue allocate uniform radio firearm guard</field>
     <field name="body"><![CDATA[
 <h2>Issuing Equipment to Guards</h2>
-<p>DogForce tracks all equipment issued to guards — from uniforms to radios and firearms. This creates accountability and enables automatic deductions if items are lost or damaged.</p>
+<p>DeployGuard tracks all equipment issued to guards — from uniforms to radios and firearms. This creates accountability and enables automatic deductions if items are lost or damaged.</p>
 
 <h3>Equipment Types</h3>
 <ul>
@@ -1300,8 +1300,8 @@
     <field name="sequence">1</field>
     <field name="tags">AI assistant overview features chat gemini claude</field>
     <field name="body"><![CDATA[
-<h2>The DogForce AI Assistant</h2>
-<p>DogForce includes a built-in AI assistant powered by Google Gemini (or Claude/OpenAI depending on your configuration). It can answer questions, find records, and even take actions — after your confirmation.</p>
+<h2>The DeployGuard AI Assistant</h2>
+<p>DeployGuard includes a built-in AI assistant powered by Google Gemini (or Claude/OpenAI depending on your configuration). It can answer questions, find records, and even take actions — after your confirmation.</p>
 
 <h3>What can you ask?</h3>
 <ul>
@@ -1323,12 +1323,12 @@
 <h3>What the AI cannot do</h3>
 <ul>
   <li>It cannot make changes without your explicit confirmation</li>
-  <li>It cannot access data outside the DogForce platform</li>
+  <li>It cannot access data outside the DeployGuard platform</li>
   <li>It cannot run payroll or confirm rosters automatically</li>
 </ul>
 
 <div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
-  <strong>Privacy:</strong> The AI only uses data within your DogForce instance. It does not send your guard or client data to external services beyond the AI provider (Gemini/Claude) for generating responses.
+  <strong>Privacy:</strong> The AI only uses data within your DeployGuard instance. It does not send your guard or client data to external services beyond the AI provider (Gemini/Claude) for generating responses.
 </div>
     ]]></field>
 </record>
@@ -1343,7 +1343,7 @@
 <h2>Using the AI Chat Panel</h2>
 
 <h3>Opening the Chat</h3>
-<p>The chat button is in the <strong>bottom-right corner</strong> of every page — it looks like a speech bubble icon with the DogForce shield. Click it to open the panel. Click again (or the × button) to close it.</p>
+<p>The chat button is in the <strong>bottom-right corner</strong> of every page — it looks like a speech bubble icon with the DeployGuard shield. Click it to open the panel. Click again (or the × button) to close it.</p>
 
 <h3>Sending a Message</h3>
 <ol>

@@ -15,3 +15,4 @@ access_equipment_damage_mgr,security.equipment.damage.mgr,model_security_equipme
 access_equipment_damage_sup,security.equipment.damage.sup,model_security_equipment_damage,security_base.group_security_supervisor,1,1,1,0
 access_equipment_damage_user,security.equipment.damage.user,model_security_equipment_damage,hr.group_hr_user,1,0,0,0
 access_security_equipment_return_wizard,security.equipment.return.wizard,model_security_equipment_return_wizard,base.group_user,1,1,1,1
+access_security_equipment_dashboard,security.equipment.dashboard,model_security_equipment_dashboard,base.group_user,1,0,0,0

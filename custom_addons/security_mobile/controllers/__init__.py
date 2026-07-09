@@ -1,1 +1,1 @@
-from . import main, supervisor, manager, owner
+from . import main, supervisor, manager, owner, notifications

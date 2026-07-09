@@ -559,3 +559,58 @@ class SecurityVehicleServiceLog(models.Model):
                 log.vehicle_id.state = "available"
             if log.odometer_at_service and log.odometer_at_service > log.vehicle_id.odometer:
                 log.vehicle_id.odometer = log.odometer_at_service
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FLEET DASHBOARD DATA PROVIDER
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SecurityFleetDashboard(models.AbstractModel):
+    _name = "security.fleet.dashboard"
+    _description = "Fleet Dashboard Data Provider"
+
+    @api.model
+    def get_dashboard_data(self):
+        from datetime import date as _date, datetime as _datetime
+        today = _date.today()
+        month_start = today.replace(day=1)
+
+        Vehicle = self.env["security.vehicle"]
+        Run = self.env["security.shuttle.run"]
+
+        vehicles = Vehicle.search([])
+        active = vehicles.filtered(lambda v: v.state == "available")
+        in_service = vehicles.filtered(lambda v: v.state == "in_service")
+
+        # Fuel cost MTD from fuel logs
+        FuelLog = self.env["security.vehicle.fuel.log"]
+        fuel_logs_mtd = FuelLog.search([("date", ">=", month_start)])
+        fuel_cost_mtd = sum(fuel_logs_mtd.mapped("cost"))
+
+        # Today's shuttle runs
+        today_str = str(today)
+        today_runs = Run.search([
+            ("departure_datetime", ">=", today_str + " 00:00:00"),
+            ("departure_datetime", "<=", today_str + " 23:59:59"),
+        ])
+
+        return {
+            "total_vehicles": len(vehicles),
+            "active_count": len(active),
+            "in_service_count": len(in_service),
+            "fuel_cost_mtd": fuel_cost_mtd,
+            "today_runs": [{
+                "id": r.id,
+                "vehicle": r.vehicle_id.name if r.vehicle_id else "",
+                "route": r.route_id.name if r.route_id else "",
+                "departure": str(r.departure_datetime) if r.departure_datetime else "",
+                "state": r.state,
+            } for r in today_runs],
+            "vehicles": [{
+                "id": v.id,
+                "name": v.name,
+                "plate": v.plate_number or "",
+                "driver": v.assigned_driver_id.name if v.assigned_driver_id else "",
+                "state": v.state,
+            } for v in vehicles],
+        }

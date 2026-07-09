@@ -470,3 +470,57 @@ class SecurityEquipmentDamage(models.Model):
     def action_reset_draft(self):
         for dmg in self:
             dmg.state = "draft"
+
+class SecurityEquipmentDashboard(models.AbstractModel):
+    _name = 'security.equipment.dashboard'
+    _description = 'Equipment Dashboard Data Provider'
+
+    @api.model
+    def get_dashboard_data(self):
+        from datetime import date as _date
+        today = _date.today()
+        month_start = today.replace(day=1)
+
+        Alloc = self.env['security.equipment.allocation']
+
+        active = Alloc.search([('state', 'in', ['issued', 'acknowledged'])])
+        returned_mtd = Alloc.search([
+            ('state', '=', 'returned'),
+            ('actual_return_date', '>=', month_start),
+        ])
+        overdue = Alloc.search([
+            ('state', 'in', ['issued', 'acknowledged']),
+            ('expected_return_date', '!=', False),
+            ('expected_return_date', '<', today),
+        ])
+        damage_count = self.env['security.equipment.damage'].search_count([
+            ('state', 'in', ['draft', 'investigation', 'approved']),
+        ])
+
+        by_category = {}
+        for a in active:
+            cat = (
+                a.equipment_type_id.category_id.name
+                if a.equipment_type_id and a.equipment_type_id.category_id
+                else 'Other'
+            )
+            by_category[cat] = by_category.get(cat, 0) + (a.quantity or 1)
+
+        overdue_data = sorted([{
+            'guard': a.employee_id.name if a.employee_id else '',
+            'equipment': a.equipment_type_id.name if a.equipment_type_id else '',
+            'item': a.equipment_item_id.name if a.equipment_item_id else '',
+            'issue_date': str(a.issue_date) if a.issue_date else '',
+            'due_date': str(a.expected_return_date),
+            'days_overdue': (today - a.expected_return_date).days,
+        } for a in overdue], key=lambda x: -x['days_overdue'])
+
+        return {
+            'allocated': len(active),
+            'returned_mtd': len(returned_mtd),
+            'damaged_lost': damage_count,
+            'overdue_count': len(overdue),
+            'by_category': [{'name': k, 'count': v} for k, v in sorted(by_category.items())],
+            'overdue': overdue_data,
+        }
+

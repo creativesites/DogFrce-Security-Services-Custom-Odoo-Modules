@@ -40,7 +40,8 @@ class SecurityPayrollPeriodWizard(models.TransientModel):
             "date_to": self.date_to,
             "rule_set_id": self.rule_set_id.id,
         })
-        period.action_generate_payslips()
+        # Period is created in Draft — click "Generate Payslips" on the period form
+        # when all attendance batches for this period are locked and ready.
         return {
             "type": "ir.actions.act_window",
             "res_model": "security.payroll.period",

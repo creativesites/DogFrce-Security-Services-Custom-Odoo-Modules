@@ -457,6 +457,14 @@ class SecurityBillingInvoice(models.Model):
         unpaid = self.search([("state", "not in", ["paid", "cancelled"]), ("due_date", "!=", False)])
         return self.env.ref("security_billing.action_report_security_invoice_aging").report_action(unpaid)
 
+    def action_preview_pdf(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/report/html/security_billing.report_security_billing_invoice/{self.id}",
+            "target": "new",
+        }
+
 
 class SecurityBillingInvoiceLine(models.Model):
     _name = "security.billing.invoice.line"
@@ -541,3 +549,82 @@ class SecurityBillingCreditNote(models.Model):
     def action_reset_to_draft(self):
         for cn in self:
             cn.state = "draft"
+
+
+class SecurityBillingDashboard(models.AbstractModel):
+    """Abstract model — provides the Billing Command Center dashboard data."""
+    _name = "security.billing.dashboard"
+    _description = "Billing Dashboard Data Provider"
+
+    @api.model
+    def get_dashboard_data(self):
+        from datetime import date as _date
+        today = _date.today()
+        month_start = today.replace(day=1)
+
+        Invoice = self.env["security.billing.invoice"]
+
+        active_plans = self.env["security.billing.plan"].search([("active", "=", True)])
+
+        mtd_invoices = Invoice.search([
+            ("invoice_date", ">=", month_start),
+            ("state", "not in", ["cancelled"]),
+        ])
+        invoiced_mtd = sum(mtd_invoices.mapped("total_amount"))
+        collected_mtd = sum(
+            mtd_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount")
+        )
+
+        outstanding = Invoice.search([("state", "not in", ["paid", "cancelled"])])
+        outstanding_total = sum(outstanding.mapped("total_amount"))
+        overdue_total = sum(
+            outstanding.filtered(
+                lambda i: i.due_date and i.due_date < today
+            ).mapped("total_amount")
+        )
+
+        plans_data = []
+        for plan in active_plans:
+            last_inv = Invoice.search(
+                [("billing_plan_id", "=", plan.id), ("state", "!=", "cancelled")],
+                order="invoice_date desc",
+                limit=1,
+            )
+            plans_data.append({
+                "id": plan.id,
+                "name": plan.name,
+                "client": plan.partner_id.name,
+                "mode": dict(self.env["security.billing.plan"]._fields["billing_mode"].selection).get(plan.billing_mode, plan.billing_mode),
+                "last_inv_date": str(last_inv.invoice_date) if last_inv and last_inv.invoice_date else "",
+                "last_inv_total": last_inv.total_amount if last_inv else 0.0,
+                "last_inv_state": last_inv.state if last_inv else "",
+                "last_inv_due": str(last_inv.due_date) if last_inv and last_inv.due_date else "",
+                "last_inv_id": last_inv.id if last_inv else 0,
+                "is_overdue": bool(last_inv and last_inv.due_date and last_inv.due_date < today and last_inv.state not in ("paid", "cancelled")),
+            })
+
+        recent_data = [{
+            "id": i.id,
+            "name": i.name,
+            "client": i.partner_id.name,
+            "date": str(i.invoice_date) if i.invoice_date else "",
+            "due": str(i.due_date) if i.due_date else "",
+            "total": i.total_amount,
+            "state": i.state,
+            "overdue": bool(i.due_date and i.due_date < today and i.state not in ("paid", "cancelled")),
+        } for i in Invoice.search(
+            [("state", "not in", ["cancelled"])],
+            order="invoice_date desc",
+            limit=12,
+        )]
+
+        return {
+            "month_label": today.strftime("%B %Y"),
+            "active_plan_count": len(active_plans),
+            "invoiced_mtd": invoiced_mtd,
+            "collected_mtd": collected_mtd,
+            "outstanding_total": outstanding_total,
+            "overdue_total": overdue_total,
+            "plans": plans_data,
+            "recent_invoices": recent_data,
+        }

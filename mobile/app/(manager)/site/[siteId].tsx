@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, ScrollView, RefreshControl } from 'react-native';
-import { Text, Button, Card, ActivityIndicator, Portal, Modal, TextInput } from 'react-native-paper';
+import { View, StyleSheet, FlatList, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, Button, Card, ActivityIndicator, Portal, Modal, TextInput, FAB } from 'react-native-paper';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getSiteDetails, approveOvertime, SiteDetailResponse } from '../../../src/api/manager';
 import { useAppStore } from '../../../src/stores/appStore';
 import { Theme } from '../../../src/theme';
 import GuardCard from '../../../src/components/GuardCard';
+import AssignGuardModal from '../../../src/components/AssignGuardModal';
+import IncidentModal from '../../../src/components/IncidentModal';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 export default function SiteDetailScreen() {
@@ -19,6 +21,10 @@ export default function SiteDetailScreen() {
   const [selectedRecordId, setSelectedRecordId] = useState<number | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [approveNote, setApproveNote] = useState('');
+
+  // Sprint 2 additions
+  const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [incidentTarget, setIncidentTarget] = useState<{ id: number; name: string } | null>(null);
 
   const { selectedDate, refreshTrigger, triggerRefresh } = useAppStore();
   const router = useRouter();
@@ -152,6 +158,7 @@ export default function SiteDetailScreen() {
                 status={item.manual_presence}
                 checkIn={item.check_in}
                 checkOut={item.check_out}
+                onIncident={() => setIncidentTarget({ id: item.guard.id, name: item.guard.name })}
               />
             ))
           ) : (
@@ -162,6 +169,34 @@ export default function SiteDetailScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Assign Guard FAB — managers can assign guards to this site */}
+      {(!data.batch_state || data.batch_state === 'draft') && (
+        <FAB
+          icon="account-plus"
+          style={styles.fab}
+          onPress={() => setAssignModalVisible(true)}
+          color="#FFF"
+          size="medium"
+        />
+      )}
+
+      <AssignGuardModal
+        siteId={Number(siteId)}
+        visible={assignModalVisible}
+        onClose={() => setAssignModalVisible(false)}
+        onAssigned={() => { setAssignModalVisible(false); triggerRefresh(); }}
+      />
+
+      {incidentTarget && (
+        <IncidentModal
+          visible={!!incidentTarget}
+          onClose={() => setIncidentTarget(null)}
+          onLogged={() => setIncidentTarget(null)}
+          employeeId={incidentTarget.id}
+          guardName={incidentTarget.name}
+        />
+      )}
 
       {/* Overtime Approval Modal */}
       <Portal>
@@ -193,9 +228,8 @@ export default function SiteDetailScreen() {
               mode="outlined"
               onPress={() => handleOvertimeAction(false)}
               disabled={actionLoading}
-              borderColor={Theme.colors.absent}
               textColor={Theme.colors.absent}
-              style={styles.modalBtn}
+              style={[styles.modalBtn, { borderColor: Theme.colors.absent }]}
             >
               Reject
             </Button>
@@ -218,14 +252,14 @@ export default function SiteDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0B0F',
+    backgroundColor: Theme.colors.background,
   },
   scroll: {
     padding: 16,
   },
   loader: {
     flex: 1,
-    backgroundColor: '#0B0B0F',
+    backgroundColor: Theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -239,7 +273,7 @@ const styles = StyleSheet.create({
   siteTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: Theme.colors.text,
   },
   clientSubtitle: {
     fontSize: 14,
@@ -291,7 +325,7 @@ const styles = StyleSheet.create({
   otGuardName: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: Theme.colors.text,
   },
   otHours: {
     fontSize: 14,
@@ -336,7 +370,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: Theme.colors.text,
   },
   modalSub: {
     fontSize: 13,
@@ -363,5 +397,12 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     borderRadius: 12,
+  },
+  fab: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    backgroundColor: Theme.colors.primary,
+    borderRadius: 16,
   },
 });

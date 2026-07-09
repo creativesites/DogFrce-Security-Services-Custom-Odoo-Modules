@@ -45,7 +45,10 @@ export default function PinScreen() {
       );
       const result = await authenticateWithPin(user.employee_id, hash, user.db);
       await setSession(result.session_id, user);
-      router.replace('/(supervisor)');
+      const dest =
+        user.role === 'owner' ? '/(owner)' :
+        user.role === 'manager' ? '/(manager)' : '/(supervisor)';
+      router.replace(dest);
     } catch (err: any) {
       setError(err.message || 'Incorrect PIN. Try again.');
       setPin('');

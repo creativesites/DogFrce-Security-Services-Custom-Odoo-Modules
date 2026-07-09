@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_security_attendance_batch_user,security.attendance.batch user,model_security_attendance_batch,hr.group_hr_user,1,1,1,1
 access_security_attendance_record_user,security.attendance.record user,model_security_attendance_record,hr.group_hr_user,1,1,1,1
+access_security_attendance_grid,security.attendance.grid,model_security_attendance_grid,base.group_user,1,0,0,0

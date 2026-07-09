@@ -1,11 +1,40 @@
 # DogForce Security Suite — Completion Plan
 ## Road to 100% Production Go-Live
 
-**Current status:** ~58% complete  
+**Current status:** ~85% complete  
 **Target:** Production-ready for DogForce Security Services (Namibia)  
-**Last updated:** 2026-06-02
+**Last updated:** 2026-06-16
 
 This plan picks up from Sprint F. Each sprint is a coherent unit of work that can be done independently and deployed as a batch. Tasks are marked P0 (production blocker), P1 (critical for daily operations), P2 (important but workaroundable), P3 (nice-to-have).
+
+> **Status legend:** ✅ Done · 🔲 Not started · ⚠️ Partial
+
+---
+
+## Completed since last update (2026-06-02 → 2026-06-16)
+
+The following major items have been built and are production-ready:
+
+| Item | Module | Sprint |
+|------|--------|--------|
+| Payroll period wizard (`security.payroll.period.wizard`) | `security_payroll_core` | G-2 |
+| Leave accrual cron + year-end carryover | `security_leave` | G-5, G-6 |
+| Loan state machine (draft → active → closed) | `security_loans` | G-9 |
+| Incident appeal workflow + `mail.thread` integration | `security_discipline` | G-13, G-15 |
+| Post type → document requirement mapping | `security_operations` | G-17 |
+| Monthly roster generation wizard | `security_operations` | H-1 |
+| Billing invoice wizard + credit notes | `security_billing` | H-6, H-7 |
+| Invoice aging report (5-bucket) | `security_accounting_controls` | H-8 |
+| Payroll expenditure dashboard OWL | `security_reporting` | I-1 |
+| AWOL/absence heatmap OWL | `security_reporting` | I-2 |
+| Notification bell systray widget | `security_notifications` | I-7 |
+| Notifications wired to all event sources | `security_notifications` | I-5 |
+| All mobile API endpoints (22 routes, 3 roles) | `security_mobile` | J-1–J-4, J-6 |
+| Full payroll pipeline integration tests | `security_payroll_core` | K-1 |
+| Migration dry-run validation mode + rollback | `security_dogforce_migration` | K-8, K-10 |
+| AI engine: 10 features, 3 providers, tool-use, chat UI | `security_ai_engine` | D |
+
+---
 
 ---
 

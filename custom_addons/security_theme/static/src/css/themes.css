@@ -18,7 +18,7 @@ body.dg_login_branded {
     --dg-accent: #3b82f6;
     --dg-surface: #f8fafc;
     --dg-sidebar-text: #c8d8f0;
-    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #eef5ff 58%, #dbeafe 100%);
+    --dg-gradient-main: linear-gradient(135deg, #154b71 0%, #306ec3 58%, #1c9591 100%);
     --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.13) 0, transparent 34%), linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%);
     --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
     --dg-gradient-muted: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(30, 58, 95, 0.04) 100%);
@@ -35,27 +35,35 @@ body.dg_login_branded {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     box-shadow: 0 8px 24px rgba(15, 31, 54, 0.28);
 }
+
 .o_theme_dogforce_navy .o_main_navbar .o_menu_brand,
 .o_theme_dogforce_navy .o_main_navbar .o_nav_entry,
 .o_theme_dogforce_navy .o_main_navbar a,
-.o_theme_dogforce_navy .o_main_navbar .o_menu_sections > li > a {
+.o_theme_dogforce_navy .o_main_navbar .o_menu_sections>li>a {
     color: #c8d8f0 !important;
 }
+
 .o_theme_dogforce_navy .o_main_navbar .o_nav_entry:hover,
-.o_theme_dogforce_navy .o_main_navbar .o_menu_sections > li > a:hover {
+.o_theme_dogforce_navy .o_main_navbar .o_menu_sections>li>a:hover {
     background-color: #2d5a9e !important;
     color: #ffffff !important;
 }
+
 .o_theme_dogforce_navy .btn-primary {
     background-color: #1e3a5f !important;
     border-color: #1e3a5f !important;
 }
+
 .o_theme_dogforce_navy .btn-primary:hover,
 .o_theme_dogforce_navy .btn-primary:focus {
     background-color: #2d5a9e !important;
     border-color: #2d5a9e !important;
 }
-.o_theme_dogforce_navy a:not(.btn) { color: #2d5a9e; }
+
+.o_theme_dogforce_navy a:not(.btn) {
+    color: #2d5a9e;
+}
+
 .o_theme_dogforce_navy .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
     background-color: #1e3a5f !important;
 }
@@ -85,27 +93,35 @@ body.dg_login_branded {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     box-shadow: 0 8px 24px rgba(13, 17, 23, 0.28);
 }
+
 .o_theme_corporate_dark .o_main_navbar .o_menu_brand,
 .o_theme_corporate_dark .o_main_navbar .o_nav_entry,
 .o_theme_corporate_dark .o_main_navbar a,
-.o_theme_corporate_dark .o_main_navbar .o_menu_sections > li > a {
+.o_theme_corporate_dark .o_main_navbar .o_menu_sections>li>a {
     color: #e8e8e8 !important;
 }
+
 .o_theme_corporate_dark .o_main_navbar .o_nav_entry:hover,
-.o_theme_corporate_dark .o_main_navbar .o_menu_sections > li > a:hover {
+.o_theme_corporate_dark .o_main_navbar .o_menu_sections>li>a:hover {
     background-color: #e67e22 !important;
     color: #ffffff !important;
 }
+
 .o_theme_corporate_dark .btn-primary {
     background-color: #e67e22 !important;
     border-color: #e67e22 !important;
     color: #ffffff !important;
 }
+
 .o_theme_corporate_dark .btn-primary:hover {
     background-color: #d35400 !important;
     border-color: #d35400 !important;
 }
-.o_theme_corporate_dark a:not(.btn) { color: #e67e22; }
+
+.o_theme_corporate_dark a:not(.btn) {
+    color: #e67e22;
+}
+
 .o_theme_corporate_dark .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
     background-color: #e67e22 !important;
 }
@@ -135,26 +151,34 @@ body.dg_login_branded {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     box-shadow: 0 8px 24px rgba(13, 31, 21, 0.28);
 }
+
 .o_theme_forest_guard .o_main_navbar .o_menu_brand,
 .o_theme_forest_guard .o_main_navbar .o_nav_entry,
 .o_theme_forest_guard .o_main_navbar a,
-.o_theme_forest_guard .o_main_navbar .o_menu_sections > li > a {
+.o_theme_forest_guard .o_main_navbar .o_menu_sections>li>a {
     color: #c8e6c9 !important;
 }
+
 .o_theme_forest_guard .o_main_navbar .o_nav_entry:hover,
-.o_theme_forest_guard .o_main_navbar .o_menu_sections > li > a:hover {
+.o_theme_forest_guard .o_main_navbar .o_menu_sections>li>a:hover {
     background-color: #2e7d32 !important;
     color: #ffffff !important;
 }
+
 .o_theme_forest_guard .btn-primary {
     background-color: #2e7d32 !important;
     border-color: #2e7d32 !important;
 }
+
 .o_theme_forest_guard .btn-primary:hover {
     background-color: #1b5e20 !important;
     border-color: #1b5e20 !important;
 }
-.o_theme_forest_guard a:not(.btn) { color: #2e7d32; }
+
+.o_theme_forest_guard a:not(.btn) {
+    color: #2e7d32;
+}
+
 .o_theme_forest_guard .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
     background-color: #2e7d32 !important;
 }
@@ -184,26 +208,34 @@ body.dg_login_branded {
     border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
     box-shadow: 0 8px 24px rgba(17, 24, 39, 0.28);
 }
+
 .o_theme_executive_slate .o_main_navbar .o_menu_brand,
 .o_theme_executive_slate .o_main_navbar .o_nav_entry,
 .o_theme_executive_slate .o_main_navbar a,
-.o_theme_executive_slate .o_main_navbar .o_menu_sections > li > a {
+.o_theme_executive_slate .o_main_navbar .o_menu_sections>li>a {
     color: #d1d5db !important;
 }
+
 .o_theme_executive_slate .o_main_navbar .o_nav_entry:hover,
-.o_theme_executive_slate .o_main_navbar .o_menu_sections > li > a:hover {
+.o_theme_executive_slate .o_main_navbar .o_menu_sections>li>a:hover {
     background-color: #374151 !important;
     color: #f9fafb !important;
 }
+
 .o_theme_executive_slate .btn-primary {
     background-color: #374151 !important;
     border-color: #374151 !important;
 }
+
 .o_theme_executive_slate .btn-primary:hover {
     background-color: #1f2937 !important;
     border-color: #1f2937 !important;
 }
-.o_theme_executive_slate a:not(.btn) { color: #374151; }
+
+.o_theme_executive_slate a:not(.btn) {
+    color: #374151;
+}
+
 .o_theme_executive_slate .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
     background-color: #374151 !important;
 }
@@ -239,16 +271,16 @@ body[class*="o_theme_"] .o_main_navbar {
 body[class*="o_theme_"] .o_main_navbar .o_menu_brand,
 body[class*="o_theme_"] .o_main_navbar .o_nav_entry,
 body[class*="o_theme_"] .o_main_navbar a,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li > a {
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li>a {
     color: var(--dg-navbar-text) !important;
 }
 
 body[class*="o_theme_"] .o_main_navbar .o_nav_entry:hover,
 body[class*="o_theme_"] .o_main_navbar .o_nav_entry:focus,
 body[class*="o_theme_"] .o_main_navbar .o_nav_entry.active,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li > a:hover,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li > a:focus,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections > li.show > a {
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li>a:hover,
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li>a:focus,
+body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li.show>a {
     background: var(--dg-navbar-entry-hover-bg) !important;
     color: var(--dg-primary) !important;
 }
@@ -273,7 +305,7 @@ body[class*="o_theme_"] .o_control_panel {
     border-radius: 0 0 14px 14px;
     box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
     margin: 0 12px 12px;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 body[class*="o_theme_"] .o_control_panel::before {
@@ -311,7 +343,7 @@ body[class*="o_theme_"] .o_form_view .o_form_sheet {
     border: 1px solid rgba(255, 255, 255, 0.72) !important;
     border-radius: 12px !important;
     box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18)) !important;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 body[class*="o_theme_"] .o_form_statusbar,
@@ -345,7 +377,7 @@ body[class*="o_theme_"] .o_kanban_group {
     background: rgba(255, 255, 255, 0.72) !important;
     border: 1px solid rgba(15, 31, 54, 0.08);
     border-radius: 12px;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 body[class*="o_theme_"] .o_kanban_group .o_kanban_header,
@@ -365,7 +397,7 @@ body[class*="o_theme_"] .o_renderer.table-responsive {
     background: rgba(255, 255, 255, 0.94) !important;
     border-radius: 12px;
     box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 body[class*="o_theme_"] .o_list_table thead,
@@ -383,7 +415,7 @@ body[class*="o_theme_"] .o_graph_view {
     background: var(--dg-gradient-surface, #fff) !important;
     border-radius: 12px;
     box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 body[class*="o_theme_"] .o_df_dashboard {

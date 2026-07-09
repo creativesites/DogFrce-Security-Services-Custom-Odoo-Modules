@@ -74,6 +74,10 @@
                         domain="[('state','=','draft')]"/>
                 <filter name="this_month" string="This Month"
                         domain="[('shift_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('shift_date','&gt;=', (context_today().replace(day=1) - datetime.timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')),('shift_date','&lt;', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="this_year" string="This Year"
+                        domain="[('shift_date','&gt;=', (context_today()).strftime('%Y-01-01'))]"/>
                 <separator/>
                 <filter name="group_client" string="By Client"
                         context="{'group_by': 'partner_id'}"/>
@@ -184,6 +188,10 @@
                         domain="[('shift_date','&gt;=', (context_today() - datetime.timedelta(days=context_today().weekday())).strftime('%Y-%m-%d'))]"/>
                 <filter name="this_month" string="This Month"
                         domain="[('shift_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('shift_date','&gt;=', (context_today().replace(day=1) - datetime.timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')),('shift_date','&lt;', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="this_year" string="This Year"
+                        domain="[('shift_date','&gt;=', (context_today()).strftime('%Y-01-01'))]"/>
                 <separator/>
                 <filter name="present" string="Present"
                         domain="[('status','in',['present','late'])]"/>
@@ -417,6 +425,10 @@
                         domain="[('high_trust_exclusion','=',True)]"/>
                 <filter name="this_month" string="This Month"
                         domain="[('incident_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('incident_date','&gt;=', (context_today().replace(day=1) - datetime.timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')),('incident_date','&lt;', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="this_year" string="This Year"
+                        domain="[('incident_date','&gt;=', (context_today()).strftime('%Y-01-01'))]"/>
                 <separator/>
                 <filter name="group_type" string="By Type"
                         context="{'group_by': 'incident_type_id'}"/>
@@ -528,6 +540,10 @@
                         domain="[('state','=','paid')]"/>
                 <filter name="this_month" string="This Month"
                         domain="[('invoice_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('invoice_date','&gt;=', (context_today().replace(day=1) - datetime.timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')),('invoice_date','&lt;', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="this_year" string="This Year"
+                        domain="[('invoice_date','&gt;=', (context_today()).strftime('%Y-01-01'))]"/>
                 <separator/>
                 <filter name="group_client" string="By Client"
                         context="{'group_by': 'partner_id'}"/>
@@ -638,6 +654,10 @@
                         domain="[('reconciliation_status','=','exception')]"/>
                 <filter name="this_month" string="This Month"
                         domain="[('payment_date','&gt;=', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="last_month" string="Last Month"
+                        domain="[('payment_date','&gt;=', (context_today().replace(day=1) - datetime.timedelta(days=1)).replace(day=1).strftime('%Y-%m-%d')),('payment_date','&lt;', (context_today()).strftime('%Y-%m-01'))]"/>
+                <filter name="this_year" string="This Year"
+                        domain="[('payment_date','&gt;=', (context_today()).strftime('%Y-01-01'))]"/>
                 <separator/>
                 <filter name="group_client" string="By Client"
                         context="{'group_by': 'partner_id'}"/>

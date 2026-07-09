@@ -25,6 +25,7 @@ class DemoBuilder:
         self._create_fleet()
         self._create_payroll_and_billing(nad)
         self._create_client_report()
+        self._create_june_september_rosters()
 
     def ref(self, name):
         return self.env.ref(f"{MODULE}.{name}", raise_if_not_found=False)
@@ -1357,3 +1358,300 @@ class DemoBuilder:
         )
         if hasattr(report3, "action_generate") and not report3.attendance_record_ids:
             report3.action_generate()
+
+    # ------------------------------------------------------------------
+    # 12. JUNE–SEPTEMBER 2026 ROSTERS AND ATTENDANCE
+    # ------------------------------------------------------------------
+
+    def _create_june_september_rosters(self):
+        """Generate full June–September 2026 rosters and attendance across 4 key sites.
+
+        Coverage:
+          June 2026        → locked attendance (historical)
+          July 2026        → locked attendance (historical)
+          August 1–15      → reviewed attendance (active month)
+          August 16–31     → roster only, no attendance (upcoming)
+          September 2026   → draft roster only (planning)
+        """
+        LOCKED_UNTIL   = date(2026, 7, 31)
+        REVIEWED_UNTIL = date(2026, 8, 15)
+
+        # 4 sites with their shift requirements and assigned guard pools
+        site_configs = [
+            {
+                "site_tag":     "bw_hq",
+                "site_xmlid":   "site_bw_hq",
+                "partner_xmlid":"client_bank_windhoek",
+                "requirements": [
+                    ("req_bw_hq_gate_day",    ["guard_a01", "guard_a02"]),
+                    ("req_bw_hq_gate_night",  ["guard_b01", "guard_b02"]),
+                    ("req_bw_hq_control_day", ["guard_b03"]),
+                ],
+            },
+            {
+                "site_tag":     "nbl_brewery",
+                "site_xmlid":   "site_nbl_brewery",
+                "partner_xmlid":"client_namibia_breweries",
+                "requirements": [
+                    ("req_nbl_brewery_gate_day",   ["guard_b05", "guard_b06"]),
+                    ("req_nbl_brewery_gate_night", ["guard_c05", "guard_c06"]),
+                ],
+            },
+            {
+                "site_tag":     "sr_wernhil",
+                "site_xmlid":   "site_sr_wernhil",
+                "partner_xmlid":"client_shoprite",
+                "requirements": [
+                    ("req_sr_wernhil_day",   ["guard_c07", "guard_c08"]),
+                    ("req_sr_wernhil_night", ["guard_c09"]),
+                ],
+            },
+            {
+                "site_tag":     "nwr_hq",
+                "site_xmlid":   "site_nwr_hq",
+                "partner_xmlid":"client_nwr",
+                "requirements": [
+                    ("req_nwr_hq_gate_day",   ["guard_a05", "guard_a06"]),
+                    ("req_nwr_hq_gate_night", ["guard_b07", "guard_b08"]),
+                    ("req_nwr_hq_cctv_day",   ["guard_c11"]),
+                ],
+            },
+        ]
+
+        months = [
+            (date(2026, 6, 1), date(2026, 6, 30), "jun_2026"),
+            (date(2026, 7, 1), date(2026, 7, 31), "jul_2026"),
+            (date(2026, 8, 1), date(2026, 8, 31), "aug_2026"),
+            (date(2026, 9, 1), date(2026, 9, 30), "sep_2026"),
+        ]
+
+        for cfg in site_configs:
+            site    = self.ref(cfg["site_xmlid"])
+            partner = self.ref(cfg["partner_xmlid"])
+            if not site or not partner:
+                continue
+            site_tag = cfg["site_tag"]
+
+            # Pre-resolve requirements + guard records
+            req_guard_specs = []
+            for req_xmlid, guard_xmlids in cfg["requirements"]:
+                req = self.ref(req_xmlid)
+                if not req:
+                    continue
+                guards = [g for g in (self.ref(gx) for gx in guard_xmlids) if g]
+                if guards:
+                    req_guard_specs.append((req_xmlid, req, guards))
+
+            for month_start, month_end, month_tag in months:
+                roster_state = "draft" if month_start.month >= 9 else "confirmed"
+
+                batch = self.get_or_create(
+                    f"roster_{month_tag}_{site_tag}",
+                    "security.roster.batch",
+                    {
+                        "date_from": month_start.isoformat(),
+                        "date_to":   month_end.isoformat(),
+                        "partner_id": partner.id,
+                        "site_id":    site.id,
+                        "state":      "draft",
+                        "note":       f"Demo roster — {site.name}, {month_start.strftime('%B %Y')}.",
+                    },
+                )
+
+                current = month_start
+                while current <= month_end:
+                    weekday = current.weekday()
+                    for req_xmlid, req, guards in req_guard_specs:
+                        if not self._req_on_day(req, weekday):
+                            continue
+                        for slot_num, guard in enumerate(guards, start=1):
+                            slot_state = (
+                                "confirmed" if current <= REVIEWED_UNTIL else "assigned"
+                            )
+                            slot = self.get_or_create(
+                                f"slot_{month_tag}_{site_tag}_{req_xmlid}_{current.isoformat()}_{slot_num}",
+                                "security.roster.slot",
+                                {
+                                    "batch_id":             batch.id,
+                                    "slot_number":          slot_num,
+                                    "shift_date":           current.isoformat(),
+                                    "shift_requirement_id": req.id,
+                                    "post_id":              req.post_id.id,
+                                    "shift_template_id":    req.shift_template_id.id,
+                                    "employee_id":          guard.id,
+                                    "state":                slot_state,
+                                },
+                            )
+                            if current <= REVIEWED_UNTIL:
+                                self._make_attendance_record(
+                                    slot, site, partner, batch, site_tag,
+                                    "locked" if current <= LOCKED_UNTIL else "reviewed",
+                                )
+                    current += timedelta(days=1)
+
+                if batch.state == "draft" and roster_state != "draft":
+                    batch.write({"state": roster_state})
+
+        # ── Additional leave requests (June–September) ────────────────────
+        lt_annual = self.env["security.leave.type"].search([("code", "=", "AL")], limit=1)
+        lt_sick   = self.env["security.leave.type"].search([("code", "=", "SL")], limit=1)
+        if lt_annual and lt_sick:
+            for xmlid, gx, d1, d2, lt, state in [
+                ("leave_a01_annual_jul", "guard_a01", "2026-07-14", "2026-07-18", lt_annual, "approved"),
+                ("leave_b05_sick_jun",   "guard_b05", "2026-06-22", "2026-06-23", lt_sick,   "approved"),
+                ("leave_c07_annual_aug", "guard_c07", "2026-08-04", "2026-08-08", lt_annual, "approved"),
+                ("leave_b08_annual_aug", "guard_b08", "2026-08-18", "2026-08-22", lt_annual, "draft"),
+                ("leave_c11_annual_sep", "guard_c11", "2026-09-01", "2026-09-05", lt_annual, "refused"),
+            ]:
+                g = self.ref(gx)
+                if g:
+                    self.get_or_create(xmlid, "security.leave.request", {
+                        "employee_id":   g.id,
+                        "date_from":     d1,
+                        "date_to":       d2,
+                        "leave_type_id": lt.id,
+                        "state":         state,
+                    })
+
+        # ── Additional incidents (June–September) ────────────────────────
+        for xmlid, gx, type_xid, d, note, state in [
+            ("incident_jun_late_sr",  "guard_c09", "incident_type_late_posting", "2026-06-12",
+             "Late reporting at ShopRite Wernhil — verbal warning.", "approved"),
+            ("incident_jul_awol_nbl", "guard_c05", "incident_type_awol_first",   "2026-07-08",
+             "AWOL at NBL Brewery night shift — formal warning issued.", "approved"),
+            ("incident_aug_uniform",  "guard_b08", "incident_type_uniform",      "2026-08-02",
+             "Incomplete uniform at BW HQ morning parade — written warning.", "draft"),
+        ]:
+            g     = self.ref(gx)
+            itype = self.ref(type_xid)
+            if g and itype:
+                self.get_or_create(xmlid, "security.incident", {
+                    "employee_id":      g.id,
+                    "incident_type_id": itype.id,
+                    "incident_date":    d,
+                    "note":             note,
+                    "state":            state,
+                })
+
+        # ── Payroll periods for June and July ─────────────────────────────
+        rule_set = self.ref("rule_set_na_2026")
+        if rule_set:
+            for p_xmlid, d_from, d_to in [
+                ("payroll_period_jun_2026", "2026-06-01", "2026-06-30"),
+                ("payroll_period_jul_2026", "2026-07-01", "2026-07-31"),
+            ]:
+                period = self.get_or_create(p_xmlid, "security.payroll.period", {
+                    "date_from":    d_from,
+                    "date_to":      d_to,
+                    "rule_set_id":  rule_set.id,
+                })
+                try:
+                    if not period.payslip_ids:
+                        period.action_generate_payslips()
+                        period.action_confirm_payslips()
+                except Exception:
+                    pass
+
+        # ── Billing invoices for June–August ─────────────────────────────
+        nad = self.env.ref("base.NAD", raise_if_not_found=False) or self.env.company.currency_id
+        for xmlid, cx, px, sx, po, amount, inv_date, due_date in [
+            ("invoice_bw_jun_2026",  "client_bank_windhoek",    "billing_plan_bank_windhoek", "site_bw_hq",       "BW-0626",  65000.0, "2026-06-30", "2026-07-30"),
+            ("invoice_nbl_jun_2026", "client_namibia_breweries","billing_plan_nbl",            "site_nbl_brewery", "NBL-0626", 80000.0, "2026-06-30", "2026-07-30"),
+            ("invoice_sr_jun_2026",  "client_shoprite",         "billing_plan_shoprite",       "site_sr_wernhil",  "SR-0626",  35000.0, "2026-06-30", "2026-07-30"),
+            ("invoice_nwr_jun_2026", "client_nwr",              "billing_plan_nwr",            "site_nwr_hq",      "NWR-0626", 45000.0, "2026-06-30", "2026-07-30"),
+            ("invoice_bw_jul_2026",  "client_bank_windhoek",    "billing_plan_bank_windhoek", "site_bw_hq",       "BW-0726",  65000.0, "2026-07-31", "2026-08-31"),
+            ("invoice_nbl_jul_2026", "client_namibia_breweries","billing_plan_nbl",            "site_nbl_brewery", "NBL-0726", 80000.0, "2026-07-31", "2026-08-31"),
+            ("invoice_sr_jul_2026",  "client_shoprite",         "billing_plan_shoprite",       "site_sr_wernhil",  "SR-0726",  35000.0, "2026-07-31", "2026-08-31"),
+            ("invoice_nwr_jul_2026", "client_nwr",              "billing_plan_nwr",            "site_nwr_hq",      "NWR-0726", 45000.0, "2026-07-31", "2026-08-31"),
+            ("invoice_bw_aug_2026",  "client_bank_windhoek",    "billing_plan_bank_windhoek", "site_bw_hq",       "BW-0826",  32500.0, "2026-08-15", "2026-09-15"),
+        ]:
+            plan = self.ref(px)
+            if not plan:
+                continue
+            invoice = self.get_or_create(xmlid, "security.billing.invoice", {
+                "name":             "New",
+                "partner_id":       self.ref(cx).id,
+                "billing_plan_id":  plan.id,
+                "currency_id":      nad.id,
+                "invoice_date":     inv_date,
+                "due_date":         due_date,
+                "service_date_from":inv_date[:8] + "01",
+                "service_date_to":  inv_date,
+                "site_id":          self.ref(sx).id,
+                "po_number":        po,
+                "vat_rate":         15.0,
+            })
+            if not invoice.line_ids:
+                month_label = {"06": "June", "07": "July", "08": "August"}.get(inv_date[5:7], "")
+                self.env["security.billing.invoice.line"].create({
+                    "invoice_id":       invoice.id,
+                    "name":             f"Security services — {month_label} 2026",
+                    "quantity":         1.0,
+                    "unit_price":       amount,
+                    "service_date_from":inv_date[:8] + "01",
+                    "service_date_to":  inv_date,
+                    "site_id":          self.ref(sx).id,
+                })
+
+    def _req_on_day(self, req, weekday):
+        """Return True if the shift requirement runs on this weekday (0=Mon..6=Sun)."""
+        field = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"][weekday]
+        return bool(getattr(req, field, True))
+
+    def _make_attendance_record(self, slot, site, partner, roster_batch, site_tag, batch_state):
+        """Create one realistic attendance record for a roster slot.
+
+        Attendance pattern (deterministic, seeded by employee+date):
+          94% — present on time
+           3% — late (check_in +20 min)
+           2% — authorised absence
+           1% — AWOL
+        """
+        seed = (slot.employee_id.id or 0) + slot.shift_date.toordinal()
+        rnd  = ((seed * 1664525 + 1013904223) & 0xFFFFFFFF) % 100
+
+        if rnd == 0:
+            presence = "awol";   absence = "awol"
+        elif rnd <= 2:
+            presence = "absent"; absence = "authorised"
+        else:
+            presence = "present"; absence = "none"
+
+        is_late = (rnd >= 94 and presence == "present")
+
+        start_h = slot.shift_template_id.start_hour
+        end_h   = slot.shift_template_id.end_hour
+        start_dt = datetime.combine(
+            slot.shift_date,
+            time(hour=int(start_h), minute=int(round((start_h % 1) * 60))),
+        )
+        end_dt = datetime.combine(
+            slot.shift_date,
+            time(hour=int(end_h), minute=int(round((end_h % 1) * 60))),
+        )
+        if end_dt <= start_dt:
+            end_dt += timedelta(days=1)
+
+        att_batch = self.get_or_create(
+            f"att_batch_{site_tag}_{slot.shift_date.isoformat()}",
+            "security.attendance.batch",
+            {
+                "attendance_date": slot.shift_date.isoformat(),
+                "partner_id":      partner.id,
+                "site_id":         site.id,
+                "roster_batch_id": roster_batch.id,
+                "state":           batch_state,
+            },
+        )
+
+        vals = {
+            "attendance_batch_id": att_batch.id,
+            "roster_slot_id":      slot.id,
+            "manual_presence":     presence,
+            "absence_type":        absence,
+        }
+        if presence == "present":
+            vals["check_in"]  = start_dt + timedelta(minutes=20 if is_late else 2)
+            vals["check_out"] = end_dt
+
+        self.get_or_create(f"att_record_{slot.id}", "security.attendance.record", vals)

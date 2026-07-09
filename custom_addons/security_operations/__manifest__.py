@@ -8,10 +8,18 @@
     "depends": ["security_base", "contacts"],
     "data": [
         "security/ir.model.access.csv",
+        "data/security_operations_cron.xml",
         "views/security_operations_menu.xml",
         "views/security_roster_wizard_views.xml",
         "views/security_operations_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "security_operations/static/src/css/site_hub.css",
+            "security_operations/static/src/xml/site_hub.xml",
+            "security_operations/static/src/js/site_hub.js",
+        ],
+    },
     "installable": True,
     "application": False,
 }

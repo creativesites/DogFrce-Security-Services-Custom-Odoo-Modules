@@ -1,0 +1,7 @@
+.ag-day-cell { border: 1px solid #dee2e6; transition: box-shadow 0.15s; }
+.ag-day-cell:hover { box-shadow: 0 0 0 2px #0d6efd55; }
+.ag-day-empty { background: #f8f9fa; border: 1px dashed #dee2e6; }
+.ag-day-unmarked { background: #e2e3e5; border: 1px solid #dee2e6; }
+.ag-day-full { background: #d1e7dd; border: 1px solid #badbcc; }
+.ag-day-partial { background: #fff3cd; border: 1px solid #ffecb5; }
+.ag-day-low { background: #f8d7da; border: 1px solid #f5c2c7; }

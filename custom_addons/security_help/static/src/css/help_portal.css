@@ -251,8 +251,12 @@
 }
 
 .dg-help-article-body table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
     border-collapse: collapse;
     width: 100%;
+    max-width: 100%;
     margin: 12px 0;
     font-size: 0.88rem;
 }
@@ -380,29 +384,30 @@
    scrollable category chip strip.
 ══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+    /* Portal stays at its fixed height — only flip to column.
+       overflow: hidden stays from base so children (not the portal) scroll. */
     .dg-help-portal {
         flex-direction: column !important;
-        height: auto !important;
-        min-height: calc(100dvh - 56px) !important;
-        overflow: auto !important;
     }
+    /* Sidebar collapses to a compact top strip — does not grow, does not scroll */
     .dg-help-sidebar {
         width: 100% !important;
         min-width: 0 !important;
+        flex: 0 0 auto !important;
         border-right: none !important;
         border-bottom: 1px solid #e2e8f0 !important;
         overflow: visible !important;
     }
     .dg-help-sidebar-header {
-        padding: 10px 14px 6px !important;
+        padding: 8px 14px 4px !important;
         border-bottom: none !important;
     }
+    /* Hide "Help Centre" h1 label — saves ~28px, keeps strip compact */
     .dg-help-sidebar-header h1 {
-        font-size: 0.95rem !important;
-        margin-bottom: 4px !important;
+        display: none !important;
     }
     .dg-help-search {
-        margin: 0 14px 8px !important;
+        margin: 0 0 4px !important;
     }
     /* Category list → horizontal scrollable chip strip */
     .dg-help-cat-list {
@@ -411,7 +416,7 @@
         overflow-x: auto !important;
         overflow-y: hidden !important;
         flex: none !important;
-        padding: 6px 10px 10px !important;
+        padding: 4px 10px 10px !important;
         gap: 6px !important;
     }
     .dg-help-cat-item {
@@ -438,9 +443,11 @@
     .dg-help-cat-count {
         display: none !important;
     }
+    /* Main area: fills remaining height, clips — article panels scroll within */
     .dg-help-main {
-        flex: 1 !important;
+        flex: 1 1 0 !important;
         min-height: 0 !important;
+        overflow: hidden !important;
     }
     .dg-help-article-detail {
         padding: 16px !important;

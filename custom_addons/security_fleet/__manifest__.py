@@ -19,6 +19,12 @@
         "data/ir_sequence_data.xml",
         "views/security_fleet_views.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "security_fleet/static/src/js/fleet_dashboard.js",
+            "security_fleet/static/src/xml/fleet_dashboard.xml",
+        ],
+    },
     "installable": True,
     "application": True,
     "auto_install": False,

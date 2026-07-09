@@ -405,8 +405,8 @@ class SecurityPayslip(models.Model):
 
     def action_compute_from_sources(self):
         attendance_model = self.env["security.attendance.record"]
-        loan_model = self.env["security.employee.loan"] if "security.employee.loan" in self.env else False
-        incident_model = self.env["security.incident"] if "security.incident" in self.env else False
+        has_loans = "security.employee.loan" in self.env
+        has_incidents = "security.incident" in self.env
         for payslip in self:
             if not payslip.employee_id or not payslip.period_id:
                 continue
@@ -541,8 +541,13 @@ class SecurityPayslip(models.Model):
                     "amount": paye_deduction,
                 }))
 
-            if loan_model:
-                active_loans = loan_model.search(
+            if has_loans:
+                # Clear deduction tracking records from any prior run of this payslip
+                # so recompute starts clean and balance_remaining reflects reality.
+                self.env["security.loan.deduction"].search([
+                    ("payslip_id", "=", payslip.id),
+                ]).unlink()
+                active_loans = self.env["security.employee.loan"].search(
                     [
                         ("employee_id", "=", payslip.employee_id.id),
                         ("state", "=", "active"),
@@ -559,8 +564,16 @@ class SecurityPayslip(models.Model):
                             "rate": amount,
                             "amount": amount,
                         }))
-            if incident_model:
-                incidents = incident_model.search(
+                        # Create a tracking record against the loan so balance_remaining
+                        # decreases each period and the loan auto-closes at zero.
+                        self.env["security.loan.deduction"].create({
+                            "loan_id": loan.id,
+                            "deduction_date": payslip.period_id.date_to,
+                            "amount": amount,
+                            "payslip_id": payslip.id,
+                        })
+            if has_incidents:
+                incidents = self.env["security.incident"].search(
                     [
                         ("employee_id", "=", payslip.employee_id.id),
                         ("incident_date", ">=", payslip.period_id.date_from),

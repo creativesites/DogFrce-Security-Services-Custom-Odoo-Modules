@@ -1,0 +1,165 @@
+/* ─── Site Management Hub ──────────────────────────────────────────── */
+
+.sh-root {
+    background: #f8f9fa;
+    min-height: 100vh;
+    font-size: 0.875rem;
+}
+
+.sh-header {
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.sh-tabs .nav-link {
+    color: #6c757d;
+    border: none;
+    padding: 0.6rem 1rem;
+    font-size: 0.875rem;
+    border-bottom: 2px solid transparent;
+}
+
+.sh-tabs .nav-link.active {
+    color: #0d6efd;
+    border-bottom: 2px solid #0d6efd;
+    background: transparent;
+}
+
+.sh-tabs .nav-link:hover {
+    color: #0d6efd;
+    background: rgba(13,110,253,.05);
+}
+
+/* ─── Calendar ──────────────────────────────── */
+
+.sh-calendar {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.sh-cal-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #343a40;
+    color: #fff;
+}
+
+.sh-cal-dayname {
+    padding: 6px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.sh-cal-week {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-top: 1px solid #dee2e6;
+}
+
+.sh-day {
+    min-height: 70px;
+    padding: 6px;
+    position: relative;
+    cursor: pointer;
+    border-right: 1px solid #dee2e6;
+    transition: background 0.15s;
+}
+
+.sh-day:last-child { border-right: none; }
+
+.sh-day:hover { background: rgba(13,110,253,.06); }
+
+.sh-day-filler,
+.sh-day-empty {
+    background: #f8f9fa;
+    cursor: default;
+}
+
+.sh-day-filler:hover,
+.sh-day-empty:hover { background: #f8f9fa; }
+
+.sh-day-full  { background: rgba(25, 135, 84, 0.08); }
+.sh-day-partial { background: rgba(255, 193, 7, 0.12); }
+.sh-day-none  { background: rgba(220, 53, 69, 0.08); }
+.sh-day-no-slots { background: #fafafa; }
+
+.sh-day-full:hover  { background: rgba(25, 135, 84, 0.15); }
+.sh-day-partial:hover { background: rgba(255, 193, 7, 0.2); }
+.sh-day-none:hover  { background: rgba(220, 53, 69, 0.15); }
+
+.sh-day-num {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #343a40;
+    display: block;
+}
+
+.sh-day-count {
+    display: block;
+    font-size: 0.7rem;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+.sh-day-full .sh-day-count  { color: #198754; font-weight: 600; }
+.sh-day-none .sh-day-count  { color: #dc3545; font-weight: 600; }
+.sh-day-partial .sh-day-count { color: #856404; font-weight: 600; }
+
+/* ─── Day popover ───────────────────────────── */
+
+.sh-popover {
+    position: absolute;
+    top: 4px;
+    left: calc(100% + 4px);
+    z-index: 100;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    min-width: 240px;
+    max-width: 300px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.sh-popover-header {
+    background: #343a40;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+}
+
+.sh-popover-slot {
+    padding: 6px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.8rem;
+}
+
+.sh-popover-slot:last-child { border-bottom: none; }
+
+.x-small { font-size: 0.72rem; }
+
+/* ─── Legend ────────────────────────────────── */
+
+.sh-legend {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    vertical-align: middle;
+    margin-right: 3px;
+}
+
+.sh-legend-full    { background: rgba(25, 135, 84, 0.5); }
+.sh-legend-partial { background: rgba(255, 193, 7, 0.5); }
+.sh-legend-none    { background: rgba(220, 53, 69, 0.4); }
+.sh-legend-empty   { background: #dee2e6; }
+
+/* ─── Loading state ─────────────────────────── */
+
+.sh-loading { min-height: 300px; }

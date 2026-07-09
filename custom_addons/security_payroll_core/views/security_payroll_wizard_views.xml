@@ -4,17 +4,20 @@
         <field name="name">security.payroll.period.wizard.form</field>
         <field name="model">security.payroll.period.wizard</field>
         <field name="arch" type="xml">
-            <form string="Generate Payroll Period">
+            <form string="New Payroll Period">
+                <div class="alert alert-info" role="alert" style="margin:8px 0;">
+                    <strong>How it works:</strong> This creates the period in Draft. Once all attendance batches for this period are locked, open the period and click <em>Generate Payslips</em>.
+                </div>
                 <group string="Period Details">
                     <field name="date_from"/>
                     <field name="date_to"/>
                     <field name="rule_set_id"/>
                 </group>
-                <group string="Eligible Guards">
+                <group string="Eligible Guards (preview)">
                     <field name="eligible_employee_ids" widget="many2many_tags" readonly="1" nolabel="1"/>
                 </group>
                 <footer>
-                    <button name="action_generate" type="object" string="Generate Payroll Period" class="btn-primary"/>
+                    <button name="action_generate" type="object" string="Create Period" class="btn-primary"/>
                     <button special="cancel" string="Cancel" class="btn-secondary"/>
                 </footer>
             </form>

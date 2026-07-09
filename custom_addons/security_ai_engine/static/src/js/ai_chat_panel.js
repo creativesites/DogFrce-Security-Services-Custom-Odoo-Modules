@@ -8,12 +8,19 @@ import { AiComponentRenderer } from "./ai_output_widget";
 
 // ── Greeting suggestions shown when chat is empty ─────────────────────────────
 
-const _GREETINGS = [
+const _GREETINGS_FULL = [
     "How many guards were AWOL this week?",
     "Show me pending actions",
     "Who are the top 5 guards by reliability score?",
     "What invoices are overdue?",
     "Summarise today's attendance",
+];
+
+const _GREETINGS_LITE = [
+    "What can you help me with?",
+    "How does roster scheduling work?",
+    "Explain the payroll process",
+    "How do I handle a guard AWOL?",
 ];
 
 // ── Main Chat Panel ───────────────────────────────────────────────────────────
@@ -38,14 +45,24 @@ class SecurityAIChatPanel extends Component {
             sessionId: null,
             unreadCount: 0,
             historyLoaded: false,
+            liteMode: localStorage.getItem("dogforce_ai_lite") !== "0",  // default ON
         });
-
-        this.greetings = _GREETINGS;
 
         onMounted(async () => {
             const saved = parseInt(localStorage.getItem("dogforce_ai_session") || "0");
             if (saved) await this._loadHistory(saved);
         });
+    }
+
+    // ── Mode ───────────────────────────────────────────────────────────────────
+
+    get activeGreetings() {
+        return this.state.liteMode ? _GREETINGS_LITE : _GREETINGS_FULL;
+    }
+
+    toggleMode() {
+        this.state.liteMode = !this.state.liteMode;
+        localStorage.setItem("dogforce_ai_lite", this.state.liteMode ? "1" : "0");
     }
 
     // ── Context ────────────────────────────────────────────────────────────────
@@ -101,7 +118,10 @@ class SecurityAIChatPanel extends Component {
         this._scrollToBottom();
 
         try {
-            const result = await rpc("/web/ai-chat/message", {
+            const endpoint = this.state.liteMode
+                ? "/web/ai-chat/message-lite"
+                : "/web/ai-chat/message";
+            const result = await rpc(endpoint, {
                 session_id: this.state.sessionId,
                 message,
                 context: this.currentContext,

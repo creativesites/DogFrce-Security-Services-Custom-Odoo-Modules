@@ -7,11 +7,11 @@
 ═══════════════════════════════════════════════════════════════════════════ -->
 <t t-name="security_ai_engine.AiChatPanel">
 
-    <!-- ── Floating toggle button ── -->
+    <!-- ── Floating open button — hidden via CSS when panel is open ── -->
     <button t-att-class="'o_ai_chat_toggle' + (state.isOpen ? ' is-open' : '')"
             t-on-click="togglePanel"
             title="DogForce AI Assistant">
-        <i t-att-class="state.isOpen ? 'fa fa-times' : 'fa fa-comment'"/>
+        <i class="fa fa-comment"/>
         <span t-if="state.unreadCount > 0 &amp;&amp; !state.isOpen"
               class="o_ai_chat_badge">
             <t t-esc="state.unreadCount"/>
@@ -45,6 +45,20 @@
             </div>
         </div>
 
+        <!-- MODE BAR -->
+        <div class="o_ai_chat_mode_bar">
+            <button t-att-class="'o_ai_chat_mode_btn' + (state.liteMode ? ' is-active' : '')"
+                    t-on-click="() => this.state.liteMode || this.toggleMode()"
+                    title="Fast Chat — single response, no data queries">
+                <i class="fa fa-bolt"/> Fast Chat
+            </button>
+            <button t-att-class="'o_ai_chat_mode_btn' + (!state.liteMode ? ' is-active' : '')"
+                    t-on-click="() => !this.state.liteMode || this.toggleMode()"
+                    title="Full AI — agentic, can query data and take actions">
+                <i class="fa fa-database"/> Full AI
+            </button>
+        </div>
+
         <!-- MESSAGES -->
         <div class="o_ai_chat_messages" t-ref="messages">
 
@@ -56,12 +70,11 @@
                     </div>
                     <div class="o_ai_chat_greeting_title">How can I help?</div>
                     <div class="o_ai_chat_greeting_sub">
-                        Ask me anything about your guards, sites, payroll, or billing.
-                        I can find information, navigate to records, and take actions
-                        after your confirmation.
+                        <t t-if="state.liteMode">Fast, conversational answers. Switch to Full AI for data queries and actions.</t>
+                        <t t-else="">I can find data, navigate to records, and take actions with your confirmation.</t>
                     </div>
                     <div class="o_ai_chat_suggestions">
-                        <t t-foreach="greetings" t-as="g" t-key="g_index">
+                        <t t-foreach="activeGreetings" t-as="g" t-key="g_index">
                             <button class="o_ai_chat_suggestion"
                                     t-on-click="() => this.sendMessage(g)">
                                 <t t-esc="g"/>
@@ -98,7 +111,7 @@
                                 />
                             </t>
                             <t t-elif="msg.content">
-                                <span style="font-size:0.87rem; color:#334155; line-height:1.6;">
+                                <span style="font-size:0.875rem; color:#334155; line-height:1.6;">
                                     <t t-esc="msg.content"/>
                                 </span>
                             </t>
@@ -125,27 +138,27 @@
         </div>
         <!-- END MESSAGES -->
 
-        <!-- INPUT BAR — uncontrolled textarea; value read via DOM ref on send -->
+        <!-- INPUT BAR — pill-style integrated textarea + send -->
         <div class="o_ai_chat_input_bar">
-            <textarea
-                class="o_ai_chat_input"
-                t-ref="input"
-                placeholder="Ask anything… (Enter to send, Shift+Enter for newline)"
-                rows="1"
-                t-on-input="onInputChange"
-                t-on-keydown="onInputKeydown"
-                t-att-disabled="state.loading"
-            />
-            <button t-att-class="'o_ai_chat_send_btn' + (state.hasInput ? ' is-active' : '')"
-                    t-on-click="() => this.sendMessage()"
-                    t-att-disabled="state.loading || !state.hasInput">
-                <i t-att-class="state.loading ? 'fa fa-circle-o-notch fa-spin' : 'fa fa-paper-plane'"/>
-            </button>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="o_ai_chat_footer">
-            <span>DogForce AI — Actions require your confirmation</span>
+            <div class="o_ai_chat_input_wrap">
+                <textarea
+                    class="o_ai_chat_input"
+                    t-ref="input"
+                    placeholder="Ask anything about your operations…"
+                    rows="1"
+                    t-on-input="onInputChange"
+                    t-on-keydown="onInputKeydown"
+                    t-att-disabled="state.loading"
+                />
+                <button t-att-class="'o_ai_chat_send_btn' + (state.hasInput ? ' is-active' : '')"
+                        t-on-click="() => this.sendMessage()"
+                        t-att-disabled="state.loading || !state.hasInput">
+                    <i t-att-class="state.loading ? 'fa fa-circle-o-notch fa-spin' : 'fa fa-arrow-up'"/>
+                </button>
+            </div>
+            <div class="o_ai_chat_input_hint">
+                <span>Enter to send · Shift+Enter for newline</span>
+            </div>
         </div>
 
     </div>

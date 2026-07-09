@@ -18,6 +18,12 @@
         "views/security_equipment_views.xml",
         "reports/equipment_allocation_report.xml",
     ],
+    "assets": {
+        "web.assets_backend": [
+            "security_equipment/static/src/js/equipment_dashboard.js",
+            "security_equipment/static/src/xml/equipment_dashboard.xml",
+        ],
+    },
     "installable": True,
     "application": True,
     "auto_install": False,

@@ -13,3 +13,8 @@ sessions/
 .idea/
 .vscode/
 
+# Mobile / Expo
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+

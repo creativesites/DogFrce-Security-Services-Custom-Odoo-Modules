@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_attendance.AttendanceSummaryGrid">
+<div class="ag-root o_action" style="background:#f0f2f5;min-height:100vh;font-size:0.875rem;">
+
+    <t t-if="state.loading">
+        <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">
+            <div class="spinner-border text-primary"/><span class="fs-5">Loading Attendance Grid…</span>
+        </div>
+    </t>
+
+    <t t-elif="state.data">
+        <t t-set="d" t-value="state.data"/>
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#1a3a5e,#2a6e4a);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <i class="fa fa-calendar-check-o fa-2x" style="color:rgba(255,255,255,0.9);" title="Attendance Grid"/>
+                <div>
+                    <h3 style="margin:0;color:white;font-weight:700;">Attendance Summary Grid</h3>
+                    <span style="color:rgba(255,255,255,0.7);font-size:12px;"><t t-esc="d.month_label"/></span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <!-- Site filter -->
+                <select class="form-select form-select-sm" style="min-width:160px;"
+                        t-on-change="(e) => this.setSite(e.target.value)">
+                    <option value="">All Sites</option>
+                    <t t-foreach="d.sites" t-as="site" t-key="site.id">
+                        <option t-att-value="site.id"
+                                t-att-selected="state.filterSiteId == site.id">
+                            <t t-esc="site.name"/>
+                        </option>
+                    </t>
+                </select>
+                <!-- Month navigation -->
+                <button class="btn btn-light btn-sm" t-on-click="prevMonth">
+                    <i class="fa fa-chevron-left"/>
+                </button>
+                <span style="color:white;font-weight:600;min-width:120px;text-align:center;">
+                    <t t-esc="d.month_label"/>
+                </span>
+                <button class="btn btn-light btn-sm" t-on-click="nextMonth">
+                    <i class="fa fa-chevron-right"/>
+                </button>
+                <!-- Export -->
+                <button class="btn btn-outline-light btn-sm" t-on-click="exportCsv">
+                    <i class="fa fa-download me-1"/>CSV
+                </button>
+            </div>
+        </div>
+
+        <div class="p-4">
+            <!-- KPI strip -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm text-center h-100">
+                        <div class="card-body py-3">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Scheduled</div>
+                            <div class="fs-2 fw-bold text-primary"><t t-esc="d.totals.scheduled"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm text-center h-100">
+                        <div class="card-body py-3">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Present</div>
+                            <div class="fs-2 fw-bold text-success"><t t-esc="d.totals.present"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm text-center h-100">
+                        <div class="card-body py-3">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Absent</div>
+                            <div t-att-class="'fs-2 fw-bold ' + (d.totals.absent > 0 ? 'text-warning' : 'text-muted')">
+                                <t t-esc="d.totals.absent"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm text-center h-100">
+                        <div class="card-body py-3">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">AWOL</div>
+                            <div t-att-class="'fs-2 fw-bold ' + (d.totals.awol > 0 ? 'text-danger' : 'text-muted')">
+                                <t t-esc="d.totals.awol"/>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar grid -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white fw-semibold py-2">
+                    <i class="fa fa-calendar me-2 text-muted"/>Monthly Calendar
+                </div>
+                <div class="card-body">
+                    <!-- Day headers -->
+                    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">
+                        <t t-foreach="['Mon','Tue','Wed','Thu','Fri','Sat','Sun']" t-as="dow" t-key="dow">
+                            <div class="text-center text-muted small fw-semibold py-1"><t t-esc="dow"/></div>
+                        </t>
+                    </div>
+                    <!-- Calendar rows -->
+                    <t t-foreach="calendarGrid" t-as="week" t-key="week_index">
+                        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;">
+                            <t t-foreach="week" t-as="cell" t-key="cell_index">
+                                <t t-if="!cell">
+                                    <div style="min-height:72px;border-radius:6px;background:#f8f9fa;"/>
+                                </t>
+                                <t t-else="">
+                                    <div t-att-class="'ag-day-cell p-2 ' + dayClass(cell)"
+                                         style="min-height:72px;border-radius:6px;position:relative;">
+                                        <div class="fw-bold" style="font-size:13px;"><t t-esc="cell.day"/></div>
+                                        <t t-if="cell.scheduled > 0">
+                                            <div class="text-muted" style="font-size:10px;line-height:1.3;">
+                                                <span class="text-success fw-semibold"><t t-esc="cell.present"/></span>/<t t-esc="cell.scheduled"/>
+                                                <t t-if="cell.awol > 0">
+                                                    <span class="text-danger ms-1"><t t-esc="cell.awol"/> AWOL</span>
+                                                </t>
+                                            </div>
+                                            <t t-if="cell.pct !== null">
+                                                <div class="mt-1" style="height:4px;border-radius:2px;background:#e9ecef;">
+                                                    <div t-att-class="pctBar(cell.pct)"
+                                                         t-att-style="'height:100%;border-radius:2px;width:' + cell.pct + '%'"/>
+                                                </div>
+                                            </t>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="text-muted" style="font-size:10px;">—</div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </t>
+                        </div>
+                    </t>
+                    <!-- Legend -->
+                    <div class="d-flex gap-3 mt-3 flex-wrap">
+                        <span style="font-size:11px;color:#6c757d;">
+                            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#d1e7dd;vertical-align:middle;margin-right:4px;"/>≥90% present
+                        </span>
+                        <span style="font-size:11px;color:#6c757d;">
+                            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#fff3cd;vertical-align:middle;margin-right:4px;"/>60–89%
+                        </span>
+                        <span style="font-size:11px;color:#6c757d;">
+                            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#f8d7da;vertical-align:middle;margin-right:4px;"/>&lt;60%
+                        </span>
+                        <span style="font-size:11px;color:#6c757d;">
+                            <span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:#e2e3e5;vertical-align:middle;margin-right:4px;"/>Not marked
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Site summary table -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold py-2">
+                    <i class="fa fa-table me-2 text-muted"/>By Site — <t t-esc="d.month_label"/>
+                </div>
+                <div class="card-body p-0">
+                    <t t-if="d.site_summary.length === 0">
+                        <div class="text-center text-muted py-4">No attendance records for this period.</div>
+                    </t>
+                    <t t-else="">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Site</th>
+                                    <th class="text-end">Scheduled</th>
+                                    <th class="text-end">Present</th>
+                                    <th class="text-end">Absent</th>
+                                    <th class="text-end">AWOL</th>
+                                    <th class="text-center" style="min-width:120px;">Presence Rate</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="d.site_summary" t-as="s" t-key="s.id">
+                                    <tr>
+                                        <td class="fw-semibold"><t t-esc="s.name"/></td>
+                                        <td class="text-end"><t t-esc="s.scheduled"/></td>
+                                        <td class="text-end text-success fw-semibold"><t t-esc="s.present"/></td>
+                                        <td class="text-end"><t t-esc="s.absent"/></td>
+                                        <td t-att-class="'text-end fw-semibold ' + (s.awol > 0 ? 'text-danger' : 'text-muted')">
+                                            <t t-esc="s.awol"/>
+                                        </td>
+                                        <td>
+                                            <t t-if="s.pct !== null">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div style="flex:1;height:8px;background:#e9ecef;border-radius:4px;">
+                                                        <div t-att-class="pctBar(s.pct)"
+                                                             t-att-style="'height:100%;border-radius:4px;width:' + s.pct + '%'"/>
+                                                    </div>
+                                                    <span class="small fw-semibold" style="min-width:36px;text-align:right;">
+                                                        <t t-esc="s.pct"/>%
+                                                    </span>
+                                                </div>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-muted small">—</span>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+</div>
+</t>
+</templates>

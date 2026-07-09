@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_billing.BillingCommandCenter">
+<div class="bcc-root o_action" style="background:#f0f2f5; min-height:100vh; font-size:0.875rem;">
+
+    <!-- Loading -->
+    <t t-if="state.loading">
+        <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">
+            <div class="spinner-border text-primary"/>
+            <span class="fs-5">Loading Billing Command Center…</span>
+        </div>
+    </t>
+
+    <t t-elif="state.data">
+        <t t-set="d" t-value="state.data"/>
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#0d3b66,#1a6e5e);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <i class="fa fa-usd fa-2x" style="color:rgba(255,255,255,0.9);" title="Billing"/>
+                <div>
+                    <h3 style="margin:0;color:white;font-weight:700;">Billing Command Center</h3>
+                    <span style="color:rgba(255,255,255,0.7);font-size:12px;"><t t-esc="d.month_label"/></span>
+                </div>
+            </div>
+            <button class="btn btn-light btn-sm" t-on-click="openAllInvoices">
+                <i class="fa fa-list me-1"/>All Invoices
+            </button>
+        </div>
+
+        <!-- KPI cards -->
+        <div class="p-4">
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Active Plans</div>
+                            <div class="fs-1 fw-bold text-primary"><t t-esc="d.active_plan_count"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Invoiced MTD</div>
+                            <div class="fs-5 fw-bold text-dark"><t t-esc="fmt(d.invoiced_mtd)"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Collected MTD</div>
+                            <div class="fs-5 fw-bold text-success"><t t-esc="fmt(d.collected_mtd)"/></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <div class="text-muted small fw-semibold text-uppercase mb-1">Outstanding</div>
+                            <div t-att-class="'fs-5 fw-bold ' + (d.overdue_total > 0 ? 'text-danger' : 'text-warning')">
+                                <t t-esc="fmt(d.outstanding_total)"/>
+                            </div>
+                            <div t-if="d.overdue_total > 0" class="text-danger x-small">
+                                <t t-esc="fmt(d.overdue_total)"/> overdue
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two-column layout -->
+            <div class="row g-3">
+                <!-- Active Billing Plans -->
+                <div class="col-lg-7">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white fw-semibold py-2">
+                            <i class="fa fa-file-text-o me-2 text-muted"/>Active Billing Plans
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Client / Plan</th>
+                                        <th>Mode</th>
+                                        <th class="text-end">Last Invoice</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="d.plans" t-as="plan" t-key="plan.id">
+                                        <tr t-att-class="plan.is_overdue ? 'table-danger' : ''"
+                                            style="cursor:pointer;" t-on-click="() => this.openPlan(plan.id)">
+                                            <td>
+                                                <div class="fw-semibold"><t t-esc="plan.client"/></div>
+                                                <div class="text-muted x-small"><t t-esc="plan.name"/></div>
+                                            </td>
+                                            <td class="text-muted small"><t t-esc="plan.mode"/></td>
+                                            <td class="text-end small">
+                                                <t t-if="plan.last_inv_total">
+                                                    <t t-esc="fmt(plan.last_inv_total)"/>
+                                                    <div class="text-muted x-small"><t t-esc="plan.last_inv_date"/></div>
+                                                </t>
+                                                <t t-else=""><span class="text-muted">—</span></t>
+                                            </td>
+                                            <td class="text-center">
+                                                <t t-if="plan.last_inv_state">
+                                                    <span t-att-class="stateBadgeClass(plan.last_inv_state)">
+                                                        <t t-esc="stateLabel(plan.last_inv_state)"/>
+                                                    </span>
+                                                    <t t-if="plan.is_overdue">
+                                                        <div class="text-danger x-small fw-semibold mt-1">OVERDUE</div>
+                                                    </t>
+                                                </t>
+                                                <t t-else=""><span class="text-muted small">No invoices</span></t>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="d.plans.length === 0">
+                                        <tr><td colspan="4" class="text-center text-muted py-3">No active billing plans.</td></tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Invoices -->
+                <div class="col-lg-5">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-white fw-semibold py-2">
+                            <i class="fa fa-clock-o me-2 text-muted"/>Recent Invoices
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Client</th>
+                                        <th class="text-end">Amount</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="d.recent_invoices" t-as="inv" t-key="inv.id">
+                                        <tr t-att-class="inv.overdue ? 'table-warning' : ''"
+                                            style="cursor:pointer;" t-on-click="() => this.openInvoice(inv.id)">
+                                            <td>
+                                                <div class="fw-semibold small"><t t-esc="inv.client"/></div>
+                                                <div class="text-muted x-small"><t t-esc="inv.date"/></div>
+                                            </td>
+                                            <td class="text-end small fw-semibold"><t t-esc="fmt(inv.total)"/></td>
+                                            <td class="text-center">
+                                                <span t-att-class="stateBadgeClass(inv.state)">
+                                                    <t t-esc="stateLabel(inv.state)"/>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</div>
+</t>
+</templates>

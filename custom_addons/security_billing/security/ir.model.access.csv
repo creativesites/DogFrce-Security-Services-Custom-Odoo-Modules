@@ -6,3 +6,4 @@ access_security_billing_invoice_line_user,security.billing.invoice.line user,mod
 access_security_billing_credit_note_manager,security.billing.credit.note manager,model_security_billing_credit_note,base.group_system,1,1,1,1
 access_security_billing_credit_note_user,security.billing.credit.note user,model_security_billing_credit_note,base.group_user,1,1,1,0
 access_security_billing_invoice_wizard,security.billing.invoice.wizard,model_security_billing_invoice_wizard,base.group_user,1,1,1,1
+access_security_billing_dashboard,security.billing.dashboard,model_security_billing_dashboard,base.group_user,1,0,0,0

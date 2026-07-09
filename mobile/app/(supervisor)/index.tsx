@@ -1,82 +1,126 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, Searchbar, Button, FAB, ActivityIndicator } from 'react-native-paper';
-import { getTodayPostingSheet, TodayResponse, submitBatch, markPresence } from '../../src/api/supervisor';
-import { useAppStore } from '../../src/stores/appStore';
+import { Text, ActivityIndicator, Searchbar } from 'react-native-paper';
+import { getAllSites, SiteDaySummary } from '../../src/api/supervisor';
 import { Theme } from '../../src/theme';
-import GuardCard from '../../src/components/GuardCard';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { flushQueue, getQueue } from '../../src/utils/offlineQueue';
+import { useAppStore } from '../../src/stores/appStore';
 
-export default function SupervisorTodayScreen() {
-  const [data, setData] = useState<TodayResponse | null>(null);
+function getBatchBadge(state: string) {
+  switch (state) {
+    case 'draft':     return { label: 'IN PROGRESS', color: Theme.colors.scheduled };
+    case 'captured':  return { label: 'CAPTURED', color: Theme.colors.primary };
+    case 'confirmed': return { label: 'CONFIRMED', color: Theme.colors.present };
+    case 'cancelled': return { label: 'CANCELLED', color: Theme.colors.absent };
+    default:          return { label: 'NOT STARTED', color: Theme.colors.placeholder };
+  }
+}
+
+function SiteCard({ site, onPress }: { site: SiteDaySummary; onPress: () => void }) {
+  const badge = getBatchBadge(site.batch_state);
+  const rateColor = site.attendance_rate >= 90
+    ? Theme.colors.present
+    : site.attendance_rate >= 70
+    ? Theme.colors.awol
+    : Theme.colors.absent;
+
+  return (
+    <TouchableOpacity activeOpacity={0.8} onPress={onPress} style={styles.card}>
+      <View style={styles.cardHeader}>
+        <View style={styles.cardTitle}>
+          <Text style={styles.siteName}>{site.site_name}</Text>
+          <Text style={styles.clientName}>{site.client || '—'}</Text>
+        </View>
+        <View style={[styles.badge, { backgroundColor: `${badge.color}14`, borderColor: badge.color }]}>
+          <Text style={[styles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+        </View>
+      </View>
+
+      {site.has_batch ? (
+        <>
+          <View style={styles.progressBg}>
+            <View style={[styles.progressFg, { width: `${Math.min(site.attendance_rate, 100)}%`, backgroundColor: rateColor }]} />
+          </View>
+
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNum, { color: Theme.colors.present }]}>{site.present}</Text>
+              <Text style={styles.statLabel}>Present</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNum, { color: Theme.colors.absent }]}>{site.absent}</Text>
+              <Text style={styles.statLabel}>Absent</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNum, { color: Theme.colors.awol }]}>{site.awol}</Text>
+              <Text style={styles.statLabel}>AWOL</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text style={[styles.statNum, { color: Theme.colors.placeholder }]}>{site.not_marked}</Text>
+              <Text style={styles.statLabel}>Unmarked</Text>
+            </View>
+            <View style={[styles.rateChip, { backgroundColor: `${rateColor}14` }]}>
+              <Text style={[styles.rateText, { color: rateColor }]}>{site.attendance_rate}%</Text>
+            </View>
+          </View>
+        </>
+      ) : (
+        <View style={styles.noShiftRow}>
+          <MaterialCommunityIcons name="clipboard-text-off-outline" size={16} color={Theme.colors.placeholder} />
+          <Text style={styles.noShiftText}>
+            {site.total > 0 ? `${site.total} guards scheduled — shift not started` : 'No shift scheduled today'}
+          </Text>
+        </View>
+      )}
+
+      {site.supervisor && (
+        <View style={styles.supervisorRow}>
+          <MaterialCommunityIcons name="account-tie" size={13} color={Theme.colors.placeholder} />
+          <Text style={styles.supervisorText}>{site.supervisor}</Text>
+        </View>
+      )}
+    </TouchableOpacity>
+  );
+}
+
+export default function SupervisorSiteListScreen() {
+  const [date, setDate] = useState('');
+  const [sites, setSites] = useState<SiteDaySummary[]>([]);
+  const [filtered, setFiltered] = useState<SiteDaySummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [isOfflineBanner, setIsOfflineBanner] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
 
-  const { searchQuery, setSearchQuery, refreshTrigger, triggerRefresh } = useAppStore();
+  const { refreshTrigger } = useAppStore();
   const router = useRouter();
 
-  const loadData = async (silent = false) => {
+  const loadSites = async (silent = false) => {
     if (!silent) setLoading(true);
     setErrorMsg('');
     try {
-      const res = await getTodayPostingSheet();
-      setData(res);
-      // Cache the successful response
-      await useAppStore.getState().cacheBatch(res);
-      setIsOfflineBanner(false);
+      const res = await getAllSites();
+      setSites(res.sites);
+      setFiltered(res.sites);
+      setDate(res.date);
     } catch (err: any) {
-      // Try the cache
-      const cached = await useAppStore.getState().getCachedBatch();
-      if (cached) {
-        setData(cached);
-        setIsOfflineBanner(true);
-        setErrorMsg('');
-      } else {
-        setErrorMsg(err.message || 'Failed to load today\'s postings. No cached data available.');
-      }
+      setErrorMsg(err.message || 'Failed to load sites.');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
+  useEffect(() => { loadSites(); }, [refreshTrigger]);
+
   useEffect(() => {
-    loadData();
-    getQueue().then(q => setPendingCount(q.length));
-  }, [refreshTrigger]);
-
-  const handleFlushQueue = async () => {
-    const result = await flushQueue(async (item) => {
-      await markPresence(item.recordId, item.presence, item.overrideReason, item.checkIn, item.checkOut);
-    });
-    setPendingCount(0);
-    triggerRefresh();
-    alert(`Synced: ${result.synced} marks. Failed: ${result.failed}.`);
-  };
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadData(true);
-  };
-
-  const handleSubmit = async () => {
-    if (!data || !data.batch_id) return;
-    setSubmitting(true);
-    try {
-      await submitBatch(data.batch_id);
-      triggerRefresh();
-    } catch (err: any) {
-      alert(err.message || 'Failed to submit batch.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    const q = search.toLowerCase();
+    setFiltered(sites.filter(s =>
+      s.site_name.toLowerCase().includes(q) ||
+      (s.client || '').toLowerCase().includes(q)
+    ));
+  }, [search, sites]);
 
   if (loading) {
     return (
@@ -86,257 +130,131 @@ export default function SupervisorTodayScreen() {
     );
   }
 
-  // Filter lists based on search
-  const filteredSlots = data?.slots
-    ? data.slots.filter((s) => s.guard.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : [];
-
-  const filteredFallback = data?.roster_slots
-    ? data.roster_slots.filter((s) => s.guard.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    : [];
-
-  const isAllMarked = data?.slots && data.slots.every((s) => s.manual_presence !== 'not_marked');
+  const withBatch = filtered.filter(s => s.has_batch).length;
+  const pending = filtered.reduce((n, s) => n + s.not_marked, 0);
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerBar}>
-        <View style={styles.headerInfo}>
-          <Text style={styles.siteName}>{data?.site?.name || 'Assigned Sites'}</Text>
-          <Text style={styles.dateLabel}>{data?.date || new Date().toDateString()}</Text>
-        </View>
-        {data?.batch_state && (
-          <View style={[styles.stateChip, data.batch_state === 'captured' && styles.capturedChip]}>
-            <Text style={styles.stateChipText}>
-              {data.batch_state.toUpperCase()}
-            </Text>
+      {filtered.length > 0 && (
+        <View style={styles.summaryBar}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryNum}>{filtered.length}</Text>
+            <Text style={styles.summaryLabel}>Sites</Text>
           </View>
-        )}
-      </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryNum}>{withBatch}</Text>
+            <Text style={styles.summaryLabel}>Active</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={[styles.summaryNum, pending > 0 && { color: Theme.colors.awol }]}>{pending}</Text>
+            <Text style={styles.summaryLabel}>Unmarked</Text>
+          </View>
+          <View style={styles.summaryDivider} />
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Today</Text>
+            <Text style={styles.summaryDate}>{date}</Text>
+          </View>
+        </View>
+      )}
 
       <Searchbar
-        placeholder="Filter guards by name..."
-        value={searchQuery}
-        onChangeText={setSearchQuery}
+        placeholder="Search sites or clients..."
+        value={search}
+        onChangeText={setSearch}
         style={styles.search}
-        inputStyle={styles.searchInput}
+        inputStyle={{ fontSize: 14, color: Theme.colors.text }}
         placeholderTextColor={Theme.colors.placeholder}
         iconColor={Theme.colors.primary}
       />
 
-      {isOfflineBanner && (
-        <View style={styles.offlineBanner}>
-          <MaterialCommunityIcons name="wifi-off" size={16} color="#fff" />
-          <Text style={styles.offlineText}>Offline — showing cached data from last sync</Text>
-        </View>
-      )}
-
-      {pendingCount > 0 && (
-        <TouchableOpacity style={styles.syncChip} onPress={handleFlushQueue}>
-          <MaterialCommunityIcons name="cloud-upload-outline" size={16} color="#fff" />
-          <Text style={styles.syncChipText}>Sync {pendingCount} pending mark{pendingCount !== 1 ? 's' : ''}</Text>
-        </TouchableOpacity>
-      )}
-
-      {errorMsg ? (
-        <View style={styles.errBox}>
-          <MaterialCommunityIcons name="alert-circle-outline" size={24} color={Theme.colors.absent} />
-          <Text style={styles.errText}>{errorMsg}</Text>
-          <Button onPress={() => loadData()} mode="outlined" style={styles.errBtn}>
-            Retry
-          </Button>
-        </View>
-      ) : null}
-
-      {!errorMsg && data?.slots ? (
-        <FlatList
-          data={filteredSlots}
-          keyExtractor={(item) => item.record_id.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Theme.colors.primary]} />}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <GuardCard
-              name={item.guard.name}
-              grade={item.guard.grade}
-              post={item.post}
-              shift={item.shift}
-              status={item.manual_presence}
-              checkIn={item.check_in}
-              checkOut={item.check_out}
-              onPress={() => router.push(`/(supervisor)/mark/${item.record_id}`)}
-            />
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <MaterialCommunityIcons name="shield-off-outline" size={48} color={Theme.colors.placeholder} />
-              <Text style={styles.emptyText}>No guards matching search query.</Text>
-            </View>
-          }
-        />
-      ) : null}
-
-      {/* Fallback Layout: Show Roster Slots if no attendance batch created */}
-      {!errorMsg && data?.roster_slots && !data.slots ? (
-        <FlatList
-          data={filteredFallback}
-          keyExtractor={(item) => item.slot_id.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Theme.colors.primary]} />}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-            <GuardCard
-              name={item.guard.name}
-              grade={item.guard.grade}
-              post={item.post}
-              shift={item.shift}
-              status="scheduled"
-              checkIn={null}
-              checkOut={null}
-            />
-          )}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <MaterialCommunityIcons name="clipboard-alert-outline" size={48} color={Theme.colors.placeholder} />
-              <Text style={styles.emptyText}>No roster slots scheduled for today.</Text>
-            </View>
-          }
-        />
-      ) : null}
-
-      {/* Submit FAB visible only on Draft state */}
-      {data?.batch_id && data.batch_state === 'draft' && isAllMarked && (
-        <FAB
-          icon="check-all"
-          label={submitting ? "Submitting..." : "Submit Posting Sheet"}
-          style={styles.fab}
-          onPress={handleSubmit}
-          loading={submitting}
-          color="#FFF"
-        />
-      )}
+      <FlatList
+        data={filtered}
+        keyExtractor={(item) => item.site_id.toString()}
+        contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => { setRefreshing(true); loadSites(true); }}
+            colors={[Theme.colors.primary]}
+            tintColor={Theme.colors.primary}
+          />
+        }
+        renderItem={({ item }) => (
+          <SiteCard
+            site={item}
+            onPress={() => router.push(`/(supervisor)/site/${item.site_id}`)}
+          />
+        )}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <MaterialCommunityIcons name="office-building-outline" size={48} color={Theme.colors.placeholder} />
+            <Text style={styles.emptyText}>{errorMsg || 'No sites found.'}</Text>
+          </View>
+        }
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0B0B0F',
-    padding: 16,
-  },
-  loader: {
-    flex: 1,
-    backgroundColor: '#0B0B0F',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerBar: {
+  container: { flex: 1, backgroundColor: Theme.colors.background },
+  loader: { flex: 1, backgroundColor: Theme.colors.background, justifyContent: 'center', alignItems: 'center' },
+  summaryBar: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    backgroundColor: Theme.colors.surface,
+    borderBottomColor: Theme.colors.border,
+    borderBottomWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
-    marginBottom: 16,
   },
-  headerInfo: {
-    flex: 1,
-  },
-  siteName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  dateLabel: {
-    fontSize: 12,
-    color: Theme.colors.placeholder,
-    marginTop: 2,
-  },
-  stateChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    borderColor: Theme.colors.scheduled,
-    borderWidth: 1,
-  },
-  capturedChip: {
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderColor: Theme.colors.primary,
-  },
-  stateChipText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryNum: { fontSize: 18, fontWeight: 'bold', color: Theme.colors.text },
+  summaryLabel: { fontSize: 10, color: Theme.colors.placeholder, marginTop: 2, fontWeight: '600' },
+  summaryDate: { fontSize: 11, color: Theme.colors.text, fontWeight: '600', marginTop: 1 },
+  summaryDivider: { width: 1, height: 32, backgroundColor: Theme.colors.border },
   search: {
+    margin: 12,
     backgroundColor: Theme.colors.surface,
     borderColor: Theme.colors.border,
     borderWidth: 1,
     borderRadius: 12,
-    height: 48,
-    justifyContent: 'center',
-    marginBottom: 16,
+    elevation: 0,
   },
-  searchInput: {
-    color: Theme.colors.text,
-    fontSize: 14,
+  list: { paddingHorizontal: 12, paddingBottom: 24 },
+  card: {
+    backgroundColor: Theme.colors.surface,
+    borderColor: Theme.colors.border,
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  list: {
-    paddingBottom: 80,
-  },
-  empty: {
-    alignItems: 'center',
-    marginTop: 64,
-    gap: 12,
-  },
-  emptyText: {
-    color: Theme.colors.placeholder,
-    fontSize: 14,
-  },
-  errBox: {
-    alignItems: 'center',
-    marginTop: 64,
-    gap: 12,
-  },
-  errText: {
-    color: Theme.colors.absent,
-    textAlign: 'center',
-  },
-  errBtn: {
-    marginTop: 8,
-    borderColor: Theme.colors.absent,
-  },
-  fab: {
-    position: 'absolute',
-    margin: 16,
-    right: 0,
-    bottom: 0,
-    backgroundColor: Theme.colors.primary,
-  },
-  offlineBanner: {
-    backgroundColor: '#d97706',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 10,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 8,
-  },
-  offlineText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  syncChip: {
-    backgroundColor: Theme.colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    padding: 10,
-    paddingHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 8,
-  },
-  syncChipText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
+  cardTitle: { flex: 1, marginRight: 8 },
+  siteName: { fontSize: 16, fontWeight: '700', color: Theme.colors.text },
+  clientName: { fontSize: 12, color: Theme.colors.placeholder, marginTop: 2 },
+  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  badgeText: { fontSize: 9, fontWeight: '700' },
+  progressBg: { height: 4, backgroundColor: Theme.colors.border, borderRadius: 2, marginBottom: 12, overflow: 'hidden' },
+  progressFg: { height: '100%', borderRadius: 2 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  statItem: { alignItems: 'center', flex: 1 },
+  statNum: { fontSize: 15, fontWeight: '700' },
+  statLabel: { fontSize: 10, color: Theme.colors.placeholder, marginTop: 1, fontWeight: '600' },
+  rateChip: { marginLeft: 'auto', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  rateText: { fontSize: 13, fontWeight: '700' },
+  noShiftRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  noShiftText: { fontSize: 12, color: Theme.colors.placeholder, flex: 1 },
+  supervisorRow: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: Theme.colors.border },
+  supervisorText: { fontSize: 11, color: Theme.colors.placeholder },
+  empty: { alignItems: 'center', marginTop: 80, gap: 12 },
+  emptyText: { color: Theme.colors.placeholder, fontSize: 14 },
 });

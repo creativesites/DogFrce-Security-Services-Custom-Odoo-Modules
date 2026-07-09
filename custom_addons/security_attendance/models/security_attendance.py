@@ -585,3 +585,109 @@ class SecurityAttendanceRecord(models.Model):
             employee = record.employee_id.name or "Unassigned"
             date = record.shift_date or ""
             record.name = f"{employee} - {date}"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ATTENDANCE SUMMARY GRID DATA PROVIDER
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SecurityAttendanceGrid(models.AbstractModel):
+    _name = "security.attendance.grid"
+    _description = "Attendance Summary Grid Data Provider"
+
+    @api.model
+    def get_grid_data(self, month_str=None, site_id=None):
+        from datetime import date as _date, timedelta
+        import calendar
+
+        today = _date.today()
+        if month_str:
+            year, month = int(month_str[:4]), int(month_str[5:7])
+        else:
+            year, month = today.year, today.month
+
+        month_start = _date(year, month, 1)
+        last_day = calendar.monthrange(year, month)[1]
+        month_end = _date(year, month, last_day)
+
+        domain = [
+            ("shift_date", ">=", str(month_start)),
+            ("shift_date", "<=", str(month_end)),
+        ]
+        if site_id:
+            domain.append(("site_id", "=", site_id))
+
+        Record = self.env["security.attendance.record"]
+        records = Record.search(domain)
+
+        # Group by date
+        from collections import defaultdict
+        by_date = defaultdict(lambda: {"scheduled": 0, "present": 0, "absent": 0, "awol": 0, "late": 0, "not_marked": 0})
+        for r in records:
+            key = str(r.shift_date)
+            by_date[key]["scheduled"] += 1
+            mp = r.manual_presence or "not_marked"
+            if mp in by_date[key]:
+                by_date[key][mp] += 1
+            else:
+                by_date[key]["not_marked"] += 1
+
+        # Build day list
+        days = []
+        cur = month_start
+        while cur <= month_end:
+            key = str(cur)
+            stats = by_date[key]
+            pct = round(100 * stats["present"] / stats["scheduled"]) if stats["scheduled"] else None
+            days.append({
+                "date": key,
+                "day": cur.day,
+                "weekday": cur.strftime("%a"),
+                "weekday_num": cur.weekday(),
+                "scheduled": stats["scheduled"],
+                "present": stats["present"],
+                "absent": stats["absent"],
+                "awol": stats["awol"],
+                "late": stats["late"],
+                "not_marked": stats["not_marked"],
+                "pct": pct,
+            })
+            cur += timedelta(days=1)
+
+        # Totals
+        totals = {"scheduled": 0, "present": 0, "absent": 0, "awol": 0, "late": 0}
+        for d in days:
+            for k in totals:
+                totals[k] += d[k]
+
+        # Site filter options
+        Site = self.env["security.client.site"]
+        sites = Site.search([("active", "=", True)], order="name asc")
+
+        # By-site summary for the month
+        by_site = {}
+        for r in records:
+            sid = r.site_id.id if r.site_id else 0
+            sname = r.site_id.name if r.site_id else "No Site"
+            if sid not in by_site:
+                by_site[sid] = {"id": sid, "name": sname, "scheduled": 0, "present": 0, "absent": 0, "awol": 0}
+            by_site[sid]["scheduled"] += 1
+            if r.manual_presence == "present":
+                by_site[sid]["present"] += 1
+            elif r.manual_presence == "absent":
+                by_site[sid]["absent"] += 1
+            elif r.manual_presence == "awol":
+                by_site[sid]["awol"] += 1
+
+        site_summary = sorted(by_site.values(), key=lambda x: -x["scheduled"])
+        for s in site_summary:
+            s["pct"] = round(100 * s["present"] / s["scheduled"]) if s["scheduled"] else None
+
+        return {
+            "month_label": month_start.strftime("%B %Y"),
+            "month_str": month_start.strftime("%Y-%m"),
+            "days": days,
+            "totals": totals,
+            "sites": [{"id": s.id, "name": s.name} for s in sites],
+            "site_summary": site_summary,
+        }

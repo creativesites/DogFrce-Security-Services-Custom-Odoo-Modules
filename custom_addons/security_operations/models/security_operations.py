@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, date
+import calendar
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+from dateutil.relativedelta import relativedelta
 
 
 class SecurityPostType(models.Model):
@@ -64,6 +66,99 @@ class SecurityClientSite(models.Model):
         string="Guard Exclusions",
     )
     note = fields.Text()
+
+    # Live coverage stats (non-stored, computed on demand)
+    site_coverage_today = fields.Float(
+        compute="_compute_site_coverage",
+        string="Coverage Today (%)",
+    )
+    site_coverage_month = fields.Float(
+        compute="_compute_site_coverage",
+        string="Coverage This Month (%)",
+    )
+
+    def _compute_site_coverage(self):
+        today = fields.Date.today()
+        month_start = today.replace(day=1)
+        for site in self:
+            today_slots = self.env["security.roster.slot"].search([
+                ("site_id", "=", site.id),
+                ("shift_date", "=", today),
+                ("state", "!=", "cancelled"),
+            ])
+            site.site_coverage_today = (
+                len(today_slots.filtered("employee_id")) / len(today_slots) * 100
+                if today_slots else 0.0
+            )
+            month_slots = self.env["security.roster.slot"].search([
+                ("site_id", "=", site.id),
+                ("shift_date", ">=", month_start),
+                ("shift_date", "<=", today),
+                ("state", "!=", "cancelled"),
+            ])
+            site.site_coverage_month = (
+                len(month_slots.filtered("employee_id")) / len(month_slots) * 100
+                if month_slots else 0.0
+            )
+
+    @api.model
+    def get_calendar_data(self, site_id, month=None):
+        site = self.browse(site_id)
+        if not site.exists():
+            return {"error": "Site not found"}
+
+        if month:
+            year, m = map(int, month.split("-"))
+        else:
+            today = date.today()
+            year, m = today.year, today.month
+
+        days_in_month = calendar.monthrange(year, m)[1]
+        month_start = date(year, m, 1)
+        month_end = date(year, m, days_in_month)
+
+        slots = self.env["security.roster.slot"].search([
+            ("site_id", "=", site_id),
+            ("shift_date", ">=", month_start),
+            ("shift_date", "<=", month_end),
+            ("state", "!=", "cancelled"),
+        ])
+
+        days = {}
+        for slot in slots:
+            d = str(slot.shift_date)
+            if d not in days:
+                days[d] = {"total": 0, "assigned": 0, "slots": []}
+            days[d]["total"] += 1
+            if slot.employee_id:
+                days[d]["assigned"] += 1
+            days[d]["slots"].append({
+                "id": slot.id,
+                "post": slot.post_id.name or "",
+                "shift": slot.shift_template_id.name or "",
+                "guard": slot.employee_id.name or "",
+                "state": slot.state,
+            })
+
+        return {
+            "site_id": site_id,
+            "site_name": site.name,
+            "year": year,
+            "month": m,
+            "days_in_month": days_in_month,
+            "first_weekday": month_start.weekday(),
+            "days": days,
+        }
+
+    def action_open_site_hub(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.client",
+            "tag": "security_operations.site_hub",
+            "name": f"Site Hub — {self.name}",
+            "context": {"active_id": self.id, "active_model": "security.client.site"},
+            "target": "current",
+        }
 
 
 class SecurityPost(models.Model):
@@ -184,6 +279,17 @@ class SecurityShiftRequirement(models.Model):
         "requirement_id",
         "attribute_id",
         string="Required Attributes",
+    )
+    preferred_employee_id = fields.Many2one(
+        "hr.employee",
+        domain=[("security_guard", "=", True)],
+        string="Preferred Guard",
+        help="Guard to auto-assign when generating roster slots. Falls back to scoring engine if unavailable.",
+    )
+    allow_preferred_only = fields.Boolean(
+        default=False,
+        string="Preferred Guard Only",
+        help="If enabled, only the preferred guard should fill this shift. Any other assignment triggers a warning.",
     )
     active = fields.Boolean(default=True)
     note = fields.Text()
@@ -387,16 +493,21 @@ class SecurityRosterBatch(models.Model):
                         )
                         if existing:
                             continue
-                        slot_model.create(
-                            {
-                                "batch_id": batch.id,
-                                "slot_number": guard_number + 1,
-                                "shift_date": target_date,
-                                "shift_requirement_id": requirement.id,
-                                "post_id": requirement.post_id.id,
-                                "shift_template_id": requirement.shift_template_id.id,
-                            }
-                        )
+                        vals = {
+                            "batch_id": batch.id,
+                            "slot_number": guard_number + 1,
+                            "shift_date": target_date,
+                            "shift_requirement_id": requirement.id,
+                            "post_id": requirement.post_id.id,
+                            "shift_template_id": requirement.shift_template_id.id,
+                        }
+                        # Pre-fill preferred guard on slot 1 only (first guard position)
+                        if guard_number == 0 and requirement.preferred_employee_id:
+                            preferred = requirement.preferred_employee_id
+                            if not preferred.security_disqualified:
+                                vals["employee_id"] = preferred.id
+                                vals["state"] = "assigned"
+                        slot_model.create(vals)
                         created_count += 1
                 target_date += timedelta(days=1)
             batch.state = "generated"
@@ -490,6 +601,164 @@ class SecurityRosterBatch(models.Model):
                 "type": "success",
             },
         }
+
+    def action_auto_fill_open_slots(self):
+        """Assign the top scoring eligible guard to every unassigned slot in this batch."""
+        for batch in self:
+            open_slots = batch.slot_ids.filtered(lambda s: not s.employee_id and s.state != "cancelled")
+            filled = 0
+            for slot in open_slots:
+                req = slot.shift_requirement_id
+                domain = [("security_guard", "=", True), ("active", "=", True), ("security_disqualified", "=", False)]
+                candidates = self.env["hr.employee"].search(domain)
+                # Filter: no double-booking on same date
+                already_assigned = self.env["security.roster.slot"].search([
+                    ("shift_date", "=", slot.shift_date),
+                    ("employee_id", "in", candidates.ids),
+                    ("id", "!=", slot.id),
+                    ("state", "!=", "cancelled"),
+                ]).mapped("employee_id").ids
+                candidates = candidates.filtered(lambda e: e.id not in already_assigned)
+                # Filter: grade requirement
+                if req and slot.post_type_id and slot.post_type_id.min_grade_id:
+                    min_seq = slot.post_type_id.min_grade_id.sequence
+                    candidates = candidates.filtered(
+                        lambda e: e.security_grade_id and e.security_grade_id.sequence <= min_seq
+                    )
+                # Filter: site exclusions
+                excluded = self.env["security.guard.exclusion"].search([
+                    ("active", "=", True),
+                    "|",
+                    ("site_id", "=", slot.site_id.id or False),
+                    ("partner_id", "=", slot.partner_id.id or False),
+                ]).mapped("employee_id").ids
+                candidates = candidates.filtered(lambda e: e.id not in excluded)
+                if not candidates:
+                    continue
+                # Prefer preferred guard if set and eligible
+                chosen = None
+                if req and req.preferred_employee_id and req.preferred_employee_id in candidates:
+                    chosen = req.preferred_employee_id
+                else:
+                    # Pick by reliability score desc
+                    scored = candidates.sorted(
+                        key=lambda e: e.security_reliability_score if hasattr(e, "security_reliability_score") else 0,
+                        reverse=True,
+                    )
+                    chosen = scored[0] if scored else None
+                if chosen:
+                    slot.write({"employee_id": chosen.id, "state": "assigned"})
+                    filled += 1
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "Auto-Fill Complete",
+                    "message": f"{filled} of {len(open_slots)} open slots filled.",
+                    "type": "success" if filled == len(open_slots) else "warning",
+                },
+            }
+
+    @api.model
+    def action_cron_auto_generate_next_month_batches(self):
+        """Cron (runs on the 20th): auto-create next month's roster batch for every active billing plan."""
+        today = date.today()
+        next_month = today + relativedelta(months=1)
+        first_day = next_month.replace(day=1)
+        last_day = next_month.replace(day=calendar.monthrange(next_month.year, next_month.month)[1])
+
+        billing_model = self.env.get("security.billing.plan")
+        if not billing_model:
+            return
+
+        active_plans = billing_model.search([("active", "=", True)])
+        req_model = self.env["security.shift.requirement"]
+        notif_model = self.env.get("security.notification")
+
+        created_batches = 0
+        total_slots = 0
+
+        for plan in active_plans:
+            # Find all active sites linked to this client via shift requirements
+            requirements = req_model.search([
+                ("partner_id", "=", plan.partner_id.id),
+                ("active", "=", True),
+            ])
+            sites = requirements.mapped("site_id")
+
+            for site in sites:
+                # Skip if a batch already exists for this site + month
+                existing = self.search([
+                    ("site_id", "=", site.id),
+                    ("date_from", "=", str(first_day)),
+                    ("date_to", "=", str(last_day)),
+                ], limit=1)
+                if existing:
+                    continue
+
+                batch = self.create({
+                    "date_from": first_day,
+                    "date_to": last_day,
+                    "site_id": site.id,
+                    "partner_id": plan.partner_id.id,
+                })
+                try:
+                    batch.action_generate_slots()
+                    total_slots += batch.generated_slot_count
+                    created_batches += 1
+                except ValidationError:
+                    batch.unlink()
+                    continue
+
+        if notif_model and created_batches:
+            notif_model.sudo().create({
+                "title": f"Roster Auto-Generated: {first_day.strftime('%B %Y')}",
+                "body": (
+                    f"{created_batches} roster batch(es) auto-created for "
+                    f"{first_day.strftime('%B %Y')} with {total_slots} slots. "
+                    "Please assign guards before the month starts."
+                ),
+                "notification_type": "roster_gap",
+                "severity": "info",
+            })
+
+    def action_generate_next_month(self):
+        """Manual trigger: generate next month's roster for this batch's site/client."""
+        today = date.today()
+        next_month = today + relativedelta(months=1)
+        first_day = next_month.replace(day=1)
+        last_day = next_month.replace(day=calendar.monthrange(next_month.year, next_month.month)[1])
+
+        for batch in self:
+            existing = self.search([
+                ("site_id", "=", batch.site_id.id),
+                ("partner_id", "=", batch.partner_id.id),
+                ("date_from", "=", str(first_day)),
+            ], limit=1)
+            if existing:
+                return {
+                    "type": "ir.actions.client",
+                    "tag": "display_notification",
+                    "params": {
+                        "title": "Already Exists",
+                        "message": f"A roster batch for {first_day.strftime('%B %Y')} already exists for this site.",
+                        "type": "warning",
+                    },
+                }
+            new_batch = self.create({
+                "date_from": first_day,
+                "date_to": last_day,
+                "site_id": batch.site_id.id,
+                "partner_id": batch.partner_id.id,
+            })
+            new_batch.action_generate_slots()
+            return {
+                "type": "ir.actions.act_window",
+                "res_model": "security.roster.batch",
+                "res_id": new_batch.id,
+                "views": [[False, "form"]],
+                "target": "current",
+            }
 
 
 class SecurityRosterSlot(models.Model):
@@ -668,3 +937,32 @@ class SecurityRosterSlot(models.Model):
                 raise ValidationError(
                     "The assigned guard does not meet the minimum reliability score."
                 )
+
+    @api.model
+    def action_batch_assign(self, slot_ids, employee_id):
+        """Assign employee_id to all slot_ids, skipping slots that fail eligibility."""
+        slots = self.browse(slot_ids)
+        employee = self.env["hr.employee"].browse(employee_id)
+        assigned = []
+        skipped = []
+        for slot in slots:
+            if slot.employee_id:
+                skipped.append(f"{slot.name} (already assigned)")
+                continue
+            try:
+                slot.write({"employee_id": employee.id, "state": "assigned"})
+                assigned.append(slot.name)
+            except ValidationError as e:
+                skipped.append(f"{slot.name} ({e.args[0]})")
+        msg_parts = [f"{len(assigned)} slot(s) assigned to {employee.name}."]
+        if skipped:
+            msg_parts.append(f"{len(skipped)} skipped: {'; '.join(skipped[:3])}{'…' if len(skipped) > 3 else ''}")
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Batch Assign Complete",
+                "message": " ".join(msg_parts),
+                "type": "success" if not skipped else "warning",
+            },
+        }
