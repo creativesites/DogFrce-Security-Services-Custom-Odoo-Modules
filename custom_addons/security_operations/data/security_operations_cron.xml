@@ -9,6 +9,5 @@
         <field name="interval_type">months</field>
         <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).strftime('%Y-%m-%d 06:00:00')"/>
         <field name="active">True</field>
-        <field name="numbercall">-1</field>
     </record>
 </odoo>
