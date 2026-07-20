@@ -45,6 +45,7 @@ for mod in "${MODULES[@]}"; do
         continue
     fi
     rsync -az --delete \
+        -e "ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15" \
         --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' \
         "$src/" "$SERVER:$REMOTE_ADDONS/$mod/"
     echo "  ✓ $mod"
@@ -62,7 +63,7 @@ MOD_LIST=$(IFS=','; echo "${MODULES[*]}")
 
 echo ""
 echo "==> Restarting Odoo with -u $MOD_LIST..."
-ssh "$SERVER" bash <<REMOTE
+ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 "$SERVER" bash <<REMOTE
 set -e
 docker restart $CONTAINER
 echo "  Waiting 20s for startup..."

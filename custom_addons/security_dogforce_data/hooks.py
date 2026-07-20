@@ -136,6 +136,7 @@ class DogForceDataLoader:
 
     def _create_work_locations(self):
         _logger.info("Creating work locations...")
+        company_partner_id = self.env.company.partner_id.id
         for row in self.data.get("hr_work_location", []):
             name = row.get("Work Location")
             if not name:
@@ -143,6 +144,7 @@ class DogForceDataLoader:
             xmlid = f"loc_{clean_xml_id(name)}"
             self.get_or_create(xmlid, "hr.work.location", {
                 "name": name,
+                "address_id": company_partner_id,
             })
 
     def _create_skill_types_and_skills(self):
