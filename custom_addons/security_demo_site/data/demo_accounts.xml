@@ -25,6 +25,7 @@
                 ref('base.group_system'),
                 ref('hr.group_hr_user'),
                 ref('hr.group_hr_manager'),
+                ref('security_base.group_security_owner'),
             ])]"/>
         </record>
 
@@ -37,6 +38,7 @@
                 ref('hr.group_hr_user'),
                 ref('hr.group_hr_manager'),
                 ref('security_demo_site.group_demo_no_delete'),
+                ref('security_base.group_security_manager'),
             ])]"/>
         </record>
 
@@ -48,6 +50,7 @@
                 ref('base.group_user'),
                 ref('hr.group_hr_user'),
                 ref('security_demo_site.group_demo_no_delete'),
+                ref('security_base.group_security_supervisor'),
             ])]"/>
         </record>
 
@@ -59,6 +62,7 @@
                 ref('base.group_user'),
                 ref('hr.group_hr_user'),
                 ref('security_demo_site.group_demo_viewer'),
+                ref('security_base.group_security_system_auditor'),
             ])]"/>
         </record>
 
