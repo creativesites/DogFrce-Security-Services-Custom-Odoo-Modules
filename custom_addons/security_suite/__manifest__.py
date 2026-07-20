@@ -44,7 +44,7 @@
         'security_notifications',
         'security_licensing',
         'security_dogforce_migration',
-        'security_demo_data',
+        'security_dogforce_data',
         'security_help',
     ],
     'data': [],
