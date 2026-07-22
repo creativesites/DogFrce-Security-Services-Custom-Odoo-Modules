@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Add Odoo Invoice View Action Button on custom security.billing.invoice form -->
+    <!-- Add Odoo Invoice View Action Button & Auto-Reconcile Button on custom security.billing.invoice form -->
     <record id="view_security_billing_invoice_form_inherit_account" model="ir.ui.view">
         <name>security.billing.invoice.form.inherit.account</name>
         <model>security.billing.invoice</model>
@@ -13,10 +13,29 @@
                         class="btn-secondary"
                         invisible="state == 'draft'"
                         groups="security_base.group_security_supervisor"/>
+                <button name="action_auto_reconcile"
+                        string="Auto-Reconcile"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="state == 'draft'"
+                        groups="security_base.group_security_supervisor"/>
             </xpath>
             <xpath expr="//field[@name='generation_source']" position="after">
                 <field name="move_id" groups="security_base.group_security_supervisor" readonly="1" invisible="not move_id"/>
             </xpath>
         </arch>
+    </record>
+
+    <!-- Server Action for Multi Auto-Reconcile in List Views -->
+    <record id="action_server_reconcile_invoices" model="ir.actions.server">
+        <field name="name">Auto-Reconcile Invoices</field>
+        <field name="model_id" ref="security_billing.model_security_billing_invoice"/>
+        <field name="binding_model_id" ref="security_billing.model_security_billing_invoice"/>
+        <field name="binding_view_types">list</field>
+        <field name="state">code</field>
+        <field name="code">
+            if records:
+                records.action_auto_reconcile()
+        </field>
     </record>
 </odoo>
