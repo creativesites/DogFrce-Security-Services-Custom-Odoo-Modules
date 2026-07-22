@@ -311,7 +311,7 @@ class SecurityRosterSetupWizard(models.TransientModel):
         today = date.today()
         month_start = today.replace(day=1)
         current_batches = self.env["security.roster.batch"].search([
-            ("month", ">=", month_start),
+            ("date_from", ">=", month_start),
         ])
         if not current_batches:
             checks.append({

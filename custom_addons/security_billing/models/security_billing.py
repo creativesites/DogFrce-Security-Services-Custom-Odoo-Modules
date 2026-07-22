@@ -641,6 +641,9 @@ class SecurityBillingInvoice(models.Model):
                 for rec in approved_recs:
                     mtd_approved_billing += rec.billing_amount or 0.0
 
+        # Detect if payment-tracking module is active
+        has_payments = "security.client.payment" in self.env
+
         # Invoice totals (MTD)
         mtd_invoices = self.search([
             ("invoice_date", ">=", str(mtd_start)),
@@ -648,13 +651,27 @@ class SecurityBillingInvoice(models.Model):
             ("state", "!=", "cancelled"),
         ])
         invoiced_mtd = sum(mtd_invoices.filtered(lambda i: i.state in ("sent", "paid")).mapped("total_amount"))
-        paid_mtd = sum(mtd_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
+        
+        if has_payments:
+            # MTD Revenue Collected: sum of actual posted payments in the current month
+            paid_mtd = sum(self.env["security.client.payment"].search([
+                ("payment_date", ">=", str(mtd_start)),
+                ("payment_date", "<=", str(mtd_end)),
+                ("state", "=", "posted"),
+            ]).mapped("amount"))
+        else:
+            paid_mtd = sum(mtd_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
 
         # All-time outstanding
         all_invoices = self.search([("state", "not in", ("cancelled",))])
         total_invoiced = sum(all_invoices.filtered(lambda i: i.state in ("sent", "paid")).mapped("total_amount"))
-        total_paid = sum(all_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
-        outstanding = max(total_invoiced - total_paid, 0.0)
+        
+        if has_payments:
+            active_invoices = all_invoices.filtered(lambda i: i.state in ("sent", "paid"))
+            outstanding = sum(active_invoices.mapped("balance_amount"))
+        else:
+            total_paid = sum(all_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
+            outstanding = max(total_invoiced - total_paid, 0.0)
 
         # Monthly revenue trend (last 6 months, invoiced)
         monthly_trend = []
@@ -675,10 +692,21 @@ class SecurityBillingInvoice(models.Model):
                 ("invoice_date", "<=", str(m_end)),
                 ("state", "in", ("sent", "paid")),
             ])
+            
+            if has_payments:
+                m_payments = self.env["security.client.payment"].search([
+                    ("payment_date", ">=", str(m_start)),
+                    ("payment_date", "<=", str(m_end)),
+                    ("state", "=", "posted"),
+                ])
+                trend_paid = sum(m_payments.mapped("amount"))
+            else:
+                trend_paid = sum(m_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount"))
+
             monthly_trend.append({
                 "month": m_start.strftime("%b %Y"),
                 "amount": round(sum(m_invoices.mapped("total_amount")), 2),
-                "paid": round(sum(m_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount")), 2),
+                "paid": round(trend_paid, 2),
             })
 
         # Top clients by invoiced amount
@@ -690,8 +718,11 @@ class SecurityBillingInvoice(models.Model):
             if not client_data[cname]["id"]:
                 client_data[cname]["id"] = inv.partner_id.id
             client_data[cname]["invoiced"] += inv.total_amount
-            if inv.state == "paid":
-                client_data[cname]["paid"] += inv.total_amount
+            if has_payments:
+                client_data[cname]["paid"] += inv.paid_amount
+            else:
+                if inv.state == "paid":
+                    client_data[cname]["paid"] += inv.total_amount
 
         top_clients = sorted(
             [
@@ -700,7 +731,7 @@ class SecurityBillingInvoice(models.Model):
                     "id": data["id"],
                     "invoiced": round(data["invoiced"], 2),
                     "paid": round(data["paid"], 2),
-                    "outstanding": round(data["invoiced"] - data["paid"], 2),
+                    "outstanding": round(max(data["invoiced"] - data["paid"], 0.0), 2),
                 }
                 for name, data in client_data.items()
             ],
@@ -837,18 +868,38 @@ class SecurityBillingDashboard(models.AbstractModel):
             ("invoice_date", ">=", month_start),
             ("state", "not in", ["cancelled"]),
         ])
-        invoiced_mtd = sum(mtd_invoices.mapped("total_amount"))
-        collected_mtd = sum(
-            mtd_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount")
-        )
+        invoiced_mtd = sum(mtd_invoices.filtered(lambda i: i.state in ("sent", "paid")).mapped("total_amount"))
 
-        outstanding = Invoice.search([("state", "not in", ["paid", "cancelled"])])
-        outstanding_total = sum(outstanding.mapped("total_amount"))
-        overdue_total = sum(
-            outstanding.filtered(
-                lambda i: i.due_date and i.due_date < today
-            ).mapped("total_amount")
-        )
+        # Detect if payment-tracking module is active
+        has_payments = "security.client.payment" in self.env
+
+        if has_payments:
+            collected_mtd = sum(self.env["security.client.payment"].search([
+                ("payment_date", ">=", month_start),
+                ("state", "=", "posted"),
+            ]).mapped("amount"))
+        else:
+            collected_mtd = sum(
+                mtd_invoices.filtered(lambda i: i.state == "paid").mapped("total_amount")
+            )
+
+        if has_payments:
+            # For outstanding/overdue, we only care about invoices that are not cancelled or draft
+            active_outstanding = Invoice.search([("state", "in", ["sent", "paid"])])
+            outstanding_total = sum(active_outstanding.mapped("balance_amount"))
+            overdue_total = sum(
+                active_outstanding.filtered(
+                    lambda i: i.due_date and i.due_date < today
+                ).mapped("balance_amount")
+            )
+        else:
+            outstanding = Invoice.search([("state", "not in", ["paid", "cancelled"])])
+            outstanding_total = sum(outstanding.mapped("total_amount"))
+            overdue_total = sum(
+                outstanding.filtered(
+                    lambda i: i.due_date and i.due_date < today
+                ).mapped("total_amount")
+            )
 
         plans_data = []
         for plan in active_plans:
@@ -857,6 +908,13 @@ class SecurityBillingDashboard(models.AbstractModel):
                 order="invoice_date desc",
                 limit=1,
             )
+            is_overdue = False
+            if last_inv and last_inv.due_date and last_inv.due_date < today:
+                if has_payments:
+                    is_overdue = bool(last_inv.balance_amount > 0.01)
+                else:
+                    is_overdue = bool(last_inv.state not in ("paid", "cancelled"))
+
             plans_data.append({
                 "id": plan.id,
                 "name": plan.name,
@@ -867,23 +925,32 @@ class SecurityBillingDashboard(models.AbstractModel):
                 "last_inv_state": last_inv.state if last_inv else "",
                 "last_inv_due": str(last_inv.due_date) if last_inv and last_inv.due_date else "",
                 "last_inv_id": last_inv.id if last_inv else 0,
-                "is_overdue": bool(last_inv and last_inv.due_date and last_inv.due_date < today and last_inv.state not in ("paid", "cancelled")),
+                "is_overdue": is_overdue,
             })
 
-        recent_data = [{
-            "id": i.id,
-            "name": i.name,
-            "client": i.partner_id.name,
-            "date": str(i.invoice_date) if i.invoice_date else "",
-            "due": str(i.due_date) if i.due_date else "",
-            "total": i.total_amount,
-            "state": i.state,
-            "overdue": bool(i.due_date and i.due_date < today and i.state not in ("paid", "cancelled")),
-        } for i in Invoice.search(
+        recent_data = []
+        for i in Invoice.search(
             [("state", "not in", ["cancelled"])],
             order="invoice_date desc",
             limit=12,
-        )]
+        ):
+            is_overdue = False
+            if i.due_date and i.due_date < today:
+                if has_payments:
+                    is_overdue = bool(i.balance_amount > 0.01)
+                else:
+                    is_overdue = bool(i.state not in ("paid", "cancelled"))
+
+            recent_data.append({
+                "id": i.id,
+                "name": i.name,
+                "client": i.partner_id.name,
+                "date": str(i.invoice_date) if i.invoice_date else "",
+                "due": str(i.due_date) if i.due_date else "",
+                "total": i.total_amount,
+                "state": i.state,
+                "overdue": is_overdue,
+            })
 
         return {
             "month_label": today.strftime("%B %Y"),

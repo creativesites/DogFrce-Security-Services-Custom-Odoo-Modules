@@ -584,14 +584,12 @@ class SecurityFleetDashboard(models.AbstractModel):
 
         # Fuel cost MTD from fuel logs
         FuelLog = self.env["security.vehicle.fuel.log"]
-        fuel_logs_mtd = FuelLog.search([("date", ">=", month_start)])
-        fuel_cost_mtd = sum(fuel_logs_mtd.mapped("cost"))
+        fuel_logs_mtd = FuelLog.search([("fuel_date", ">=", month_start)])
+        fuel_cost_mtd = sum(fuel_logs_mtd.mapped("total_cost"))
 
         # Today's shuttle runs
-        today_str = str(today)
         today_runs = Run.search([
-            ("departure_datetime", ">=", today_str + " 00:00:00"),
-            ("departure_datetime", "<=", today_str + " 23:59:59"),
+            ("shift_date", "=", today),
         ])
 
         return {
@@ -603,7 +601,7 @@ class SecurityFleetDashboard(models.AbstractModel):
                 "id": r.id,
                 "vehicle": r.vehicle_id.name if r.vehicle_id else "",
                 "route": r.route_id.name if r.route_id else "",
-                "departure": str(r.departure_datetime) if r.departure_datetime else "",
+                "departure": str(r.scheduled_departure) if r.scheduled_departure else "",
                 "state": r.state,
             } for r in today_runs],
             "vehicles": [{

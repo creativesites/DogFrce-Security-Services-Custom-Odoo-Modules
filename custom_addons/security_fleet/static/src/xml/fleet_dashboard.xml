@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="security_fleet.FleetDashboard">
-<div class="fd-root o_action" style="background:#f0f2f5;min-height:100vh;font-size:0.875rem;">
+<div class="fd-root o_action" style="background:#f0f2f5;height:100%;overflow-y:auto;font-size:0.875rem;">
 
     <t t-if="state.loading">
         <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">

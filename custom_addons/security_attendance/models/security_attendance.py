@@ -242,6 +242,11 @@ class SecurityAttendanceRecord(models.Model):
         ondelete="set null",
         string="Posting Sheet Batch",
     )
+    hr_attendance_id = fields.Many2one(
+        "hr.attendance",
+        string="Linked HR Attendance",
+        ondelete="set null",
+    )
     name = fields.Char(compute="_compute_name", store=True)
     shift_date = fields.Date(related="roster_slot_id.shift_date", store=True)
     employee_id = fields.Many2one(related="roster_slot_id.employee_id", store=True)
@@ -418,7 +423,7 @@ class SecurityAttendanceRecord(models.Model):
             end_hour = int(template.end_hour)
             end_minute = int(round((template.end_hour - end_hour) * 60))
 
-            tz_name = self.env.company.partner_id.tz or "UTC"
+            tz_name = self.env.user.tz or self.env.company.partner_id.tz or "UTC"
             tz = pytz.timezone(tz_name)
 
             start_dt_local = datetime.combine(
@@ -725,6 +730,12 @@ class SecurityAttendanceRecord(models.Model):
     def _group_expand_status(self, statuses, domain, order):
         return [key for key, _ in type(self).status.selection]
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._sync_hr_attendance()
+        return records
+
     def write(self, vals):
         awol_triggered = (
             vals.get("manual_presence") == "awol"
@@ -733,7 +744,46 @@ class SecurityAttendanceRecord(models.Model):
         result = super().write(vals)
         if awol_triggered:
             self.sudo()._notify_awol()
+        
+        fields_to_sync = {"manual_presence", "check_in", "check_out", "employee_id"}
+        if any(f in vals for f in fields_to_sync):
+            self._sync_hr_attendance()
+            
         return result
+
+    def unlink(self):
+        linked_attendances = self.mapped("hr_attendance_id")
+        result = super().unlink()
+        if linked_attendances:
+            linked_attendances.sudo().unlink()
+        return result
+
+    def _sync_hr_attendance(self):
+        if "hr.attendance" not in self.env:
+            return
+        for record in self:
+            rec_sudo = record.sudo()
+            employee = rec_sudo.employee_id
+            check_in = rec_sudo.check_in
+            check_out = rec_sudo.check_out
+            is_present = rec_sudo.manual_presence == "present"
+
+            if is_present and employee and check_in:
+                vals = {
+                    "employee_id": employee.id,
+                    "check_in": check_in,
+                    "check_out": check_out or False,
+                }
+                if rec_sudo.hr_attendance_id:
+                    rec_sudo.hr_attendance_id.write(vals)
+                else:
+                    new_attendance = self.env["hr.attendance"].sudo().create(vals)
+                    super(SecurityAttendanceRecord, record).write({"hr_attendance_id": new_attendance.id})
+            else:
+                if rec_sudo.hr_attendance_id:
+                    linked_att = rec_sudo.hr_attendance_id
+                    super(SecurityAttendanceRecord, record).write({"hr_attendance_id": False})
+                    linked_att.unlink()
 
     def _notify_awol(self):
         notification_model = self.env.get("security.notification")
@@ -747,7 +797,7 @@ class SecurityAttendanceRecord(models.Model):
             if site and site.supervisor_id and site.supervisor_id.user_id:
                 recipients |= site.supervisor_id.user_id
             mgr_users = self.env["res.users"].search(
-                [("groups_id", "in", [self.env.ref("base.group_system").id])],
+                [("group_ids", "in", [self.env.ref("base.group_system").id])],
                 limit=3,
             )
             recipients |= mgr_users

@@ -45,7 +45,7 @@
                 <select class="ah-select" t-att-value="state.filterSite" t-on-change="onSiteChange">
                     <option value="all">All Sites</option>
                     <t t-foreach="state.sites" t-as="site" t-key="site.id">
-                        <option t-att-value="String(site.id)" t-esc="site.name"/>
+                        <option t-att-value="site.id" t-esc="site.name"/>
                     </t>
                 </select>
             </div>

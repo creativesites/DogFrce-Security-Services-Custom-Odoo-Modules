@@ -189,7 +189,10 @@ class SecurityClientPayment(models.Model):
     def action_cancel(self):
         for payment in self:
             payment.state = "cancelled"
-            payment.invoice_id._compute_payment_status()
+            invoice = payment.invoice_id
+            invoice._compute_payment_status()
+            if invoice.state == "paid" and invoice.payment_status != "paid":
+                invoice.state = "sent"
 
 
 class SecurityRecordPaymentWizard(models.TransientModel):

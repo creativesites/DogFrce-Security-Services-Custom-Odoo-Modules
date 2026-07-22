@@ -18,7 +18,8 @@
     --ah-shadow:   0 1px 3px rgba(0,0,0,.08);
 
     background: var(--ah-bg);
-    min-height: 100vh;
+    height: 100%;
+    overflow-y: auto;
     padding: 24px;
     font-family: system-ui, -apple-system, sans-serif;
     color: var(--ah-text);

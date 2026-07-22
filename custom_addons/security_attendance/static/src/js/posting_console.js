@@ -137,6 +137,8 @@ class AttendancePostingConsole extends Component {
                 "early_departure_minutes",
                 "status",
                 "override_reason",
+                "scheduled_start",
+                "scheduled_end",
             ],
             { order: "employee_id" }
         );
@@ -183,7 +185,14 @@ class AttendancePostingConsole extends Component {
 
     setPresence(rec, value) {
         rec.manual_presence = value;
-        if (value === "absent" || value === "awol") {
+        if (value === "present") {
+            if (!rec.check_in && rec.scheduled_start) {
+                rec.check_in = rec.scheduled_start;
+            }
+            if (!rec.check_out && rec.scheduled_end) {
+                rec.check_out = rec.scheduled_end;
+            }
+        } else if (value === "absent" || value === "awol") {
             rec.check_in = false;
             rec.check_out = false;
         }
@@ -206,6 +215,12 @@ class AttendancePostingConsole extends Component {
         for (const rec of this.state.records) {
             if (rec.manual_presence !== "present") {
                 rec.manual_presence = "present";
+                if (!rec.check_in && rec.scheduled_start) {
+                    rec.check_in = rec.scheduled_start;
+                }
+                if (!rec.check_out && rec.scheduled_end) {
+                    rec.check_out = rec.scheduled_end;
+                }
                 this.state.dirtyIds.add(rec.id);
             }
         }
@@ -481,23 +496,53 @@ class AttendancePostingConsole extends Component {
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
-    /** Convert Odoo datetime string "YYYY-MM-DD HH:MM:SS" → "HH:MM" for time input. */
+    /** Convert Odoo datetime string "YYYY-MM-DD HH:MM:SS" (UTC) → "HH:MM" (Local User Timezone). */
     toTimeInput(odooDatetime) {
         if (!odooDatetime) return "";
-        return String(odooDatetime).replace(" ", "T").slice(11, 16);
+        try {
+            const utcStr = String(odooDatetime).replace(" ", "T");
+            const isoStr = utcStr.includes("Z") ? utcStr : utcStr + "Z";
+            const date = new Date(isoStr);
+            if (isNaN(date.getTime())) return "";
+            const hours = String(date.getHours()).padStart(2, "0");
+            const mins = String(date.getMinutes()).padStart(2, "0");
+            return `${hours}:${mins}`;
+        } catch (e) {
+            return "";
+        }
     }
 
-    /** Build an Odoo-compatible datetime string from a time input value "HH:MM". */
+    /** Build a UTC Odoo-compatible datetime string from local "HH:MM" time input. */
     _timeToDatetime(timeStr) {
         if (!timeStr || !this.state.date) return false;
-        return `${this.state.date} ${timeStr}:00`;
+        try {
+            const date = new Date(`${this.state.date}T${timeStr}:00`);
+            if (isNaN(date.getTime())) return false;
+            const yyyy = date.getUTCFullYear();
+            const mm = String(date.getUTCMonth() + 1).padStart(2, "0");
+            const dd = String(date.getUTCDate()).padStart(2, "0");
+            const hh = String(date.getUTCHours()).padStart(2, "0");
+            const min = String(date.getUTCMinutes()).padStart(2, "0");
+            const ss = String(date.getUTCSeconds()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+        } catch (e) {
+            return false;
+        }
     }
 
     /** Ensure value is an ISO-style string Odoo can parse. */
     _toIsoString(val) {
         if (!val) return false;
         if (typeof val === "string") return val.replace("T", " ").slice(0, 19);
-        if (val instanceof Date) return val.toISOString().replace("T", " ").slice(0, 19);
+        if (val instanceof Date) {
+            const yyyy = val.getUTCFullYear();
+            const mm = String(val.getUTCMonth() + 1).padStart(2, "0");
+            const dd = String(val.getUTCDate()).padStart(2, "0");
+            const hh = String(val.getUTCHours()).padStart(2, "0");
+            const min = String(val.getUTCMinutes()).padStart(2, "0");
+            const ss = String(val.getUTCSeconds()).padStart(2, "0");
+            return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+        }
         return String(val);
     }
 

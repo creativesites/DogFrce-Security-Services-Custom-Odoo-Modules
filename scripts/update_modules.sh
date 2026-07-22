@@ -45,7 +45,7 @@ for mod in "${MODULES[@]}"; do
         continue
     fi
     rsync -az --delete \
-        -e "ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15" \
+        -e "ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 -o ControlPath=/tmp/master-%r@%h:%p" \
         --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' \
         "$src/" "$SERVER:$REMOTE_ADDONS/$mod/"
     echo "  ✓ $mod"
@@ -54,7 +54,7 @@ done
 if $NO_RESTART; then
     echo ""
     echo "Skipped restart (--no-restart). Run manually:"
-    echo "  ssh $SERVER 'docker restart $CONTAINER'"
+    echo "  ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 -o ControlPath=/tmp/master-%r@%h:%p $SERVER 'docker restart $CONTAINER'"
     exit 0
 fi
 
@@ -63,7 +63,7 @@ MOD_LIST=$(IFS=','; echo "${MODULES[*]}")
 
 echo ""
 echo "==> Restarting Odoo with -u $MOD_LIST..."
-ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 "$SERVER" bash <<REMOTE
+ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 -o ControlPath="/tmp/master-%r@%h:%p" "$SERVER" bash <<REMOTE
 set -e
 docker restart $CONTAINER
 echo "  Waiting 20s for startup..."
@@ -76,4 +76,4 @@ echo ""
 echo "Done. Visit: http://47.84.205.81:8069"
 echo ""
 echo "Tip: If modules need schema changes, run inside WorkBench:"
-echo "  docker exec $CONTAINER odoo -d $DB -u $MOD_LIST --stop-after-init"
+echo "  ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 -o ControlPath=\"/tmp/master-%r@%h:%p\" $SERVER \"docker exec \$CONTAINER odoo -d \$DB -u \$MOD_LIST --stop-after-init\""

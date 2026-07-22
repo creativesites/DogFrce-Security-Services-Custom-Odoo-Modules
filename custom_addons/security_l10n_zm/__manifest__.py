@@ -5,7 +5,7 @@
     "category": "Localization",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_payroll_core"],
+    "depends": ["security_payroll_core", "security_l10n_na"],
     "data": [
         "data/security_l10n_zm_data.xml",
         "views/security_l10n_zm_views.xml",

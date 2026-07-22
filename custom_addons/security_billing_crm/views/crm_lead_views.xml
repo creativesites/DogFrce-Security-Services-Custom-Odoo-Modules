@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Smart button on crm.lead form view -->
+    <record id="crm_lead_view_form_inherit_security_billing" model="ir.ui.view">
+        <name>crm.lead.form.inherit.security.billing</name>
+        <model>crm.lead</model>
+        <inherit_id ref="crm.crm_lead_view_form"/>
+        <arch type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_billing_plans"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-usd"
+                        groups="security_base.group_security_supervisor">
+                    <field name="billing_plan_count" widget="statinfo" string="Billing Plans"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="billing_plan_ids" invisible="1"/>
+            </xpath>
+        </arch>
+    </record>
+
+    <!-- Smart field on security.billing.plan form view -->
+    <record id="view_security_billing_plan_form_inherit_crm" model="ir.ui.view">
+        <name>security.billing.plan.form.inherit.crm</name>
+        <model>security.billing.plan</model>
+        <inherit_id ref="security_billing.view_security_billing_plan_form"/>
+        <arch type="xml">
+            <xpath expr="//field[@name='active']" position="after">
+                <field name="lead_id" groups="security_base.group_security_supervisor" readonly="1" invisible="not lead_id"/>
+            </xpath>
+        </arch>
+    </record>
+</odoo>

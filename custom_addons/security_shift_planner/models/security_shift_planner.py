@@ -56,7 +56,7 @@ class SecuritySlotSuggestion(models.Model):
         post_type = slot.post_id.post_type_id if slot.post_id else False
         if post_type and post_type.min_grade_id:
             emp_seq = employee.security_grade_id.sequence if employee.security_grade_id else 0
-            if emp_seq < post_type.min_grade_id.sequence:
+            if not employee.security_grade_id or emp_seq > post_type.min_grade_id.sequence:
                 return (
                     f"{employee.name} is Grade {employee.security_grade_id.name or 'None'} "
                     f"but this post requires at least Grade {post_type.min_grade_id.name}."
@@ -229,7 +229,7 @@ class SecurityRosterBatch(models.Model):
                 )
                 if manager_group:
                     manager_users = self.env["res.users"].search(
-                        [("groups_id", "in", [manager_group.id])]
+                        [("group_ids", "in", [manager_group.id])]
                     )
                 else:
                     manager_users = self.env["res.users"].browse()
@@ -471,7 +471,7 @@ class SecurityRosterSlot(models.Model):
             # Grade check
             if min_grade_seq > 0:
                 emp_grade_seq = employee.security_grade_id.sequence if employee.security_grade_id else 0
-                if emp_grade_seq < min_grade_seq:
+                if not employee.security_grade_id or emp_grade_seq > min_grade_seq:
                     continue
             # Reliability score
             if employee.security_reliability_score < min_score:
@@ -556,7 +556,7 @@ class SecurityRosterSlot(models.Model):
         if slot.post_id.post_type_id.min_grade_id and employee.security_grade_id:
             min_seq = slot.post_id.post_type_id.min_grade_id.sequence
             emp_seq = employee.security_grade_id.sequence
-            if emp_seq > min_seq:
+            if emp_seq < min_seq:
                 score += 10
                 parts.append("△ Above minimum grade: +10")
 

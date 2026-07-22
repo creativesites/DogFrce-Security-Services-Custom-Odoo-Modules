@@ -19,12 +19,12 @@
                         <!-- Header Title -->
                         <div class="row border-bottom pb-3 mb-4">
                             <div class="col-6">
-                                <h3 class="text-primary fw-bold mb-1" style="color: #1e3d59;">DOGFORCE SECURITY SERVICES</h3>
+                                <!-- <h3 class="text-primary fw-bold mb-1" style="color: #1e3d59;">DOGFORCE SECURITY SERVICES</h3> -->
                                 <p class="text-muted small mb-0">Professional Guarding &amp; Tactical Operations</p>
                                 <p class="text-muted small mb-0">Windhoek, Namibia</p>
                             </div>
                             <div class="col-6 text-end">
-                                <h2 class="fw-bold mb-1" style="color: #1e3d59; letter-spacing: 1px;">SALARY ADVICE</h2>
+                                <h2 class="fw-bold mb-1" style="color: #1e3d59; letter-spacing: 1px;">Payslip</h2>
                                 <span class="badge bg-success text-uppercase p-2" style="font-size: 11px;"><t t-esc="doc.state"/></span>
                             </div>
                         </div>
