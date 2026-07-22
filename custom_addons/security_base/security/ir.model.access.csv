@@ -7,3 +7,5 @@ access_security_disqualification_reason_user,security.disqualification.reason us
 access_security_reliability_adjustment_user,security.reliability.adjustment user,model_security_reliability_adjustment,hr.group_hr_user,1,1,1,1
 access_security_employee_certification,security.employee.certification,model_security_employee_certification,base.group_user,1,1,1,0
 access_security_employee_certification_manager,security.employee.certification manager,model_security_employee_certification,base.group_system,1,1,1,1
+access_security_event_log_user,security.event.log user,model_security_event_log,base.group_user,1,1,1,1
+

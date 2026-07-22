@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="crm_lead_view_form_inherit_ops" model="ir.ui.view">
+        <field name="name">crm.lead.form.inherit.ops</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//sheet/group" position="after">
+                <group name="security_ops_intelligence" string="DeployGuard Operational Intelligence">
+                    <group string="Account SLA Health Metrics">
+                        <field name="opportunity_health" widget="priority" readonly="1"/>
+                        <field name="renewal_probability" readonly="1"/>
+                        <field name="account_risk" widget="badge" readonly="1"/>
+                    </group>
+                    <group string="Trailing 30-Day Logs">
+                        <field name="sla_breach_count" readonly="1"/>
+                    </group>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_roster_slot_form_inherit_compliance" model="ir.ui.view">
+        <field name="name">security.roster.slot.form.inherit.compliance</field>
+        <field name="model">security.roster.slot</field>
+        <field name="inherit_id" ref="security_operations.view_security_roster_slot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='override_reason']" position="after">
+                <field name="compliance_override" widget="boolean_toggle"/>
+                <field name="compliance_override_reason" invisible="not compliance_override" required="compliance_override" placeholder="Specify compliance override reason..."/>
+                <field name="compliance_override_user_id" invisible="not compliance_override" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

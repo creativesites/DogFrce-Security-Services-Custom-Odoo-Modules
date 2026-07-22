@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Expose latest client portal ratings and feedback on site forms -->
+    <record id="view_security_client_site_form_inherit_portal" model="ir.ui.view">
+        <field name="name">security.client.site.form.inherit.portal</field>
+        <field name="model">security.client.site</field>
+        <field name="inherit_id" ref="security_operations.view_security_client_site_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='supervisor_id']" position="after">
+                <field name="latest_client_rating" widget="priority" readonly="1"/>
+                <field name="latest_client_feedback" readonly="1"/>
+                <field name="latest_client_feedback_date" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

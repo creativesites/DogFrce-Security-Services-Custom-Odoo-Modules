@@ -734,6 +734,12 @@ class SecurityAttendanceRecord(models.Model):
     def create(self, vals_list):
         records = super().create(vals_list)
         records._sync_hr_attendance()
+        # DeployGuard Intelligence Bus Event
+        event_model = self.env.get("security.event.log")
+        if event_model:
+            for rec in records:
+                if rec.manual_presence in ["absent", "awol"] or rec.absence_type == "awol":
+                    event_model.register_event("attendance.missed", "security.attendance.record", rec.id)
         return records
 
     def write(self, vals):
@@ -744,6 +750,12 @@ class SecurityAttendanceRecord(models.Model):
         result = super().write(vals)
         if awol_triggered:
             self.sudo()._notify_awol()
+        
+        # DeployGuard Intelligence Bus Event
+        event_model = self.env.get("security.event.log")
+        if event_model and (vals.get("manual_presence") in ["absent", "awol"] or vals.get("absence_type") == "awol"):
+            for rec in self:
+                event_model.register_event("attendance.missed", "security.attendance.record", rec.id)
         
         fields_to_sync = {"manual_presence", "check_in", "check_out", "employee_id"}
         if any(f in vals for f in fields_to_sync):

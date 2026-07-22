@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Integrate Security Dashboard into standard Odoo Portal Home page links -->
+    <template id="portal_my_home_security" name="Show Security Dashboard" inherit_id="portal.portal_my_home" priority="30">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
+            <t t_call="portal.portal_docs_entry">
+                <t t_set="title">DeployGuard Security Operations</t>
+                <t t_set="url">/my/security-dashboard</t>
+                <t t_set="placeholder_count">Live</t>
+            </t>
+        </xpath>
+    </template>
+
+    <!-- Detailed Premium Portal Client Dashboard Template -->
+    <template id="security_portal_dashboard" name="DeployGuard Security Dashboard">
+        <t t_call="portal.portal_layout">
+            <t t_set="breadcrumbs_searchbar" t_value="True"/>
+            
+            <div class="container-fluid py-4" style="font-family: 'Outfit', sans-serif; background: #0b0f19; color: #f3f4f6; min-height: 100vh; border-radius: 12px; margin-top: 16px; overflow-x: hidden;">
+                <!-- Embedded CSS for absolute visual control, glassmorphism, and micro-animations -->
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&amp;display=swap');
+                    
+                    .glass-card {
+                        background: rgba(17, 24, 39, 0.7);
+                        backdrop-filter: blur(16px);
+                        -webkit-backdrop-filter: blur(16px);
+                        border: 1px solid rgba(255, 255, 255, 0.08);
+                        border-radius: 16px;
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    }
+                    .glass-card:hover {
+                        transform: translateY(-4px);
+                        border-color: rgba(255, 255, 255, 0.15);
+                        box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.5);
+                    }
+                    .text-gradient-cyan {
+                        background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                    }
+                    .text-gradient-green {
+                        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                    }
+                    .text-gradient-orange {
+                        background: linear-gradient(135deg, #f97316 0%, #f43f5e 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                    }
+                    .pulse-dot {
+                        width: 8px;
+                        height: 8px;
+                        background-color: #10b981;
+                        border-radius: 50%;
+                        display: inline-block;
+                        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                        animation: pulse 1.6s infinite;
+                    }
+                    @keyframes pulse {
+                        0% {
+                            transform: scale(0.95);
+                            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+                        }
+                        70% {
+                            transform: scale(1);
+                            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+                        }
+                        100% {
+                            transform: scale(0.95);
+                            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                        }
+                    }
+                    .rating-star {
+                        color: #4b5563;
+                        font-size: 24px;
+                        cursor: pointer;
+                        transition: color 0.2s ease;
+                    }
+                    .rating-star:hover, .rating-star.selected {
+                        color: #f59e0b;
+                    }
+                    .submit-btn {
+                        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                        border: none;
+                        border-radius: 8px;
+                        color: #fff;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                    }
+                    .submit-btn:hover {
+                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+                        transform: translateY(-1px);
+                    }
+                </style>
+
+                <!-- Header / Greeting Section -->
+                <div class="row align-items-center mb-4 pb-2">
+                    <div class="col-md-8">
+                        <h1 class="display-6 font-weight-bold mb-1" style="letter-spacing: -0.5px;">
+                            Welcome, <span class="text-gradient-cyan"><t t_esc="partner.name"/></span>
+                        </h1>
+                        <p class="text-muted mb-0">DeployGuard Operational Command Center | Real-time SLA Integrity Portal</p>
+                    </div>
+                    <div class="col-md-4 text-md-right mt-3 mt-md-0">
+                        <span class="badge badge-pill py-2 px-3" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; font-size: 13px;">
+                            <span class="pulse-dot mr-2"></span>SYSTEM STATUS: HEALTHY
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Success Banner -->
+                <t t_if="success_message">
+                    <div class="alert alert-success border-0 mb-4 p-3 glass-card" role="alert" style="background: rgba(16, 185, 129, 0.15); border-left: 4px solid #10b981 !important; color: #34d399;">
+                        <i class="fa fa-check-circle mr-2"></i><t t_esc="success_message"/>
+                    </div>
+                </t>
+
+                <!-- Statistics Widgets Panel -->
+                <div class="row mb-4">
+                    <!-- Total Guard Posts Scheduled -->
+                    <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+                        <div class="card glass-card p-4 h-100 text-center text-sm-left">
+                            <div class="text-muted font-weight-medium small text-uppercase mb-1" style="letter-spacing: 0.5px;">Today's Deployment Postings</div>
+                            <div class="h2 font-weight-bold mb-1 text-gradient-cyan"><t t_esc="stats['total_posts']"/></div>
+                            <div class="small text-muted"><t t_esc="stats['assigned_posts']"/> Guards Allocated Scheduled</div>
+                        </div>
+                    </div>
+
+                    <!-- Present Active Now -->
+                    <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+                        <div class="card glass-card p-4 h-100 text-center text-sm-left">
+                            <div class="text-muted font-weight-medium small text-uppercase mb-1" style="letter-spacing: 0.5px;">On-Site Active Now</div>
+                            <div class="h2 font-weight-bold mb-1 text-gradient-green"><t t_esc="stats['present_guards']"/></div>
+                            <div class="small text-muted"><span class="pulse-dot mr-1"></span> Verified via Physical Geo-Clocking</div>
+                        </div>
+                    </div>
+
+                    <!-- Missing Posts Critical Action -->
+                    <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+                        <div class="card glass-card p-4 h-100 text-center text-sm-left">
+                            <div class="text-muted font-weight-medium small text-uppercase mb-1" style="letter-spacing: 0.5px;">Unexcused AWOL / Missed</div>
+                            <div class="h2 font-weight-bold mb-1" t-att-class="'text-danger' if stats['missing_guards'] > 0 else 'text-muted'"><t t_esc="stats['missing_guards']"/></div>
+                            <div class="small text-muted">
+                                <t t_if="stats['missing_guards'] > 0">
+                                    <span class="text-danger font-weight-bold"><i class="fa fa-exclamation-triangle mr-1"></i> SLA CRITICAL RISK</span>
+                                </t>
+                                <t t_else="">All scheduled personnel deployed</t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completed Shifts -->
+                    <div class="col-sm-6 col-lg-3 mb-3 mb-lg-0">
+                        <div class="card glass-card p-4 h-100 text-center text-sm-left" style="background: linear-gradient(135deg, rgba(37,99,235,0.05) 0%, rgba(139,92,246,0.05) 100%);">
+                            <div class="text-muted font-weight-medium small text-uppercase mb-1" style="letter-spacing: 0.5px;">Completed Hand-Offs</div>
+                            <div class="h2 font-weight-bold mb-1 text-gradient-orange"><t t_esc="stats['completed_shifts']"/></div>
+                            <div class="small text-muted">Archived Shifts Completed Today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid & Interactive Forms -->
+                <div class="row">
+                    <!-- Left Column: Active Deployment Grid -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card glass-card p-4 h-100">
+                            <h3 class="h5 font-weight-bold mb-3"><i class="fa fa-shield mr-2 text-primary"></i> Live Shift Postings &amp; Coverage</h3>
+                            
+                            <t t_if="not roster_slots">
+                                <div class="text-center py-5 text-muted">
+                                    <i class="fa fa-info-circle fa-2x mb-3 text-secondary"></i>
+                                    <p>No active security postings found for today's date.</p>
+                                </div>
+                            </t>
+                            
+                            <t t_else="">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless align-middle" style="color: #e5e7eb;">
+                                        <thead>
+                                            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); color: #9ca3af; font-size: 13px;">
+                                                <th class="pb-3 text-uppercase">Site / Post</th>
+                                                <th class="pb-3 text-uppercase">Allocated Security Officer</th>
+                                                <th class="pb-3 text-uppercase text-center">Duty Slot</th>
+                                                <th class="pb-3 text-uppercase text-right">Coverage Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t_foreach="roster_slots" t_as="slot">
+                                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); transition: background-color 0.2s ease;">
+                                                    <td class="py-3">
+                                                        <div class="font-weight-bold text-gradient-cyan"><t t_esc="slot.site_id.name"/></div>
+                                                        <span class="small text-muted"><t t_esc="slot.post_id.name"/></span>
+                                                    </td>
+                                                    <td class="py-3">
+                                                        <t t_if="slot.employee_id">
+                                                            <div class="font-weight-semibold"><t t_esc="slot.employee_id.name"/></div>
+                                                            <span class="badge badge-pill badge-dark" style="font-size: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);"><t t_esc="slot.employee_id.security_grade_id.name or 'Officer'"/></span>
+                                                        </t>
+                                                        <t t_else="">
+                                                            <span class="text-danger font-weight-bold small"><i class="fa fa-user-times mr-1"></i> UNASSIGNED</span>
+                                                        </t>
+                                                    </td>
+                                                    <td class="py-3 text-center small text-muted">
+                                                        #<t t_esc="slot.slot_number or '1'"/>
+                                                    </td>
+                                                    <td class="py-3 text-right">
+                                                        <t t_if="slot.state == 'confirmed'">
+                                                            <span class="badge badge-pill px-3 py-2" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 11px;">Confirmed / Active</span>
+                                                        </t>
+                                                        <t t_else="">
+                                                            <span class="badge badge-pill px-3 py-2" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 11px;">Draft / Unconfirmed</span>
+                                                        </t>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Interactive Site Feedback & Ratings -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card glass-card p-4">
+                            <h3 class="h5 font-weight-bold mb-2"><i class="fa fa-star mr-2 text-warning"></i> Operational Feedback</h3>
+                            <p class="small text-muted mb-4">Grade operational coverage quality. Feedback logs are routed back instantly to CRM Account Risk indexes.</p>
+                            
+                            <form action="/my/security-dashboard/feedback" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                
+                                <div class="form-group mb-3">
+                                    <label class="form-label font-weight-semibold small text-muted text-uppercase mb-2">Select Protected Site</label>
+                                    <select class="form-control" name="site_id" required="required" style="background: #111827; border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px;">
+                                        <t t_foreach="sites" t_as="site">
+                                            <option t-att-value="site.id"><t t_esc="site.name"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+
+                                <div class="form-group mb-4 text-center">
+                                    <label class="form-label d-block text-left font-weight-semibold small text-muted text-uppercase mb-3">Quality Rating</label>
+                                    <div class="d-flex justify-content-center gap-3">
+                                        <div class="rating-stars" style="display: flex; gap: 10px;">
+                                            <i class="fa fa-star rating-star" data-rating="1"></i>
+                                            <i class="fa fa-star rating-star" data-rating="2"></i>
+                                            <i class="fa fa-star rating-star" data-rating="3"></i>
+                                            <i class="fa fa-star rating-star" data-rating="4"></i>
+                                            <i class="fa fa-star rating-star selected" data-rating="5"></i>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="rating" id="rating_value" value="5"/>
+                                </div>
+
+                                <div class="form-group mb-4">
+                                    <label class="form-label font-weight-semibold small text-muted text-uppercase mb-2">Performance Comments</label>
+                                    <textarea class="form-control" name="feedback" rows="4" placeholder="Report on arrival times, guard attire, alertness, or incident comments..." style="background: #111827; border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px; font-size: 14px; resize: none;" required="required"></textarea>
+                                </div>
+
+                                <button type="submit" class="btn submit-btn w-100 py-2.5">
+                                    Submit Operations Review
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Javascript interactive logic -->
+            <script type="text/javascript">
+                document.addEventListener("DOMContentLoaded", function() {
+                    const stars = document.querySelectorAll(".rating-star");
+                    const ratingValue = document.getElementById("rating_value");
+
+                    stars.forEach(star => {
+                        star.addEventListener("click", function() {
+                            const r = parseInt(this.getAttribute("data-rating"));
+                            ratingValue.value = r;
+                            
+                            // Highlight stars up to clicked rating
+                            stars.forEach(s => {
+                                const sr = parseInt(s.getAttribute("data-rating"));
+                                if (sr &lt;= r) {
+                                    s.classList.add("selected");
+                                } else {
+                                    s.classList.remove("selected");
+                                }
+                            });
+                        });
+                    });
+                });
+            </script>
+        </t>
+    </template>
+</odoo>

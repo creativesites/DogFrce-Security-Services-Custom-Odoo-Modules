@@ -104,6 +104,14 @@ graph TD
     PAY --> ZM[security_l10n_zm]
     BILL --> ZRA[security_zra_invoice]
     BASE --> HELP[security_help]
+
+    OPS --> ONB[security_client_onboarding]
+    BILL --> ONB
+    BILL --> BILL_ACC[security_billing_account]
+    BILL --> BILL_CRM[security_billing_crm]
+    BILL --> BILL_SALE[security_billing_sale]
+    BASE --> THEME[security_theme]
+    BASE --> LICE[security_licensing]
 ```
 
 **Parallel branches** attach at different layers:
@@ -130,6 +138,11 @@ Rather than duplicating entities, modules extend existing models:
 | `security.billing.invoice` | `security_ai_engine` | AI audit fields |
 | `security.roster.batch` | `security_ai_engine` | AI optimizer fields |
 | `security.roster.slot` | `security_shift_planner` | Guard scoring and suggestions |
+| `crm.lead` | `security_billing_crm` | Map CRM leads to custom security billing plans |
+| `security.billing.plan` | `security_billing_crm`, `security_billing_sale` | Link billing plans to opportunities and sales orders |
+| `sale.order` | `security_billing_sale` | Integrate custom security services with sales contracts |
+| `security.billing.invoice` | `security_billing_account`, `security_zra_invoice` | Sync custom security invoices with standard `account.move` journal entries and ZRA fiscal signatures |
+| `res.config.settings` | `security_licensing`, `security_theme`, `security_demo_site` | System-wide theme selection, license validation controls, and sandbox restrictions |
 
 This is the primary integration mechanism between modules — no shared service layer, no event bus.
 
@@ -285,13 +298,20 @@ OWL-based searchable help portal surfaced as an Odoo client action:
 | `security_equipment` | Equipment categories, allocations to guards, damage claims → payroll deduction |
 | `security_fleet` | Vehicles, shuttle routes/runs/passengers, fuel logs, inspections, service logs |
 | `security_reporting` | Pivot/graph views only — no new models; dashboards on existing data |
+| `security_client_onboarding` | 6-step wizard to onboard a new client, link contracts, sites, shift requirements, and generate first roster batch |
+| `security_theme` | DogForce white-label branding, login customization, preset color themes, and corporate PDF reports |
+| `security_licensing` | License enforcement, certificate management, and system entitlement limits for DeployGuard OS |
+| `security_billing_account` | Auto-installed integration between custom security invoices and standard Odoo customer invoices (`account.move`) |
+| `security_billing_crm` | Auto-installed integration between custom security billing plans and CRM leads/opportunities |
+| `security_billing_sale` | Auto-installed integration between custom security billing plans and standard Sales Orders |
 | `security_demo_data` | Post-install hook seeds a full Namibian demo company |
+| `security_demo_data_zm` | Post-init hook to seed complete Zambian operational and payroll demo data for Sentinel Security Ltd |
 | `security_demo_site` | Demo site login panel and demo account management for sandbox environments |
 | `security_shift_planner` | Constraint-satisfaction guard scoring, roster suggestions, Roster Board OWL |
 | `security_ai_engine` | Multi-provider AI facade (Claude/OpenAI/Gemini); anomaly detection, risk profiling, billing audit, roster optimizer |
 | `security_notifications` | Internal alert model; daily crons scan document expiry and overdue invoices |
 | `security_dogforce_migration` | CSV import tools for guards, clients, leave balances, and loans with row-level error logging |
-| `security_suite` | Meta-module that installs the complete Security Suite (all 26 modules) in one step |
+| `security_suite` | Meta-module that installs the complete Security Suite (all 34 modules) in one step |
 
 ---
 
@@ -528,7 +548,11 @@ The full module chain from base through billing, plus equipment, fleet, mobile A
 - Zambia localization (`security_l10n_zm`) — NAPSA, NHIMA, WCF, PAYE, ZM payslip PDF, 7 unit tests
 - ZRA Smart Invoice (`security_zra_invoice`) — VSDC API integration, cancellation, bulk wizard, exponential backoff cron
 - In-app Help Centre (`security_help`) — OWL portal, country-aware articles, Zambia content seeded
-- `security_suite` meta-module for one-step install
+- Client Onboarding Wizard (`security_client_onboarding`) — 6-step unified client onboarding wizard (contract, sites, posts, requirements, billing, first roster batch)
+- White-label Theme (`security_theme`) — system branding, color theme preset switcher, custom login panel
+- DeployGuard Licensing (`security_licensing`) — license key validation, admin settings, run-time capability enforcement
+- Standard Odoo Integrations — CRM, Sales, and Accounting integration bridges for custom billing plans (`security_billing_crm`, `security_billing_sale`, `security_billing_account`)
+- `security_suite` meta-module for one-step install (all 34 modules)
 - `security_demo_site` demo environment panel
 
 ### Planned but not implemented
