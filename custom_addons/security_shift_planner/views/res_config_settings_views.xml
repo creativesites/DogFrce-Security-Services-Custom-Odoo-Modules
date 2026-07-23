@@ -53,10 +53,9 @@
 
     <record id="action_security_roster_cycle_config" model="ir.actions.act_window">
         <field name="name">Roster Cycle Settings</field>
-        <field name="type">ir.actions.act_window</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
-        <field name="target">inline</field>
-        <field name="context">{'module' : 'security_shift_planner'}</field>
+        <field name="target">current</field>
+        <field name="context">{'module': 'security_shift_planner'}</field>
     </record>
 </odoo>
