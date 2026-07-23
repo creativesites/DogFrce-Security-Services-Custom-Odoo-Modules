@@ -132,6 +132,15 @@ class SecurityBillingPlanLine(models.Model):
             multiplier = line.guard_count if line.billing_basis == "guard_shift" else 1.0
             line.subtotal = line.quantity * line.unit_price * multiplier
 
+    @api.onchange("post_id")
+    def _onchange_post_id(self):
+        for line in self:
+            if line.post_id:
+                if line.post_id.post_type_id:
+                    line.post_type_id = line.post_id.post_type_id
+                if not line.name:
+                    line.name = line.post_id.name
+
     @api.constrains("quantity", "unit_price", "guard_count")
     def _check_line_values(self):
         for line in self:
@@ -264,6 +273,38 @@ class SecurityBillingInvoice(models.Model):
         for invoice in self:
             if invoice.site_id and invoice.site_id.partner_id != invoice.partner_id:
                 invoice.site_id = False
+            if invoice.contract_id and invoice.contract_id.partner_id != invoice.partner_id:
+                invoice.contract_id = False
+            if invoice.billing_plan_id and invoice.billing_plan_id.partner_id != invoice.partner_id:
+                invoice.billing_plan_id = False
+            if invoice.line_ids:
+                for line in invoice.line_ids:
+                    if line.site_id and line.site_id.partner_id != invoice.partner_id:
+                        line.site_id = False
+                    if line.post_id and line.post_id.site_id.partner_id != invoice.partner_id:
+                        line.post_id = False
+
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for invoice in self:
+            if invoice.site_id:
+                if not invoice.partner_id or invoice.site_id.partner_id != invoice.partner_id:
+                    invoice.partner_id = invoice.site_id.partner_id
+                contract_model = self.env.get("security.client.contract")
+                if contract_model and not invoice.contract_id:
+                    today = invoice.invoice_date or fields.Date.context_today(self)
+                    active_contract = contract_model.get_active_for_site(invoice.site_id, today)
+                    if active_contract:
+                        invoice.contract_id = active_contract.id
+
+    @api.onchange("contract_id")
+    def _onchange_contract_id(self):
+        for invoice in self:
+            if invoice.contract_id:
+                if not invoice.partner_id or invoice.contract_id.partner_id != invoice.partner_id:
+                    invoice.partner_id = invoice.contract_id.partner_id
+                if invoice.contract_id.site_id and not invoice.site_id:
+                    invoice.site_id = invoice.contract_id.site_id
 
     @api.onchange("invoice_date")
     def _onchange_invoice_date(self):
@@ -795,6 +836,19 @@ class SecurityBillingInvoiceLine(models.Model):
         for line in self:
             line.subtotal = line.quantity * line.unit_price * max(line.guard_count, 1)
 
+    @api.onchange("site_id")
+    def _onchange_site_id(self):
+        for line in self:
+            if line.site_id and line.post_id and line.post_id.site_id != line.site_id:
+                line.post_id = False
+
+    @api.onchange("post_id")
+    def _onchange_post_id(self):
+        for line in self:
+            if line.post_id:
+                if line.post_id.site_id and not line.site_id:
+                    line.site_id = line.post_id.site_id
+
     @api.constrains("service_date_from", "service_date_to", "quantity", "unit_price", "guard_count")
     def _check_invoice_line_values(self):
         for line in self:
@@ -962,3 +1016,63 @@ class SecurityBillingDashboard(models.AbstractModel):
             "plans": plans_data,
             "recent_invoices": recent_data,
         }
+
+
+class ResPartner(models.Model):
+    _inherit = "res.partner"
+
+    security_billing_plan_count = fields.Integer(
+        compute="_compute_security_billing_counts",
+        string="Billing Plans",
+    )
+    security_contract_count = fields.Integer(
+        compute="_compute_security_billing_counts",
+        string="Security Contracts",
+    )
+    security_invoice_count = fields.Integer(
+        compute="_compute_security_billing_counts",
+        string="Security Invoices",
+    )
+
+    def _compute_security_billing_counts(self):
+        plan_model = self.env.get("security.billing.plan")
+        contract_model = self.env.get("security.client.contract")
+        invoice_model = self.env.get("security.billing.invoice")
+        for partner in self:
+            partner.security_billing_plan_count = (
+                plan_model.search_count([("partner_id", "=", partner.id)]) if plan_model else 0
+            )
+            partner.security_contract_count = (
+                contract_model.search_count([("partner_id", "=", partner.id)]) if contract_model else 0
+            )
+            partner.security_invoice_count = (
+                invoice_model.search_count([("partner_id", "=", partner.id)]) if invoice_model else 0
+            )
+
+    def action_view_security_billing_plans(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("security_billing.action_security_billing_plan")
+        action.update({
+            "domain": [("partner_id", "=", self.id)],
+            "context": {"default_partner_id": self.id},
+        })
+        return action
+
+    def action_view_security_contracts(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("security_operations.action_security_client_contract")
+        action.update({
+            "domain": [("partner_id", "=", self.id)],
+            "context": {"default_partner_id": self.id},
+        })
+        return action
+
+    def action_view_security_invoices(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("security_billing.action_security_billing_invoice")
+        action.update({
+            "domain": [("partner_id", "=", self.id)],
+            "context": {"default_partner_id": self.id},
+        })
+        return action
+
