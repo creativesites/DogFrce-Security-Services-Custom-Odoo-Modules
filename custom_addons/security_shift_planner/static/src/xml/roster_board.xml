@@ -38,12 +38,17 @@
             </select>
         </div>
 
-        <!-- New Roster button -->
-        <div class="px-3 pb-2">
+        <!-- New Roster & Manage Batches buttons -->
+        <div class="px-3 pb-2 d-flex flex-column gap-1">
             <button class="rb-btn"
                     style="width:100%; font-size:12px; background:#1d4ed8; color:#fff; border-radius:7px;"
                     t-on-click="openCreateDialog">
-                <i class="fa fa-plus me-1"/>New Roster
+                <i class="fa fa-plus me-1"/>New Roster Batch
+            </button>
+            <button class="rb-btn rb-btn-ghost"
+                    style="width:100%; font-size:11px; color:#93c5fd; border:1px solid #334155; border-radius:7px;"
+                    t-on-click="openBatchesManager">
+                <i class="fa fa-layer-group me-1"/>Manage All Batches
             </button>
         </div>
 
@@ -759,86 +764,241 @@
     </t>
 
     <!-- ═══════════════════════════════════════════════════════════
-         CREATE ROSTER BATCH DIALOG
+         MONTHLY ROSTER BATCHES MANAGER (MODAL & MOBILE BOTTOM SHEET)
          ═══════════════════════════════════════════════════════════ -->
-    <t t-if="state.createDialog.visible">
-        <div style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center;"
-             t-on-click="closeCreateDialog">
-            <div style="background:#fff; border-radius:14px; width:420px; max-width:92vw; box-shadow:0 20px 60px rgba(0,0,0,.25); overflow:hidden;"
+    <t t-if="state.showBatchesDrawer">
+        <div class="rb-modal-overlay" t-on-click="closeBatchesManager">
+            <div t-att-class="'rb-modal-box ' + (state.isMobile ? 'rb-bottom-sheet' : 'rb-modal-lg')"
                  t-on-click.stop="">
 
-                <!-- Modal header -->
-                <div style="background:#1e3a5f; padding:18px 22px 16px; display:flex; align-items:center; justify-content:space-between;">
+                <!-- Mobile handle -->
+                <div t-if="state.isMobile" class="rb-sheet-handle-bar">
+                    <div class="rb-sheet-handle"/>
+                </div>
+
+                <!-- Header -->
+                <div class="rb-modal-header d-flex align-items-center justify-content-between px-4 py-3">
                     <div>
-                        <div style="font-size:15px; font-weight:700; color:#fff; letter-spacing:.2px;">
-                            <i class="fa fa-calendar-plus-o me-2" style="color:#60a5fa;"/>New Roster Batch
+                        <div class="fw-bold text-white d-flex align-items-center gap-2" style="font-size:16px;">
+                            <i class="fa fa-layer-group text-primary"/>
+                            <span>Monthly Roster Batches</span>
+                            <span class="badge bg-primary rounded-pill" style="font-size:11px;" t-esc="batchesList.length"/>
                         </div>
-                        <div style="font-size:12px; color:#94a3b8; margin-top:3px;">
-                            Generate slots from shift requirements
+                        <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+                            Cycle Settings: Dogforce Default (<t t-esc="state.companyCycle.startDay"/>th to <t t-esc="state.companyCycle.endDay"/>th)
                         </div>
                     </div>
-                    <button style="background:none; border:none; color:#94a3b8; font-size:18px; cursor:pointer; line-height:1; padding:2px 6px;"
-                            t-on-click="closeCreateDialog">&#x2715;</button>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="rb-btn rb-btn-primary rb-btn-sm" t-on-click="() => this.openCreateDialog()">
+                            <i class="fa fa-plus me-1"/>New Batch
+                        </button>
+                        <button class="rb-btn-close-icon" t-on-click="closeBatchesManager">&#x2715;</button>
+                    </div>
+                </div>
+
+                <!-- Search & Status Filter Bar -->
+                <div class="px-4 pt-3 pb-2 border-bottom border-dark d-flex flex-column flex-md-row gap-2 align-items-md-center justify-content-between"
+                     style="background:#0f172a;">
+                    <!-- Filter Pills -->
+                    <div class="d-flex gap-1 overflow-auto py-1" style="max-width:100%;">
+                        <t t-foreach="['all', 'draft', 'generated', 'submitted', 'approved', 'confirmed', 'cancelled']" t-as="fState" t-key="fState">
+                            <button t-att-class="'rb-filter-pill ' + (state.batchesFilter === fState ? 'active' : '')"
+                                    t-on-click="() => this.setBatchesFilter(fState)">
+                                <t t-esc="fState.charAt(0).toUpperCase() + fState.slice(1)"/>
+                            </button>
+                        </t>
+                    </div>
+                    <!-- Search Input -->
+                    <div style="min-width:200px;">
+                        <input type="text" class="form-control form-control-sm rb-search-input"
+                               placeholder="Search batch, client..."
+                               t-att-value="state.batchesSearch"
+                               t-on-input="onBatchesSearchInput"/>
+                    </div>
+                </div>
+
+                <!-- Body / Cards Grid -->
+                <div class="rb-modal-body p-3 p-md-4 overflow-auto" style="max-height:65vh;">
+                    <t t-if="batchesList.length === 0">
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa fa-folder-open-o display-4 mb-2" style="color:#475569;"/>
+                            <div>No roster batches found matching criteria.</div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="row g-3">
+                            <t t-foreach="batchesList" t-as="b" t-key="b.id">
+                                <div class="col-12 col-md-6 col-lg-4">
+                                    <div t-att-class="'rb-batch-card ' + (b.id === state.batchId ? 'active-batch' : '')">
+                                        <!-- Top Info -->
+                                        <div class="d-flex align-items-start justify-content-between mb-2">
+                                            <div>
+                                                <div class="fw-bold text-white mb-1" style="font-size:14px;" t-esc="b.name"/>
+                                                <div class="text-muted" style="font-size:11px;">
+                                                    <i class="fa fa-calendar me-1 text-primary"/>
+                                                    <t t-esc="formatDateShort(b.date_from)"/> – <t t-esc="formatDateShort(b.date_to)"/>
+                                                </div>
+                                            </div>
+                                            <span class="badge rounded-pill text-uppercase"
+                                                  t-att-style="'font-size:10px; font-weight:700; padding:4px 8px; color:#fff; background:' + batchStateColor(b.state)"
+                                                  t-esc="b.state"/>
+                                        </div>
+
+                                        <!-- Fill Rate Progress -->
+                                        <div class="my-2">
+                                            <div class="d-flex justify-content-between mb-1" style="font-size:11px;">
+                                                <span class="text-muted">Coverage Rate</span>
+                                                <span class="fw-bold text-white"><t t-esc="b.fill_rate || 0"/>%</span>
+                                            </div>
+                                            <div class="progress" style="height:6px; background:#1e293b; border-radius:4px;">
+                                                <div class="progress-bar bg-success"
+                                                     t-att-style="'width:' + (b.fill_rate || 0) + '%; border-radius:4px;'"/>
+                                            </div>
+                                        </div>
+
+                                        <!-- Stats Badges -->
+                                        <div class="d-flex gap-2 my-2 pt-1">
+                                            <span class="badge bg-dark text-light border border-secondary" style="font-size:10px;">
+                                                Unassigned: <t t-esc="b.unassigned_count || 0"/>
+                                            </span>
+                                            <t t-if="b.critical_gap_count > 0">
+                                                <span class="badge bg-danger text-white" style="font-size:10px;">
+                                                    <i class="fa fa-warning me-1"/>Gaps: <t t-esc="b.critical_gap_count"/>
+                                                </span>
+                                            </t>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex gap-1 mt-3 pt-2 border-top border-secondary">
+                                            <button class="rb-btn rb-btn-sm rb-btn-primary flex-grow-1"
+                                                    t-on-click="() => this.selectBatchFromManager(b.id)">
+                                                <i class="fa fa-arrow-right me-1"/>
+                                                <t t-if="b.id === state.batchId">Active</t>
+                                                <t t-else="">Open</t>
+                                            </button>
+                                            <button class="rb-btn rb-btn-sm rb-btn-ghost"
+                                                    title="Auto-Fill Slots"
+                                                    t-on-click="() => this.autoFillBatchFromManager(b.id)">
+                                                <i class="fa fa-bolt text-warning"/>
+                                            </button>
+                                            <button class="rb-btn rb-btn-sm rb-btn-ghost"
+                                                    title="Duplicate/Copy Cycle"
+                                                    t-on-click="() => this.duplicateBatch(b.id)">
+                                                <i class="fa fa-copy text-info"/>
+                                            </button>
+                                            <t t-if="b.state === 'draft' or b.state === 'generated'">
+                                                <button class="rb-btn rb-btn-sm rb-btn-ghost text-danger"
+                                                        title="Cancel Batch"
+                                                        t-on-click="() => this.cancelBatch(b.id)">
+                                                    <i class="fa fa-trash"/>
+                                                </button>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         CREATE ROSTER BATCH DIALOG / MOBILE BOTTOM SHEET
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.createDialog.visible">
+        <div class="rb-modal-overlay" t-on-click="closeCreateDialog">
+            <div t-att-class="'rb-modal-box ' + (state.isMobile ? 'rb-bottom-sheet' : 'rb-modal-md')"
+                 t-on-click.stop="">
+
+                <!-- Mobile handle -->
+                <div t-if="state.isMobile" class="rb-sheet-handle-bar">
+                    <div class="rb-sheet-handle"/>
+                </div>
+
+                <!-- Modal header -->
+                <div class="rb-modal-header d-flex align-items-center justify-content-between px-4 py-3">
+                    <div>
+                        <div class="fw-bold text-white d-flex align-items-center gap-2" style="font-size:16px;">
+                            <i class="fa fa-calendar-plus-o text-primary"/>
+                            <span>New Monthly Roster Batch</span>
+                        </div>
+                        <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+                            Dogforce Cycle Prefill: <t t-esc="state.companyCycle.startDay"/>th to <t t-esc="state.companyCycle.endDay"/>th
+                        </div>
+                    </div>
+                    <button class="rb-btn-close-icon" t-on-click="closeCreateDialog">&#x2715;</button>
                 </div>
 
                 <!-- Modal body -->
-                <div style="padding:22px;">
+                <div class="rb-modal-body p-4">
 
-                    <!-- Client -->
-                    <div style="margin-bottom:16px;">
-                        <label style="display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#64748b; margin-bottom:6px;">
-                            Client <span style="color:#ef4444;">*</span>
-                        </label>
-                        <select class="form-select form-select-sm"
-                                style="border-color:#e2e8f0; font-size:13px; border-radius:8px;"
-                                t-on-change="onDialogPartnerChange">
-                            <option value="">-- Select client --</option>
-                            <t t-foreach="createDialogPartners" t-as="p" t-key="p.id">
-                                <option t-att-value="p.id"
-                                        t-att-selected="p.id === state.createDialog.partnerId"
-                                        t-esc="p.name"/>
-                            </t>
-                        </select>
+                    <!-- Cycle Mode Quick Selectors -->
+                    <div class="mb-3">
+                        <label class="rb-form-label mb-1">Monthly Cycle Option</label>
+                        <div class="d-flex flex-wrap gap-1">
+                            <button t-att-class="'rb-cycle-pill ' + (state.createDialog.cycleMode === 'default' ? 'active' : '')"
+                                    t-on-click="() => this.onCycleModeChange('default')">
+                                <i class="fa fa-shield me-1"/>Dogforce Cycle (<t t-esc="state.companyCycle.startDay"/>th–<t t-esc="state.companyCycle.endDay"/>th)
+                            </button>
+                            <button t-att-class="'rb-cycle-pill ' + (state.createDialog.cycleMode === 'current' ? 'active' : '')"
+                                    t-on-click="() => this.onCycleModeChange('current')">
+                                Current Cycle
+                            </button>
+                            <button t-att-class="'rb-cycle-pill ' + (state.createDialog.cycleMode === 'next' ? 'active' : '')"
+                                    t-on-click="() => this.onCycleModeChange('next')">
+                                Next Month Cycle
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Site (optional) -->
-                    <div style="margin-bottom:16px;">
-                        <label style="display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#64748b; margin-bottom:6px;">
-                            Site <span style="font-weight:400; text-transform:none; letter-spacing:0; color:#94a3b8;">(leave blank for all client sites)</span>
-                        </label>
-                        <select class="form-select form-select-sm"
-                                style="border-color:#e2e8f0; font-size:13px; border-radius:8px;"
-                                t-att-disabled="!state.createDialog.partnerId"
-                                t-on-change="onDialogSiteChange">
-                            <option value="">All sites for this client</option>
-                            <t t-foreach="createDialogSites" t-as="s" t-key="s.id">
-                                <option t-att-value="s.id"
-                                        t-att-selected="s.id === state.createDialog.siteId"
-                                        t-esc="s.name"/>
-                            </t>
-                        </select>
+                    <!-- Client & Site -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="rb-form-label">Client <span class="text-danger">*</span></label>
+                            <select class="form-select form-select-sm rb-select"
+                                    t-on-change="onDialogPartnerChange">
+                                <option value="">-- Select Client --</option>
+                                <t t-foreach="createDialogPartners" t-as="p" t-key="p.id">
+                                    <option t-att-value="p.id"
+                                            t-att-selected="p.id === state.createDialog.partnerId"
+                                            t-esc="p.name"/>
+                                </t>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="rb-form-label">Site <span class="text-muted fw-normal">(blank for all)</span></label>
+                            <select class="form-select form-select-sm rb-select"
+                                    t-att-disabled="!state.createDialog.partnerId"
+                                    t-on-change="onDialogSiteChange">
+                                <option value="">All Client Sites</option>
+                                <t t-foreach="createDialogSites" t-as="s" t-key="s.id">
+                                    <option t-att-value="s.id"
+                                            t-att-selected="s.id === state.createDialog.siteId"
+                                            t-esc="s.name"/>
+                                </t>
+                            </select>
+                        </div>
                     </div>
 
-                    <!-- Month / Year -->
-                    <div style="margin-bottom:20px;">
-                        <label style="display:block; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; color:#64748b; margin-bottom:6px;">
-                            Roster Month <span style="color:#ef4444;">*</span>
-                        </label>
-                        <div class="d-flex gap-2">
-                            <select class="form-select form-select-sm"
-                                    style="border-color:#e2e8f0; font-size:13px; border-radius:8px; flex:2;"
+                    <!-- Target Month & Year -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="rb-form-label">Target Month</label>
+                            <select class="form-select form-select-sm rb-select"
                                     t-on-change="onDialogMonthChange">
-                                <option value="">Month</option>
                                 <t t-foreach="dialogMonthOptions" t-as="mo" t-key="mo.value">
                                     <option t-att-value="mo.value"
                                             t-att-selected="mo.value === state.createDialog.month"
                                             t-esc="mo.label"/>
                                 </t>
                             </select>
-                            <select class="form-select form-select-sm"
-                                    style="border-color:#e2e8f0; font-size:13px; border-radius:8px; flex:1;"
+                        </div>
+                        <div class="col-6">
+                            <label class="rb-form-label">Target Year</label>
+                            <select class="form-select form-select-sm rb-select"
                                     t-on-change="onDialogYearChange">
-                                <option value="">Year</option>
                                 <t t-foreach="dialogYearOptions" t-as="yr" t-key="yr">
                                     <option t-att-value="yr"
                                             t-att-selected="yr === state.createDialog.year"
@@ -848,32 +1008,80 @@
                         </div>
                     </div>
 
-                    <!-- Info note -->
-                    <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 13px; font-size:12px; color:#1e40af; margin-bottom:18px;">
-                        <i class="fa fa-info-circle me-1"/>
-                        Slots are generated from the <strong>Shift Requirements</strong> configured for each site. Make sure requirements are set up before creating a roster.
+                    <!-- Computed Date Range Fields -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="rb-form-label">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control form-control-sm rb-input"
+                                   t-att-value="state.createDialog.dateFrom"
+                                   t-on-change="onDialogDateFromChange"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="rb-form-label">End Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control form-control-sm rb-input"
+                                   t-att-value="state.createDialog.dateTo"
+                                   t-on-change="onDialogDateToChange"/>
+                        </div>
                     </div>
 
-                    <!-- Error -->
-                    <div t-if="state.createDialog.error"
-                         style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:9px 13px; font-size:12px; color:#b91c1c; margin-bottom:14px;">
-                        <i class="fa fa-exclamation-triangle me-1"/>
-                        <t t-esc="state.createDialog.error"/>
+                    <!-- Options -->
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="autoGenerateCheck"
+                               t-att-checked="state.createDialog.autoGenerateSlots"
+                               t-on-change="(ev) => this.state.createDialog.autoGenerateSlots = ev.target.checked"/>
+                        <label class="form-check-label text-light" style="font-size:12px;" for="autoGenerateCheck">
+                            Automatically generate empty shift slots from site requirements
+                        </label>
+                    </div>
+
+                    <!-- Live Validation & Preview Banner -->
+                    <div t-if="state.createDialog.validation" class="mb-3">
+                        <div t-if="state.createDialog.validation.valid"
+                             class="p-3 rounded border border-secondary"
+                             style="background:#0f172a; font-size:12px;">
+                            <div class="fw-bold text-info mb-1">
+                                <i class="fa fa-info-circle me-1"/>Batch Scope Preview
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1">
+                                <span>Cycle Duration:</span>
+                                <span class="text-white"><t t-esc="state.createDialog.validation.duration_days"/> days</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-1">
+                                <span>Estimated Slots:</span>
+                                <span class="text-white font-monospace"><t t-esc="state.createDialog.validation.estimated_slots"/> slots</span>
+                            </div>
+                            <t t-foreach="state.createDialog.validation.warnings || []" t-as="warn" t-key="warn">
+                                <div class="text-warning mt-1" style="font-size:11px;">
+                                    <i class="fa fa-warning me-1"/><t t-esc="warn"/>
+                                </div>
+                            </t>
+                        </div>
+                        <div t-else="" class="p-3 rounded border border-danger bg-danger bg-opacity-10 text-danger" style="font-size:12px;">
+                            <i class="fa fa-exclamation-triangle me-1"/>
+                            <t t-foreach="state.createDialog.validation.errors || []" t-as="err" t-key="err">
+                                <div><t t-esc="err"/></div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- Error Alert -->
+                    <div t-if="state.createDialog.error" class="alert alert-danger py-2 px-3 mb-3" style="font-size:12px;">
+                        <i class="fa fa-exclamation-circle me-1"/><t t-esc="state.createDialog.error"/>
                     </div>
 
                     <!-- Buttons -->
-                    <div class="d-flex gap-2 justify-content-end">
+                    <div class="d-flex gap-2 justify-content-end pt-2">
                         <button class="rb-btn rb-btn-ghost"
                                 t-on-click="closeCreateDialog"
                                 t-att-disabled="state.createDialog.creating">
                             Cancel
                         </button>
-                        <button class="rb-btn rb-btn-autofill"
+                        <button class="rb-btn rb-btn-primary"
                                 t-on-click="confirmCreateBatch"
-                                t-att-disabled="state.createDialog.creating">
+                                t-att-disabled="state.createDialog.creating or (state.createDialog.validation and !state.createDialog.validation.valid)">
                             <i t-att-class="state.createDialog.creating ? 'fa fa-spinner fa-spin me-1' : 'fa fa-calendar-check-o me-1'"/>
-                            <t t-if="state.createDialog.creating">Creating…</t>
-                            <t t-else="">Create &amp; Generate</t>
+                            <t t-if="state.createDialog.creating">Generating Batch…</t>
+                            <t t-else="">Generate Batch &amp; Open</t>
                         </button>
                     </div>
 

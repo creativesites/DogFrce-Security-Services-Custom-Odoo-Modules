@@ -506,7 +506,7 @@ class SecurityEquipmentDashboard(models.AbstractModel):
             ('expected_return_date', '!=', False),
             ('expected_return_date', '<', today),
         ])
-        damage_records = Damage.search([], limit=10, order='damage_date desc, id desc')
+        damage_records = Damage.search([], limit=10, order='occurrence_date desc, id desc')
 
         # Return compliance rate
         total_due_mtd = len(active) + len(returned_mtd)
@@ -571,9 +571,9 @@ class SecurityEquipmentDashboard(models.AbstractModel):
                 'name': d.name,
                 'guard': d.employee_id.name if d.employee_id else '',
                 'equipment': d.equipment_type_id.name if d.equipment_type_id else '',
-                'date': str(d.damage_date) if d.damage_date else '',
-                'severity': d.severity,
-                'cost': d.cost_estimate or 0.0,
+                'date': str(d.occurrence_date) if d.occurrence_date else '',
+                'severity': d.incident_type,
+                'cost': d.cost_repair_replace or 0.0,
                 'state': d.state,
             } for d in damage_records],
             'guards': [{'id': g.id, 'name': g.name} for g in guards],
@@ -606,7 +606,51 @@ class SecurityEquipmentDashboard(models.AbstractModel):
 
     @api.model
     def action_quick_report_damage(self, vals):
-        dmg = self.env['security.equipment.damage'].create(vals)
+        employee_id = vals.get('employee_id')
+        equipment_type_id = vals.get('equipment_type_id')
+        
+        alloc = self.env['security.equipment.allocation'].search([
+            ('employee_id', '=', employee_id),
+            ('equipment_type_id', '=', equipment_type_id),
+            ('state', 'in', ['issued', 'acknowledged'])
+        ], limit=1, order='issue_date desc')
+        
+        if not alloc:
+            alloc = self.env['security.equipment.allocation'].search([
+                ('employee_id', '=', employee_id),
+                ('equipment_type_id', '=', equipment_type_id)
+            ], limit=1, order='id desc')
+            
+        if not alloc:
+            alloc = self.env['security.equipment.allocation'].create({
+                'employee_id': employee_id,
+                'equipment_type_id': equipment_type_id,
+                'quantity': 1,
+                'state': 'issued',
+                'issue_date': fields.Date.today(),
+            })
+            
+        severity = vals.get('severity', 'damage')
+        incident_type = 'damage'
+        if severity in ['loss', 'lost']:
+            incident_type = 'loss'
+        elif severity in ['negligence', 'gross']:
+            incident_type = 'negligence'
+            
+        cost = vals.get('cost_estimate') or vals.get('cost_repair_replace') or 0.0
+        if cost <= 0.0:
+            cost = alloc.equipment_type_id.unit_cost or 1.0
+            
+        dmg_vals = {
+            'allocation_id': alloc.id,
+            'occurrence_date': vals.get('damage_date') or vals.get('occurrence_date') or fields.Date.today(),
+            'incident_type': incident_type,
+            'description': vals.get('description') or f"Quick reported {incident_type} via Dashboard",
+            'cost_repair_replace': cost,
+            'state': 'draft',
+        }
+        dmg = self.env['security.equipment.damage'].create(dmg_vals)
         return dmg.id
+
 
 
