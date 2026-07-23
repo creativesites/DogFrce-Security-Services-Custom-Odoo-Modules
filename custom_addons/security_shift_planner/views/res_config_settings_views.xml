@@ -6,7 +6,7 @@
         <field name="priority" eval="90"/>
         <field name="inherit_id" ref="base.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[hasclass('settings')]" position="inside">
+            <xpath expr="//form" position="inside">
                 <div class="app_settings_block" data-string="Security Operations" string="Security Operations" data-key="security_shift_planner">
                     <h2>Monthly Roster Cycle Settings</h2>
                     <div class="row mt16 o_settings_container">
