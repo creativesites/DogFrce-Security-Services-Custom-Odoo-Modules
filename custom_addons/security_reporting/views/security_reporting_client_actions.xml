@@ -17,5 +17,5 @@
               parent="security_reporting.menu_security_reporting"
               action="action_security_executive_dashboard"
               sequence="1"
-              groups="hr.group_hr_manager"/>
+              groups="hr.group_hr_user,security_base.group_security_supervisor"/>
 </odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_form_inherit_security_billing" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.security.billing</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_security_contracts"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-file-text-o"
+                        invisible="not is_company">
+                    <field name="security_contract_count" widget="statinfo" string="Contracts"/>
+                </button>
+                <button name="action_view_security_billing_plans"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-calculator"
+                        invisible="not is_company">
+                    <field name="security_billing_plan_count" widget="statinfo" string="Billing Plans"/>
+                </button>
+                <button name="action_view_security_invoices"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-pencil-square-o"
+                        invisible="not is_company">
+                    <field name="security_invoice_count" widget="statinfo" string="Security Invoices"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

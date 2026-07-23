@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
-import { Text, ActivityIndicator } from 'react-native-paper';
+import { View, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, ActivityIndicator, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { getHistory, HistoryBatch, HistoryResponse } from '../../src/api/supervisor';
+import { generateHistoryReportPDF } from '../../src/utils/pdfExport';
 import { Theme } from '../../src/theme';
 
 const PAGE_SIZE = 20;
@@ -12,6 +13,7 @@ export default function SupervisorHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [offset, setOffset] = useState(0);
   const [total, setTotal] = useState(0);
@@ -41,6 +43,18 @@ export default function SupervisorHistoryScreen() {
 
   const onRefresh = () => { setRefreshing(true); setOffset(0); loadPage(true); };
   const onEndReached = () => { if (batches.length < total) loadPage(false); };
+
+  const handleExportPDF = async () => {
+    if (!batches.length) return;
+    setExporting(true);
+    try {
+      await generateHistoryReportPDF(batches);
+    } catch (err: any) {
+      setErrorMsg('Export failed: ' + (err.message || 'Unknown error'));
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const getStateColor = (state: string) => {
     switch (state) {
@@ -102,6 +116,19 @@ export default function SupervisorHistoryScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.headerBar}>
+        <Text style={styles.headerTitle}>Batch Log ({total})</Text>
+        <Button
+          mode="contained-tonal"
+          icon="file-pdf-box"
+          onPress={handleExportPDF}
+          loading={exporting}
+          disabled={exporting || !batches.length}
+          compact
+        >
+          Export PDF
+        </Button>
+      </View>
       <FlatList
         data={batches}
         keyExtractor={(item) => item.batch_id.toString()}
@@ -135,6 +162,15 @@ export default function SupervisorHistoryScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: Theme.colors.text },
   loader: { flex: 1, backgroundColor: Theme.colors.background, justifyContent: 'center', alignItems: 'center' },
   list: { padding: 16, paddingBottom: 40 },
   card: {

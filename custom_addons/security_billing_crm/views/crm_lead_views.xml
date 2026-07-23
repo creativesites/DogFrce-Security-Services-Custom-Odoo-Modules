@@ -6,6 +6,18 @@
         <model>crm.lead</model>
         <inherit_id ref="crm.crm_lead_view_form"/>
         <arch type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_create_security_contract"
+                        string="Create Client Contract"
+                        type="object"
+                        class="btn-primary"
+                        groups="security_base.group_security_supervisor"/>
+                <button name="action_create_security_billing_plan"
+                        string="Create Billing Plan"
+                        type="object"
+                        class="btn-secondary"
+                        groups="security_base.group_security_supervisor"/>
+            </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button name="action_view_billing_plans"
                         type="object"

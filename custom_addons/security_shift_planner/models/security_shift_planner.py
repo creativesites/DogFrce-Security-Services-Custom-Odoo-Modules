@@ -113,8 +113,76 @@ class SecurityRosterBatch(models.Model):
     _inherit = "security.roster.batch"
 
     @api.model
-    def action_quick_create_batch(self, partner_id=False, site_id=False, date_from=False, date_to=False):
-        """Create a batch and generate slots in one call — used by the Roster Board create dialog."""
+    def validate_batch_creation(self, partner_id=False, site_id=False, date_from=False, date_to=False):
+        """
+        Validates proposed batch creation parameters:
+        - Checks date order and duration limits.
+        - Checks for date overlap with existing active batches.
+        - Calculates estimated slot generation.
+        """
+        errors = []
+        warnings = []
+
+        if not date_from or not date_to:
+            errors.append("Start date and End date are required.")
+            return {"valid": False, "errors": errors, "warnings": warnings}
+
+        d_from = fields.Date.from_string(date_from)
+        d_to = fields.Date.from_string(date_to)
+
+        if d_to < d_from:
+            errors.append("End date must be on or after Start date.")
+            return {"valid": False, "errors": errors, "warnings": warnings}
+
+        duration_days = (d_to - d_from).days + 1
+        if duration_days > 62:
+            warnings.append(f"Batch date range spans {duration_days} days. Standard monthly batches are 28-31 days.")
+
+        domain = [("state", "not in", ["cancelled"])]
+        if site_id:
+            domain.append(("site_id", "=", site_id))
+        elif partner_id:
+            domain.append(("partner_id", "=", partner_id))
+
+        existing_batches = self.search(domain)
+        overlaps = existing_batches.filtered(
+            lambda b: b.date_from and b.date_to and not (b.date_to < date_from or b.date_from > date_to)
+        )
+
+        if overlaps:
+            overlap_names = ", ".join(overlaps.mapped("name")[:3])
+            warnings.append(f"Date range overlaps with existing batch(es): {overlap_names}")
+
+        # Estimate slots from shift requirements
+        req_domain = [("active", "=", True)]
+        if site_id:
+            req_domain.append(("site_id", "=", site_id))
+        elif partner_id:
+            req_domain.append(("site_id.partner_id", "=", partner_id))
+
+        shift_reqs = self.env["security.shift.requirement"].search(req_domain)
+        sites = shift_reqs.mapped("site_id")
+        posts = shift_reqs.mapped("post_id")
+
+        if not shift_reqs:
+            warnings.append("No active shift requirements found for the selected client/site. Slots will not be generated automatically until requirements are configured.")
+
+        # Rough estimate: sum of requirement guards_required * duration
+        est_slots = sum(r.guards_required for r in shift_reqs) * duration_days
+
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+            "duration_days": duration_days,
+            "estimated_slots": est_slots,
+            "sites_count": len(sites),
+            "posts_count": len(posts),
+        }
+
+    @api.model
+    def action_quick_create_batch(self, partner_id=False, site_id=False, date_from=False, date_to=False, auto_generate=True, copy_source_id=False):
+        """Create a batch, optionally generate slots or copy from previous batch."""
         vals = {"date_from": date_from, "date_to": date_to}
         if site_id:
             vals["site_id"] = site_id
@@ -122,13 +190,54 @@ class SecurityRosterBatch(models.Model):
             vals["partner_id"] = site.partner_id.id
         elif partner_id:
             vals["partner_id"] = partner_id
+
         batch = self.create(vals)
-        batch.action_generate_slots()
+
+        if copy_source_id:
+            batch.action_copy_from_previous_batch(copy_source_id)
+        elif auto_generate:
+            batch.action_generate_slots()
+
         return {
             "batch_id": batch.id,
             "batch_name": batch.name,
             "slot_count": len(batch.slot_ids),
         }
+
+    def action_copy_from_previous_batch(self, source_batch_id):
+        """Copies slot structures (post, template, assigned guard if valid) from source batch."""
+        self.ensure_one()
+        source = self.browse(source_batch_id)
+        if not source.exists() or not source.slot_ids:
+            return self.action_generate_slots()
+
+        # Find date offset between source batch and self
+        s_start = fields.Date.from_string(source.date_from)
+        t_start = fields.Date.from_string(self.date_from)
+        days_diff = (t_start - s_start).days
+
+        new_slots = []
+        for s in source.slot_ids.filtered(lambda x: x.state != "cancelled"):
+            s_date = fields.Date.from_string(s.shift_date)
+            new_date = s_date + datetime.timedelta(days=days_diff)
+            # Only include if within target batch date range
+            if self.date_from <= fields.Date.to_string(new_date) <= self.date_to:
+                vals = {
+                    "batch_id": self.id,
+                    "post_id": s.post_id.id,
+                    "shift_template_id": s.shift_template_id.id,
+                    "shift_date": fields.Date.to_string(new_date),
+                    "employee_id": s.employee_id.id if s.employee_id else False,
+                    "state": "assigned" if s.employee_id else "draft",
+                }
+                new_slots.append(vals)
+
+        if new_slots:
+            self.env["security.roster.slot"].create(new_slots)
+        else:
+            self.action_generate_slots()
+        self.state = "generated"
+
 
     unassigned_count = fields.Integer(
         compute="_compute_gap_counts",

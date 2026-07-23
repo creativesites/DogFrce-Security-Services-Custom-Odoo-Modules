@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { flushQueue, getQueue, getQueuedRecordIds } from '../../../src/utils/offlineQueue';
 import { isOffline } from '../../../src/api/client';
+import { generatePostingSheetPDF } from '../../../src/utils/pdfExport';
 
 export default function SitePostingSheetScreen() {
   const { siteId } = useLocalSearchParams<{ siteId: string }>();
@@ -28,6 +29,7 @@ export default function SitePostingSheetScreen() {
   const [incidentTarget, setIncidentTarget] = useState<AttendanceRecord | null>(null);
   const [profileTarget, setProfileTarget] = useState<{ id: number; name: string } | null>(null);
   const [bulkMarking, setBulkMarking] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
   const [queuedIds, setQueuedIds] = useState<Set<number>>(new Set());
 
   const { refreshTrigger, triggerRefresh } = useAppStore();
@@ -50,15 +52,11 @@ export default function SitePostingSheetScreen() {
   useEffect(() => {
     loadData();
     getQueue().then(q => setPendingCount(q.length));
-    getQueuedRecordIds().then(setQueuedIds);
+    getQueuedRecordIds().then(ids => setQueuedIds(new Set(ids)));
   }, [siteId, refreshTrigger]);
 
   const handleFlushQueue = async () => {
-    await flushQueue({
-      mark: async (item) => {
-        await markPresence(item.recordId, item.presence, item.overrideReason, item.checkIn, item.checkOut);
-      },
-    });
+    await flushQueue();
     setPendingCount(0);
     setQueuedIds(new Set());
     triggerRefresh();
@@ -110,6 +108,18 @@ export default function SitePostingSheetScreen() {
   const siteName = data?.site?.name || `Site ${siteId}`;
   const batchState = data?.batch_state;
 
+  const handleExportPDF = async () => {
+    if (!data) return;
+    setExportingPDF(true);
+    try {
+      await generatePostingSheetPDF(data, siteName);
+    } catch (err: any) {
+      alert('Failed to generate PDF: ' + (err.message || 'Unknown error'));
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.headerBar}>
@@ -120,6 +130,13 @@ export default function SitePostingSheetScreen() {
           <Text style={styles.siteName} numberOfLines={1}>{siteName}</Text>
           <Text style={styles.clientName}>{data?.client?.name || ''}</Text>
         </View>
+        <TouchableOpacity onPress={handleExportPDF} disabled={exportingPDF || !data} style={styles.pdfBtn}>
+          {exportingPDF ? (
+            <ActivityIndicator size={16} color={Theme.colors.primary} />
+          ) : (
+            <MaterialCommunityIcons name="file-pdf-box" size={22} color={Theme.colors.primary} />
+          )}
+        </TouchableOpacity>
         {batchState && (
           <View style={[styles.stateChip, batchState === 'captured' && styles.capturedChip]}>
             <Text style={styles.stateChipText}>{batchState.toUpperCase()}</Text>
@@ -337,6 +354,13 @@ const styles = StyleSheet.create({
   backBtn: {
     padding: 4,
     borderRadius: 8,
+  },
+  pdfBtn: {
+    padding: 6,
+    borderRadius: 8,
+    backgroundColor: `${Theme.colors.primary}12`,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerInfo: { flex: 1 },
   siteName: { fontSize: 16, fontWeight: '700', color: Theme.colors.text },

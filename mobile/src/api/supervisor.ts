@@ -133,10 +133,17 @@ export const markPresence = async (
   throw new Error(response.data?.error || 'Failed to mark presence');
 };
 
-export const quickCheckIn = async (recordId: number, action: 'check_in' | 'check_out'): Promise<AttendanceRecord> => {
+export const quickCheckIn = async (
+  recordId: number,
+  action: 'check_in' | 'check_out',
+  location?: { latitude: number; longitude: number; accuracy?: number }
+): Promise<AttendanceRecord> => {
   const response = await client.post('/api/security/mobile/supervisor/checkin', {
     record_id: recordId,
     action,
+    latitude: location?.latitude,
+    longitude: location?.longitude,
+    accuracy: location?.accuracy,
   });
   if (response.data?.success) return response.data.data;
   throw new Error(response.data?.error || 'Failed to capture timestamp');
@@ -294,12 +301,17 @@ export const getIncidentTypes = async (): Promise<IncidentType[]> => {
 export const logIncident = async (
   employeeId: number,
   incidentTypeId: number,
-  note?: string
+  note?: string,
+  photoBase64?: string,
+  location?: { latitude: number; longitude: number }
 ): Promise<IncidentLogResult> => {
   const response = await client.post('/api/security/mobile/supervisor/incident', {
     employee_id: employeeId,
     incident_type_id: incidentTypeId,
     note: note || '',
+    photo_base64: photoBase64,
+    latitude: location?.latitude,
+    longitude: location?.longitude,
   });
   if (response.data?.success) return response.data.data;
   throw new Error(response.data?.error || 'Failed to log incident');

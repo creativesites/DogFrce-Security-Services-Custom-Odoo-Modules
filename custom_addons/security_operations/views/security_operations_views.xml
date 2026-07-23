@@ -321,6 +321,15 @@
         sequence="25"
     />
 
+    <menuitem
+        id="menu_security_client_site_billing"
+        name="Client Sites"
+        parent="security_operations.menu_security_billing_root"
+        action="action_security_client_site"
+        sequence="3"
+        groups="hr.group_hr_user,security_base.group_security_supervisor"
+    />
+
     <!-- ======================= -->
     <!-- SECURITY POSTS          -->
     <!-- ======================= -->

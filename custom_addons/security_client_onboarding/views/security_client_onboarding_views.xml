@@ -164,15 +164,49 @@
         <field name="context">{'default_run_on_open': True}</field>
     </record>
 
-    <!-- Menu items (Operations > Roster section) -->
+    <!-- Menu items (Operations > Roster section & Clients & Sites section) -->
+
+    <record id="action_security_client_partner" model="ir.actions.act_window">
+        <field name="name">Client Companies</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('is_company', '=', True)]</field>
+        <field name="context">{'default_is_company': True, 'default_customer_rank': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Add a Client Company!
+            </p>
+            <p>
+                Manage client profiles, contact persons, sites, contracts, and billing plans.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_client_partner"
+        name="Client Companies"
+        parent="security_operations.menu_security_billing_root"
+        action="action_security_client_partner"
+        sequence="1"
+        groups="hr.group_hr_user,security_base.group_security_supervisor"
+    />
 
     <menuitem
         id="menu_security_client_onboarding"
+        name="Client Setup &amp; Onboarding"
+        parent="security_operations.menu_security_billing_root"
+        action="action_security_client_onboarding_wizard"
+        sequence="2"
+        groups="hr.group_hr_user,security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_client_onboarding_ops"
         name="Onboard New Client"
         parent="security_operations.menu_security_roster"
         action="action_security_client_onboarding_wizard"
         sequence="5"
-        groups="hr.group_hr_manager,base.group_system"
+        groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 
     <menuitem
@@ -181,7 +215,7 @@
         parent="security_operations.menu_security_roster"
         action="action_security_roster_setup_wizard"
         sequence="6"
-        groups="hr.group_hr_manager,base.group_system"
+        groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 
 </odoo>

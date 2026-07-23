@@ -20,6 +20,7 @@
     ],
     "assets": {
         "web.assets_backend": [
+            "security_equipment/static/src/css/equipment_dashboard.css",
             "security_equipment/static/src/js/equipment_dashboard.js",
             "security_equipment/static/src/xml/equipment_dashboard.xml",
         ],

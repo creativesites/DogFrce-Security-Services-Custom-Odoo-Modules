@@ -288,7 +288,7 @@ class DogForceDataLoader:
             self.get_or_create(xmlid, "product.template", {
                 "name": name,
                 "list_price": row.get("Sales Price", 0.0),
-                "detailed_type": "service",
+                "type": "service",
             })
 
     def _create_sales_teams(self):

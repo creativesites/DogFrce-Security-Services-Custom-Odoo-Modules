@@ -33,3 +33,17 @@ services:
       - ../custom_addons:/mnt/extra-addons
       - ../.local/odoo:/var/lib/odoo
     restart: unless-stopped
+
+  whatsapp-bridge:
+    build:
+      context: ../whatsapp_service
+    container_name: ${COMPOSE_PROJECT_NAME}-whatsapp-bridge
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../.local/whatsapp_session:/app/session
+    environment:
+      - PORT=3000
+      - ODOO_WEBHOOK_URL=http://odoo:8069/api/whatsapp/webhook
+    restart: unless-stopped
+

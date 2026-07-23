@@ -2,15 +2,21 @@
 <odoo>
     <!-- Smart button and Action button on sale.order form view -->
     <record id="view_order_form_inherit_security_billing" model="ir.ui.view">
-        <name>sale.order.form.inherit.security.billing</name>
-        <model>sale.order</model>
-        <inherit_id ref="sale.view_order_form"/>
-        <arch type="xml">
+        <field name="name">sale.order.form.inherit.security.billing</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
                 <button name="action_create_security_billing_plan"
-                        string="Create Security Billing Plan"
+                        string="Create Billing Plan"
                         type="object"
                         class="btn-primary"
+                        invisible="state not in ('sale', 'done')"
+                        groups="security_base.group_security_supervisor"/>
+                <button name="action_create_security_contract"
+                        string="Create Client Contract"
+                        type="object"
+                        class="btn-secondary"
                         invisible="state not in ('sale', 'done')"
                         groups="security_base.group_security_supervisor"/>
             </xpath>
@@ -26,18 +32,18 @@
             <xpath expr="//field[@name='partner_id']" position="after">
                 <field name="billing_plan_ids" invisible="1"/>
             </xpath>
-        </arch>
+        </field>
     </record>
 
     <!-- Smart field on security.billing.plan form view -->
     <record id="view_security_billing_plan_form_inherit_sale" model="ir.ui.view">
-        <name>security.billing.plan.form.inherit.sale</name>
-        <model>security.billing.plan</model>
-        <inherit_id ref="security_billing.view_security_billing_plan_form"/>
-        <arch type="xml">
+        <field name="name">security.billing.plan.form.inherit.sale</field>
+        <field name="model">security.billing.plan</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_plan_form"/>
+        <field name="arch" type="xml">
             <xpath expr="//field[@name='active']" position="after">
                 <field name="sale_order_id" groups="security_base.group_security_supervisor" readonly="1" invisible="not sale_order_id"/>
             </xpath>
-        </arch>
+        </field>
     </record>
 </odoo>

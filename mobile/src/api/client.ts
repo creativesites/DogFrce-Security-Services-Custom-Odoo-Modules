@@ -54,6 +54,26 @@ export let isOffline = false;
 client.interceptors.response.use(
   (response) => {
     isOffline = false;
+
+    // Detect Set-Cookie session_id if available
+    const setCookie = response.headers?.['set-cookie'] || response.headers?.['Set-Cookie'];
+    if (setCookie) {
+      const cookieStr = Array.isArray(setCookie) ? setCookie.join(';') : String(setCookie);
+      const match = cookieStr.match(/session_id=([^;]+)/);
+      if (match && match[1]) {
+        setSessionId(match[1]).catch(() => {});
+      }
+    }
+
+    // Detect Odoo redirecting to HTML login page when session is unauthenticated
+    if (typeof response.data === 'string' && (response.data.includes('<!DOCTYPE html>') || response.data.includes('<html'))) {
+      _sessionId = null;
+      SecureStore.deleteItemAsync('user_profile').catch(() => {});
+      SecureStore.deleteItemAsync('odoo_session_id').catch(() => {});
+      _onSessionExpired?.();
+      return Promise.reject(new Error('Session expired or invalid. Please sign in again.'));
+    }
+
     const odooError = response.data?.error;
     if (odooError) {
       const msg: string = odooError?.data?.message || odooError?.message || '';
@@ -74,6 +94,34 @@ client.interceptors.response.use(
   async (error) => {
     if (!error.response) {
       isOffline = true;
+      const config = error.config;
+      const method = (config?.method || '').toUpperCase();
+      const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+      const isAuthRoute = config?.url?.includes('/auth/login');
+
+      if (isMutation && !isAuthRoute && config?.url) {
+        try {
+          const { enqueueOfflineRequest } = await import('../utils/offlineQueue');
+          let parsedData = config.data;
+          if (typeof parsedData === 'string') {
+            try { parsedData = JSON.parse(parsedData); } catch {}
+          }
+          await enqueueOfflineRequest(config.url, method as any, parsedData);
+          return {
+            data: {
+              success: true,
+              queued: true,
+              message: 'Offline: Request queued for automatic synchronization.',
+            },
+            status: 200,
+            statusText: 'OK (Queued Offline)',
+            headers: {},
+            config,
+          };
+        } catch (enqueueErr) {
+          console.warn('[Client] Failed to enqueue offline request:', enqueueErr);
+        }
+      }
       return Promise.reject(error);
     }
     return Promise.reject(error);

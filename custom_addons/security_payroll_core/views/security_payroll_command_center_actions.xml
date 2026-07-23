@@ -11,5 +11,5 @@
         parent="security_operations.menu_security_payroll"
         action="action_security_payroll_command_center"
         sequence="5"
-        groups="hr.group_hr_manager"/>
+        groups="hr.group_hr_user,security_base.group_security_supervisor"/>
 </odoo>

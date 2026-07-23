@@ -21,6 +21,7 @@
     ],
     "assets": {
         "web.assets_backend": [
+            "security_fleet/static/src/css/fleet_dashboard.css",
             "security_fleet/static/src/js/fleet_dashboard.js",
             "security_fleet/static/src/xml/fleet_dashboard.xml",
         ],

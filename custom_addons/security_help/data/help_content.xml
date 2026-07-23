@@ -1913,7 +1913,52 @@
   <li>Fix the root cause</li>
   <li>Open the linked invoice and click <strong>Submit to ZRA</strong> again to create a fresh submission</li>
 </ol>
-    ]]></field>
+<!-- ═══════════════════════════════════════════════════════
+     WHATSAPP AI BRIDGE & FIELD ATTENDANCE
+════════════════════════════════════════════════════════ -->
+
+<record id="art_whatsapp_ai_field_guide" model="security.help.article">
+    <field name="category_id" ref="cat_attendance"/>
+    <field name="title">WhatsApp AI Bridge &amp; Field Attendance Guide</field>
+    <field name="summary">Complete guide to supervisors taking field attendance, tracking lateness, bulk site check-ins, and executive stats via WhatsApp.</field>
+    <field name="sequence">10</field>
+    <field name="tags">whatsapp ai bridge field attendance lateness site bulk owner stats manager stats awol</field>
+    <field name="body"><![CDATA[
+<h2>DeployGuard WhatsApp AI Bridge &amp; Field Operations</h2>
+<p>DeployGuard connects real-time field operations with Odoo using a zero-cost WhatsApp transport bridge. Supervisors in the field can log attendance, record lateness, mark bulk site check-ins, and query live executive metrics directly over WhatsApp messages.</p>
+
+<h3>1. Field Attendance &amp; Lateness Tracking</h3>
+<p>Supervisors can record guard check-ins directly from site posts:</p>
+<ul>
+  <li><strong>On-time Check-in:</strong> Type <code>Check in [Guard Name]</code>. The guard is marked present at their scheduled shift start time.</li>
+  <li><strong>Late Check-in:</strong> Type <code>Check in [Guard Name] late [X] minutes</code> (e.g., <code>Check in Winston Zulu late 20 minutes</code>). The system automatically calculates the check-in time variance and logs lateness minutes for payroll.</li>
+</ul>
+
+<h3>2. Bulk Site-Level Attendance</h3>
+<p>Instead of logging individual guards one by one, supervisors can report whole site postings at once:</p>
+<ul>
+  <li><strong>All Present:</strong> Type <code>[Site Name] all present</code> (e.g., <code>Bank of Zambia all present</code>). All guards scheduled at the site today are marked present on-time.</li>
+  <li><strong>All Present Except Exceptions:</strong> Type <code>[Site Name] all present except [Guard Name]</code> (e.g., <code>Bank of Zambia all present except Winston Zulu</code>). Named guards are flagged as AWOL, while all other site guards are marked present.</li>
+</ul>
+
+<h3>3. Flagging Unexcused Absences (AWOL)</h3>
+<p>To flag an absent guard, type <code>AWOL [Guard Name]</code>. The system logs an unexcused absence, notifies the Central Control Room, and registers an incident on the Central Intelligence Bus.</p>
+
+<h3>4. Role-Based Intelligence Commands</h3>
+<ul>
+  <li><strong>Owner / Executive Stats (<code>OWNER STATS</code>):</strong> Displays active client sites, estimated monthly recurring billing, active posts today, roster coverage rate %, and SLA penalty risks.</li>
+  <li><strong>Manager / Operations Stats (<code>MANAGER STATS</code>):</strong> Displays total posts scheduled today, active guards on duty, AWOL gaps, pending check-ins, and top site coverage breakdown.</li>
+  <li><strong>Roster Status (<code>STATUS</code>):</strong> Queries daily scheduled posts, active guards, and missing gaps.</li>
+  <li><strong>Command Help (<code>HELP</code>):</strong> Displays the interactive WhatsApp command menu.</li>
+</ul>
+
+<h3>5. Hybrid Deterministic &amp; AI Processing Architecture</h3>
+<p>The bridge operates using a two-tier hybrid architecture:</p>
+<ol>
+  <li><strong>Rule-Based Fast Engine:</strong> High-speed regex rule parsing executes instantly without external AI dependencies or costs.</li>
+  <li><strong>Extensive AI Fallback:</strong> If unstructured natural language is received, the message is routed to the <code>security.ai.engine</code> LLM parser to extract intent and execute actions.</li>
+</ol>
+]]></field>
 </record>
 
 </odoo>

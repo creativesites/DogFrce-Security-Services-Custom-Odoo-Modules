@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
 import { Text, Modal, Portal, ActivityIndicator, TextInput, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { getIncidentTypes, logIncident, IncidentType } from '../api/supervisor';
 import { Theme } from '../theme';
 
@@ -34,6 +35,7 @@ export default function IncidentModal({ visible, onClose, onLogged, employeeId, 
   const [types, setTypes] = useState<IncidentType[]>([]);
   const [selectedType, setSelectedType] = useState<IncidentType | null>(null);
   const [note, setNote] = useState('');
+  const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [step, setStep] = useState<'type' | 'confirm'>('type');
 
   useEffect(() => {
@@ -41,6 +43,7 @@ export default function IncidentModal({ visible, onClose, onLogged, employeeId, 
     setStep('type');
     setSelectedType(null);
     setNote('');
+    setPhotoBase64(null);
     setError('');
     setLoading(true);
     getIncidentTypes()
@@ -49,12 +52,49 @@ export default function IncidentModal({ visible, onClose, onLogged, employeeId, 
       .finally(() => setLoading(false));
   }, [visible]);
 
+  const handleTakeCameraPhoto = async () => {
+    try {
+      const perm = await ImagePicker.requestCameraPermissionsAsync();
+      if (!perm.granted) {
+        setError('Camera permission required to capture incident photo.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.5,
+        base64: true,
+      });
+      if (!result.canceled && result.assets[0]?.base64) {
+        setPhotoBase64(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      }
+    } catch (err) {
+      console.warn('Camera error:', err);
+    }
+  };
+
+  const handlePickGalleryImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        quality: 0.5,
+        base64: true,
+      });
+      if (!result.canceled && result.assets[0]?.base64) {
+        setPhotoBase64(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      }
+    } catch (err) {
+      console.warn('Gallery error:', err);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedType) return;
     setSubmitting(true);
     setError('');
     try {
-      await logIncident(employeeId, selectedType.id, note);
+      await logIncident(employeeId, selectedType.id, note, photoBase64 || undefined);
       onLogged();
       onClose();
     } catch (err: any) {
@@ -152,11 +192,6 @@ export default function IncidentModal({ visible, onClose, onLogged, employeeId, 
                 <Text style={styles.summaryLabel}>Guard</Text>
                 <Text style={styles.summaryValue}>{guardName}</Text>
               </View>
-              <View style={styles.summaryRow}>
-                <MaterialCommunityIcons name="calendar-today" size={18} color={Theme.colors.placeholder} />
-                <Text style={styles.summaryLabel}>Date</Text>
-                <Text style={styles.summaryValue}>Today</Text>
-              </View>
             </View>
 
             <TextInput
@@ -172,6 +207,30 @@ export default function IncidentModal({ visible, onClose, onLogged, employeeId, 
               textColor={Theme.colors.text}
               placeholder="Describe what happened..."
             />
+
+            {/* Photo Attachment Section */}
+            <View style={styles.photoContainer}>
+              <Text style={styles.photoTitle}>Photo Evidence</Text>
+              {photoBase64 ? (
+                <View style={styles.previewContainer}>
+                  <Image source={{ uri: photoBase64 }} style={styles.previewImage} />
+                  <TouchableOpacity style={styles.removePhotoBtn} onPress={() => setPhotoBase64(null)}>
+                    <MaterialCommunityIcons name="close-circle" size={24} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View style={styles.photoBtnRow}>
+                  <TouchableOpacity style={styles.photoBtn} onPress={handleTakeCameraPhoto}>
+                    <MaterialCommunityIcons name="camera" size={20} color={Theme.colors.primary} />
+                    <Text style={styles.photoBtnText}>Camera</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.photoBtn} onPress={handlePickGalleryImage}>
+                    <MaterialCommunityIcons name="image" size={20} color={Theme.colors.primary} />
+                    <Text style={styles.photoBtnText}>Gallery</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -296,4 +355,23 @@ const styles = StyleSheet.create({
   submitBtn: { flex: 1, borderRadius: 14 },
   submitBtnLabel: { fontSize: 14, fontWeight: 'bold' },
   errorText: { color: Theme.colors.absent, fontSize: 13, textAlign: 'center' },
+  photoContainer: { gap: 8 },
+  photoTitle: { fontSize: 12, fontWeight: '600', color: Theme.colors.placeholder },
+  photoBtnRow: { flexDirection: 'row', gap: 12 },
+  photoBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Theme.colors.border,
+    backgroundColor: Theme.colors.background,
+  },
+  photoBtnText: { fontSize: 13, fontWeight: '600', color: Theme.colors.text },
+  previewContainer: { position: 'relative', width: 100, height: 100, borderRadius: 12, overflow: 'hidden' },
+  previewImage: { width: '100%', height: '100%' },
+  removePhotoBtn: { position: 'absolute', top: 4, right: 4, backgroundColor: '#fff', borderRadius: 12 },
 });

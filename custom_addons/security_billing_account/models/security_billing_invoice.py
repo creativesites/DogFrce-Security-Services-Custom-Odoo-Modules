@@ -45,34 +45,43 @@ class SecurityBillingInvoice(models.Model):
             }
 
             move = inv.move_id
+            was_posted = False
             if move:
+                if move.state == "posted":
+                    was_posted = True
+                    move.button_draft()
                 move.write(vals)
-                # Reset lines
-                move.invoice_line_ids.unlink()
             else:
                 move = move_model.create(vals)
                 # Avoid recursion during sync write
                 super(SecurityBillingInvoice, inv).write({"move_id": move.id})
 
             # Map lines
-            line_vals = []
-            for line in inv.line_ids:
-                product = self.env["product.product"].search([
-                    ("name", "ilike", "Security"),
-                    ("type", "=", "service")
-                ], limit=1)
+            tax = self.env["account.tax"].search([
+                ("type_tax_use", "=", "sale"),
+                ("amount", "=", inv.vat_rate if hasattr(inv, "vat_rate") else 15.0),
+                ("company_id", "=", inv.currency_id.company_id.id or self.env.company.id)
+            ], limit=1)
 
+            product = self.env["product.product"].search([
+                ("name", "ilike", "Security"),
+                ("type", "=", "service")
+            ], limit=1)
+
+            line_vals = [(5, 0, 0)] # Clear existing lines cleanly
+            for line in inv.line_ids:
                 line_vals.append((0, 0, {
                     "name": line.name,
                     "quantity": line.quantity * max(line.guard_count, 1),
                     "price_unit": line.unit_price,
                     "product_id": product.id if product else False,
+                    "tax_ids": [(6, 0, [tax.id])] if tax else [],
                 }))
             if line_vals:
                 move.write({"invoice_line_ids": line_vals})
 
-            # If the custom invoice is sent or paid, make sure the Odoo invoice is posted
-            if inv.state in ("sent", "paid") and move.state == "draft":
+            # If the custom invoice is sent or paid, or was posted previously, make sure Odoo move is posted
+            if (inv.state in ("sent", "paid") or was_posted) and move.state == "draft":
                 move.action_post()
 
         return True
@@ -191,18 +200,15 @@ class SecurityClientPayment(models.Model):
         for payment in self:
             invoice = payment.invoice_id
             if invoice.move_id and invoice.move_id.state == "posted":
-                # Find standard bank or cash journal
                 journal = self.env["account.journal"].search([
                     ("type", "in", ("bank", "cash")),
                     ("company_id", "=", invoice.currency_id.company_id.id or self.env.company.id)
                 ], limit=1)
                 if journal:
-                    # Check how much has already been paid on Odoo compared to custom
                     odoo_paid = invoice.move_id.amount_total - invoice.move_id.amount_residual
                     custom_paid = sum(
                         invoice.payment_ids.filtered(lambda p: p.state == "posted").mapped("amount")
                     )
-                    # Register standard Odoo payment for the delta if any
                     if odoo_paid < custom_paid:
                         delta = custom_paid - odoo_paid
                         register_wizard = self.env["account.payment.register"].with_context(
@@ -216,7 +222,6 @@ class SecurityClientPayment(models.Model):
                         })
                         register_wizard.action_create_payments()
                     
-                    # Call auto-reconcile to align all balances and states
                     invoice.with_context(skip_auto_reconcile=True).action_auto_reconcile()
         return True
 
@@ -228,9 +233,65 @@ class SecurityClientPayment(models.Model):
         for payment in self:
             invoice = payment.invoice_id
             if invoice.move_id:
-                # Trigger a reconciliation pass to re-align DeployGuard and standard Odoo
                 invoice.action_auto_reconcile()
         return True
+
+
+class AccountPayment(models.Model):
+    _inherit = "account.payment"
+
+    def action_post(self):
+        res = super().action_post()
+        if self.env.context.get("skip_auto_reconcile"):
+            return res
+        for payment in self:
+            moves = payment.reconciled_bill_ids | payment.reconciled_invoice_ids
+            if moves:
+                custom_invoices = self.env["security.billing.invoice"].search([("move_id", "in", moves.ids)])
+                if custom_invoices:
+                    custom_invoices.action_auto_reconcile()
+        return res
+
+
+class SecurityBillingCreditNote(models.Model):
+    _inherit = "security.billing.credit.note"
+
+    move_id = fields.Many2one(
+        "account.move",
+        string="Linked Odoo Credit Note",
+        ondelete="set null",
+        copy=False,
+    )
+
+    def action_confirm(self):
+        super().action_confirm()
+        for cn in self:
+            if cn.invoice_id and cn.invoice_id.move_id and not cn.move_id:
+                orig_move = cn.invoice_id.move_id
+                refund_vals = {
+                    "move_type": "out_refund",
+                    "partner_id": cn.partner_id.id,
+                    "invoice_date": cn.date,
+                    "ref": f"Credit Note for {orig_move.name}: {cn.reason or ''}",
+                    "currency_id": cn.currency_id.id,
+                    "invoice_line_ids": [(0, 0, {
+                        "name": f"Credit Note: {cn.reason or 'Adjustment'}",
+                        "quantity": 1.0,
+                        "price_unit": cn.amount,
+                    })],
+                }
+                refund_move = self.env["account.move"].create(refund_vals)
+                if refund_move and cn.state in ("confirmed", "applied"):
+                    refund_move.action_post()
+                cn.move_id = refund_move.id
+
+    def action_apply(self):
+        super().action_apply()
+        for cn in self:
+            if not cn.move_id:
+                cn.action_confirm()
+            elif cn.move_id and cn.move_id.state == "draft":
+                cn.move_id.action_post()
 
 
 class AccountMove(models.Model):
@@ -242,8 +303,8 @@ class AccountMove(models.Model):
             return res
 
         if "payment_state" in vals or "amount_residual" in vals:
-            # Find linked custom security invoices
             custom_invoices = self.env["security.billing.invoice"].search([("move_id", "in", self.ids)])
             if custom_invoices:
                 custom_invoices.with_context(skip_auto_reconcile=True).action_auto_reconcile()
         return res
+

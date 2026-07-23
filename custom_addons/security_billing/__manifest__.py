@@ -13,6 +13,7 @@
         "views/revenue_dashboard_actions.xml",
         "views/security_billing_views.xml",
         "views/security_billing_wizard_views.xml",
+        "views/res_partner_views.xml",
         "reports/security_invoice_report.xml",
         "reports/security_invoice_aging_report.xml",
     ],

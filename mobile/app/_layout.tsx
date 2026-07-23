@@ -52,6 +52,9 @@ async function registerPushToken(): Promise<void> {
   }
 }
 
+import PinLockModal from '../src/components/PinLockModal';
+import { usePinStore } from '../src/stores/pinStore';
+
 export default function RootLayout() {
   const { isAuthenticated, isLoading, isLocked, user, bootstrap, lock, logout } = useAuthStore();
   const segments = useSegments();
@@ -63,6 +66,7 @@ export default function RootLayout() {
     bootstrap();
     startNetworkWatcher();
     initPendingCount();
+    usePinStore.getState().initPinStore();
   }, []);
 
   useEffect(() => {
@@ -139,6 +143,7 @@ export default function RootLayout() {
         if (user.role === 'supervisor') router.replace('/(supervisor)');
         else if (user.role === 'manager') router.replace('/(manager)');
         else if (user.role === 'owner') router.replace('/(owner)');
+        else if (user.role === 'guard') router.replace('/(guard)');
       }
     }
   }, [isAuthenticated, isLoading, isLocked, segments, user]);
@@ -159,6 +164,7 @@ export default function RootLayout() {
       <PaperProvider theme={Theme}>
         <StatusBar barStyle="dark-content" backgroundColor={Theme.colors.background} />
         <OfflineBanner />
+        <PinLockModal />
         <ErrorBoundary>
           <Slot />
         </ErrorBoundary>

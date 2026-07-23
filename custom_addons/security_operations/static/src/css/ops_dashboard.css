@@ -1,81 +1,165 @@
-/* ─── Operations Dashboard ─────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   Operations Dashboard — Roster Board Style Design System
+   Scoped CSS
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-.od-root {
-    background: #f8f9fa;
-    min-height: 100vh;
-    font-size: 0.875rem;
+.o_ops_dashboard.od-shell {
+    display: grid !important;
+    grid-template-columns: clamp(230px, 18vw, 280px) minmax(0, 1fr);
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 18% 0%, rgba(30, 58, 138, 0.08) 0, transparent 32%),
+        linear-gradient(135deg, #f8fafc 0%, #e2e8f0 54%, #f1f5f9 100%);
+    color: #0f172a;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.od-nav-sidebar {
+    min-height: 0;
+    overflow-y: auto;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(238, 242, 255, 0.88) 100%) !important;
+    color: #1e1b4b !important;
+    border-right: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 6px 0 25px rgba(15, 23, 42, 0.05);
+}
+
+.od-brand {
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.od-select {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+}
+
+.od-select:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2) !important;
+}
+
+.od-main {
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .od-header {
-    background: #fff;
-    position: sticky;
-    top: 0;
-    z-index: 10;
+    flex-shrink: 0;
+    min-height: 58px;
+    background: rgba(255, 255, 255, 0.94) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
 }
 
-.od-btn-navy {
-    background-color: var(--df-navy);
-    color: #fff;
-    border: none;
+.od-kpi-pills {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 2px;
 }
-
-.od-btn-navy:hover,
-.od-btn-navy:focus {
-    background-color: #141830;
-    color: #fff;
-}
-
-.od-btn-amber {
-    background-color: var(--df-amber);
-    color: var(--df-navy);
-    border: none;
-    font-weight: 600;
-}
-
-.od-btn-amber:hover,
-.od-btn-amber:focus {
-    background-color: #d48e1a;
-    color: var(--df-navy);
-}
-
-/* ─── KPI strip ─────────────────────────────────────────────────────── */
 
 .od-kpi-card {
-    background: #fff;
-    transition: box-shadow 0.15s;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 16px;
+    min-width: 130px;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .od-kpi-card:hover {
-    box-shadow: 0 2px 8px rgba(27, 32, 64, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
 }
 
-.od-kpi-present { border-left: 3px solid #198754 !important; }
-.od-kpi-warning { border-left: 3px solid var(--df-amber) !important; }
-.od-kpi-danger  { border-left: 3px solid #dc3545 !important; }
+.od-workspace {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 16px;
+    overflow: hidden;
+}
 
-/* ─── Card header ───────────────────────────────────────────────────── */
+.od-workspace.has-inspector {
+    grid-template-columns: minmax(0, 1fr) clamp(340px, 28vw, 440px);
+}
 
-.od-card-header {
-    background: var(--df-navy);
-    color: #fff;
-    font-size: 0.875rem;
+.od-content-area {
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.od-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    transition: all 0.2s ease;
+}
+
+.od-card:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+.od-card-active {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3) !important;
+}
+
+/* Inspector Drawer */
+.od-inspector {
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.1);
+}
+
+.od-badge {
+    font-size: 11px;
     font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
-/* ─── Alert rows ────────────────────────────────────────────────────── */
-
-.od-alert-row:last-child,
-.od-site-row:last-child {
-    border-bottom: none !important;
+.od-modal-backdrop {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.od-alert-row:hover,
-.od-site-row:hover {
-    background: rgba(27, 32, 64, 0.04);
+.od-modal-content {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 540px;
+    overflow: hidden;
 }
-
-/* ─── Utilities ─────────────────────────────────────────────────────── */
-
-.x-small { font-size: 0.72rem; }
-
-.od-loading { min-height: 300px; }

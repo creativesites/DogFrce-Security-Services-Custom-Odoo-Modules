@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_roster_cycle" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.roster.cycle</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[hasclass('settings')]" position="inside">
+                <div class="app_settings_block" data-string="Security Operations" string="Security Operations" data-key="security_shift_planner">
+                    <h2>Monthly Roster Cycle Settings</h2>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="roster_cycle_start_day" string="Cycle Start Day of Month"/>
+                                <div class="text-muted">
+                                    Default day of month to start monthly roster cycle (e.g. 21st for Dogforce default cycle: 21st to 20th).
+                                </div>
+                                <div class="content-group mt8">
+                                    <field name="roster_cycle_start_day" class="oe_inline"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane"/>
+                            <div class="o_setting_right_pane">
+                                <label for="roster_cycle_end_day" string="Cycle End Day of Month"/>
+                                <div class="text-muted">
+                                    Default day of month to end monthly roster cycle (e.g. 20th or 22nd).
+                                </div>
+                                <div class="content-group mt8">
+                                    <field name="roster_cycle_end_day" class="oe_inline"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="roster_auto_generate_slots"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="roster_auto_generate_slots" string="Auto-Generate Shift Slots"/>
+                                <div class="text-muted">
+                                    Automatically populate empty shift slots from site shift requirements when creating new roster batches.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_security_roster_cycle_config" model="ir.actions.act_window">
+        <field name="name">Roster Cycle Settings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module' : 'security_shift_planner'}</field>
+    </record>
+</odoo>

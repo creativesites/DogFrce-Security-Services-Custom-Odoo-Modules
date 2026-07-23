@@ -7,7 +7,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 interface KpiMetricProps {
   title: string;
   value: string | number;
-  icon: keyof typeof MaterialCommunityIcons.isActive | any;
+  icon: React.ComponentProps<typeof MaterialCommunityIcons>['name'];
   color?: string;
   subtitle?: string;
 }

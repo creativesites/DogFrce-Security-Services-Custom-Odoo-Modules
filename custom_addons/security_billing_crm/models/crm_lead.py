@@ -32,6 +32,49 @@ class CrmLead(models.Model):
         })
         return action
 
+    def action_create_security_contract(self):
+        self.ensure_one()
+        if not self.partner_id:
+            raise ValidationError("Please assign a customer to this opportunity first.")
+
+        contract_vals = {
+            "name": f"CTR/{self.name}",
+            "partner_id": self.partner_id.id,
+            "currency_id": self.company_currency.id if hasattr(self, "company_currency") and self.company_currency else self.env.company.currency_id.id,
+            "date_start": fields.Date.today(),
+            "monthly_value": self.expected_revenue or 0.0,
+            "state": "draft",
+        }
+        contract = self.env["security.client.contract"].create(contract_vals)
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "security.client.contract",
+            "res_id": contract.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
+    def action_create_security_billing_plan(self):
+        self.ensure_one()
+        if not self.partner_id:
+            raise ValidationError("Please assign a customer to this opportunity first.")
+
+        plan_vals = {
+            "name": f"Plan for {self.name}",
+            "partner_id": self.partner_id.id,
+            "currency_id": self.company_currency.id if hasattr(self, "company_currency") and self.company_currency else self.env.company.currency_id.id,
+            "date_start": fields.Date.today(),
+            "lead_id": self.id,
+        }
+        plan = self.env["security.billing.plan"].create(plan_vals)
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "security.billing.plan",
+            "res_id": plan.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
 
 class SecurityBillingPlan(models.Model):
     _inherit = "security.billing.plan"

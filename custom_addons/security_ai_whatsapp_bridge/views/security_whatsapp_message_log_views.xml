@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Message Log — List View -->
+    <record id="view_security_whatsapp_message_log_tree" model="ir.ui.view">
+        <field name="name">security.whatsapp.message.log.list</field>
+        <field name="model">security.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <list string="WhatsApp Message Audit History" create="0" delete="1">
+                <field name="timestamp"/>
+                <field name="sender_phone"/>
+                <field name="direction" widget="badge"
+                       decoration-info="direction == 'inbound'"
+                       decoration-success="direction == 'outbound'"/>
+                <field name="parsed_intent"/>
+                <field name="execution_status" widget="badge"
+                       decoration-success="execution_status == 'success'"
+                       decoration-warning="execution_status == 'ignored'"
+                       decoration-danger="execution_status in ('unauthorized', 'error')"/>
+                <field name="is_authorized" widget="boolean_toggle"/>
+                <field name="raw_body"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Message Log — Form View -->
+    <record id="view_security_whatsapp_message_log_form" model="ir.ui.view">
+        <field name="name">security.whatsapp.message.log.form</field>
+        <field name="model">security.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp Message Record" create="0">
+                <sheet>
+                    <group>
+                        <group string="Message Context">
+                            <field name="timestamp" readonly="1"/>
+                            <field name="sender_phone" readonly="1"/>
+                            <field name="sender_name" readonly="1"/>
+                            <field name="direction" readonly="1"/>
+                        </group>
+                        <group string="AI Processing &amp; Execution">
+                            <field name="parsed_intent" readonly="1"/>
+                            <field name="execution_status" readonly="1"/>
+                            <field name="is_authorized" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Payload &amp; Response Transcript">
+                        <field name="raw_body" readonly="1"/>
+                        <field name="reply_body" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Message Log — Search View -->
+    <record id="view_security_whatsapp_message_log_search" model="ir.ui.view">
+        <field name="name">security.whatsapp.message.log.search</field>
+        <field name="model">security.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Message History">
+                <field name="sender_phone"/>
+                <field name="raw_body"/>
+                <field name="parsed_intent"/>
+                <filter string="Inbound Messages" name="filter_inbound" domain="[('direction', '=', 'inbound')]"/>
+                <filter string="Outbound Replies" name="filter_outbound" domain="[('direction', '=', 'outbound')]"/>
+                <separator/>
+                <filter string="Ignored / Unrelated" name="filter_ignored" domain="[('execution_status', '=', 'ignored')]"/>
+                <filter string="Unauthorized Attempts" name="filter_unauthorized" domain="[('execution_status', '=', 'unauthorized')]"/>
+                <separator/>
+                <filter string="By Sender" name="group_sender" context="{'group_by': 'sender_phone'}"/>
+                <filter string="By Direction" name="group_direction" context="{'group_by': 'direction'}"/>
+                <filter string="By Intent" name="group_intent" context="{'group_by': 'parsed_intent'}"/>
+                <filter string="By Status" name="group_status" context="{'group_by': 'execution_status'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Message Log — Action -->
+    <record id="action_security_whatsapp_message_log" model="ir.actions.act_window">
+        <field name="name">WhatsApp Message History &amp; Audit Log</field>
+        <field name="res_model">security.whatsapp.message.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_whatsapp_message_log_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No WhatsApp messages logged yet!
+            </p>
+            <p>
+                Incoming and outgoing WhatsApp messages, intent classifications, and authorization logs will appear here automatically.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item for Message History -->
+    <menuitem id="menu_security_whatsapp_message_log"
+              name="WhatsApp Conversation Audit"
+              parent="security_ai_engine.menu_security_ai_engine_root"
+              action="action_security_whatsapp_message_log"
+              sequence="20"/>
+
+</odoo>

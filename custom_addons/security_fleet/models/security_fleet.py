@@ -565,50 +565,148 @@ class SecurityVehicleServiceLog(models.Model):
 # FLEET DASHBOARD DATA PROVIDER
 # ─────────────────────────────────────────────────────────────────────────────
 
+# FLEET DASHBOARD DATA PROVIDER
+# ─────────────────────────────────────────────────────────────────────────────
+
 class SecurityFleetDashboard(models.AbstractModel):
     _name = "security.fleet.dashboard"
     _description = "Fleet Dashboard Data Provider"
 
     @api.model
-    def get_dashboard_data(self):
-        from datetime import date as _date, datetime as _datetime
+    def get_dashboard_data(self, state_filter=None):
+        from datetime import date as _date
         today = _date.today()
         month_start = today.replace(day=1)
 
         Vehicle = self.env["security.vehicle"]
         Run = self.env["security.shuttle.run"]
-
-        vehicles = Vehicle.search([])
-        active = vehicles.filtered(lambda v: v.state == "available")
-        in_service = vehicles.filtered(lambda v: v.state == "in_service")
-
-        # Fuel cost MTD from fuel logs
         FuelLog = self.env["security.vehicle.fuel.log"]
+        Route = self.env["security.shuttle.route"]
+        Employee = self.env["hr.employee"]
+
+        domain = []
+        if state_filter and state_filter != "all":
+            domain.append(("state", "=", state_filter))
+
+        vehicles = Vehicle.search(domain)
+        all_vehicles = Vehicle.search([])
+
+        active_count = len(all_vehicles.filtered(lambda v: v.state == "available"))
+        in_transit_count = len(all_vehicles.filtered(lambda v: v.state == "in_transit"))
+        in_service_count = len(all_vehicles.filtered(lambda v: v.state == "in_service"))
+        scrapped_count = len(all_vehicles.filtered(lambda v: v.state == "scrapped"))
+
+        total_active = len(all_vehicles.filtered(lambda v: v.state != "scrapped"))
+        readiness_pct = round(((active_count + in_transit_count) / max(total_active, 1)) * 100, 1)
+
         fuel_logs_mtd = FuelLog.search([("fuel_date", ">=", month_start)])
         fuel_cost_mtd = sum(fuel_logs_mtd.mapped("total_cost"))
 
-        # Today's shuttle runs
-        today_runs = Run.search([
-            ("shift_date", "=", today),
-        ])
+        today_runs = Run.search([("shift_date", "=", today)], order="scheduled_departure asc, id desc")
+
+        # Drivers list for quick assign & scheduling
+        drivers = Employee.search([("security_guard", "=", True)], limit=100, order="name asc")
+
+        # Routes
+        routes = Route.search([], order="name asc")
+
+        # Recent fuel logs
+        recent_fuel = FuelLog.search([], limit=5, order="fuel_date desc, id desc")
 
         return {
-            "total_vehicles": len(vehicles),
-            "active_count": len(active),
-            "in_service_count": len(in_service),
+            "total_vehicles": len(all_vehicles),
+            "active_count": active_count,
+            "in_transit_count": in_transit_count,
+            "in_service_count": in_service_count,
+            "scrapped_count": scrapped_count,
+            "readiness_pct": readiness_pct,
             "fuel_cost_mtd": fuel_cost_mtd,
             "today_runs": [{
                 "id": r.id,
-                "vehicle": r.vehicle_id.name if r.vehicle_id else "",
-                "route": r.route_id.name if r.route_id else "",
+                "name": r.name,
+                "vehicle_id": r.vehicle_id.id if r.vehicle_id else False,
+                "vehicle": r.vehicle_id.name if r.vehicle_id else "Unassigned",
+                "vehicle_plate": r.vehicle_id.plate_number if r.vehicle_id else "",
+                "route_id": r.route_id.id if r.route_id else False,
+                "route": r.route_id.name if r.route_id else "Custom Route",
+                "driver_id": r.driver_id.id if r.driver_id else False,
+                "driver": r.driver_id.name if r.driver_id else "No Driver",
                 "departure": str(r.scheduled_departure) if r.scheduled_departure else "",
+                "departure_time": r.scheduled_departure.strftime("%H:%M") if r.scheduled_departure else "—",
                 "state": r.state,
+                "passenger_count": r.passenger_count,
+                "capacity": r.vehicle_id.capacity if r.vehicle_id else 0,
             } for r in today_runs],
             "vehicles": [{
                 "id": v.id,
                 "name": v.name,
                 "plate": v.plate_number or "",
-                "driver": v.assigned_driver_id.name if v.assigned_driver_id else "",
+                "make": v.make or "",
+                "model": v.model or "",
+                "year": v.year or "",
+                "colour": v.colour or "",
+                "capacity": v.capacity,
+                "odometer": v.odometer,
+                "driver_id": v.assigned_driver_id.id if v.assigned_driver_id else False,
+                "driver": v.assigned_driver_id.name if v.assigned_driver_id else "Unassigned",
                 "state": v.state,
+                "run_count": v.run_count,
+                "fuel_log_count": v.fuel_log_count,
+                "total_fuel_cost": v.total_fuel_cost,
+                "notes": v.notes or "",
             } for v in vehicles],
+            "drivers": [{"id": d.id, "name": d.name} for d in drivers],
+            "routes": [{"id": r.id, "name": r.name} for r in routes],
+            "recent_fuel": [{
+                "id": f.id,
+                "vehicle": f.vehicle_id.name if f.vehicle_id else "",
+                "driver": f.driver_id.name if f.driver_id else "",
+                "date": str(f.fuel_date),
+                "litres": f.litres,
+                "cost": f.total_cost,
+            } for f in recent_fuel],
         }
+
+    @api.model
+    def action_update_vehicle_state(self, vehicle_id, new_state):
+        vehicle = self.env["security.vehicle"].browse(vehicle_id)
+        if vehicle.exists():
+            vehicle.write({"state": new_state})
+            return True
+        return False
+
+    @api.model
+    def action_quick_assign_driver(self, vehicle_id, driver_id):
+        vehicle = self.env["security.vehicle"].browse(vehicle_id)
+        if vehicle.exists():
+            vehicle.write({"assigned_driver_id": driver_id or False})
+            return True
+        return False
+
+    @api.model
+    def action_update_run_state(self, run_id, new_state):
+        run = self.env["security.shuttle.run"].browse(run_id)
+        if run.exists():
+            if new_state == "boarding":
+                run.write({"state": "boarding"})
+            elif new_state == "in_transit":
+                run.action_start()
+            elif new_state == "completed":
+                run.action_complete()
+            elif new_state == "cancelled":
+                run.action_cancel()
+            else:
+                run.write({"state": new_state})
+            return True
+        return False
+
+    @api.model
+    def action_quick_create_run(self, vals):
+        run = self.env["security.shuttle.run"].create(vals)
+        return run.id
+
+    @api.model
+    def action_quick_create_fuel(self, vals):
+        fuel = self.env["security.vehicle.fuel.log"].create(vals)
+        return fuel.id
+

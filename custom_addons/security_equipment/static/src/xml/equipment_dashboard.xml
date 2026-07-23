@@ -1,149 +1,439 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-<t t-name="security_equipment.EquipmentDashboard">
-<div class="eq-root o_action" style="background:#f0f2f5;min-height:100vh;font-size:0.875rem;">
 
-    <t t-if="state.loading">
-        <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">
-            <div class="spinner-border text-primary"/><span class="fs-5">Loading Equipment Dashboard…</span>
-        </div>
-    </t>
+<t t-name="security_equipment.EquipmentDashboard" owl="1">
+<div class="o_equipment_dashboard eq-shell">
 
-    <t t-elif="state.data">
-        <t t-set="d" t-value="state.data"/>
+    <!-- ═══════════════════════════════════════════════════════════
+         LEFT SIDEBAR — Control & Category Filters
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="eq-nav-sidebar d-flex flex-column">
 
-        <!-- Header -->
-        <div style="background:linear-gradient(135deg,#3b1f6e,#1a5e8a);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <i class="fa fa-shield fa-2x" style="color:rgba(255,255,255,0.9);" title="Equipment"/>
-                <div>
-                    <h3 style="margin:0;color:white;font-weight:700;">Equipment &amp; Assets</h3>
-                    <span style="color:rgba(255,255,255,0.7);font-size:12px;">Allocation overview</span>
-                </div>
+        <!-- Brand Header -->
+        <div class="eq-brand px-4 py-3">
+            <div class="fw-bold" style="font-size:15px; color:#2e1065; letter-spacing:.3px;">
+                <i class="fa fa-shield me-2" style="color:#9333ea;"/>DogForce Assets
             </div>
-            <div class="d-flex gap-2">
-                <button class="btn btn-light btn-sm" t-on-click="openAllocations">
-                    <i class="fa fa-list me-1"/>All Allocations
-                </button>
-                <button class="btn btn-warning btn-sm" t-on-click="openOverdue" t-if="d.overdue_count > 0">
-                    <i class="fa fa-exclamation-triangle me-1"/><t t-esc="d.overdue_count"/> Overdue
-                </button>
-            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">Equipment &amp; Inventory Control</div>
         </div>
 
-        <div class="p-4">
-            <!-- KPIs -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Allocated</div>
-                            <div class="fs-1 fw-bold text-primary"><t t-esc="d.allocated"/></div>
-                        </div>
-                    </div>
+        <!-- Category Filter -->
+        <div class="px-3 pt-3 pb-2">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+                Category
+            </div>
+            <select class="form-select form-select-sm eq-select" t-on-change="onCategoryFilterChange">
+                <option value="all">All Categories</option>
+                <t t-if="state.data and state.data.categories" t-foreach="state.data.categories" t-as="cat" t-key="cat.id">
+                    <option t-att-value="cat.id" t-esc="cat.name"/>
+                </t>
+            </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div class="px-3 pb-2">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+                Allocation Status
+            </div>
+            <select class="form-select form-select-sm eq-select" t-on-change="onStateFilterChange">
+                <option value="all">All Statuses</option>
+                <option value="issued">Issued</option>
+                <option value="acknowledged">Acknowledged</option>
+                <option value="returned">Returned</option>
+                <option value="damaged">Damaged / Lost</option>
+            </select>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
+            <button class="btn btn-sm text-white w-100 fw-semibold" style="background:#9333ea; border-radius:8px;" t-on-click="openIssueModal">
+                <i class="fa fa-plus me-1"/>New Asset Allocation
+            </button>
+            <button class="btn btn-sm btn-outline-danger w-100 fw-semibold" style="border-radius:8px; font-size:12px;" t-on-click="openDamageModal">
+                <i class="fa fa-exclamation-triangle me-1"/>Report Damage / Loss
+            </button>
+            <button class="btn btn-sm btn-light w-100 text-muted" style="font-size:11px;" t-on-click="loadData">
+                <i class="fa fa-refresh me-1"/>Refresh Data
+            </button>
+        </div>
+
+        <div style="border-top:1px solid rgba(15, 23, 42, 0.08); margin:4px 0;"/>
+
+        <!-- Asset Return Compliance Gauge -->
+        <div t-if="state.data" class="px-3 py-3">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:8px;">
+                On-Time Return Rate
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold" style="font-size:18px; color:#2e1065;"><t t-esc="state.data.return_rate_pct"/>%</span>
+                <span class="small text-muted"><t t-esc="state.data.returned_mtd"/> Returned MTD</span>
+            </div>
+            <div class="progress" style="height:7px; border-radius:4px; background:#e2e8f0;">
+                <div class="progress-bar" t-att-style="'width:' + state.data.return_rate_pct + '%; background:#9333ea;'"/>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAIN WORKSPACE — Header Strip + Main Area
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="eq-main">
+
+        <!-- Top Header & KPI Strip -->
+        <div class="eq-header px-4 py-2 d-flex align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="input-group input-group-sm" style="width:240px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search guard, equipment, serial..." t-on-input="onSearchInput"/>
                 </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Returned (MTD)</div>
-                            <div class="fs-1 fw-bold text-success"><t t-esc="d.returned_mtd"/></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center" style="cursor:pointer;" t-on-click="openDamages">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Damaged / Lost</div>
-                            <div t-att-class="'fs-1 fw-bold ' + (d.damaged_lost > 0 ? 'text-warning' : 'text-muted')">
-                                <t t-esc="d.damaged_lost"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center" style="cursor:pointer;" t-on-click="openOverdue">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Overdue Returns</div>
-                            <div t-att-class="'fs-1 fw-bold ' + (d.overdue_count > 0 ? 'text-danger' : 'text-success')">
-                                <t t-esc="d.overdue_count"/>
-                            </div>
-                        </div>
-                    </div>
+
+                <!-- Tab Switcher -->
+                <div class="btn-group btn-group-sm">
+                    <button t-att-class="'btn ' + (state.activeTab === 'allocations' ? 'btn-primary text-white' : 'btn-outline-secondary')" style="background-color: state.activeTab === 'allocations' ? '#9333ea' : ''" t-on-click="() => this.setTab('allocations')">
+                        <i class="fa fa-list me-1"/>Allocations (<t t-esc="filteredAllocations.length"/>)
+                    </button>
+                    <button t-att-class="'btn ' + (state.activeTab === 'stock' ? 'btn-primary text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('stock')">
+                        <i class="fa fa-cubes me-1"/>Inventory Stock
+                    </button>
+                    <button t-att-class="'btn ' + (state.activeTab === 'overdue' ? 'btn-danger text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('overdue')">
+                        <i class="fa fa-clock-o me-1"/>Overdue (<t t-esc="overdueAllocations.length"/>)
+                    </button>
                 </div>
             </div>
 
-            <div class="row g-3">
-                <!-- By Category -->
-                <div class="col-lg-4">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-semibold py-2">
-                            <i class="fa fa-tags me-2 text-muted"/>By Category
-                        </div>
+            <!-- KPI Cards Strip -->
+            <div t-if="state.data" class="eq-kpi-pills">
+                <div class="eq-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Active Issued</div>
+                    <div class="fs-5 fw-bold text-primary"><t t-esc="state.data.allocated"/></div>
+                </div>
+                <div class="eq-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Returned MTD</div>
+                    <div class="fs-5 fw-bold text-success"><t t-esc="state.data.returned_mtd"/></div>
+                </div>
+                <div class="eq-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Overdue</div>
+                    <div t-att-class="'fs-5 fw-bold ' + (state.data.overdue_count > 0 ? 'text-danger' : 'text-muted')">
+                        <t t-esc="state.data.overdue_count"/>
+                    </div>
+                </div>
+                <div class="eq-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Damaged / Lost</div>
+                    <div class="fs-5 fw-bold text-warning"><t t-esc="state.data.damaged_lost"/></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace Area with Inspector -->
+        <div t-att-class="'eq-workspace ' + (state.selectedAllocation || state.selectedStockItem ? 'has-inspector' : '')">
+
+            <!-- Content Area -->
+            <div class="eq-content-area">
+
+                <!-- Loading State -->
+                <t t-if="state.loading">
+                    <div class="d-flex align-items-center justify-content-center py-5 gap-3 text-muted">
+                        <div class="spinner-border text-purple" role="status" style="color:#9333ea;"/>
+                        <span class="fs-5">Loading Asset Manager...</span>
+                    </div>
+                </t>
+
+                <!-- TAB 1: ALLOCATIONS MATRIX -->
+                <t t-elif="state.activeTab === 'allocations'">
+                    <div class="row g-3">
+                        <t t-foreach="filteredAllocations" t-as="alloc" t-key="alloc.id">
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <div t-att-class="'card eq-card p-3 cursor-pointer ' + (state.selectedAllocation and state.selectedAllocation.id === alloc.id ? 'eq-card-active' : '')"
+                                     t-on-click="() => this.selectAllocation(alloc)">
+                                    <div class="d-flex align-items-start justify-content-between mb-2">
+                                        <div>
+                                            <div class="fw-bold fs-6 text-dark mb-0"><t t-esc="alloc.guard"/></div>
+                                            <small class="text-muted"><t t-esc="alloc.site"/></small>
+                                        </div>
+                                        <span t-att-class="stateBadgeClass(alloc.state)"><t t-esc="alloc.state"/></span>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-1 my-2 fs-7 text-secondary">
+                                        <div><i class="fa fa-shield me-2 text-purple" style="color:#9333ea;"/><span class="fw-bold text-dark"><t t-esc="alloc.equipment"/></span> (<t t-esc="alloc.category"/>)</div>
+                                        <div><i class="fa fa-barcode me-2 text-muted"/>Serial / Item: <span class="font-monospace text-dark"><t t-esc="alloc.item_serial"/></span></div>
+                                        <div><i class="fa fa-calendar me-2 text-muted"/>Issued: <t t-esc="alloc.issue_date"/> | Due: <span t-att-class="alloc.is_overdue ? 'text-danger fw-bold' : ''"><t t-esc="alloc.due_date"/></span></div>
+                                    </div>
+
+                                    <div t-if="alloc.is_overdue" class="badge bg-danger-subtle text-danger border border-danger-subtle w-100 text-center mb-2 py-1">
+                                        <i class="fa fa-warning me-1"/><t t-esc="alloc.days_overdue"/> Days Overdue
+                                    </div>
+
+                                    <div class="d-flex align-items-center justify-content-between border-top pt-2 mt-1" t-on-click.stop="">
+                                        <button t-if="alloc.state === 'issued' or alloc.state === 'acknowledged'" class="btn btn-xs btn-outline-success" t-on-click="() => this.quickReturnAsset(alloc.id)">
+                                            <i class="fa fa-check me-1"/>Quick Return
+                                        </button>
+                                        <button t-if="alloc.state === 'issued'" class="btn btn-xs btn-outline-primary" t-on-click="() => this.quickAcknowledgeAsset(alloc.id)">
+                                            Acknowledge
+                                        </button>
+                                        <button class="btn btn-xs btn-light text-muted ms-auto" t-on-click="() => this.openAllocationForm(alloc.id)">
+                                            <i class="fa fa-external-link"/> View
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="filteredAllocations.length === 0">
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="fa fa-folder-open-o fa-3x mb-3 text-secondary"/>
+                                <h5>No allocations match search query.</h5>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- TAB 2: INVENTORY STOCK OVERVIEW -->
+                <t t-elif="state.activeTab === 'stock'">
+                    <div class="card shadow-sm border-0">
                         <div class="card-body p-0">
-                            <table class="table table-sm mb-0">
-                                <thead class="table-light">
-                                    <tr><th>Category</th><th class="text-end">Issued</th></tr>
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7">
+                                    <tr>
+                                        <th>Equipment Type</th>
+                                        <th>Category</th>
+                                        <th class="text-center">Total Stock</th>
+                                        <th class="text-center">Issued</th>
+                                        <th class="text-center">Available</th>
+                                        <th class="text-end">Unit Value</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                    <t t-foreach="d.by_category" t-as="cat" t-key="cat.name">
+                                    <t t-foreach="filteredStock" t-as="item" t-key="item.id">
                                         <tr>
-                                            <td><t t-esc="cat.name"/></td>
-                                            <td class="text-end fw-semibold"><t t-esc="cat.count"/></td>
+                                            <td class="fw-bold text-dark"><t t-esc="item.name"/></td>
+                                            <td><span class="badge bg-light text-dark"><t t-esc="item.category"/></span></td>
+                                            <td class="text-center fw-semibold"><t t-esc="item.qty_total"/></td>
+                                            <td class="text-center text-primary fw-semibold"><t t-esc="item.qty_issued"/></td>
+                                            <td class="text-center text-success fw-bold"><t t-esc="item.qty_available"/></td>
+                                            <td class="text-end font-monospace">N$ <t t-esc="item.unit_cost"/></td>
                                         </tr>
-                                    </t>
-                                    <t t-if="d.by_category.length === 0">
-                                        <tr><td colspan="2" class="text-center text-muted py-3">No active allocations.</td></tr>
                                     </t>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
+                </t>
 
-                <!-- Overdue Returns -->
-                <div class="col-lg-8">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-semibold py-2">
-                            <i class="fa fa-exclamation-triangle me-2 text-warning"/>
-                            Overdue Returns (<t t-esc="d.overdue_count"/>)
+                <!-- TAB 3: OVERDUE WATCHLIST -->
+                <t t-elif="state.activeTab === 'overdue'">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-danger text-white py-2 fw-bold d-flex align-items-center justify-content-between">
+                            <span><i class="fa fa-exclamation-triangle me-2"/>Overdue Watchlist (<t t-esc="overdueAllocations.length"/>)</span>
                         </div>
                         <div class="card-body p-0">
-                            <t t-if="d.overdue.length === 0">
-                                <div class="text-center text-muted py-4">
-                                    <i class="fa fa-check-circle fa-2x text-success d-block mb-2" title="All clear"/>
-                                    No overdue returns.
-                                </div>
-                            </t>
-                            <t t-else="">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7">
+                                    <tr>
+                                        <th>Guard</th>
+                                        <th>Equipment</th>
+                                        <th>Due Date</th>
+                                        <th class="text-center">Days Late</th>
+                                        <th class="text-end">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="overdueAllocations" t-as="o" t-key="o.id">
                                         <tr>
-                                            <th>Guard</th>
-                                            <th>Equipment</th>
-                                            <th>Due Date</th>
-                                            <th class="text-end">Days Late</th>
+                                            <td class="fw-bold text-dark"><t t-esc="o.guard"/></td>
+                                            <td><t t-esc="o.equipment"/> <small class="text-muted"><t t-esc="o.item_serial"/></small></td>
+                                            <td><t t-esc="o.due_date"/></td>
+                                            <td class="text-center fw-bold text-danger"><t t-esc="o.days_overdue"/>d Overdue</td>
+                                            <td class="text-end">
+                                                <button class="btn btn-xs btn-success text-white me-1" t-on-click="() => this.quickReturnAsset(o.id)">
+                                                    Mark Returned
+                                                </button>
+                                                <button class="btn btn-xs btn-outline-danger" t-on-click="openDamageModal">
+                                                    Report Lost
+                                                </button>
+                                            </td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        <t t-foreach="d.overdue" t-as="o" t-key="o_index">
-                                            <tr>
-                                                <td class="fw-semibold"><t t-esc="o.guard"/></td>
-                                                <td><t t-esc="o.equipment"/><t t-if="o.item"> — <t t-esc="o.item"/></t></td>
-                                                <td class="text-muted small"><t t-esc="o.due_date"/></td>
-                                                <td t-att-class="'text-end fw-bold ' + severityColor(o.days_overdue)">
-                                                    <t t-esc="o.days_overdue"/>d
-                                                </td>
-                                            </tr>
-                                        </t>
-                                    </tbody>
-                                </table>
-                            </t>
+                                    </t>
+                                    <t t-if="overdueAllocations.length === 0">
+                                        <tr><td colspan="5" class="text-center py-4 text-success"><i class="fa fa-check-circle fa-2x mb-2 d-block"/>All allocations are returned on time!</td></tr>
+                                    </t>
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
+                </t>
+
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 RIGHT INSPECTOR PANEL — Asset Details Drawer
+                 ═══════════════════════════════════════════════════════════ -->
+            <div t-if="state.selectedAllocation" class="eq-inspector p-3">
+
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <div>
+                        <div class="fw-bold fs-6 text-dark"><t t-esc="state.selectedAllocation.equipment"/></div>
+                        <small class="text-muted"><t t-esc="state.selectedAllocation.name"/></small>
+                    </div>
+                    <button class="btn-close" t-on-click="closeInspector"/>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 bg-light rounded-3">
+                        <div class="text-muted x-small text-uppercase fw-semibold mb-1">Status Action</div>
+                        <span t-att-class="stateBadgeClass(state.selectedAllocation.state) + ' mb-2'"><t t-esc="state.selectedAllocation.state"/></span>
+                        <div class="d-flex gap-2 mt-2">
+                            <button t-if="state.selectedAllocation.state !== 'returned'" class="btn btn-sm btn-success text-white flex-fill" t-on-click="() => this.quickReturnAsset(state.selectedAllocation.id)">
+                                <i class="fa fa-check me-1"/>Mark Returned
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border rounded p-2 fs-7">
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Assigned Guard</span>
+                            <span class="fw-bold"><t t-esc="state.selectedAllocation.guard"/></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Security Site</span>
+                            <span class="fw-bold"><t t-esc="state.selectedAllocation.site"/></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Item / Serial #</span>
+                            <span class="font-monospace fw-bold"><t t-esc="state.selectedAllocation.item_serial"/></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1 border-bottom">
+                            <span class="text-muted">Issue Date</span>
+                            <span class="fw-bold"><t t-esc="state.selectedAllocation.issue_date"/></span>
+                        </div>
+                        <div class="d-flex justify-content-between py-1">
+                            <span class="text-muted">Expected Return</span>
+                            <span t-att-class="'fw-bold ' + (state.selectedAllocation.is_overdue ? 'text-danger' : '')"><t t-esc="state.selectedAllocation.due_date"/></span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-sm btn-outline-primary w-100 mt-2" t-on-click="() => this.openAllocationForm(state.selectedAllocation.id)">
+                        Open Full Allocation Record
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MODALS — Issue Equipment & Report Damage
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Issue Asset Modal -->
+    <t t-if="state.modalIssue.open">
+        <div class="eq-modal-backdrop">
+            <div class="eq-modal-content p-4">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa fa-plus-circle text-purple me-2" style="color:#9333ea;"/>New Equipment Allocation</h5>
+                    <button class="btn-close" t-on-click="closeIssueModal"/>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Guard</label>
+                        <select class="form-select form-select-sm" t-model="state.modalIssue.employee_id">
+                            <t t-foreach="state.data.guards" t-as="g" t-key="g.id">
+                                <option t-att-value="g.id" t-esc="g.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Equipment Type</label>
+                        <select class="form-select form-select-sm" t-model="state.modalIssue.equipment_type_id">
+                            <t t-foreach="state.data.equipment_types" t-as="t" t-key="t.id">
+                                <option t-att-value="t.id" t-esc="t.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Quantity</label>
+                            <input type="number" min="1" class="form-control form-control-sm" t-model="state.modalIssue.quantity"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Expected Return Date</label>
+                            <input type="date" class="form-control form-control-sm" t-model="state.modalIssue.expected_return_date"/>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-3 border-top pt-3">
+                        <button class="btn btn-sm btn-light" t-on-click="closeIssueModal">Cancel</button>
+                        <button class="btn btn-sm text-white" style="background:#9333ea;" t-att-disabled="state.modalIssue.saving" t-on-click="submitIssue">
+                            <t t-if="state.modalIssue.saving"><span class="spinner-border spinner-border-sm me-1"/>Issuing...</t>
+                            <t t-else=""><i class="fa fa-check me-1"/>Confirm Allocation</t>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </t>
+
+    <!-- Damage Report Modal -->
+    <t t-if="state.modalDamage.open">
+        <div class="eq-modal-backdrop">
+            <div class="eq-modal-content p-4">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <h5 class="mb-0 fw-bold text-danger"><i class="fa fa-exclamation-triangle me-2"/>Report Damage / Loss</h5>
+                    <button class="btn-close" t-on-click="closeDamageModal"/>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Guard Involved</label>
+                        <select class="form-select form-select-sm" t-model="state.modalDamage.employee_id">
+                            <t t-foreach="state.data.guards" t-as="g" t-key="g.id">
+                                <option t-att-value="g.id" t-esc="g.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Equipment Type</label>
+                        <select class="form-select form-select-sm" t-model="state.modalDamage.equipment_type_id">
+                            <t t-foreach="state.data.equipment_types" t-as="t" t-key="t.id">
+                                <option t-att-value="t.id" t-esc="t.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Severity</label>
+                            <select class="form-select form-select-sm" t-model="state.modalDamage.severity">
+                                <option value="minor">Minor Damage</option>
+                                <option value="major">Major Damage</option>
+                                <option value="lost">Lost / Stolen</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Estimated Cost (N$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" t-model="state.modalDamage.cost_estimate"/>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-3 border-top pt-3">
+                        <button class="btn btn-sm btn-light" t-on-click="closeDamageModal">Cancel</button>
+                        <button class="btn btn-sm btn-danger text-white" t-att-disabled="state.modalDamage.saving" t-on-click="submitDamage">
+                            <t t-if="state.modalDamage.saving"><span class="spinner-border spinner-border-sm me-1"/>Saving...</t>
+                            <t t-else=""><i class="fa fa-warning me-1"/>Submit Report</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
 </div>
 </t>
+
 </templates>

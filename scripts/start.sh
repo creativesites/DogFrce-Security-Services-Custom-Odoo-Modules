@@ -18,7 +18,9 @@ set +a
 mkdir -p \
   "$ROOT_DIR/.local/postgres" \
   "$ROOT_DIR/.local/odoo" \
+  "$ROOT_DIR/.local/whatsapp_session" \
   "$ROOT_DIR/custom_addons"
+
 
 cat > "$ROOT_DIR/.local/odoo.conf" <<EOF
 [options]

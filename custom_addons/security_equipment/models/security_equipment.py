@@ -476,13 +476,26 @@ class SecurityEquipmentDashboard(models.AbstractModel):
     _description = 'Equipment Dashboard Data Provider'
 
     @api.model
-    def get_dashboard_data(self):
+    def get_dashboard_data(self, category_filter=None, state_filter=None):
         from datetime import date as _date
         today = _date.today()
         month_start = today.replace(day=1)
 
         Alloc = self.env['security.equipment.allocation']
+        EqType = self.env['security.equipment.type']
+        EqItem = self.env['security.equipment.item']
+        Category = self.env['security.equipment.category']
+        Damage = self.env['security.equipment.damage']
+        Employee = self.env['hr.employee']
 
+        # Allocations
+        alloc_domain = []
+        if state_filter and state_filter != 'all':
+            alloc_domain.append(('state', '=', state_filter))
+        if category_filter and category_filter != 'all':
+            alloc_domain.append(('equipment_type_id.category_id.id', '=', int(category_filter)))
+
+        all_allocations = Alloc.search(alloc_domain, order='issue_date desc, id desc')
         active = Alloc.search([('state', 'in', ['issued', 'acknowledged'])])
         returned_mtd = Alloc.search([
             ('state', '=', 'returned'),
@@ -493,9 +506,11 @@ class SecurityEquipmentDashboard(models.AbstractModel):
             ('expected_return_date', '!=', False),
             ('expected_return_date', '<', today),
         ])
-        damage_count = self.env['security.equipment.damage'].search_count([
-            ('state', 'in', ['draft', 'investigation', 'approved']),
-        ])
+        damage_records = Damage.search([], limit=10, order='damage_date desc, id desc')
+
+        # Return compliance rate
+        total_due_mtd = len(active) + len(returned_mtd)
+        return_rate_pct = round((len(returned_mtd) / max(total_due_mtd, 1)) * 100, 1)
 
         by_category = {}
         for a in active:
@@ -506,21 +521,92 @@ class SecurityEquipmentDashboard(models.AbstractModel):
             )
             by_category[cat] = by_category.get(cat, 0) + (a.quantity or 1)
 
-        overdue_data = sorted([{
-            'guard': a.employee_id.name if a.employee_id else '',
-            'equipment': a.equipment_type_id.name if a.equipment_type_id else '',
-            'item': a.equipment_item_id.name if a.equipment_item_id else '',
-            'issue_date': str(a.issue_date) if a.issue_date else '',
-            'due_date': str(a.expected_return_date),
-            'days_overdue': (today - a.expected_return_date).days,
-        } for a in overdue], key=lambda x: -x['days_overdue'])
+        # Equipment types inventory
+        types = EqType.search([])
+        inventory_stock = [{
+            'id': t.id,
+            'name': t.name,
+            'category': t.category_id.name if t.category_id else 'General',
+            'is_serialized': t.is_serialized,
+            'qty_total': t.qty_total,
+            'qty_issued': t.qty_issued,
+            'qty_available': t.qty_available,
+            'unit_cost': t.unit_cost,
+        } for t in types]
+
+        # Guards
+        guards = Employee.search([('security_guard', '=', True)], limit=150, order='name asc')
+        categories = Category.search([], order='name asc')
 
         return {
             'allocated': len(active),
             'returned_mtd': len(returned_mtd),
-            'damaged_lost': damage_count,
+            'damaged_lost': len(damage_records.filtered(lambda d: d.state in ['draft', 'investigation', 'approved'])),
             'overdue_count': len(overdue),
+            'return_rate_pct': return_rate_pct,
             'by_category': [{'name': k, 'count': v} for k, v in sorted(by_category.items())],
-            'overdue': overdue_data,
+            'allocations': [{
+                'id': a.id,
+                'name': a.name,
+                'guard_id': a.employee_id.id if a.employee_id else False,
+                'guard': a.employee_id.name if a.employee_id else 'Unassigned Guard',
+                'guard_code': a.employee_id.employee_code or '' if a.employee_id else '',
+                'site': a.site_id.name if a.site_id else 'Main Depot',
+                'equipment_type_id': a.equipment_type_id.id if a.equipment_type_id else False,
+                'equipment': a.equipment_type_id.name if a.equipment_type_id else 'Equipment',
+                'category': a.equipment_type_id.category_id.name if a.equipment_type_id and a.equipment_type_id.category_id else 'General',
+                'item_serial': a.equipment_item_id.serial_number if a.equipment_item_id else 'Non-Serialized',
+                'quantity': a.quantity,
+                'state': a.state,
+                'issue_date': str(a.issue_date) if a.issue_date else '',
+                'due_date': str(a.expected_return_date) if a.expected_return_date else 'No Due Date',
+                'actual_return_date': str(a.actual_return_date) if a.actual_return_date else '',
+                'days_overdue': (today - a.expected_return_date).days if (a.expected_return_date and a.expected_return_date < today and a.state in ['issued', 'acknowledged']) else 0,
+                'is_overdue': bool(a.expected_return_date and a.expected_return_date < today and a.state in ['issued', 'acknowledged']),
+                'notes': a.notes or '',
+            } for a in all_allocations],
+            'inventory_stock': inventory_stock,
+            'damages': [{
+                'id': d.id,
+                'name': d.name,
+                'guard': d.employee_id.name if d.employee_id else '',
+                'equipment': d.equipment_type_id.name if d.equipment_type_id else '',
+                'date': str(d.damage_date) if d.damage_date else '',
+                'severity': d.severity,
+                'cost': d.cost_estimate or 0.0,
+                'state': d.state,
+            } for d in damage_records],
+            'guards': [{'id': g.id, 'name': g.name} for g in guards],
+            'categories': [{'id': c.id, 'name': c.name} for c in categories],
+            'equipment_types': [{'id': t.id, 'name': t.name, 'is_serialized': t.is_serialized} for t in types],
         }
+
+    @api.model
+    def action_quick_return(self, allocation_id):
+        from datetime import date as _date
+        alloc = self.env['security.equipment.allocation'].browse(allocation_id)
+        if alloc.exists():
+            alloc.action_return()
+            return True
+        return False
+
+    @api.model
+    def action_quick_acknowledge(self, allocation_id):
+        alloc = self.env['security.equipment.allocation'].browse(allocation_id)
+        if alloc.exists():
+            alloc.action_acknowledge()
+            return True
+        return False
+
+    @api.model
+    def action_quick_issue(self, vals):
+        alloc = self.env['security.equipment.allocation'].create(vals)
+        alloc.action_issue()
+        return alloc.id
+
+    @api.model
+    def action_quick_report_damage(self, vals):
+        dmg = self.env['security.equipment.damage'].create(vals)
+        return dmg.id
+
 

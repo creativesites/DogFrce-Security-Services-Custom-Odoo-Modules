@@ -32,17 +32,15 @@ async function _autoSync(store: ReturnType<typeof useAppStore.getState>) {
   store.setSyncStatus('syncing');
 
   try {
-    const result = await flushQueue({
-      mark: async (item) => {
-        await markPresence(item.recordId, item.presence, item.overrideReason, item.checkIn, item.checkOut);
-      },
-    });
+    const result = await flushQueue();
+    const remaining = (await import('./offlineQueue')).getOfflineQueue();
+    const remainingQueue = await remaining;
 
-    store.setPendingQueueCount(result.remaining);
+    store.setPendingQueueCount(remainingQueue.length);
     store.setLastSyncedAt(new Date().toISOString());
-    store.setSyncStatus(result.synced > 0 ? 'done' : 'idle');
+    store.setSyncStatus(result.success > 0 ? 'done' : 'idle');
 
-    if (result.synced > 0) {
+    if (result.success > 0) {
       // Trigger screens to re-fetch fresh data now that marks are synced
       store.triggerRefresh();
       // Revert banner after 3 s

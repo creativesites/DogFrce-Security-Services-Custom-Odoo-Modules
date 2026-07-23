@@ -1,150 +1,500 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-<t t-name="security_fleet.FleetDashboard">
-<div class="fd-root o_action" style="background:#f0f2f5;height:100%;overflow-y:auto;font-size:0.875rem;">
 
-    <t t-if="state.loading">
-        <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">
-            <div class="spinner-border text-primary"/><span class="fs-5">Loading Fleet Dashboard…</span>
+<t t-name="security_fleet.FleetDashboard" owl="1">
+<div class="o_fleet_dashboard fd-shell">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         LEFT SIDEBAR — Control & Navigation Panel
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="fd-nav-sidebar d-flex flex-column">
+
+        <!-- Brand Header -->
+        <div class="fd-brand px-4 py-3">
+            <div class="fw-bold" style="font-size:15px; color:#0f291e; letter-spacing:.3px;">
+                <i class="fa fa-car me-2" style="color:#10b981;"/>DogForce Fleet
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">Vehicle &amp; Transport Control</div>
         </div>
-    </t>
 
-    <t t-elif="state.data">
-        <t t-set="d" t-value="state.data"/>
+        <!-- Vehicle State Filter -->
+        <div class="px-3 pt-3 pb-2">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+                Vehicle Status
+            </div>
+            <select class="form-select form-select-sm fd-select" t-on-change="onStateFilterChange">
+                <option value="all">All Vehicles</option>
+                <option value="available">Available</option>
+                <option value="in_transit">In Transit</option>
+                <option value="in_service">In Service / Maintenance</option>
+                <option value="scrapped">Decommissioned</option>
+            </select>
+        </div>
 
-        <!-- Header -->
-        <div style="background:linear-gradient(135deg,#1a3a1a,#2e6b2e);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <i class="fa fa-car fa-2x" style="color:rgba(255,255,255,0.9);" title="Fleet"/>
-                <div>
-                    <h3 style="margin:0;color:white;font-weight:700;">Fleet Management</h3>
-                    <span style="color:rgba(255,255,255,0.7);font-size:12px;">Vehicle &amp; shuttle overview</span>
+        <!-- Quick Action Buttons -->
+        <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
+            <button class="btn btn-sm text-white w-100 fw-semibold" style="background:#10b981; border-radius:8px;" t-on-click="openRunModal">
+                <i class="fa fa-plus me-1"/>Schedule Shuttle Run
+            </button>
+            <button class="btn btn-sm btn-outline-secondary w-100 fw-semibold" style="border-radius:8px; font-size:12px;" t-on-click="openFuelModal">
+                <i class="fa fa-tint me-1"/>Register Fuel Slip
+            </button>
+            <button class="btn btn-sm btn-light w-100 text-muted" style="font-size:11px;" t-on-click="loadData">
+                <i class="fa fa-refresh me-1"/>Refresh Data
+            </button>
+        </div>
+
+        <div style="border-top:1px solid rgba(15, 23, 42, 0.08); margin:4px 0;"/>
+
+        <!-- Operational Readiness Gauge -->
+        <div t-if="state.data" class="px-3 py-3">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:8px;">
+                Fleet Readiness
+            </div>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold" style="font-size:18px; color:#0f291e;"><t t-esc="state.data.readiness_pct"/>%</span>
+                <span class="small text-muted"><t t-esc="state.data.active_count + state.data.in_transit_count"/> / <t t-esc="state.data.total_vehicles"/> Operational</span>
+            </div>
+            <div class="progress" style="height:7px; border-radius:4px; background:#e2e8f0;">
+                <div class="progress-bar bg-emerald" t-att-style="'width:' + state.data.readiness_pct + '%; background:#10b981;'"/>
+            </div>
+        </div>
+
+        <!-- Fuel MTD Counter -->
+        <div t-if="state.data" class="px-3 py-2 mt-auto border-top" style="background:rgba(255,255,255,0.6);">
+            <div class="text-muted x-small uppercase fw-semibold">Fuel Spent MTD</div>
+            <div class="fw-bold fs-6 text-dark"><t t-esc="fmt(state.data.fuel_cost_mtd)"/></div>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAIN WORKSPACE — Header Strip + Main Area
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="fd-main">
+
+        <!-- Top Header & KPI Strip -->
+        <div class="fd-header px-4 py-2 d-flex align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="input-group input-group-sm" style="width:240px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search vehicles, runs, drivers..." t-on-input="onSearchInput"/>
+                </div>
+
+                <!-- Tab Switcher -->
+                <div class="btn-group btn-group-sm">
+                    <button t-att-class="'btn ' + (state.activeTab === 'vehicles' ? 'btn-success text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('vehicles')">
+                        <i class="fa fa-car me-1"/>Vehicles (<t t-esc="filteredVehicles.length"/>)
+                    </button>
+                    <button t-att-class="'btn ' + (state.activeTab === 'runs' ? 'btn-success text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('runs')">
+                        <i class="fa fa-road me-1"/>Today's Runs (<t t-esc="filteredRuns.length"/>)
+                    </button>
+                    <button t-att-class="'btn ' + (state.activeTab === 'fuel' ? 'btn-success text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('fuel')">
+                        <i class="fa fa-tint me-1"/>Fuel Logs
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards Strip -->
+            <div t-if="state.data" class="fd-kpi-pills">
+                <div class="fd-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Total Fleet</div>
+                    <div class="fs-5 fw-bold text-dark"><t t-esc="state.data.total_vehicles"/></div>
+                </div>
+                <div class="fd-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Available</div>
+                    <div class="fs-5 fw-bold text-success"><t t-esc="state.data.active_count"/></div>
+                </div>
+                <div class="fd-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">In Transit</div>
+                    <div class="fs-5 fw-bold text-primary"><t t-esc="state.data.in_transit_count"/></div>
+                </div>
+                <div class="fd-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">In Service</div>
+                    <div class="fs-5 fw-bold text-warning"><t t-esc="state.data.in_service_count"/></div>
                 </div>
             </div>
         </div>
 
-        <div class="p-4">
-            <!-- KPIs -->
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Total Vehicles</div>
-                            <div class="fs-1 fw-bold text-primary"><t t-esc="d.total_vehicles"/></div>
+        <!-- Main Workspace Area with Inspector -->
+        <div t-att-class="'fd-workspace ' + (state.selectedVehicle || state.selectedRun ? 'has-inspector' : '')">
+
+            <!-- Content Area -->
+            <div class="fd-content-area">
+
+                <!-- Loading State -->
+                <t t-if="state.loading">
+                    <div class="d-flex align-items-center justify-content-center py-5 gap-3 text-muted">
+                        <div class="spinner-border text-success" role="status"/>
+                        <span class="fs-5">Loading Fleet Command...</span>
+                    </div>
+                </t>
+
+                <!-- TAB 1: VEHICLES -->
+                <t t-elif="state.activeTab === 'vehicles'">
+                    <div class="row g-3">
+                        <t t-foreach="filteredVehicles" t-as="v" t-key="v.id">
+                            <div class="col-12 col-md-6 col-xl-4">
+                                <div t-att-class="'card fd-card p-3 cursor-pointer ' + (state.selectedVehicle and state.selectedVehicle.id === v.id ? 'fd-card-active' : '')"
+                                     t-on-click="() => this.selectVehicle(v)">
+                                    <div class="d-flex align-items-start justify-content-between mb-2">
+                                        <div>
+                                            <div class="fw-bold fs-6 text-dark mb-0"><t t-esc="v.name"/></div>
+                                            <span class="badge bg-light text-dark font-monospace small"><t t-esc="v.plate"/></span>
+                                        </div>
+                                        <span t-att-class="stateBadgeClass(v.state)">
+                                            <t t-esc="v.state"/>
+                                        </span>
+                                    </div>
+
+                                    <div class="d-flex flex-column gap-1 my-2 fs-7 text-secondary">
+                                        <div><i class="fa fa-user me-2 text-muted"/>Primary Driver: <span class="fw-semibold text-dark"><t t-esc="v.driver"/></span></div>
+                                        <div><i class="fa fa-tachometer me-2 text-muted"/>Odometer: <span class="fw-semibold text-dark"><t t-esc="v.odometer"/> km</span></div>
+                                        <div><i class="fa fa-road me-2 text-muted"/>Shuttle Runs: <span class="fw-semibold text-dark"><t t-esc="v.run_count"/></span></div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center justify-content-between border-top pt-2 mt-1">
+                                        <span class="x-small text-muted"><i class="fa fa-tint me-1"/>Fuel: <t t-esc="fmt(v.total_fuel_cost)"/></span>
+                                        <button class="btn btn-xs btn-outline-success" t-on-click.stop="() => this.openVehicleForm(v.id)">
+                                            <i class="fa fa-external-link"/> View
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                        <t t-if="filteredVehicles.length === 0">
+                            <div class="col-12 text-center py-5 text-muted">
+                                <i class="fa fa-car fa-3x mb-3 text-secondary"/>
+                                <h5>No vehicles match search criteria.</h5>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- TAB 2: SHUTTLE RUNS -->
+                <t t-elif="state.activeTab === 'runs'">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7">
+                                    <tr>
+                                        <th>Run Ref</th>
+                                        <th>Route</th>
+                                        <th>Vehicle</th>
+                                        <th>Driver</th>
+                                        <th>Departure</th>
+                                        <th class="text-center">Capacity</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="filteredRuns" t-as="run" t-key="run.id">
+                                        <tr t-att-class="state.selectedRun and state.selectedRun.id === run.id ? 'table-success' : ''"
+                                            style="cursor:pointer;" t-on-click="() => this.selectRun(run)">
+                                            <td class="fw-bold text-dark"><t t-esc="run.name"/></td>
+                                            <td class="fw-semibold"><t t-esc="run.route"/></td>
+                                            <td><t t-esc="run.vehicle"/> <small class="text-muted"><t t-esc="run.vehicle_plate"/></small></td>
+                                            <td><t t-esc="run.driver"/></td>
+                                            <td><i class="fa fa-clock-o text-muted me-1"/><t t-esc="run.departure_time"/></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-light text-dark">
+                                                    <t t-esc="run.passenger_count"/> / <t t-esc="run.capacity"/>
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-att-class="runStateClass(run.state)"><t t-esc="run.state"/></span>
+                                            </td>
+                                            <td class="text-end" t-on-click.stop="">
+                                                <div class="btn-group btn-group-sm">
+                                                    <button t-if="run.state === 'draft'" class="btn btn-outline-primary" t-on-click="() => this.changeRunState(run.id, 'boarding')">Board</button>
+                                                    <button t-if="run.state === 'boarding'" class="btn btn-outline-success" t-on-click="() => this.changeRunState(run.id, 'in_transit')">Dispatch</button>
+                                                    <button t-if="run.state === 'in_transit'" class="btn btn-outline-secondary" t-on-click="() => this.changeRunState(run.id, 'completed')">Complete</button>
+                                                    <button class="btn btn-light" t-on-click="() => this.openRunForm(run.id)"><i class="fa fa-edit"/></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="filteredRuns.length === 0">
+                                        <tr><td colspan="8" class="text-center py-4 text-muted">No shuttle runs scheduled for today.</td></tr>
+                                    </t>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Available</div>
-                            <div class="fs-1 fw-bold text-success"><t t-esc="d.active_count"/></div>
+                </t>
+
+                <!-- TAB 3: RECENT FUEL LOGS -->
+                <t t-elif="state.activeTab === 'fuel'">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0 fw-bold"><i class="fa fa-tint me-2 text-success"/>Recent Fuel Slip Logs</h6>
+                            <button class="btn btn-sm btn-success text-white" t-on-click="openFuelModal"><i class="fa fa-plus me-1"/>Register Fuel Log</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Vehicle</th>
+                                        <th>Driver</th>
+                                        <th>Litres</th>
+                                        <th class="text-end">Total Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="state.data.recent_fuel" t-as="f" t-key="f.id">
+                                        <tr>
+                                            <td><t t-esc="f.date"/></td>
+                                            <td class="fw-semibold"><t t-esc="f.vehicle"/></td>
+                                            <td><t t-esc="f.driver"/></td>
+                                            <td><t t-esc="f.litres"/> L</td>
+                                            <td class="text-end fw-bold text-dark"><t t-esc="fmt(f.cost)"/></td>
+                                        </tr>
+                                    </t>
+                                    <t t-if="!state.data.recent_fuel || state.data.recent_fuel.length === 0">
+                                        <tr><td colspan="5" class="text-center py-4 text-muted">No fuel logs registered recently.</td></tr>
+                                    </t>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">In Service</div>
-                            <div t-att-class="'fs-1 fw-bold ' + (d.in_service_count > 0 ? 'text-warning' : 'text-muted')">
-                                <t t-esc="d.in_service_count"/>
+                </t>
+
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 RIGHT INSPECTOR PANEL — Vehicle / Shuttle Inspector Drawer
+                 ═══════════════════════════════════════════════════════════ -->
+            <div t-if="state.selectedVehicle || state.selectedRun" class="fd-inspector p-3">
+
+                <!-- VEHICLE INSPECTOR -->
+                <t t-if="state.selectedVehicle">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <div>
+                            <div class="fw-bold fs-6 text-dark"><t t-esc="state.selectedVehicle.name"/></div>
+                            <span class="badge bg-light text-dark font-monospace small"><t t-esc="state.selectedVehicle.plate"/></span>
+                        </div>
+                        <button class="btn-close" t-on-click="closeInspector"/>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-muted x-small text-uppercase fw-semibold mb-1">Status Control</div>
+                            <div class="d-flex gap-1 flex-wrap">
+                                <button class="btn btn-xs btn-success" t-on-click="() => this.changeVehicleState(state.selectedVehicle.id, 'available')">Available</button>
+                                <button class="btn btn-xs btn-primary" t-on-click="() => this.changeVehicleState(state.selectedVehicle.id, 'in_transit')">In Transit</button>
+                                <button class="btn btn-xs btn-warning" t-on-click="() => this.changeVehicleState(state.selectedVehicle.id, 'in_service')">Service</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100 text-center">
-                        <div class="card-body">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Fuel Cost MTD</div>
-                            <div class="fs-5 fw-bold text-dark"><t t-esc="fmt(d.fuel_cost_mtd)"/></div>
+
+                        <div>
+                            <label class="form-label small fw-bold mb-1">Primary Driver</label>
+                            <select class="form-select form-select-sm fd-select"
+                                    t-att-value="state.selectedVehicle.driver_id || ''"
+                                    t-on-change="(ev) => this.assignDriver(state.selectedVehicle.id, ev.target.value)">
+                                <option value="">-- Unassigned --</option>
+                                <t t-foreach="state.data.drivers" t-as="d" t-key="d.id">
+                                    <option t-att-value="d.id" t-att-selected="d.id === state.selectedVehicle.driver_id" t-esc="d.name"/>
+                                </t>
+                            </select>
+                        </div>
+
+                        <div class="border rounded p-2 fs-7">
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Seating Capacity</span>
+                                <span class="fw-bold"><t t-esc="state.selectedVehicle.capacity"/> Passengers</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Odometer</span>
+                                <span class="fw-bold"><t t-esc="state.selectedVehicle.odometer"/> km</span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Total Fuel Spent</span>
+                                <span class="fw-bold"><t t-esc="fmt(state.selectedVehicle.total_fuel_cost)"/></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-2">
+                            <button class="btn btn-sm btn-outline-success flex-fill" t-on-click="() => this.openVehicleForm(state.selectedVehicle.id)">
+                                Open Vehicle Record
+                            </button>
                         </div>
                     </div>
-                </div>
+                </t>
+
+                <!-- SHUTTLE RUN INSPECTOR -->
+                <t t-if="state.selectedRun">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <div>
+                            <div class="fw-bold fs-6 text-dark"><t t-esc="state.selectedRun.name"/></div>
+                            <span t-att-class="runStateClass(state.selectedRun.state)"><t t-esc="state.selectedRun.state"/></span>
+                        </div>
+                        <button class="btn-close" t-on-click="closeInspector"/>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <div class="p-3 bg-light rounded-3">
+                            <div class="text-muted x-small text-uppercase fw-semibold mb-1">Update Status</div>
+                            <div class="btn-group btn-group-sm w-100">
+                                <button class="btn btn-outline-primary" t-on-click="() => this.changeRunState(state.selectedRun.id, 'boarding')">Board</button>
+                                <button class="btn btn-outline-success" t-on-click="() => this.changeRunState(state.selectedRun.id, 'in_transit')">Dispatch</button>
+                                <button class="btn btn-outline-secondary" t-on-click="() => this.changeRunState(state.selectedRun.id, 'completed')">Complete</button>
+                            </div>
+                        </div>
+
+                        <div class="border rounded p-2 fs-7">
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Route</span>
+                                <span class="fw-bold"><t t-esc="state.selectedRun.route"/></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Vehicle</span>
+                                <span class="fw-bold"><t t-esc="state.selectedRun.vehicle"/></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Driver</span>
+                                <span class="fw-bold"><t t-esc="state.selectedRun.driver"/></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Departure Time</span>
+                                <span class="fw-bold"><t t-esc="state.selectedRun.departure_time"/></span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-success w-100 mt-2" t-on-click="() => this.openRunForm(state.selectedRun.id)">
+                            Open Run Manifest Form
+                        </button>
+                    </div>
+                </t>
+
             </div>
 
-            <div class="row g-3">
-                <!-- Today's Runs -->
-                <div class="col-lg-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-semibold py-2">
-                            <i class="fa fa-road me-2 text-muted"/>Today's Runs
-                        </div>
-                        <div class="card-body p-0">
-                            <t t-if="d.today_runs.length === 0">
-                                <div class="text-center text-muted py-4">No runs scheduled for today.</div>
-                            </t>
-                            <t t-else="">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Vehicle</th>
-                                            <th>Route</th>
-                                            <th>Departure</th>
-                                            <th class="text-center">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <t t-foreach="d.today_runs" t-as="run" t-key="run.id">
-                                            <tr style="cursor:pointer;" t-on-click="() => this.openRun(run.id)">
-                                                <td class="fw-semibold"><t t-esc="run.vehicle"/></td>
-                                                <td class="text-muted small"><t t-esc="run.route || '—'"/></td>
-                                                <td class="text-muted small"><t t-esc="run.departure ? run.departure.slice(11, 16) : '—'"/></td>
-                                                <td class="text-center">
-                                                    <span t-att-class="runStateClass(run.state)">
-                                                        <t t-esc="run.state"/>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </t>
-                                    </tbody>
-                                </table>
-                            </t>
-                        </div>
-                    </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MODALS — Schedule Shuttle Run & Fuel Slip
+         ═══════════════════════════════════════════════════════════ -->
+
+    <!-- Schedule Run Modal -->
+    <t t-if="state.modalRun.open">
+        <div class="fd-modal-backdrop">
+            <div class="fd-modal-content p-4">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa fa-plus-circle text-success me-2"/>Schedule Shuttle Run</h5>
+                    <button class="btn-close" t-on-click="closeRunModal"/>
                 </div>
 
-                <!-- Vehicle Status -->
-                <div class="col-lg-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-semibold py-2">
-                            <i class="fa fa-car me-2 text-muted"/>Vehicle Status
-                        </div>
-                        <div class="card-body p-0">
-                            <t t-if="d.vehicles.length === 0">
-                                <div class="text-center text-muted py-4">No vehicles registered.</div>
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Vehicle</label>
+                        <select class="form-select form-select-sm" t-model="state.modalRun.vehicle_id">
+                            <t t-foreach="state.data.vehicles" t-as="v" t-key="v.id">
+                                <option t-att-value="v.id" t-esc="v.name"/>
                             </t>
-                            <t t-else="">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Vehicle</th>
-                                            <th>Plate</th>
-                                            <th>Driver</th>
-                                            <th class="text-center">State</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <t t-foreach="d.vehicles" t-as="v" t-key="v.id">
-                                            <tr style="cursor:pointer;" t-on-click="() => this.openVehicle(v.id)">
-                                                <td class="fw-semibold"><t t-esc="v.name"/></td>
-                                                <td class="text-muted small"><t t-esc="v.plate"/></td>
-                                                <td class="text-muted small"><t t-esc="v.driver || '—'"/></td>
-                                                <td class="text-center">
-                                                    <span t-att-class="stateBadgeClass(v.state)">
-                                                        <t t-esc="stateLabel(v.state)"/>
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        </t>
-                                    </tbody>
-                                </table>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Driver</label>
+                        <select class="form-select form-select-sm" t-model="state.modalRun.driver_id">
+                            <t t-foreach="state.data.drivers" t-as="d" t-key="d.id">
+                                <option t-att-value="d.id" t-esc="d.name"/>
                             </t>
-                        </div>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Route</label>
+                        <select class="form-select form-select-sm" t-model="state.modalRun.route_id">
+                            <t t-foreach="state.data.routes" t-as="r" t-key="r.id">
+                                <option t-att-value="r.id" t-esc="r.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Scheduled Departure Time</label>
+                        <input type="datetime-local" class="form-control form-control-sm" t-model="state.modalRun.scheduled_departure"/>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-3 border-top pt-3">
+                        <button class="btn btn-sm btn-light" t-on-click="closeRunModal">Cancel</button>
+                        <button class="btn btn-sm btn-success text-white" t-att-disabled="state.modalRun.saving" t-on-click="submitCreateRun">
+                            <t t-if="state.modalRun.saving"><span class="spinner-border spinner-border-sm me-1"/>Saving...</t>
+                            <t t-else=""><i class="fa fa-check me-1"/>Confirm Schedule</t>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </t>
+
+    <!-- Fuel Slip Modal -->
+    <t t-if="state.modalFuel.open">
+        <div class="fd-modal-backdrop">
+            <div class="fd-modal-content p-4">
+                <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                    <h5 class="mb-0 fw-bold"><i class="fa fa-tint text-success me-2"/>Register Fuel Slip</h5>
+                    <button class="btn-close" t-on-click="closeFuelModal"/>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Vehicle</label>
+                        <select class="form-select form-select-sm" t-model="state.modalFuel.vehicle_id">
+                            <t t-foreach="state.data.vehicles" t-as="v" t-key="v.id">
+                                <option t-att-value="v.id" t-esc="v.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-bold mb-1">Driver</label>
+                        <select class="form-select form-select-sm" t-model="state.modalFuel.driver_id">
+                            <t t-foreach="state.data.drivers" t-as="d" t-key="d.id">
+                                <option t-att-value="d.id" t-esc="d.name"/>
+                            </t>
+                        </select>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Litres Purchased</label>
+                            <input type="number" step="0.1" class="form-control form-control-sm" t-model="state.modalFuel.litres" t-on-input="onFuelCalc"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Cost Per Litre (N$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" t-model="state.modalFuel.cost_per_litre" t-on-input="onFuelCalc"/>
+                        </div>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Total Cost (N$)</label>
+                            <input type="number" step="0.01" class="form-control form-control-sm font-monospace fw-bold" t-model="state.modalFuel.total_cost"/>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-bold mb-1">Current Odometer (km)</label>
+                            <input type="number" class="form-control form-control-sm" t-model="state.modalFuel.odometer_at_fueling"/>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 justify-content-end mt-3 border-top pt-3">
+                        <button class="btn btn-sm btn-light" t-on-click="closeFuelModal">Cancel</button>
+                        <button class="btn btn-sm btn-success text-white" t-att-disabled="state.modalFuel.saving" t-on-click="submitCreateFuel">
+                            <t t-if="state.modalFuel.saving"><span class="spinner-border spinner-border-sm me-1"/>Saving...</t>
+                            <t t-else=""><i class="fa fa-check me-1"/>Save Fuel Log</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
 </div>
 </t>
+
 </templates>

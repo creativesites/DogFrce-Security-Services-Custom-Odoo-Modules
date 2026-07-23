@@ -1,216 +1,320 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-<t t-name="security_operations.OpsDashboard">
-    <div class="od-root o_action">
+<t t-name="security_operations.OpsDashboard" owl="1">
+<div class="o_ops_dashboard od-shell">
 
-        <!-- Loading -->
-        <t t-if="state.loading">
-            <div class="od-loading d-flex align-items-center justify-content-center py-5">
-                <div class="spinner-border me-3" style="color: var(--df-navy);" role="status"/>
-                <span class="fs-5 text-muted">Loading Operations Dashboard…</span>
+    <!-- ═══════════════════════════════════════════════════════════
+         LEFT SIDEBAR — Control & Site Filters
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="od-nav-sidebar d-flex flex-column">
+
+        <!-- Brand Header -->
+        <div class="od-brand px-4 py-3">
+            <div class="fw-bold" style="font-size:15px; color:#1e1b4b; letter-spacing:.3px;">
+                <i class="fa fa-dashboard me-2" style="color:#2563eb;"/>DogForce Operations
             </div>
-        </t>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">Shift &amp; Incident Control</div>
+        </div>
 
-        <t t-else="">
-            <!-- Header -->
-            <div class="od-header px-4 py-3 border-bottom bg-white d-flex align-items-center justify-content-between">
-                <div class="d-flex align-items-center gap-3">
-                    <i class="fa fa-shield fs-3" style="color: var(--df-navy);"/>
-                    <div>
-                        <h4 class="mb-0 fw-bold" style="color: var(--df-navy);">Operations Dashboard</h4>
-                        <small class="text-muted"><t t-esc="state.todayLabel"/></small>
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary" t-on-click="openLiveOps">
-                        <i class="fa fa-eye me-1"/>Live Ops
-                    </button>
-                    <button class="btn btn-sm od-btn-navy" t-on-click="openRosterBoard">
-                        <i class="fa fa-calendar me-1"/>Roster Board
-                    </button>
-                </div>
+        <!-- Site Filter -->
+        <div class="px-3 pt-3 pb-2">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+                Security Site
             </div>
+            <select class="form-select form-select-sm od-select" t-on-change="onSiteFilterChange">
+                <option value="all">All Sites</option>
+                <t t-if="state.data and state.data.sites" t-foreach="state.data.sites" t-as="s" t-key="s.id">
+                    <option t-att-value="s.id" t-esc="s.name"/>
+                </t>
+            </select>
+        </div>
 
-            <!-- KPI Strip -->
-            <div class="od-kpi-strip px-4 py-3 bg-white border-bottom">
-                <div class="row g-3">
-                    <div class="col-6 col-md-2">
-                        <div class="od-kpi-card border rounded p-3 text-center h-100">
-                            <div class="od-kpi-value fw-bold fs-2" style="color: var(--df-navy);">
-                                <t t-esc="state.kpi.scheduled"/>
-                            </div>
-                            <div class="od-kpi-label text-muted small">Scheduled Today</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <div class="od-kpi-card od-kpi-present border rounded p-3 text-center h-100">
-                            <div class="od-kpi-value fw-bold fs-2 text-success">
-                                <t t-esc="state.kpi.present"/>
-                            </div>
-                            <div class="od-kpi-label text-muted small">On Duty</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <div class="od-kpi-card od-kpi-warning border rounded p-3 text-center h-100">
-                            <div class="od-kpi-value fw-bold fs-2" style="color: #92600a;">
-                                <t t-esc="state.kpi.late"/>
-                            </div>
-                            <div class="od-kpi-label text-muted small">Late Arrivals</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <div class="od-kpi-card od-kpi-danger border rounded p-3 text-center h-100">
-                            <div class="od-kpi-value fw-bold fs-2 text-danger">
-                                <t t-esc="state.kpi.awol"/>
-                            </div>
-                            <div class="od-kpi-label text-muted small">AWOL</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <div class="od-kpi-card border rounded p-3 text-center h-100">
-                            <div class="od-kpi-value fw-bold fs-2"
-                                 t-att-class="state.kpi.criticalGaps > 0 ? 'text-danger' : 'text-success'">
-                                <t t-esc="state.kpi.criticalGaps"/>
-                            </div>
-                            <div class="od-kpi-label text-muted small">Critical Gaps</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-2">
-                        <div class="od-kpi-card border rounded p-3 text-center h-100">
-                            <div class="od-kpi-value fw-bold fs-2"
-                                 t-att-class="statusClass(state.kpi.fillRate)">
-                                <t t-esc="state.kpi.fillRate"/>%
-                            </div>
-                            <div class="od-kpi-label text-muted small">Fill Rate</div>
-                            <div class="progress mt-1" style="height: 4px;">
-                                <div class="progress-bar"
-                                     t-att-class="barClass(state.kpi.fillRate)"
-                                     t-att-style="'width: ' + state.kpi.fillRate + '%'"/>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Shift Filter -->
+        <div class="px-3 pb-2">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+                Shift Type
             </div>
+            <select class="form-select form-select-sm od-select" t-on-change="onShiftFilterChange">
+                <option value="all">All Shifts</option>
+                <option value="day">Day Shift</option>
+                <option value="night">Night Shift</option>
+            </select>
+        </div>
 
-            <!-- Main panels -->
-            <div class="od-body px-4 py-3">
-                <div class="row g-3">
+        <!-- Quick Action Buttons -->
+        <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
+            <button class="btn btn-sm text-white w-100 fw-semibold" style="background:#2563eb; border-radius:8px;" t-att-disabled="state.filling" t-on-click="autoFillGaps">
+                <t t-if="state.filling"><span class="spinner-border spinner-border-sm me-1"/>Filling Gaps...</t>
+                <t t-else=""><i class="fa fa-magic me-1"/>Auto-Fill All Open Gaps</t>
+            </button>
+            <button class="btn btn-sm btn-outline-primary w-100 fw-semibold" style="border-radius:8px; font-size:12px;" t-on-click="openRosterBoard">
+                <i class="fa fa-th me-1"/>Launch Roster Board
+            </button>
+            <button class="btn btn-sm btn-light w-100 text-muted" style="font-size:11px;" t-on-click="loadData">
+                <i class="fa fa-refresh me-1"/>Refresh Live Data
+            </button>
+        </div>
 
-                    <!-- AWOL Alerts -->
-                    <div class="col-12 col-lg-6">
-                        <div class="card shadow-sm" style="min-height: 280px;">
-                            <div class="od-card-header d-flex align-items-center justify-content-between px-3 py-2">
-                                <span>
-                                    <i class="fa fa-exclamation-triangle me-1" style="color: var(--df-amber);"/>
-                                    AWOL Alerts — Today
-                                    <span class="badge ms-1 text-bg-danger" t-if="state.awolAlerts.length">
-                                        <t t-esc="state.awolAlerts.length"/>
-                                    </span>
-                                </span>
-                                <button class="btn btn-sm od-btn-amber"
-                                        t-if="state.activeBatchId"
-                                        t-att-disabled="state.filling"
-                                        t-on-click="autoFillGaps">
-                                    <t t-if="state.filling">
-                                        <span class="spinner-border spinner-border-sm me-1" role="status"/>
-                                        Filling…
-                                    </t>
-                                    <t t-else="">
-                                        <i class="fa fa-magic me-1"/>Auto-Fill All Gaps
-                                    </t>
-                                </button>
-                            </div>
-                            <div class="card-body p-0">
-                                <t t-if="!state.awolAlerts.length">
-                                    <div class="text-center py-5 text-success">
-                                        <i class="fa fa-check-circle fa-2x mb-2 d-block"/>
-                                        <span>No AWOL incidents today</span>
-                                    </div>
-                                </t>
-                                <t t-else="">
-                                    <t t-foreach="state.awolAlerts" t-as="alert" t-key="alert.id">
-                                        <div class="od-alert-row d-flex align-items-center justify-content-between px-3 py-2 border-bottom">
-                                            <div class="overflow-hidden me-2">
-                                                <div class="fw-semibold small text-truncate">
-                                                    <t t-esc="alert.employee_id ? alert.employee_id[1] : 'Unknown Guard'"/>
-                                                </div>
-                                                <div class="text-muted x-small">
-                                                    <t t-if="alert.site_id"><t t-esc="alert.site_id[1]"/></t>
-                                                    <t t-if="alert.post_id"><span class="mx-1">·</span><t t-esc="alert.post_id[1]"/></t>
-                                                    <t t-if="alert.shift_template_id"><span class="mx-1">·</span><t t-esc="alert.shift_template_id[1]"/></t>
-                                                </div>
-                                            </div>
-                                            <button class="btn btn-sm btn-outline-primary flex-shrink-0"
-                                                    t-if="alert.roster_slot_id"
-                                                    t-on-click="() => findReplacement(alert)">
-                                                <i class="fa fa-exchange me-1"/>Find Replacement
-                                            </button>
-                                            <span class="badge text-bg-secondary flex-shrink-0" t-else="">
-                                                No slot linked
-                                            </span>
-                                        </div>
-                                    </t>
-                                </t>
-                            </div>
-                        </div>
-                    </div>
+        <div style="border-top:1px solid rgba(15, 23, 42, 0.08); margin:4px 0;"/>
 
-                    <!-- Sites Requiring Attention -->
-                    <div class="col-12 col-lg-6">
-                        <div class="card shadow-sm" style="min-height: 280px;">
-                            <div class="od-card-header d-flex align-items-center justify-content-between px-3 py-2">
-                                <span>
-                                    <i class="fa fa-map-marker me-1" style="color: var(--df-amber);"/>
-                                    Sites Requiring Attention
-                                </span>
-                                <button class="btn btn-sm btn-link text-white p-0 text-decoration-none"
-                                        t-if="state.activeBatchId"
-                                        t-on-click="openBatch">
-                                    <small><t t-esc="state.activeBatchName"/><i class="fa fa-arrow-right ms-1"/></small>
-                                </button>
-                            </div>
-                            <div class="card-body p-0">
-                                <t t-if="!state.alertSites.length">
-                                    <div class="text-center py-5 text-success">
-                                        <i class="fa fa-check-circle fa-2x mb-2 d-block"/>
-                                        <span>All sites fully staffed</span>
-                                    </div>
-                                </t>
-                                <t t-else="">
-                                    <t t-foreach="state.alertSites" t-as="site" t-key="site.id">
-                                        <div class="od-site-row px-3 py-2 border-bottom">
-                                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                                <span class="fw-semibold small"><t t-esc="site.name"/></span>
-                                                <span class="small fw-bold" t-att-class="statusClass(site.fillRate)">
-                                                    <t t-esc="site.fillRate"/>%
-                                                </span>
-                                            </div>
-                                            <div class="progress mb-1" style="height: 5px;">
-                                                <div class="progress-bar"
-                                                     t-att-class="barClass(site.fillRate)"
-                                                     t-att-style="'width: ' + site.fillRate + '%'"/>
-                                            </div>
-                                            <div class="d-flex gap-2 align-items-center">
-                                                <span class="badge text-bg-danger x-small" t-if="site.criticalGaps">
-                                                    <i class="fa fa-warning me-1"/>
-                                                    <t t-esc="site.criticalGaps"/> critical
-                                                </span>
-                                                <span class="text-muted x-small" t-if="site.unassigned">
-                                                    <t t-esc="site.unassigned"/> unassigned
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </t>
-                                </t>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+        <!-- Shift Fill Rate Gauge -->
+        <div t-if="state.data" class="px-3 py-3">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:8px;">
+                Daily Guard Fill Rate
             </div>
-        </t>
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="fw-bold" style="font-size:18px; color:#1e1b4b;"><t t-esc="state.data.fill_rate_pct"/>%</span>
+                <span class="small text-muted"><t t-esc="state.data.on_duty_count"/> / <t t-esc="state.data.total_scheduled"/> Guarded</span>
+            </div>
+            <div class="progress" style="height:7px; border-radius:4px; background:#e2e8f0;">
+                <div class="progress-bar" t-att-style="'width:' + state.data.fill_rate_pct + '%; background:#2563eb;'"/>
+            </div>
+        </div>
+
     </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         MAIN WORKSPACE — Header Strip + Main Content Area
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="od-main">
+
+        <!-- Top Header & KPI Strip -->
+        <div class="od-header px-4 py-2 d-flex align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="input-group input-group-sm" style="width:240px;">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search site, guard, post..." t-on-input="onSearchInput"/>
+                </div>
+            </div>
+
+            <!-- KPI Cards Strip -->
+            <div t-if="state.data" class="od-kpi-pills">
+                <div class="od-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Scheduled Today</div>
+                    <div class="fs-5 fw-bold text-dark"><t t-esc="state.data.total_scheduled"/></div>
+                </div>
+                <div class="od-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">On Duty</div>
+                    <div class="fs-5 fw-bold text-success"><t t-esc="state.data.on_duty_count"/></div>
+                </div>
+                <div class="od-kpi-card text-center">
+                    <div class="text-muted x-small fw-semibold text-uppercase">Critical Open Gaps</div>
+                    <div t-att-class="'fs-5 fw-bold ' + (state.data.open_gaps_count > 0 ? 'text-danger' : 'text-muted')">
+                        <t t-esc="state.data.open_gaps_count"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Workspace Area with Inspector -->
+        <div t-att-class="'od-workspace ' + (state.selectedAlert || state.selectedSite ? 'has-inspector' : '')">
+
+            <!-- Content Area -->
+            <div class="od-content-area">
+
+                <!-- Loading State -->
+                <t t-if="state.loading">
+                    <div class="d-flex align-items-center justify-content-center py-5 gap-3 text-muted">
+                        <div class="spinner-border text-primary" role="status"/>
+                        <span class="fs-5">Connecting Operations Command...</span>
+                    </div>
+                </t>
+
+                <t t-else="">
+                    <!-- SECTION 1: CRITICAL SHIFT GAPS & AWOL ALERTS -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                            <h6 class="mb-0 fw-bold text-danger"><i class="fa fa-exclamation-circle me-2"/>Unassigned Shift Gaps &amp; AWOL Alerts (<t t-esc="filteredAlerts.length"/>)</h6>
+                            <button class="btn btn-xs btn-outline-primary" t-on-click="openLiveOps">Open Full Live Stream</button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="row g-0">
+                                <t t-foreach="filteredAlerts" t-as="alert" t-key="alert.slot_id">
+                                    <div class="col-12 col-md-6 border-bottom border-end p-3">
+                                        <div t-att-class="'card od-card p-3 cursor-pointer ' + (state.selectedAlert and state.selectedAlert.slot_id === alert.slot_id ? 'od-card-active' : '')"
+                                             t-on-click="() => this.selectAlert(alert)">
+                                            <div class="d-flex align-items-start justify-content-between mb-1">
+                                                <div>
+                                                    <span class="fw-bold fs-6 text-dark"><t t-esc="alert.site"/></span>
+                                                    <div class="text-muted small"><t t-esc="alert.post"/></div>
+                                                </div>
+                                                <span class="badge bg-danger text-white"><i class="fa fa-warning me-1"/>OPEN GAP</span>
+                                            </div>
+
+                                            <div class="d-flex align-items-center gap-3 my-2 text-secondary fs-7">
+                                                <div><i class="fa fa-clock-o text-muted me-1"/>Start: <t t-esc="alert.start_time"/></div>
+                                                <div><i class="fa fa-user me-1 text-danger"/><t t-esc="alert.guard"/></div>
+                                            </div>
+
+                                            <div class="d-flex align-items-center justify-content-between border-top pt-2 mt-1">
+                                                <span class="x-small text-muted">Click to view replacement candidates</span>
+                                                <button class="btn btn-xs btn-primary text-white" t-on-click.stop="() => this.selectAlert(alert)">
+                                                    <i class="fa fa-user-plus me-1"/>Find Replacement
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-if="filteredAlerts.length === 0">
+                                    <div class="col-12 text-center py-5 text-success">
+                                        <i class="fa fa-check-circle fa-3x mb-2 d-block"/>
+                                        <h5>All scheduled shifts are 100% manned! No open gaps.</h5>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: SITES REQUIRING ATTENTION -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white py-3">
+                            <h6 class="mb-0 fw-bold"><i class="fa fa-building me-2 text-primary"/>Security Client Sites &amp; Fill Rates</h6>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7">
+                                    <tr>
+                                        <th>Site Name</th>
+                                        <th>Location</th>
+                                        <th>Supervisor</th>
+                                        <th class="text-center">Coverage</th>
+                                        <th class="text-center">Open Gaps</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="filteredSites" t-as="site" t-key="site.site_id">
+                                        <tr t-on-click="() => this.selectSite(site)" style="cursor:pointer;">
+                                            <td class="fw-bold text-dark"><t t-esc="site.site"/></td>
+                                            <td class="text-muted"><t t-esc="site.location"/></td>
+                                            <td><t t-esc="site.supervisor"/></td>
+                                            <td class="text-center">
+                                                <span t-att-class="'fw-bold ' + (site.risk_level === 'critical' ? 'text-danger' : (site.risk_level === 'warning' ? 'text-warning' : 'text-success'))">
+                                                    <t t-esc="site.fill_rate_pct"/>%
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span t-att-class="'badge ' + (site.open_gaps > 0 ? 'bg-danger' : 'bg-light text-muted')">
+                                                    <t t-esc="site.open_gaps"/> Gaps
+                                                </span>
+                                            </td>
+                                            <td class="text-end" t-on-click.stop="">
+                                                <button class="btn btn-xs btn-outline-secondary" t-on-click="() => this.openSiteForm(site.site_id)">
+                                                    View Site
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </t>
+
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 RIGHT INSPECTOR PANEL — Shift Command Inspector Drawer
+                 ═══════════════════════════════════════════════════════════ -->
+            <div t-if="state.selectedAlert || state.selectedSite" class="od-inspector p-3">
+
+                <!-- ALERT INSPECTOR WITH LIVE CANDIDATE PICKER -->
+                <t t-if="state.selectedAlert">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <div>
+                            <div class="fw-bold fs-6 text-dark"><t t-esc="state.selectedAlert.site"/></div>
+                            <small class="text-muted"><t t-esc="state.selectedAlert.post"/></small>
+                        </div>
+                        <button class="btn-close" t-on-click="closeInspector"/>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle">
+                            <div class="text-danger x-small text-uppercase fw-bold mb-1">Shift Gap Context</div>
+                            <div class="fs-7 text-dark">
+                                <div><i class="fa fa-calendar me-2"/>Date: <t t-esc="state.selectedAlert.shift_date"/></div>
+                                <div><i class="fa fa-clock-o me-2"/>Start Time: <t t-esc="state.selectedAlert.start_time"/></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="fw-bold fs-7 text-dark mb-2"><i class="fa fa-magic text-primary me-1"/>Recommended Available Guards</div>
+
+                            <t t-if="state.loadingSuggestions">
+                                <div class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm me-1"/>Matching guards...</div>
+                            </t>
+
+                            <t t-else="">
+                                <div class="d-flex flex-column gap-2">
+                                    <t t-foreach="state.suggestions" t-as="cand" t-key="cand.id">
+                                        <div class="border rounded p-2 d-flex align-items-center justify-content-between bg-white hover-shadow">
+                                            <div>
+                                                <div class="fw-bold text-dark fs-7"><t t-esc="cand.name"/></div>
+                                                <div class="x-small text-muted"><i class="fa fa-phone me-1"/><t t-esc="cand.phone"/></div>
+                                            </div>
+                                            <button class="btn btn-xs btn-success text-white fw-bold" t-on-click="() => this.assignReplacement(state.selectedAlert.slot_id, cand.id)">
+                                                Assign
+                                            </button>
+                                        </div>
+                                    </t>
+                                    <t t-if="state.suggestions.length === 0">
+                                        <div class="text-muted small py-2 text-center">No available off-duty guards found for this date.</div>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-secondary w-100 mt-2" t-on-click="() => this.openSlotForm(state.selectedAlert.slot_id)">
+                            Open Slot Form
+                        </button>
+                    </div>
+                </t>
+
+                <!-- SITE INSPECTOR -->
+                <t t-if="state.selectedSite">
+                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                        <div>
+                            <div class="fw-bold fs-6 text-dark"><t t-esc="state.selectedSite.site"/></div>
+                            <small class="text-muted"><t t-esc="state.selectedSite.location"/></small>
+                        </div>
+                        <button class="btn-close" t-on-click="closeInspector"/>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        <div class="border rounded p-2 fs-7">
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Supervisor</span>
+                                <span class="fw-bold"><t t-esc="state.selectedSite.supervisor"/></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Total Posts Required</span>
+                                <span class="fw-bold"><t t-esc="state.selectedSite.total_required"/></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="text-muted">Guards Assigned</span>
+                                <span class="fw-bold text-success"><t t-esc="state.selectedSite.assigned"/></span>
+                            </div>
+                            <div class="d-flex justify-content-between py-1">
+                                <span class="text-muted">Open Gaps</span>
+                                <span class="fw-bold text-danger"><t t-esc="state.selectedSite.open_gaps"/></span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-sm btn-outline-primary w-100 mt-2" t-on-click="() => this.openSiteForm(state.selectedSite.site_id)">
+                            Open Security Site Form
+                        </button>
+                    </div>
+                </t>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
 </t>
 
 </templates>

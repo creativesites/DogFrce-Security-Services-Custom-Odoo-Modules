@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- WhatsApp Config — Form view -->
+    <record id="view_security_whatsapp_config_form" model="ir.ui.view">
+        <field name="name">security.whatsapp.config.form</field>
+        <field name="model">security.whatsapp.config</field>
+        <field name="arch" type="xml">
+            <form string="WhatsApp AI Bridge Settings" create="0" delete="0">
+                <header>
+                    <button name="action_refresh" type="object" string="Refresh Status" class="btn-primary" icon="fa-refresh"/>
+                </header>
+                <sheet>
+                    <!-- Header Information Banner -->
+                    <div class="alert alert-info d-flex align-items-center" role="alert" style="margin-bottom: 24px; border-radius: 8px;">
+                        <i class="fa fa-info-circle fa-2x me-3" style="color: #0284c7;"/>
+                        <div>
+                            <h5 class="alert-heading" style="margin-top: 0; font-weight: 600; color: #0f172a;">Zero-Cost WhatsApp Transport Bridge</h5>
+                            <p style="margin-bottom: 0; font-size: 13px; color: #475569;">
+                                This service establishes a secure session using the WhatsApp Web protocol (via Baileys). 
+                                There are no message sending fees or enterprise Meta registration requirements. 
+                                Once paired, supervisors can use WhatsApp commands to mark attendance or query roster metrics live.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Service Configuration">
+                            <field name="service_url"/>
+                        </group>
+                        <group string="Connection Status">
+                            <field name="connection_status" widget="badge" 
+                                   decoration-success="connection_status == 'connected'"
+                                   decoration-warning="connection_status == 'connecting'"
+                                   decoration-danger="connection_status == 'disconnected'"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Device Link (QR Scanner)">
+                            <div style="text-align: center; padding: 20px 0;">
+                                <field name="qr_code_image" widget="html" readonly="1" nolabel="1"/>
+                            </div>
+                        </page>
+                        <page string="Access Control &amp; Security">
+                            <group string="Sender Whitelisting &amp; Authorization">
+                                <field name="restrict_authorized_numbers"/>
+                                <field name="authorized_numbers" placeholder="+260971234567, 260965000111, +260955888999" invisible="not restrict_authorized_numbers"/>
+                            </group>
+                            <group string="NLP &amp; Message Filtering">
+                                <field name="ignore_unrelated_messages"/>
+                            </group>
+                        </page>
+                        <page string="Supported Commands">
+                            <div style="padding: 16px; font-size: 13px;">
+                                <h5 style="font-weight: 600; margin-bottom: 12px; color: #1e293b;">Interactive WhatsApp Command Reference</h5>
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Command / Syntax</th>
+                                            <th>Category</th>
+                                            <th>Action Description</th>
+                                            <th>Example Usage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>[Site Name] all present</strong></td>
+                                            <td>Bulk Site Attendance</td>
+                                            <td>Marks all scheduled guards at the specified client site as present (on-time).</td>
+                                            <td><code>Bank of Zambia all present</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>[Site Name] all present except [Guard]</strong></td>
+                                            <td>Bulk Site Attendance</td>
+                                            <td>Marks all site guards present, except named guards who are marked AWOL.</td>
+                                            <td><code>Bank of Zambia all present except Winston Zulu</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Check in [Guard] [late X mins]</strong></td>
+                                            <td>Field Attendance &amp; Lateness</td>
+                                            <td>Registers individual check-in and logs lateness variance in minutes. Assumes on-time if no minutes stated.</td>
+                                            <td><code>Check in Winston Zulu late 20 minutes</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>AWOL [Guard Name]</strong></td>
+                                            <td>Field Discipline</td>
+                                            <td>Flags unexcused absence for a guard, records incident, and notifies control room.</td>
+                                            <td><code>AWOL Winston Zulu</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>OWNER STATS</strong> / <strong>EXECUTIVE</strong></td>
+                                            <td>Executive Intelligence</td>
+                                            <td>Returns executive financial KPIs, billed recurring revenue, total active sites, and SLA penalty risk.</td>
+                                            <td><code>OWNER STATS</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>MANAGER STATS</strong> / <strong>OPS STATS</strong></td>
+                                            <td>Operations Intelligence</td>
+                                            <td>Returns shift roster coverage rates, active guards on duty, AWOL gaps, and top site breakdown.</td>
+                                            <td><code>MANAGER STATS</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>STATUS</strong> / <strong>ROSTER</strong></td>
+                                            <td>General Status</td>
+                                            <td>Queries today's total scheduled posts, present guards, and AWOL gaps.</td>
+                                            <td><code>STATUS</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>HELP</strong></td>
+                                            <td>Command Menu</td>
+                                            <td>Displays full interactive menu of supported commands and syntax guides.</td>
+                                            <td><code>HELP</code></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Server Action to open form in singleton mode -->
+    <record id="action_security_whatsapp_config_server" model="ir.actions.server">
+        <field name="name">WhatsApp AI Bridge Settings</field>
+        <field name="model_id" ref="model_security_whatsapp_config"/>
+        <field name="state">code</field>
+        <field name="code">
+action = model.get_config_action()
+        </field>
+    </record>
+
+    <!-- Menu item nested inside the AI Engine configuration submenu -->
+    <menuitem id="menu_security_whatsapp_config"
+              name="WhatsApp Integration"
+              parent="security_ai_engine.menu_security_ai_engine_root"
+              action="action_security_whatsapp_config_server"
+              sequence="15"/>
+</odoo>

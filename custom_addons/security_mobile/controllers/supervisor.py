@@ -131,6 +131,7 @@ class SupervisorController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_today(self, **kw):
@@ -217,6 +218,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_mark(self, **kw):
@@ -265,6 +267,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_checkin(self, **kw):
@@ -296,6 +299,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_batch_submit(self, **kw):
@@ -331,6 +335,7 @@ class SupervisorController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_site_assignable(self, site_id, **kw):
@@ -410,6 +415,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_site_assign(self, site_id, **kw):
@@ -515,6 +521,7 @@ class SupervisorController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_guard_profile(self, guard_id, **kw):
@@ -591,6 +598,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_bulk_mark_present(self, site_id, **kw):
@@ -627,6 +635,7 @@ class SupervisorController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_incident_types(self, **kw):
@@ -649,6 +658,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_log_incident(self, **kw):
@@ -676,6 +686,8 @@ class SupervisorController(http.Controller):
         if not inc_type.exists():
             return _json_err("Incident type not found.", status=404)
 
+        photo_base64 = body.get("photo_base64")
+
         incident = env["security.incident"].sudo().create({
             "employee_id": int(employee_id),
             "incident_type_id": int(incident_type_id),
@@ -684,6 +696,19 @@ class SupervisorController(http.Controller):
             "state": "draft",
         })
 
+        if photo_base64:
+            try:
+                photo_data = photo_base64.split(",", 1)[1] if "," in photo_base64 else photo_base64
+                env["ir.attachment"].sudo().create({
+                    "name": f"Incident_Photo_{incident.id}.jpg",
+                    "datas": photo_data,
+                    "res_model": "security.incident",
+                    "res_id": incident.id,
+                    "mimetype": "image/jpeg",
+                })
+            except Exception as att_err:
+                _logger.warning("Failed to attach incident photo: %s", att_err)
+
         return _json_ok({
             "incident_id": incident.id,
             "guard": employee.name,
@@ -691,6 +716,7 @@ class SupervisorController(http.Controller):
             "severity": inc_type.severity,
             "date": str(date.today()),
             "state": "draft",
+            "has_photo": bool(photo_base64),
         })
 
     # ── POST /api/security/mobile/supervisor/site/<id>/reassign ────────────
@@ -700,6 +726,7 @@ class SupervisorController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_reassign_guard(self, site_id, **kw):
@@ -806,6 +833,7 @@ class SupervisorController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_SUPERVISOR, GROUP_MANAGER, GROUP_OWNER)
     def supervisor_history(self, **kw):

@@ -69,6 +69,28 @@ class SaleOrder(models.Model):
             "target": "current",
         }
 
+    def action_create_security_contract(self):
+        self.ensure_one()
+        if not self.partner_id:
+            raise ValidationError("Please specify a customer on the sales order first.")
+
+        contract_vals = {
+            "name": f"CTR/{self.name}",
+            "partner_id": self.partner_id.id,
+            "currency_id": self.currency_id.id if self.currency_id else self.env.company.currency_id.id,
+            "date_start": fields.Date.today(),
+            "monthly_value": self.amount_total,
+            "state": "draft",
+        }
+        contract = self.env["security.client.contract"].create(contract_vals)
+        return {
+            "type": "ir.actions.act_window",
+            "res_model": "security.client.contract",
+            "res_id": contract.id,
+            "view_mode": "form",
+            "target": "current",
+        }
+
 
 class SecurityBillingPlan(models.Model):
     _inherit = "security.billing.plan"

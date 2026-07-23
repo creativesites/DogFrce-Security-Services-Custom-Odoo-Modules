@@ -11,6 +11,7 @@
         "views/security_shift_planner_views.xml",
         "views/security_shift_planner_client_actions.xml",
         "views/security_roster_week_views.xml",
+        "views/res_config_settings_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

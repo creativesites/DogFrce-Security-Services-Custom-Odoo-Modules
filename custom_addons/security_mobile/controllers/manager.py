@@ -80,7 +80,7 @@ def _serialize_rec(rec):
 class ManagerController(http.Controller):
 
     @http.route("/api/security/mobile/manager/dashboard",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_dashboard(self, **kw):
         """Multi-site attendance summary. ?date=YYYY-MM-DD defaults to today."""
@@ -109,7 +109,7 @@ class ManagerController(http.Controller):
         })
 
     @http.route("/api/security/mobile/manager/site/<int:site_id>",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_site_detail(self, site_id, **kw):
         """Detailed roster for one site. ?date=YYYY-MM-DD"""
@@ -160,7 +160,7 @@ class ManagerController(http.Controller):
         })
 
     @http.route("/api/security/mobile/manager/overtime",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_overtime_list(self, **kw):
         """All attendance records with pending overtime across all sites."""
@@ -193,7 +193,7 @@ class ManagerController(http.Controller):
         return _json_ok(result)
 
     @http.route("/api/security/mobile/manager/overtime/approve",
-                auth="user", methods=["POST"], type="http", csrf=False)
+                auth="user", methods=["POST"], type="http", csrf=False, cors="*")
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_overtime_approve(self, **kw):
         """Approve/reject overtime. Body: {record_id, approved, note?}"""
@@ -220,6 +220,7 @@ class ManagerController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_leave_requests(self, **kw):
@@ -258,6 +259,7 @@ class ManagerController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_leave_action(self, req_id, **kw):
@@ -291,6 +293,7 @@ class ManagerController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_guard_performance(self, **kw):
@@ -362,6 +365,7 @@ class ManagerController(http.Controller):
         methods=["POST"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_guard_review(self, **kw):
@@ -388,6 +392,7 @@ class ManagerController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_ot_summary(self, **kw):
@@ -438,6 +443,7 @@ class ManagerController(http.Controller):
         methods=["GET"],
         type="http",
         csrf=False,
+        cors="*",
     )
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_unassigned_slots(self, **kw):

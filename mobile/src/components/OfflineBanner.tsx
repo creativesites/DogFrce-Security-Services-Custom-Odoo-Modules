@@ -1,9 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet } from 'react-native';
+import { Animated, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAppStore } from '../stores/appStore';
 import { Theme } from '../theme';
+import { flushOfflineQueue } from '../utils/offlineQueue';
 
 function timeAgo(isoString: string | null): string {
   if (!isoString) return '';
@@ -57,7 +58,6 @@ export default function OfflineBanner() {
     }
   }, [variant]);
 
-  // Auto-dismiss the "back online" confirmation after 3 s
   useEffect(() => {
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
     if (variant === 'done') {
@@ -65,6 +65,12 @@ export default function OfflineBanner() {
     }
     return () => { if (dismissTimer.current) clearTimeout(dismissTimer.current); };
   }, [variant]);
+
+  const handleManualSync = async () => {
+    if (!isOffline && pendingQueueCount > 0) {
+      await flushOfflineQueue();
+    }
+  };
 
   if (variant === 'none') return null;
 
@@ -81,7 +87,7 @@ export default function OfflineBanner() {
       case 'done':
         return 'Back online — data synced';
       case 'error':
-        return 'Sync failed — will retry when online';
+        return 'Sync failed — tap to retry';
       default:
         return '';
     }
@@ -91,6 +97,11 @@ export default function OfflineBanner() {
     <Animated.View style={[styles.banner, { backgroundColor: BG[variant], transform: [{ translateY: slideAnim }] }]}>
       <MaterialCommunityIcons name={ICON[variant] as any} size={14} color="#fff" />
       <Text style={styles.text}>{label()}</Text>
+      {!isOffline && pendingQueueCount > 0 && variant !== 'syncing' && (
+        <TouchableOpacity style={styles.syncBtn} onPress={handleManualSync}>
+          <Text style={styles.syncBtnText}>Sync Now</Text>
+        </TouchableOpacity>
+      )}
     </Animated.View>
   );
 }
@@ -105,4 +116,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   text: { color: '#fff', fontSize: 12, fontWeight: '600', flex: 1 },
+  syncBtn: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  syncBtnText: { color: '#fff', fontSize: 11, fontWeight: '700' },
 });

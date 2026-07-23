@@ -2,10 +2,10 @@
 <odoo>
     <!-- Add Odoo Invoice View Action Button & Auto-Reconcile Button on custom security.billing.invoice form -->
     <record id="view_security_billing_invoice_form_inherit_account" model="ir.ui.view">
-        <name>security.billing.invoice.form.inherit.account</name>
-        <model>security.billing.invoice</model>
-        <inherit_id ref="security_billing.view_security_billing_invoice_form"/>
-        <arch type="xml">
+        <field name="name">security.billing.invoice.form.inherit.account</field>
+        <field name="model">security.billing.invoice</field>
+        <field name="inherit_id" ref="security_billing.view_security_billing_invoice_form"/>
+        <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
                 <button name="action_view_odoo_invoice"
                         string="View Odoo Invoice"
@@ -23,7 +23,7 @@
             <xpath expr="//field[@name='generation_source']" position="after">
                 <field name="move_id" groups="security_base.group_security_supervisor" readonly="1" invisible="not move_id"/>
             </xpath>
-        </arch>
+        </field>
     </record>
 
     <!-- Server Action for Multi Auto-Reconcile in List Views -->

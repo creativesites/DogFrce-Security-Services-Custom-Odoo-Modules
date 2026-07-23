@@ -10,7 +10,8 @@ from odoo.http import request
 
 _logger = logging.getLogger(__name__)
 
-# ─── XML-IDs for the three mobile roles ────────────────────────────────────
+# ─── XML-IDs for the mobile roles ────────────────────────────────────
+GROUP_GUARD      = "security_base.group_security_guard"
 GROUP_SUPERVISOR = "security_base.group_security_supervisor"
 GROUP_MANAGER    = "security_base.group_security_manager"
 GROUP_OWNER      = "security_base.group_security_owner"
@@ -68,11 +69,72 @@ def _employee_for_user(user=None):
 class AuthController(http.Controller):
 
     @http.route(
-        "/api/security/mobile/auth/me",
-        auth="user",
-        methods=["GET"],
+        "/api/security/mobile/auth/login",
+        auth="public",
+        methods=["POST", "OPTIONS"],
         type="http",
         csrf=False,
+        cors="*",
+    )
+    def auth_login(self, **kw):
+        """
+        Mobile app REST login endpoint.
+        Body: { db, login/username, password }
+        Returns session_id, uid, name, role, employee_id in JSON payload.
+        """
+        body = _parse_body()
+        db = body.get("db") or request.db or "dogforce_dev"
+        login = body.get("login") or body.get("username")
+        password = body.get("password")
+
+        if not login or not password:
+            return _json_err("Username and password are required.", status=400)
+
+        try:
+            if db:
+                request.session.db = db
+            credential = {'login': login, 'password': password, 'type': 'password'}
+            try:
+                auth_info = request.session.authenticate(request.env, credential)
+                uid = auth_info.get('uid') if isinstance(auth_info, dict) else request.session.uid
+            except Exception:
+                try:
+                    uid = request.session.authenticate(login, password)
+                except Exception:
+                    uid = request.session.authenticate(db, login, password)
+        except Exception as e:
+            _logger.exception("Mobile login exception for %s on %s", login, db)
+            return _json_err(f"Authentication failed: {e}", status=401)
+
+        user = request.env["res.users"].sudo().browse(uid)
+        if user.has_group(GROUP_OWNER):
+            role = "owner"
+        elif user.has_group(GROUP_MANAGER):
+            role = "manager"
+        elif user.has_group(GROUP_SUPERVISOR):
+            role = "supervisor"
+        else:
+            role = "guard"
+
+        employee = _employee_for_user(user)
+
+        return _json_ok({
+            "session_id": request.session.sid,
+            "uid": user.id,
+            "name": user.name,
+            "username": login,
+            "db": db,
+            "role": role,
+            "employee_id": employee.id if employee.exists() else None,
+        })
+
+    @http.route(
+        "/api/security/mobile/auth/me",
+        auth="user",
+        methods=["GET", "OPTIONS"],
+        type="http",
+        csrf=False,
+        cors="*",
     )
     def auth_me(self, **kw):
         """Return current user's role (from Odoo groups) and employee info."""
@@ -82,8 +144,10 @@ class AuthController(http.Controller):
             role = "owner"
         elif user.has_group(GROUP_MANAGER):
             role = "manager"
-        else:
+        elif user.has_group(GROUP_SUPERVISOR):
             role = "supervisor"
+        else:
+            role = "guard"
 
         employee = _employee_for_user(user)
 
@@ -100,9 +164,10 @@ class PinController(http.Controller):
     @http.route(
         "/api/security/mobile/auth/pin",
         auth="public",
-        methods=["POST"],
+        methods=["POST", "OPTIONS"],
         type="http",
         csrf=False,
+        cors="*",
     )
     def pin_auth(self, **kw):
         """
@@ -151,9 +216,10 @@ class PinController(http.Controller):
     @http.route(
         "/api/security/mobile/auth/pin/set",
         auth="user",
-        methods=["POST"],
+        methods=["POST", "OPTIONS"],
         type="http",
         csrf=False,
+        cors="*",
     )
     def pin_set(self, **kw):
         """Set or update the employee's mobile PIN hash."""
@@ -168,3 +234,4 @@ class PinController(http.Controller):
 
         employee.sudo().write({"security_mobile_pin_hash": pin_hash})
         return _json_ok({"message": "PIN updated successfully."})
+

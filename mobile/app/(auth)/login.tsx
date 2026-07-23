@@ -14,7 +14,7 @@ import { useAuthStore } from '../../src/stores/authStore';
 import { Theme } from '../../src/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-const DEMO_DB = process.env.EXPO_PUBLIC_ODOO_DB || 'dogforce-demo';
+const DEMO_DB = process.env.EXPO_PUBLIC_ODOO_DB || 'dogforce_dev';
 // Show demo access chips unless explicitly disabled via EXPO_PUBLIC_SHOW_DEMO=false.
 const SHOW_DEMO = process.env.EXPO_PUBLIC_SHOW_DEMO !== 'false';
 

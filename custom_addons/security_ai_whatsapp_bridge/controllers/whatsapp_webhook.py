@@ -1,6 +1,6 @@
 import json
 import logging
-from odoo import http
+from odoo import _, http
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
@@ -15,62 +15,35 @@ class WhatsAppWebhookController(http.Controller):
         entity parsers to log operational status updates, and responds with immediate confirmation logs.
         """
         try:
-            data = request.get_json_data() or {}
+            raw_data = request.get_json_data() or {}
         except Exception:
-            data = {}
+            raw_data = {}
 
-        _logger.info("WhatsApp Webhook | Received raw payload: %s", json.dumps(data))
+        _logger.info("WhatsApp Webhook | Received raw payload: %s", json.dumps(raw_data))
+
+        # Handle both standard JSON payload and Odoo JSON-RPC wrapper format
+        data = raw_data.get("params", raw_data) if isinstance(raw_data, dict) else {}
 
         sender = data.get("From", "")
-        body = str(data.get("Body", "")).strip().lower()
+        raw_body = str(data.get("Body", "")).strip()
 
-        if not body:
+        if not raw_body:
+            _logger.warning("WhatsApp Webhook | Received empty Body from sender [%s]", sender)
             return {
                 "status": "error",
                 "reply": "DeployGuard AI: Empty message body received. Please type 'help' for instructions.",
             }
 
         bridge_model = request.env["security.whatsapp.bridge"].sudo()
+        reply_msg = bridge_model.process_incoming_message(raw_body, sender)
 
-        # Simple high-speed NLP intent classifier
-        if "awol" in body:
-            # Extract guard name candidate: take anything after the word 'awol'
-            parts = body.split("awol", 1)
-            guard_candidate = parts[1].strip() if len(parts) > 1 else ""
-            guard_candidate = guard_candidate.strip(":- ")
-
-            if not guard_candidate:
-                return {
-                    "status": "warning",
-                    "reply": "DeployGuard AI: Intent classified as 'AWOL', but no Guard Name was extracted. Syntax: 'AWOL [Guard Name]'",
-                }
-
-            result = bridge_model.mark_guard_awol(guard_candidate)
+        if not reply_msg:
             return {
-                "status": "success",
-                "reply": _("DeployGuard AI: %s") % result,
+                "status": "ignored",
+                "reply": "",
             }
 
-        elif "status" in body or "roster" in body:
-            stats = bridge_model.get_roster_status_summary()
-            return {
-                "status": "success",
-                "reply": _(
-                    "DeployGuard AI Status Summary:\n"
-                    "- Today's Total Posts: %d\n"
-                    "- Active Guards Present: %d\n"
-                    "- AWOL / Missing Gaps: %d\n"
-                    "All rosters are synchronized live."
-                ) % (stats["total"], stats["present"], stats["awol"]),
-            }
-
-        # Default help fallback response
         return {
             "status": "success",
-            "reply": _(
-                "Welcome to DeployGuard Security WhatsApp AI Service.\n"
-                "Available Commands:\n"
-                "1. 'AWOL [Guard Name]' - Mark a guard as unexcused absent today\n"
-                "2. 'STATUS' - Query today's active roster coverage numbers"
-            ),
+            "reply": reply_msg,
         }

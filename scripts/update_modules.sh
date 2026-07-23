@@ -10,8 +10,8 @@ set -e
 
 SERVER="root@47.84.205.81"
 REMOTE_ADDONS="/opt/dogforce/custom_addons"
-CONTAINER="dogforce-demo-odoo-1"
-DB="dogforce-demo"
+CONTAINER="dogforce-demo-odoo"
+DB="dogforce-demo-two"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ADDONS_DIR="$(cd "$SCRIPT_DIR/../custom_addons" && pwd)"
 
@@ -29,27 +29,35 @@ for arg in "$@"; do
 done
 
 if $UPDATE_ALL; then
-    MODULES=($(find "$ADDONS_DIR" -maxdepth 1 -mindepth 1 -type d -exec test -f '{}/__manifest__.py' \; -print | xargs -I{} basename {}))
-fi
-
-if [ ${#MODULES[@]} -eq 0 ]; then
-    echo "Usage: bash scripts/update_modules.sh <module1> [module2 ...] [--all] [--no-restart]"
-    exit 1
-fi
-
-echo "==> Syncing ${#MODULES[@]} module(s) to $SERVER..."
-for mod in "${MODULES[@]}"; do
-    src="$ADDONS_DIR/$mod"
-    if [ ! -d "$src" ]; then
-        echo "  WARNING: $mod not found at $src, skipping"
-        continue
-    fi
+    echo "==> Syncing ALL modules to $SERVER in a single bulk session..."
     rsync -az --delete \
-        -e "ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 -o ControlPath=/tmp/master-%r@%h:%p" \
+        -e "ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15" \
         --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' \
-        "$src/" "$SERVER:$REMOTE_ADDONS/$mod/"
-    echo "  ✓ $mod"
-done
+        "$ADDONS_DIR/" "$SERVER:$REMOTE_ADDONS/"
+    echo "  ✓ All modules synchronized."
+    # Build list of modules for -u parameter restart
+    MODULES=($(find "$ADDONS_DIR" -maxdepth 1 -mindepth 1 -type d -exec test -f '{}/__manifest__.py' \; -print | xargs -I{} basename {}))
+else
+    if [ ${#MODULES[@]} -eq 0 ]; then
+        echo "Usage: bash scripts/update_modules.sh <module1> [module2 ...] [--all] [--no-restart]"
+        exit 1
+    fi
+
+    echo "==> Syncing ${#MODULES[@]} module(s) to $SERVER..."
+    for mod in "${MODULES[@]}"; do
+        src="$ADDONS_DIR/$mod"
+        if [ ! -d "$src" ]; then
+            echo "  WARNING: $mod not found at $src, skipping"
+            continue
+        fi
+        rsync -az --delete \
+            -e "ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15" \
+            --exclude='__pycache__' --exclude='*.pyc' --exclude='.DS_Store' \
+            "$src/" "$SERVER:$REMOTE_ADDONS/$mod/"
+        echo "  ✓ $mod"
+    done
+fi
+
 
 if $NO_RESTART; then
     echo ""
@@ -63,7 +71,7 @@ MOD_LIST=$(IFS=','; echo "${MODULES[*]}")
 
 echo ""
 echo "==> Restarting Odoo with -u $MOD_LIST..."
-ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 -o ControlPath="/tmp/master-%r@%h:%p" "$SERVER" bash <<REMOTE
+ssh -i /Users/winstonzulu/Documents/GitHub/Personal-Assistant/.deploy-local/claude-local.pem -o ConnectTimeout=15 "$SERVER" bash <<REMOTE
 set -e
 docker restart $CONTAINER
 echo "  Waiting 20s for startup..."

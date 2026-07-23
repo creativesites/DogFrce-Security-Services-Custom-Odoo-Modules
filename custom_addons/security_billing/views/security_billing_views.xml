@@ -27,7 +27,7 @@
                                 <list editable="bottom">
                                     <field name="sequence"/>
                                     <field name="name"/>
-                                    <field name="post_id"/>
+                                    <field name="post_id" domain="[('site_id.partner_id', '=', parent.partner_id)]"/>
                                     <field name="post_type_id"/>
                                     <field name="billing_basis"/>
                                     <field name="quantity"/>
@@ -193,7 +193,7 @@
                             <field name="partner_id" domain="[('is_company','=',True)]"/>
                             <field name="site_id" domain="[('partner_id','=',partner_id)]" context="{'default_partner_id': partner_id}"/>
                             <field name="contract_id" domain="[('partner_id','=',partner_id)]"/>
-                            <field name="billing_plan_id"/>
+                            <field name="billing_plan_id" domain="[('partner_id', '=', partner_id)]"/>
                             <field name="currency_id"/>
                         </group>
                         <group>
@@ -214,8 +214,8 @@
                                     <field name="name"/>
                                     <field name="service_date_from"/>
                                     <field name="service_date_to"/>
-                                    <field name="site_id"/>
-                                    <field name="post_id"/>
+                                    <field name="site_id" domain="[('partner_id', '=', parent.partner_id)]"/>
+                                    <field name="post_id" domain="['|', ('site_id', '=', site_id), ('site_id.partner_id', '=', parent.partner_id)]"/>
                                     <field name="guard_count"/>
                                     <field name="shift_template_id"/>
                                     <field name="quantity"/>
@@ -425,7 +425,7 @@
               parent="security_operations.menu_security_billing_root"
               action="action_billing_command_center"
               sequence="1"
-              groups="hr.group_hr_manager,base.group_system"/>
+              groups="hr.group_hr_user,security_base.group_security_supervisor"/>
 
     <!-- Contract Invoice Generation Wizard -->
     <record id="view_security_contract_invoice_wizard_form" model="ir.ui.view">

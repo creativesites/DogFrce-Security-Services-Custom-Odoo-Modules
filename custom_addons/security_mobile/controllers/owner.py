@@ -15,7 +15,7 @@ _logger = logging.getLogger(__name__)
 class OwnerController(http.Controller):
 
     @http.route("/api/security/mobile/owner/kpis",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_kpis(self, **kw):
         """
@@ -158,7 +158,7 @@ class OwnerController(http.Controller):
 
     # ── GET /api/security/mobile/owner/calendar ────────────────────────────
     @http.route("/api/security/mobile/owner/calendar",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_calendar(self, **kw):
         """
@@ -239,7 +239,7 @@ class OwnerController(http.Controller):
 
     # ── GET /api/security/mobile/owner/sites ──────────────────────────────
     @http.route("/api/security/mobile/owner/sites",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_sites(self, **kw):
         """
@@ -344,7 +344,7 @@ class OwnerController(http.Controller):
 
     # ── GET /api/security/mobile/owner/guards ─────────────────────────────
     @http.route("/api/security/mobile/owner/guards",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_guards(self, **kw):
         """
@@ -417,7 +417,7 @@ class OwnerController(http.Controller):
 
     # ── GET /api/security/mobile/owner/site/<id> ───────────────────────────
     @http.route("/api/security/mobile/owner/site/<int:site_id>",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_site_detail(self, site_id, **kw):
         """
@@ -640,7 +640,7 @@ class OwnerController(http.Controller):
 
     # ── GET /api/security/mobile/owner/guard/<id> ─────────────────────────
     @http.route("/api/security/mobile/owner/guard/<int:guard_id>",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_guard_detail(self, guard_id, **kw):
         """Guard profile deep-dive: certifications, reliability, recent history."""
@@ -746,7 +746,7 @@ class OwnerController(http.Controller):
 
     # ── GET /api/security/mobile/owner/live ───────────────────────────────
     @http.route("/api/security/mobile/owner/live",
-                auth="user", methods=["GET"], type="http", csrf=False)
+                auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_OWNER)
     def owner_live_timeline(self, **kw):
         """

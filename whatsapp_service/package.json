@@ -1,0 +1,19 @@
+{
+  "name": "deployguard-whatsapp-bridge",
+  "version": "1.0.0",
+  "description": "Zero-cost WhatsApp bridge microservice for DeployGuard using Baileys",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.18",
+    "axios": "^1.6.8",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pino": "^8.20.0",
+    "qrcode": "^1.5.3"
+  },
+  "author": "Antigravity AI",
+  "license": "ISC"
+}
