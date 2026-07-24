@@ -221,15 +221,13 @@ with registry.cursor() as cr:
             site = env['security.client.site'].create({'name': cust_name, 'partner_id': partner.id, 'code': f"SITE-{partner.id:04d}"})
 
         # Create/sync DeployGuard Billing Plan
-        plan = env['security.billing.plan'].search([('site_id', '=', site.id)], limit=1)
+        plan = env['security.billing.plan'].search([('partner_id', '=', partner.id)], limit=1)
         if not plan:
             plan = env['security.billing.plan'].create({
                 'name': f"Billing Plan - {cust_name}",
                 'partner_id': partner.id,
-                'site_id': site.id,
-                'billing_cycle': 'monthly',
-                'monthly_rate': total_amt if total_amt > 0 else 1000.0,
-                'state': 'active',
+                'billing_mode': 'recurring',
+                'date_start': today,
             })
             plan_count += 1
 
