@@ -3,11 +3,12 @@ import glob
 import openpyxl
 from datetime import datetime, date
 import odoo
+from odoo.modules.registry import Registry
 from odoo.api import Environment
 
 # Initialize Odoo Config and Environment
 odoo.tools.config.parse_config(['-d', 'dogforce_prod', '--no-http'])
-registry = odoo.registry('dogforce_prod')
+registry = Registry('dogforce_prod')
 
 DATA_DIR = "/mnt/extra-addons/dogforce_data"
 
