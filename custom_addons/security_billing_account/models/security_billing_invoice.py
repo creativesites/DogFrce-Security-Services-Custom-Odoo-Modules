@@ -60,7 +60,7 @@ class SecurityBillingInvoice(models.Model):
             tax = self.env["account.tax"].search([
                 ("type_tax_use", "=", "sale"),
                 ("amount", "=", inv.vat_rate if hasattr(inv, "vat_rate") else 15.0),
-                ("company_id", "=", inv.currency_id.company_id.id or self.env.company.id)
+                ("company_id", "=", self.env.company.id)
             ], limit=1)
 
             product = self.env["product.product"].search([
@@ -148,7 +148,7 @@ class SecurityBillingInvoice(models.Model):
                         diff = custom_paid - odoo_paid
                         journal = self.env["account.journal"].search([
                             ("type", "in", ("bank", "cash")),
-                            ("company_id", "=", inv.currency_id.company_id.id or self.env.company.id)
+                            ("company_id", "=", self.env.company.id)
                         ], limit=1)
                         if journal:
                             register_wizard = self.env["account.payment.register"].with_context(
@@ -172,7 +172,7 @@ class SecurityBillingInvoice(models.Model):
                     if move.state == "posted" and move.amount_residual > 0.01:
                         journal = self.env["account.journal"].search([
                             ("type", "in", ("bank", "cash")),
-                            ("company_id", "=", inv.currency_id.company_id.id or self.env.company.id)
+                            ("company_id", "=", self.env.company.id)
                         ], limit=1)
                         if journal:
                             register_wizard = self.env["account.payment.register"].with_context(
@@ -202,7 +202,7 @@ class SecurityClientPayment(models.Model):
             if invoice.move_id and invoice.move_id.state == "posted":
                 journal = self.env["account.journal"].search([
                     ("type", "in", ("bank", "cash")),
-                    ("company_id", "=", invoice.currency_id.company_id.id or self.env.company.id)
+                    ("company_id", "=", self.env.company.id)
                 ], limit=1)
                 if journal:
                     odoo_paid = invoice.move_id.amount_total - invoice.move_id.amount_residual
