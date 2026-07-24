@@ -31,7 +31,7 @@ class SecurityBillingInvoice(models.Model):
 
             journal = journal_model.search([
                 ("type", "=", "sale"),
-                ("company_id", "=", inv.currency_id.company_id.id or self.env.company.id)
+                ("company_id", "=", self.env.company.id)
             ], limit=1)
 
             vals = {
