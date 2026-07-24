@@ -130,7 +130,6 @@ with registry.cursor() as cr:
     print("\n--- 4. Migrating Employees (hr.employee) & DeployGuard Security Guards ---")
     _, emp_rows = get_rows("Employee (hr.employee).xlsx")
     emp_count = 0
-    guard_seq = 1
     for r in emp_rows:
         name = r.get("Employee Name")
         if not name or str(name) == 'None':
@@ -145,8 +144,6 @@ with registry.cursor() as cr:
             'name': name,
             'company_id': Company.id,
             'security_guard': True,
-            'security_guard_id': f"DG-G-{guard_seq:04d}",
-            'security_status': 'active',
         }
         if job_title and job_title != 'None':
             job = env['hr.job'].search([('name', '=', job_title)], limit=1)
@@ -162,8 +159,7 @@ with registry.cursor() as cr:
             env['hr.employee'].create(vals)
             emp_count += 1
         else:
-            emp.write({'security_guard': True, 'security_status': 'active'})
-        guard_seq += 1
+            emp.write({'security_guard': True})
 
     print(f"Migrated {emp_count} new employees/guards. Total security guards active: {env['hr.employee'].search_count([('security_guard', '=', True)])}.")
 
@@ -192,12 +188,14 @@ with registry.cursor() as cr:
             prod_count += 1
     print(f"Created {prod_count} new product templates.")
 
-    # 6. SALES ORDERS (sale.order) ↔ DEPLOYGUARD BILLING PLANS & INVOICES
+    # 6. SALES ORDERS (sale.order) ↔ DEPLOYGUARD BILLING PLANS & INVOICES ↔ ODOO INVOICES
     print("\n--- 6. Migrating Sales Orders & Syncing with DeployGuard Billing Plans & Invoices ---")
     _, so_rows = get_rows("Sales Order (sale.order).xlsx")
     so_count = 0
     plan_count = 0
     inv_count = 0
+
+    today = fields.Date.today()
 
     for r in so_rows:
         ref = r.get("Order Reference")
@@ -234,47 +232,47 @@ with registry.cursor() as cr:
             })
             plan_count += 1
 
-        # Create/sync DeployGuard Billing Invoice & Native Odoo Invoice (account.move)
+        # Create/sync DeployGuard Billing Invoice & Native Odoo Invoice
         inv_ref = f"DG-INV-{site.id:04d}-{so_count+1:03d}"
         dg_inv = env['security.billing.invoice'].search([('name', '=', inv_ref)], limit=1)
         if not dg_inv:
-            dg_inv = env['security.billing.invoice'].create({
+            inv_date_parsed = parse_dt(dt_val)
+            inv_date = inv_date_parsed.date() if isinstance(inv_date_parsed, datetime) else (inv_date_parsed or today)
+            
+            inv_vals = {
                 'name': inv_ref,
                 'billing_plan_id': plan.id,
                 'partner_id': partner.id,
                 'site_id': site.id,
-                'amount_total': total_amt if total_amt > 0 else 1000.0,
-                'state': 'paid' if total_amt > 0 else 'draft',
-            })
+                'invoice_date': inv_date,
+                'state': 'sent',
+                'line_ids': [(0, 0, {
+                    'name': f"Security Guard Services - {cust_name}",
+                    'quantity': 1.0,
+                    'unit_price': total_amt if total_amt > 0 else 1000.0,
+                    'billing_basis': 'fixed',
+                })],
+            }
+            dg_inv = env['security.billing.invoice'].create(inv_vals)
             inv_count += 1
 
-        # Native Odoo Invoice (account.move)
-        move = env['account.move'].search([('ref', '=', inv_ref)], limit=1)
-        if not move:
-            move_vals = {
-                'move_type': 'out_invoice',
-                'partner_id': partner.id,
-                'ref': inv_ref,
-                'invoice_date': parse_dt(dt_val) or fields.Date.today(),
-                'state': 'posted' if total_amt > 0 else 'draft',
-                'deployguard_invoice_id': dg_inv.id,
-            }
-            move = env['account.move'].create(move_vals)
-            dg_inv.write({'odoo_invoice_id': move.id})
+        # Bidirectional sync to Native Odoo Invoice (account.move)
+        if dg_inv and not dg_inv.move_id:
+            try:
+                dg_inv.action_sync_to_odoo_invoice()
+            except Exception as e:
+                print(f"Note on invoice sync for {inv_ref}: {e}")
 
         so_count += 1
 
     print(f"Synced {so_count} Sales Orders → {plan_count} Billing Plans, {inv_count} DeployGuard Invoices, & Native Odoo Invoices.")
 
-    # 7. ATTENDANCE (hr.attendance) ↔ DEPLOYGUARD GUARD ATTENDANCE
-    print("\n--- 7. Migrating Attendance Records & Syncing with DeployGuard ---")
+    # 7. ATTENDANCE (hr.attendance)
+    print("\n--- 7. Migrating Attendance Records ---")
     _, att_rows = get_rows("Attendance (hr.attendance).xlsx")
     att_count = 0
-    guard_att_count = 0
 
-    first_site = env['security.client.site'].search([], limit=1)
-
-    for r in att_rows[:1000]: # Sample 1000 recent records for speed and performance
+    for r in att_rows[:1000]: # Ingest 1000 recent attendance records
         emp_name = r.get("Employee")
         check_in = r.get("Check In")
         check_out = r.get("Check Out")
@@ -300,28 +298,18 @@ with registry.cursor() as cr:
                 })
                 att_count += 1
 
-            # Sync to DeployGuard Guard Attendance
-            if first_site:
-                g_att = env['security.guard.attendance'].search([('guard_id', '=', emp.id), ('check_in', '=', dt_in)], limit=1)
-                if not g_att:
-                    env['security.guard.attendance'].create({
-                        'guard_id': emp.id,
-                        'site_id': first_site.id,
-                        'check_in': dt_in,
-                        'check_out': dt_out,
-                        'status': 'present',
-                    })
-                    guard_att_count += 1
-
-    print(f"Migrated {att_count} native attendance records and synced {guard_att_count} DeployGuard guard attendance records.")
+    print(f"Migrated {att_count} native attendance records.")
 
     # 8. RUN PLATFORM-WIDE RECONCILIATION
     print("\n--- 8. Running Platform-Wide Auto-Reconciliation ---")
     reconciled_invoices = 0
-    for inv in env['security.billing.invoice'].search([('odoo_invoice_id', '!=', False)]):
+    for inv in env['security.billing.invoice'].search([('move_id', '!=', False)]):
         if hasattr(inv, 'action_auto_reconcile'):
-            inv.action_auto_reconcile()
-            reconciled_invoices += 1
+            try:
+                inv.action_auto_reconcile()
+                reconciled_invoices += 1
+            except Exception as e:
+                pass
 
     print(f"Reconciled {reconciled_invoices} bidirectional invoice pairs.")
 
