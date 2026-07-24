@@ -3,6 +3,7 @@ import glob
 import openpyxl
 from datetime import datetime, date
 import odoo
+from odoo import fields
 from odoo.modules.registry import Registry
 from odoo.api import Environment
 
