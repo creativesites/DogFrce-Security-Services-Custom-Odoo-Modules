@@ -249,7 +249,6 @@ with registry.cursor() as cr:
                     'name': f"Security Guard Services - {cust_name}",
                     'quantity': 1.0,
                     'unit_price': total_amt if total_amt > 0 else 1000.0,
-                    'billing_basis': 'fixed',
                 })],
             }
             dg_inv = env['security.billing.invoice'].create(inv_vals)
