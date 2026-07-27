@@ -550,7 +550,7 @@ class SecurityEquipmentDashboard(models.AbstractModel):
                 'name': a.name,
                 'guard_id': a.employee_id.id if a.employee_id else False,
                 'guard': a.employee_id.name if a.employee_id else 'Unassigned Guard',
-                'guard_code': a.employee_id.employee_code or '' if a.employee_id else '',
+                'guard_code': getattr(a.employee_id, 'employee_code', False) or getattr(a.employee_id, 'barcode', '') or '' if a.employee_id else '',
                 'site': a.site_id.name if a.site_id else 'Main Depot',
                 'equipment_type_id': a.equipment_type_id.id if a.equipment_type_id else False,
                 'equipment': a.equipment_type_id.name if a.equipment_type_id else 'Equipment',

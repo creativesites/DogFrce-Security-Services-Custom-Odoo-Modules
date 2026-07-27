@@ -1400,7 +1400,7 @@ class SecurityOperationsDashboard(models.AbstractModel):
         return [{
             "id": g.id,
             "name": g.name,
-            "code": g.employee_code or "",
+            "code": getattr(g, "employee_code", False) or getattr(g, "barcode", "") or "",
             "phone": g.mobile_phone or g.work_phone or "No Phone",
             "reliability_score": getattr(g, "security_reliability_score", 95),
             "match_score": 90,

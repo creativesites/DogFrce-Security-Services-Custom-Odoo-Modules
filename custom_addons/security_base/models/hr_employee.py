@@ -5,6 +5,7 @@ from odoo.exceptions import ValidationError
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
+    employee_code = fields.Char(string="Employee Code / Guard ID", copy=False)
     security_guard = fields.Boolean(default=False, tracking=True)
     security_grade_id = fields.Many2one("security.grade", tracking=True)
     security_hourly_rate = fields.Float(
