@@ -9,11 +9,14 @@ class AttendanceSummaryGrid extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.action = useService("action");
         this.state = useState({
             loading: true,
             data: null,
             filterSiteId: null,
             monthStr: null,
+            siteSearchTerm: "",
+            activeDayModal: null,
         });
         onWillStart(() => this._load());
     }
@@ -44,9 +47,46 @@ class AttendanceSummaryGrid extends Component {
         this._load();
     }
 
+    goToday() {
+        const now = new Date();
+        const curMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+        this.state.monthStr = curMonth;
+        this._load();
+    }
+
     setSite(id) {
         this.state.filterSiteId = id ? parseInt(id) : null;
         this._load();
+    }
+
+    openDayModal(cell) {
+        if (!cell || cell.scheduled === 0) return;
+        this.state.activeDayModal = cell;
+    }
+
+    closeDayModal() {
+        this.state.activeDayModal = null;
+    }
+
+    openPostingConsole(dateStr) {
+        this.closeDayModal();
+        this.action.doAction({
+            type: "ir.actions.client",
+            tag: "security_attendance.posting_console",
+            params: { date: dateStr },
+        });
+    }
+
+    openAttendanceRecords(dateStr) {
+        this.closeDayModal();
+        this.action.doAction({
+            name: `Attendance Records - ${dateStr}`,
+            type: "ir.actions.act_window",
+            res_model: "security.attendance.record",
+            domain: [["shift_date", "=", dateStr]],
+            views: [[false, "list"], [false, "form"]],
+            target: "current",
+        });
     }
 
     get calendarGrid() {
@@ -70,6 +110,15 @@ class AttendanceSummaryGrid extends Component {
         return rows;
     }
 
+    get filteredSiteSummary() {
+        if (!this.state.data || !this.state.data.site_summary) return [];
+        const term = (this.state.siteSearchTerm || "").toLowerCase().trim();
+        if (!term) return this.state.data.site_summary;
+        return this.state.data.site_summary.filter(s =>
+            (s.name || "").toLowerCase().includes(term)
+        );
+    }
+
     dayClass(cell) {
         if (!cell || cell.scheduled === 0) return "ag-day-empty";
         if (cell.not_marked === cell.scheduled) return "ag-day-unmarked";
@@ -80,9 +129,9 @@ class AttendanceSummaryGrid extends Component {
 
     pctBar(pct) {
         if (pct === null || pct === undefined) return "";
-        if (pct >= 90) return "bg-success";
-        if (pct >= 60) return "bg-warning";
-        return "bg-danger";
+        if (pct >= 90) return "ag-progress-fill-emerald";
+        if (pct >= 60) return "ag-progress-fill-amber";
+        return "ag-progress-fill-rose";
     }
 
     exportCsv() {

@@ -927,6 +927,7 @@ class SecurityAttendanceGrid(models.AbstractModel):
         for d in days:
             for k in totals:
                 totals[k] += d[k]
+        totals["compliance_rate"] = round(100.0 * totals["present"] / totals["scheduled"], 1) if totals["scheduled"] else 0.0
 
         # Site filter options
         Site = self.env["security.client.site"]
@@ -954,6 +955,7 @@ class SecurityAttendanceGrid(models.AbstractModel):
         return {
             "month_label": month_start.strftime("%B %Y"),
             "month_str": month_start.strftime("%Y-%m"),
+            "today_str": str(today),
             "days": days,
             "totals": totals,
             "sites": [{"id": s.id, "name": s.name} for s in sites],
