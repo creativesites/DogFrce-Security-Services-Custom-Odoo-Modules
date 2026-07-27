@@ -660,9 +660,9 @@ class SecurityFleetDashboard(models.AbstractModel):
             "recent_fuel": [{
                 "id": f.id,
                 "vehicle": f.vehicle_id.name if f.vehicle_id else "",
-                "driver": f.driver_id.name if f.driver_id else "",
-                "date": str(f.fuel_date),
-                "litres": f.litres,
+                "driver": getattr(f, "fueled_by_id", False).name if getattr(f, "fueled_by_id", False) else (getattr(f, "driver_id", False).name if getattr(f, "driver_id", False) else ""),
+                "date": str(f.fuel_date) if f.fuel_date else "",
+                "litres": getattr(f, "liters", getattr(f, "litres", 0.0)),
                 "cost": f.total_cost,
             } for f in recent_fuel],
         }
