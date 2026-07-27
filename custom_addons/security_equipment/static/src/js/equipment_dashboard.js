@@ -18,7 +18,7 @@ class EquipmentDashboard extends Component {
             filterCategory: "all",
             filterState: "all",
             searchQuery: "",
-            activeTab: "allocations", // "allocations" | "stock" | "overdue" | "damages"
+            activeTab: "allocations", // "allocations" | "stock" | "overdue"
             selectedAllocation: null,
             selectedStockItem: null,
             modalIssue: {
@@ -157,6 +157,33 @@ class EquipmentDashboard extends Component {
         }
     }
 
+    exportAllocationsCsv() {
+        const list = this.filteredAllocations;
+        if (!list || !list.length) return;
+        const header = ["Guard", "Site", "Equipment", "Category", "Serial/Item", "Issue Date", "Due Date", "Status", "Overdue"];
+        const rows = list.map((a) => [
+            a.guard,
+            a.site,
+            a.equipment,
+            a.category,
+            a.item_serial,
+            a.issue_date,
+            a.due_date,
+            a.state,
+            a.is_overdue ? `${a.days_overdue} days` : "No",
+        ]);
+        const csv = [header, ...rows]
+            .map((r) => r.map((c) => `"${(c || "").toString().replace(/"/g, '""')}"`).join(","))
+            .join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `equipment_allocations_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     // ── Modals ──
 
     openIssueModal() {
@@ -254,12 +281,8 @@ class EquipmentDashboard extends Component {
             lost: "eq-badge eq-badge-lost",
         }[state] || "eq-badge eq-badge-issued";
     }
-
-    severityColor(daysOverdue) {
-        if (daysOverdue > 30) return "text-danger fw-bold";
-        if (daysOverdue > 7) return "text-warning fw-semibold";
-        return "text-secondary";
-    }
 }
 
-registry.category("actions").add("security_equipment.equipment_dashboard", EquipmentDashboard);
+registry
+    .category("actions")
+    .add("security_equipment.equipment_dashboard", EquipmentDashboard);

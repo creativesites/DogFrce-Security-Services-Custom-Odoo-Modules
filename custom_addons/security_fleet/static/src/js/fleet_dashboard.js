@@ -55,7 +55,6 @@ class FleetDashboard extends Component {
             );
             this.state.data = data;
 
-            // Maintain selection if previously selected item exists
             if (this.state.selectedVehicle) {
                 const updatedV = data.vehicles.find(v => v.id === this.state.selectedVehicle.id);
                 this.state.selectedVehicle = updatedV || null;
@@ -164,6 +163,33 @@ class FleetDashboard extends Component {
         }
     }
 
+    exportRunsCsv() {
+        const list = this.filteredRuns;
+        if (!list || !list.length) return;
+        const header = ["Run Ref", "Route", "Vehicle", "Plate", "Driver", "Departure", "Passengers", "Capacity", "Status"];
+        const rows = list.map((r) => [
+            r.name,
+            r.route,
+            r.vehicle,
+            r.vehicle_plate,
+            r.driver,
+            r.departure_time,
+            r.passenger_count,
+            r.capacity,
+            r.state,
+        ]);
+        const csv = [header, ...rows]
+            .map((row) => row.map((c) => `"${(c || "").toString().replace(/"/g, '""')}"`).join(","))
+            .join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `shuttle_runs_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     // ── Modal Handlers ──
 
     openRunModal() {
@@ -257,7 +283,7 @@ class FleetDashboard extends Component {
     openVehicleForm(id) {
         this.actionService.doAction({
             type: "ir.actions.act_window",
-            res_model: "security.vehicle",
+            res_model: "security.fleet.vehicle",
             res_id: id,
             views: [[false, "form"]],
             target: "current",
@@ -267,7 +293,7 @@ class FleetDashboard extends Component {
     openRunForm(id) {
         this.actionService.doAction({
             type: "ir.actions.act_window",
-            res_model: "security.shuttle.run",
+            res_model: "security.fleet.shuttle.run",
             res_id: id,
             views: [[false, "form"]],
             target: "current",
@@ -275,7 +301,10 @@ class FleetDashboard extends Component {
     }
 
     fmt(amount) {
-        return "N$ " + (amount || 0).toLocaleString("en-NA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return (amount || 0).toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
     }
 
     stateBadgeClass(state) {
@@ -284,18 +313,20 @@ class FleetDashboard extends Component {
             in_transit: "fd-badge fd-badge-in_transit",
             in_service: "fd-badge fd-badge-in_service",
             scrapped: "fd-badge fd-badge-scrapped",
-        }[state] || "fd-badge fd-badge-scrapped";
+        }[state] || "fd-badge fd-badge-available";
     }
 
     runStateClass(state) {
         return {
-            draft: "fd-badge fd-badge-draft",
-            boarding: "fd-badge fd-badge-boarding",
-            in_transit: "fd-badge fd-badge-in_transit",
-            completed: "fd-badge fd-badge-completed",
-            cancelled: "fd-badge fd-badge-cancelled",
-        }[state] || "fd-badge fd-badge-draft";
+            draft: "badge bg-secondary text-white",
+            boarding: "badge bg-warning text-dark",
+            in_transit: "badge bg-primary text-white",
+            completed: "badge bg-success text-white",
+            cancelled: "badge bg-danger text-white",
+        }[state] || "badge bg-secondary text-white";
     }
 }
 
-registry.category("actions").add("security_fleet.fleet_dashboard", FleetDashboard);
+registry
+    .category("actions")
+    .add("security_fleet.fleet_dashboard", FleetDashboard);

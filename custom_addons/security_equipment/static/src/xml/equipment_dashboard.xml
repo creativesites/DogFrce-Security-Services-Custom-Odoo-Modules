@@ -11,16 +11,17 @@
 
         <!-- Brand Header -->
         <div class="eq-brand px-4 py-3">
-            <div class="fw-bold" style="font-size:15px; color:#2e1065; letter-spacing:.3px;">
-                <i class="fa fa-shield me-2" style="color:#9333ea;"/>DogForce Assets
+            <div class="fw-bold d-flex align-items-center gap-2" style="font-size:15px; color:#ffffff; letter-spacing:.3px;">
+                <i class="fa fa-shield text-purple" style="color:#c084fc;"/>
+                <span>DogForce Assets</span>
             </div>
-            <div style="font-size:11px; color:#64748b; margin-top:2px;">Equipment &amp; Inventory Control</div>
+            <div style="font-size:11px; color:rgba(255,255,255,0.6); margin-top:2px;">Equipment &amp; Inventory Control</div>
         </div>
 
         <!-- Category Filter -->
         <div class="px-3 pt-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
-                Category
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:6px;">
+                Equipment Category
             </div>
             <select class="form-select form-select-sm eq-select" t-on-change="onCategoryFilterChange">
                 <option value="all">All Categories</option>
@@ -32,7 +33,7 @@
 
         <!-- Status Filter -->
         <div class="px-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:6px;">
                 Allocation Status
             </div>
             <select class="form-select form-select-sm eq-select" t-on-change="onStateFilterChange">
@@ -46,30 +47,30 @@
 
         <!-- Quick Action Buttons -->
         <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
-            <button class="btn btn-sm text-white w-100 fw-semibold" style="background:#9333ea; border-radius:8px;" t-on-click="openIssueModal">
+            <button class="btn btn-sm text-white w-100 fw-bold" style="background:#a855f7; border-radius:8px;" t-on-click="openIssueModal">
                 <i class="fa fa-plus me-1"/>New Asset Allocation
             </button>
-            <button class="btn btn-sm btn-outline-danger w-100 fw-semibold" style="border-radius:8px; font-size:12px;" t-on-click="openDamageModal">
+            <button class="btn btn-sm btn-outline-danger w-100 fw-semibold text-white border-danger" style="border-radius:8px; font-size:12px; background:rgba(239,68,68,0.15);" t-on-click="openDamageModal">
                 <i class="fa fa-exclamation-triangle me-1"/>Report Damage / Loss
             </button>
-            <button class="btn btn-sm btn-light w-100 text-muted" style="font-size:11px;" t-on-click="loadData">
+            <button class="btn btn-sm eq-top-btn w-100" style="font-size:11px;" t-on-click="loadData">
                 <i class="fa fa-refresh me-1"/>Refresh Data
             </button>
         </div>
 
-        <div style="border-top:1px solid rgba(15, 23, 42, 0.08); margin:4px 0;"/>
+        <div style="border-top:1px solid rgba(255, 255, 255, 0.1); margin:4px 0;"/>
 
         <!-- Asset Return Compliance Gauge -->
         <div t-if="state.data" class="px-3 py-3">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:8px;">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:8px;">
                 On-Time Return Rate
             </div>
             <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="fw-bold" style="font-size:18px; color:#2e1065;"><t t-esc="state.data.return_rate_pct"/>%</span>
-                <span class="small text-muted"><t t-esc="state.data.returned_mtd"/> Returned MTD</span>
+                <span class="fw-bold" style="font-size:18px; color:#ffffff;"><t t-esc="state.data.return_rate_pct"/>%</span>
+                <span class="small text-white-50"><t t-esc="state.data.returned_mtd"/> Returned MTD</span>
             </div>
-            <div class="progress" style="height:7px; border-radius:4px; background:#e2e8f0;">
-                <div class="progress-bar" t-att-style="'width:' + state.data.return_rate_pct + '%; background:#9333ea;'"/>
+            <div class="progress" style="height:7px; border-radius:4px; background:rgba(255,255,255,0.15);">
+                <div class="progress-bar" t-att-style="'width:' + state.data.return_rate_pct + '%; background:#a855f7;'"/>
             </div>
         </div>
 
@@ -77,51 +78,92 @@
 
 
     <!-- ═══════════════════════════════════════════════════════════
-         MAIN WORKSPACE — Header Strip + Main Area
+         MAIN WORKSPACE — Header Banner + Main Area
          ═══════════════════════════════════════════════════════════ -->
     <div class="eq-main">
 
-        <!-- Top Header & KPI Strip -->
-        <div class="eq-header px-4 py-2 d-flex align-items-center justify-content-between gap-3">
+        <!-- Executive Header Banner -->
+        <div class="eq-header">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="eq-title-icon">
+                        <i class="fa fa-shield"/>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Equipment &amp; Assets Command Center</h3>
+                            <div class="eq-live-indicator">
+                                <span class="ag-live-dot"/>Live Equipment Tracking
+                            </div>
+                        </div>
+                        <span style="color:rgba(255,255,255,0.7);font-size:13px;">
+                            Guards Equipment Allocation &amp; Inventory Return Control
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Header Action Toolbar -->
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <button class="eq-top-btn"
+                            t-on-click="exportAllocationsCsv"
+                            style="background:#a855f7;border-color:#a855f7;"
+                            title="Export Allocations to CSV">
+                        <i class="fa fa-download me-1"/>Export CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Strip (Search & Tabs) -->
+        <div class="px-4 py-3 bg-white border-bottom d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-3">
-                <div class="input-group input-group-sm" style="width:240px;">
-                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
-                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search guard, equipment, serial..." t-on-input="onSearchInput"/>
+                <!-- Search Input -->
+                <div class="position-relative" style="width:280px;">
+                    <i class="fa fa-search position-absolute text-muted" style="left:12px;top:50%;transform:translateY(-50%);font-size:12px;"/>
+                    <input type="text"
+                           class="form-control form-control-sm ps-4 border-slate-300"
+                           placeholder="Search guard, equipment, serial..."
+                           t-on-input="onSearchInput"
+                           style="border-radius:8px; font-size:13px;"/>
                 </div>
 
                 <!-- Tab Switcher -->
                 <div class="btn-group btn-group-sm">
-                    <button t-att-class="'btn ' + (state.activeTab === 'allocations' ? 'btn-primary text-white' : 'btn-outline-secondary')" style="background-color: state.activeTab === 'allocations' ? '#9333ea' : ''" t-on-click="() => this.setTab('allocations')">
+                    <button t-att-class="'btn ' + (state.activeTab === 'allocations' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
+                            style="background-color: state.activeTab === 'allocations' ? '#a855f7' : ''"
+                            t-on-click="() => this.setTab('allocations')">
                         <i class="fa fa-list me-1"/>Allocations (<t t-esc="filteredAllocations.length"/>)
                     </button>
-                    <button t-att-class="'btn ' + (state.activeTab === 'stock' ? 'btn-primary text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('stock')">
+                    <button t-att-class="'btn ' + (state.activeTab === 'stock' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
+                            t-on-click="() => this.setTab('stock')">
                         <i class="fa fa-cubes me-1"/>Inventory Stock
                     </button>
-                    <button t-att-class="'btn ' + (state.activeTab === 'overdue' ? 'btn-danger text-white' : 'btn-outline-secondary')" t-on-click="() => this.setTab('overdue')">
+                    <button t-att-class="'btn ' + (state.activeTab === 'overdue' ? 'btn-danger text-white fw-bold' : 'btn-outline-secondary')"
+                            t-on-click="() => this.setTab('overdue')">
                         <i class="fa fa-clock-o me-1"/>Overdue (<t t-esc="overdueAllocations.length"/>)
                     </button>
                 </div>
             </div>
 
             <!-- KPI Cards Strip -->
-            <div t-if="state.data" class="eq-kpi-pills">
-                <div class="eq-kpi-card text-center">
-                    <div class="text-muted x-small fw-semibold text-uppercase">Active Issued</div>
-                    <div class="fs-5 fw-bold text-primary"><t t-esc="state.data.allocated"/></div>
+            <div t-if="state.data" class="d-flex gap-2">
+                <div class="eq-kpi-card text-center" style="border-top:3px solid #3b82f6;">
+                    <div class="text-muted x-small fw-bold text-uppercase">Active Issued</div>
+                    <div class="fs-5 fw-extrabold text-primary"><t t-esc="state.data.allocated"/></div>
                 </div>
-                <div class="eq-kpi-card text-center">
-                    <div class="text-muted x-small fw-semibold text-uppercase">Returned MTD</div>
-                    <div class="fs-5 fw-bold text-success"><t t-esc="state.data.returned_mtd"/></div>
+                <div class="eq-kpi-card text-center" style="border-top:3px solid #10b981;">
+                    <div class="text-muted x-small fw-bold text-uppercase">Returned MTD</div>
+                    <div class="fs-5 fw-extrabold text-success"><t t-esc="state.data.returned_mtd"/></div>
                 </div>
-                <div class="eq-kpi-card text-center">
-                    <div class="text-muted x-small fw-semibold text-uppercase">Overdue</div>
-                    <div t-att-class="'fs-5 fw-bold ' + (state.data.overdue_count > 0 ? 'text-danger' : 'text-muted')">
+                <div class="eq-kpi-card text-center" style="border-top:3px solid #ef4444;">
+                    <div class="text-muted x-small fw-bold text-uppercase">Overdue</div>
+                    <div t-att-class="'fs-5 fw-extrabold ' + (state.data.overdue_count > 0 ? 'text-danger' : 'text-muted')">
                         <t t-esc="state.data.overdue_count"/>
                     </div>
                 </div>
-                <div class="eq-kpi-card text-center">
-                    <div class="text-muted x-small fw-semibold text-uppercase">Damaged / Lost</div>
-                    <div class="fs-5 fw-bold text-warning"><t t-esc="state.data.damaged_lost"/></div>
+                <div class="eq-kpi-card text-center" style="border-top:3px solid #f59e0b;">
+                    <div class="text-muted x-small fw-bold text-uppercase">Damaged / Lost</div>
+                    <div class="fs-5 fw-extrabold text-warning"><t t-esc="state.data.damaged_lost"/></div>
                 </div>
             </div>
         </div>
@@ -135,8 +177,8 @@
                 <!-- Loading State -->
                 <t t-if="state.loading">
                     <div class="d-flex align-items-center justify-content-center py-5 gap-3 text-muted">
-                        <div class="spinner-border text-purple" role="status" style="color:#9333ea;"/>
-                        <span class="fs-5">Loading Asset Manager...</span>
+                        <div class="spinner-border text-purple" role="status" style="color:#a855f7;"/>
+                        <span class="fs-5 fw-semibold">Loading Asset Control Matrix...</span>
                     </div>
                 </t>
 
@@ -156,7 +198,7 @@
                                     </div>
 
                                     <div class="d-flex flex-column gap-1 my-2 fs-7 text-secondary">
-                                        <div><i class="fa fa-shield me-2 text-purple" style="color:#9333ea;"/><span class="fw-bold text-dark"><t t-esc="alloc.equipment"/></span> (<t t-esc="alloc.category"/>)</div>
+                                        <div><i class="fa fa-shield me-2 text-purple" style="color:#a855f7;"/><span class="fw-bold text-dark"><t t-esc="alloc.equipment"/></span> (<t t-esc="alloc.category"/>)</div>
                                         <div><i class="fa fa-barcode me-2 text-muted"/>Serial / Item: <span class="font-monospace text-dark"><t t-esc="alloc.item_serial"/></span></div>
                                         <div><i class="fa fa-calendar me-2 text-muted"/>Issued: <t t-esc="alloc.issue_date"/> | Due: <span t-att-class="alloc.is_overdue ? 'text-danger fw-bold' : ''"><t t-esc="alloc.due_date"/></span></div>
                                     </div>
@@ -182,7 +224,7 @@
                         <t t-if="filteredAllocations.length === 0">
                             <div class="col-12 text-center py-5 text-muted">
                                 <i class="fa fa-folder-open-o fa-3x mb-3 text-secondary"/>
-                                <h5>No allocations match search query.</h5>
+                                <h5>No equipment allocations match search query.</h5>
                             </div>
                         </t>
                     </div>
@@ -190,10 +232,19 @@
 
                 <!-- TAB 2: INVENTORY STOCK OVERVIEW -->
                 <t t-elif="state.activeTab === 'stock'">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-0">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light fs-7">
+                    <div class="pcc-card">
+                        <div class="pcc-card-header d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fa fa-cubes text-purple" style="color:#a855f7;"/>
+                                <span>Master Equipment Inventory Directory</span>
+                            </div>
+                            <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:11px;">
+                                <t t-esc="filteredStock.length"/> Types
+                            </span>
+                        </div>
+                        <div class="p-0 eq-table-wrapper">
+                            <table class="eq-table">
+                                <thead>
                                     <tr>
                                         <th>Equipment Type</th>
                                         <th>Category</th>
@@ -207,11 +258,11 @@
                                     <t t-foreach="filteredStock" t-as="item" t-key="item.id">
                                         <tr>
                                             <td class="fw-bold text-dark"><t t-esc="item.name"/></td>
-                                            <td><span class="badge bg-light text-dark"><t t-esc="item.category"/></span></td>
+                                            <td><span class="badge bg-light text-dark border px-2 py-1"><t t-esc="item.category"/></span></td>
                                             <td class="text-center fw-semibold"><t t-esc="item.qty_total"/></td>
                                             <td class="text-center text-primary fw-semibold"><t t-esc="item.qty_issued"/></td>
                                             <td class="text-center text-success fw-bold"><t t-esc="item.qty_available"/></td>
-                                            <td class="text-end font-monospace">N$ <t t-esc="item.unit_cost"/></td>
+                                            <td class="text-end font-monospace fw-semibold">ZMW <t t-esc="item.unit_cost"/></td>
                                         </tr>
                                     </t>
                                 </tbody>
@@ -222,13 +273,13 @@
 
                 <!-- TAB 3: OVERDUE WATCHLIST -->
                 <t t-elif="state.activeTab === 'overdue'">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-danger text-white py-2 fw-bold d-flex align-items-center justify-content-between">
-                            <span><i class="fa fa-exclamation-triangle me-2"/>Overdue Watchlist (<t t-esc="overdueAllocations.length"/>)</span>
+                    <div class="pcc-card">
+                        <div class="pcc-card-header bg-danger text-white py-2 fw-bold d-flex align-items-center justify-content-between">
+                            <span><i class="fa fa-exclamation-triangle me-2"/>Overdue Return Watchlist (<t t-esc="overdueAllocations.length"/>)</span>
                         </div>
-                        <div class="card-body p-0">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light fs-7">
+                        <div class="p-0 eq-table-wrapper">
+                            <table class="eq-table">
+                                <thead>
                                     <tr>
                                         <th>Guard</th>
                                         <th>Equipment</th>
@@ -255,7 +306,7 @@
                                         </tr>
                                     </t>
                                     <t t-if="overdueAllocations.length === 0">
-                                        <tr><td colspan="5" class="text-center py-4 text-success"><i class="fa fa-check-circle fa-2x mb-2 d-block"/>All allocations are returned on time!</td></tr>
+                                        <tr><td colspan="5" class="text-center py-5 text-success"><i class="fa fa-check-circle fa-3x mb-2 d-block"/>All allocations are returned on time!</td></tr>
                                     </t>
                                 </tbody>
                             </table>
@@ -323,16 +374,14 @@
 
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════
-         MODALS — Issue Equipment & Report Damage
-         ═══════════════════════════════════════════════════════════ -->
+    <!-- MODALS -->
 
     <!-- Issue Asset Modal -->
     <t t-if="state.modalIssue.open">
         <div class="eq-modal-backdrop">
             <div class="eq-modal-content p-4">
                 <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
-                    <h5 class="mb-0 fw-bold"><i class="fa fa-plus-circle text-purple me-2" style="color:#9333ea;"/>New Equipment Allocation</h5>
+                    <h5 class="mb-0 fw-bold"><i class="fa fa-plus-circle text-purple me-2" style="color:#a855f7;"/>New Equipment Allocation</h5>
                     <button class="btn-close" t-on-click="closeIssueModal"/>
                 </div>
 
@@ -368,7 +417,7 @@
 
                     <div class="d-flex gap-2 justify-content-end mt-3 border-top pt-3">
                         <button class="btn btn-sm btn-light" t-on-click="closeIssueModal">Cancel</button>
-                        <button class="btn btn-sm text-white" style="background:#9333ea;" t-att-disabled="state.modalIssue.saving" t-on-click="submitIssue">
+                        <button class="btn btn-sm text-white" style="background:#a855f7;" t-att-disabled="state.modalIssue.saving" t-on-click="submitIssue">
                             <t t-if="state.modalIssue.saving"><span class="spinner-border spinner-border-sm me-1"/>Issuing...</t>
                             <t t-else=""><i class="fa fa-check me-1"/>Confirm Allocation</t>
                         </button>
@@ -416,7 +465,7 @@
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold mb-1">Estimated Cost (N$)</label>
+                            <label class="form-label small fw-bold mb-1">Estimated Cost</label>
                             <input type="number" step="0.01" class="form-control form-control-sm" t-model="state.modalDamage.cost_estimate"/>
                         </div>
                     </div>
