@@ -15,17 +15,36 @@ export class PayrollExpenditure extends Component {
 
         this.state = useState({
             loading: true,
+            currencySymbol: "ZMW",
             periods: [],
             selectedPeriodId: null,
             byEmployee: [],
             totals: { gross: 0, net: 0, normal_hrs: 0, overtime_hrs: 0, premium_hrs: 0 },
             prevTotals: { gross: 0, net: 0 },
             activeTab: "by_employee",
+            employeeSearchTerm: "",
+            employeeFilter: "all",
+            periodSearchTerm: "",
         });
 
         onWillStart(async () => {
+            await this._loadCurrency();
             await this._loadPeriods();
         });
+    }
+
+    async _loadCurrency() {
+        try {
+            const companies = await this.orm.searchRead("res.company", [], ["currency_id"], { limit: 1 });
+            if (companies.length && companies[0].currency_id) {
+                const currencies = await this.orm.read("res.currency", [companies[0].currency_id[0]], ["symbol", "name"]);
+                if (currencies.length) {
+                    this.state.currencySymbol = currencies[0].symbol || currencies[0].name || "ZMW";
+                }
+            }
+        } catch (_e) {
+            this.state.currencySymbol = "ZMW";
+        }
     }
 
     // ── Computed getters ────────────────────────────────────────────────────
@@ -49,6 +68,39 @@ export class PayrollExpenditure extends Component {
         return ((this.state.totals.net - this.state.prevTotals.net) / this.state.prevTotals.net) * 100;
     }
 
+    get filteredPeriods() {
+        if (!this.state.periods) return [];
+        const term = (this.state.periodSearchTerm || "").toLowerCase().trim();
+        if (!term) return this.state.periods;
+        return this.state.periods.filter((p) =>
+            (p.name || "").toLowerCase().includes(term) ||
+            (p.state || "").toLowerCase().includes(term)
+        );
+    }
+
+    get filteredEmployees() {
+        if (!this.state.byEmployee) return [];
+        let list = this.state.byEmployee;
+
+        // Custom filter
+        if (this.state.employeeFilter === "ot") {
+            list = list.filter((e) => e.ot_hrs > 0);
+        } else if (this.state.employeeFilter === "premium") {
+            list = list.filter((e) => (e.sat_hrs + e.sun_hrs + e.ph_hrs + e.night_hrs) > 0);
+        }
+
+        // Search filter
+        const term = (this.state.employeeSearchTerm || "").toLowerCase().trim();
+        if (term) {
+            list = list.filter((e) => {
+                const nameMatch = (e.name || "").toLowerCase().includes(term);
+                const gradeMatch = (e.grade || "").toLowerCase().includes(term);
+                return nameMatch || gradeMatch;
+            });
+        }
+        return list;
+    }
+
     // ── Data loading ────────────────────────────────────────────────────────
 
     async _loadPeriods() {
@@ -58,7 +110,7 @@ export class PayrollExpenditure extends Component {
                 "security.payroll.period",
                 [],
                 ["name", "state", "total_earnings", "total_net_pay", "date_from", "date_to"],
-                { limit: 6, order: "date_from desc" }
+                { limit: 12, order: "date_from desc" }
             );
             this.state.periods = periods;
 
@@ -189,13 +241,45 @@ export class PayrollExpenditure extends Component {
         this.state.activeTab = t;
     }
 
+    setEmployeeFilter(f) {
+        this.state.employeeFilter = f;
+    }
+
+    exportExpenditureCsv() {
+        const period = this.selectedPeriod;
+        if (!period || !this.state.byEmployee.length) return;
+        const header = ["Employee", "Grade", "Gross", "Net Pay", "Normal Hrs", "Sat Hrs", "Sun Hrs", "PH Hrs", "Night Hrs", "OT Hrs", "Status"];
+        const rows = this.filteredEmployees.map((e) => [
+            e.name,
+            e.grade,
+            e.gross,
+            e.net,
+            e.normal_hrs,
+            e.sat_hrs,
+            e.sun_hrs,
+            e.ph_hrs,
+            e.night_hrs,
+            e.ot_hrs,
+            e.state,
+        ]);
+        const csv = [header, ...rows].map((r) => r.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `payroll_expenditure_${period.name.replace(/\s+/g, "_")}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     // ── Formatting helpers ───────────────────────────────────────────────────
 
     formatCurrency(v) {
-        if (!v && v !== 0) return "N$ 0.00";
+        const sym = this.state.currencySymbol || "ZMW";
+        if (!v && v !== 0) return `${sym} 0.00`;
         return (
-            "N$ " +
-            Number(v).toLocaleString("en-NA", {
+            `${sym} ` +
+            Number(v).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
             })
@@ -213,16 +297,16 @@ export class PayrollExpenditure extends Component {
     }
 
     stateBadgeClass(state) {
-        if (state === "paid") return "bg-success";
-        if (state === "confirmed") return "bg-primary";
-        if (state === "cancelled") return "bg-secondary";
-        return "bg-secondary text-dark";
+        if (state === "paid") return "bg-success text-white";
+        if (state === "confirmed") return "bg-primary text-white";
+        if (state === "cancelled") return "bg-secondary text-white";
+        return "bg-warning text-dark";
     }
 
     periodStateBadgeClass(state) {
-        if (state === "processed") return "bg-success";
-        if (state === "closed") return "bg-dark";
-        return "bg-secondary text-dark";
+        if (state === "processed") return "bg-success text-white";
+        if (state === "closed") return "bg-dark text-white";
+        return "bg-secondary text-white";
     }
 }
 
