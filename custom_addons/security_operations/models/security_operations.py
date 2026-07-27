@@ -1315,7 +1315,7 @@ class SecurityOperationsDashboard(models.AbstractModel):
         if site_id and site_id != "all":
             domain.append(("site_id", "=", int(site_id)))
         if shift_filter and shift_filter != "all":
-            domain.append(("shift_type", "=", shift_filter))
+            domain.append(("shift_template_id.name", "=ilike", f"%{shift_filter}%"))
 
         today_slots = RosterSlot.search(domain)
         all_today_slots = RosterSlot.search([("shift_date", "=", today)])
@@ -1340,8 +1340,8 @@ class SecurityOperationsDashboard(models.AbstractModel):
             "site_id": s.site_id.id if s.site_id else False,
             "site": s.site_id.name if s.site_id else "Unspecified Site",
             "shift_date": str(s.shift_date),
-            "shift_type": s.shift_type,
-            "start_time": f"{int(s.start_time):02d}:00" if s.start_time else "06:00",
+            "shift_type": s.shift_template_id.name if s.shift_template_id else "Standard",
+            "start_time": f"{int(s.shift_template_id.start_hour):02d}:00" if s.shift_template_id else "06:00",
             "post": s.post_id.name if s.post_id else "General Security",
             "state": s.state,
         } for s in awol_slots[:25]]
