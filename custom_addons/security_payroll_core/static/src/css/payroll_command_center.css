@@ -1,567 +1,313 @@
 /* ═══════════════════════════════════════════════════════════
-   DOGFORCE — PAYROLL COMMAND CENTER + EXPENDITURE
-   Design system mirrors executive_dashboard.css
+   DOGFORCE — PAYROLL COMMAND CENTER
+   Modernized Executive Dashboard Styling
    ═══════════════════════════════════════════════════════════ */
 
 .o_payroll_command_center {
-    /* ── Core surfaces (matches executive dashboard) ── */
-    --pcc-bg:           #f4f6f9;
+    --pcc-bg:           #f8fafc;
     --pcc-surface:      #ffffff;
-    --pcc-surface-soft: #f0f3f7;
-    --pcc-border:       #e5e8ec;
-    --pcc-border-em:    #cbd1d9;
+    --pcc-surface-soft: #f1f5f9;
+    --pcc-border:       #e2e8f0;
+    --pcc-border-em:    #cbd5e1;
 
-    /* ── Text scale ── */
-    --pcc-ink:   #0d1726;
-    --pcc-ink-2: #475569;
-    --pcc-ink-3: #8b95a5;
-    --pcc-ink-4: #b8bfca;
+    --pcc-ink:   #0f172a;
+    --pcc-ink-2: #334155;
+    --pcc-ink-3: #475569;
+    --pcc-ink-4: #64748b;
 
-    /* ── Brand / nav ── */
-    --pcc-navy:     #1a3a5c;
-    --pcc-navy-mid: #234a77;
-    --pcc-navy-soft:#eaf0f7;
+    --pcc-navy:     #0f172a;
+    --pcc-emerald:  #10b981;
+    --pcc-blue:     #3b82f6;
 
-    /* ── Semantic colours ── */
-    --pcc-success: #16a34a;
-    --pcc-warning: #d97706;
-    --pcc-danger:  #dc2626;
+    --pcc-success: #10b981;
+    --pcc-warning: #f59e0b;
+    --pcc-danger:  #ef4444;
 
-    /* ── Radius / shadow ── */
-    --pcc-r:    6px;
-    --pcc-r-lg: 10px;
     --pcc-r-xl: 14px;
-    --pcc-shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-    --pcc-shadow:    0 4px 12px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.04);
+    --pcc-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+    --pcc-shadow:    0 10px 25px -5px rgba(0,0,0,0.08);
 
     height: 100%;
     background: var(--pcc-bg);
     color: var(--pcc-ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .o_payroll_command_center * { box-sizing: border-box; }
 
-.o_payroll_command_center h1,
-.o_payroll_command_center h2,
-.o_payroll_command_center h3,
-.o_payroll_command_center h4,
-.o_payroll_command_center h5 {
-    font-style: normal !important;
-    font-family: inherit !important;
-    color: var(--pcc-ink);
-    letter-spacing: -.3px;
-}
-
-/* ── Bootstrap visual overrides (keep layout classes, replace colours) ── */
-.o_payroll_command_center .text-primary  { color: var(--pcc-navy) !important; }
-.o_payroll_command_center .text-success  { color: var(--pcc-success) !important; }
-.o_payroll_command_center .text-danger   { color: var(--pcc-danger) !important; }
-.o_payroll_command_center .text-warning  { color: var(--pcc-warning) !important; }
-.o_payroll_command_center .text-muted    { color: var(--pcc-ink-3) !important; }
-.o_payroll_command_center .text-secondary{ color: var(--pcc-ink-2) !important; }
-.o_payroll_command_center .text-dark     { color: var(--pcc-ink) !important; }
-.o_payroll_command_center .text-info     { color: #0891b2 !important; }
-
-.o_payroll_command_center .badge.bg-primary {
-    background: #eff6ff !important;
-    color: #1e3a8a !important;
-}
-.o_payroll_command_center .badge.bg-success {
-    background: #f0fdf4 !important;
-    color: #14532d !important;
-}
-.o_payroll_command_center .badge.bg-secondary {
-    background: var(--pcc-surface-soft) !important;
-    color: var(--pcc-ink-2) !important;
-}
-.o_payroll_command_center .badge.bg-warning.text-dark {
-    background: #fffbeb !important;
-    color: #78350f !important;
-}
-.o_payroll_command_center .badge.bg-danger {
-    background: #fef2f2 !important;
-    color: #7f1d1d !important;
-}
-.o_payroll_command_center .badge.bg-white.text-primary {
-    background: rgba(255,255,255,.18) !important;
-    color: #fff !important;
-}
-.o_payroll_command_center .badge.bg-white.text-success {
-    background: rgba(255,255,255,.18) !important;
-    color: #fff !important;
-}
-
-.o_payroll_command_center .alert.alert-warning {
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    color: #78350f;
-    border-radius: 8px;
-    font-size: 12px;
-}
-
-.o_payroll_command_center .table-success { background: #f0fdf4 !important; }
-.o_payroll_command_center .table-warning { background: #fffbeb !important; }
-
-/* Bootstrap button overrides */
-.o_payroll_command_center .btn {
-    border-radius: var(--pcc-r) !important;
-    font-weight: 600 !important;
-    font-size: 12px !important;
-    transition: all .13s ease !important;
-    font-family: inherit !important;
-}
-.o_payroll_command_center .btn.btn-primary,
-.o_payroll_command_center .btn.btn-primary:not(:disabled):not(.disabled) {
-    background: var(--pcc-navy) !important;
-    border-color: var(--pcc-navy) !important;
-    color: #fff !important;
-}
-.o_payroll_command_center .btn.btn-primary:hover {
-    background: var(--pcc-navy-mid) !important;
-    border-color: var(--pcc-navy-mid) !important;
-}
-.o_payroll_command_center .btn.btn-success,
-.o_payroll_command_center .btn.btn-success:not(:disabled):not(.disabled) {
-    background: #16a34a !important;
-    border-color: #16a34a !important;
-    color: #fff !important;
-}
-.o_payroll_command_center .btn.btn-success:hover {
-    background: #15803d !important;
-    border-color: #15803d !important;
-}
-.o_payroll_command_center .btn.btn-outline-secondary {
-    background: var(--pcc-surface) !important;
-    border-color: var(--pcc-border-em) !important;
-    color: var(--pcc-ink-2) !important;
-}
-.o_payroll_command_center .btn.btn-outline-secondary:hover {
-    background: var(--pcc-surface-soft) !important;
-    color: var(--pcc-ink) !important;
-}
-.o_payroll_command_center .btn:disabled,
-.o_payroll_command_center .btn[disabled] {
-    opacity: .4 !important;
-    cursor: not-allowed !important;
-}
-
-/* Bootstrap spinner */
-.o_payroll_command_center .spinner-border.text-primary {
-    color: var(--pcc-navy) !important;
-}
-
-/* ══════════════════════════════════
-   SIDEBAR (period list)
-══════════════════════════════════ */
+/* Sidebar */
 .o_pcc_sidebar {
-    background: linear-gradient(160deg, #0a1929 0%, #102238 45%, #1a3a5c 100%);
-    color: #fff;
-    border-right: none;
+    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #0f291e 100%);
+    color: #ffffff;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
     z-index: 10;
-    box-shadow: 2px 0 16px rgba(0,0,0,.2);
 }
 
-/* Sidebar header block */
-.o_pcc_sidebar .px-4.py-4 strong,
-.o_pcc_sidebar .px-4.py-4 .small {
-    color: rgba(255,255,255,.4) !important;
+.pcc-sidebar-search {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff !important;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    width: 100%;
 }
 
-.o_pcc_sidebar .px-4.py-4 i {
-    color: rgba(255,255,255,.4) !important;
+.pcc-sidebar-search::placeholder {
+    color: rgba(255, 255, 255, 0.4);
 }
 
-/* Period items */
+.pcc-sidebar-search:focus {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    outline: none;
+}
+
 .o_period_item {
-    transition: all .14s ease;
-    border-left: 2px solid transparent;
-    padding: 10px 12px;
-    border-radius: 7px;
-    color: rgba(255,255,255,.45) !important;
-    margin: 1px 4px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: 3px solid transparent;
+    padding: 12px 16px;
+    margin: 3px 8px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, 0.6) !important;
+    cursor: pointer;
 }
 
 .o_period_item:hover:not(.is-active) {
-    background: rgba(255,255,255,.07) !important;
-    color: rgba(255,255,255,.85) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    transform: translateX(2px);
 }
 
 .o_period_item.is-active {
-    background: rgba(96,165,250,.14) !important;
-    border-left-color: #60a5fa;
-    color: #fff !important;
+    background: rgba(16, 185, 129, 0.18) !important;
+    border-left-color: #10b981;
+    color: #ffffff !important;
     font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.o_period_item.is-active .badge,
-.o_period_item.is-active .pcc-badge {
-    background: rgba(255,255,255,.15) !important;
-    color: #fff !important;
-}
-
-.o_period_item .fw-bold {
-    color: inherit !important;
-}
-
-/* Sidebar label for period sections */
-.o_pcc_sidebar .small.text-muted,
-.o_pcc_sidebar .text-muted {
-    color: rgba(255,255,255,.35) !important;
-}
-
-/* ══════════════════════════════════
-   HEADER BAR
-══════════════════════════════════ */
+/* Header */
 .o_pcc_header {
-    background: var(--pcc-surface) !important;
-    border-bottom: none !important;
-    box-shadow: 0 1px 12px rgba(0,0,0,.06) !important;
-    z-index: 5;
-    height: 60px;
-    padding: 0 28px !important;
-    display: flex !important;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f291e 100%);
+    border-bottom: 3px solid #10b981;
+    padding: 18px 32px !important;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+}
+
+.ag-title-icon {
+    width: 44px;
+    height: 44px;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 12px;
+    display: flex;
     align-items: center;
-    position: relative;
+    justify-content: center;
+    color: #10b981;
+    font-size: 20px;
 }
 
-.o_pcc_header h4 {
-    font-weight: 800 !important;
-    font-size: 18px !important;
-    letter-spacing: -.45px !important;
-    color: var(--pcc-ink) !important;
-    margin-bottom: 2px !important;
+.ag-live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.o_pcc_header h2 {
-    font-weight: 800 !important;
-    font-size: 18px !important;
-    letter-spacing: -.45px !important;
-    color: var(--pcc-ink) !important;
+.ag-live-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #34d399;
+    animation: ag-pulse 2s infinite;
 }
 
-.o_pcc_header .rounded-3 {
-    background: var(--pcc-navy) !important;
-    border-radius: 10px !important;
+@keyframes ag-pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+    70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
-/* ══════════════════════════════════
-   STAT CARDS (top strip)
-══════════════════════════════════ */
+.pcc-top-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.pcc-top-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Stat Cards */
 .pcc-stat-card {
-    background: var(--pcc-surface);
-    border: 1px solid var(--pcc-border);
-    border-radius: var(--pcc-r-xl);
-    box-shadow: var(--pcc-shadow-sm);
-    transition: all .16s ease;
-    padding: 18px 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
+    overflow: hidden;
 }
 
 .pcc-stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--pcc-shadow);
-    border-color: var(--pcc-border-em);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
 }
 
-/* Override Bootstrap fs utilities inside stat cards */
-.pcc-stat-card .fs-3 {
-    font-size: 34px !important;
-    font-weight: 800 !important;
-    letter-spacing: -1px;
-    line-height: 1;
-    margin-bottom: 4px !important;
+.pcc-border-blue { border-left: 4px solid #3b82f6; }
+.pcc-border-slate { border-left: 4px solid #64748b; }
+.pcc-border-emerald { border-left: 4px solid #10b981; }
+.pcc-border-warning { border-left: 4px solid #f59e0b; }
+.pcc-border-purple { border-left: 4px solid #8b5cf6; }
+
+.pcc-stat-val {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+    line-height: 1.2;
 }
 
-.pcc-stat-card .fs-5 {
-    font-size: 24px !important;
-    font-weight: 800 !important;
-    letter-spacing: -.5px;
-    line-height: 1;
-    margin-bottom: 4px !important;
+.pcc-stat-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
 }
 
-.pcc-stat-card .small.fw-bold.text-uppercase.text-muted {
-    font-size: 10px !important;
-    font-weight: 700 !important;
-    text-transform: uppercase !important;
-    letter-spacing: .08em !important;
-    color: var(--pcc-ink-3) !important;
-}
-
-/* ══════════════════════════════════
-   TAB BAR (Bootstrap nav-tabs override)
-══════════════════════════════════ */
+/* Tabs */
 .pcc-nav-tabs {
-    border-bottom: 1px solid var(--pcc-border) !important;
-    gap: 0;
-    padding: 0 4px;
+    border-bottom: 1px solid #e2e8f0 !important;
 }
 
 .pcc-nav-tabs .nav-link {
-    color: var(--pcc-ink-3) !important;
+    color: #64748b !important;
     border: none !important;
     border-bottom: 2px solid transparent !important;
-    padding: 10px 16px !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    transition: all .13s ease !important;
+    padding: 10px 18px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
     background: transparent !important;
-    text-transform: uppercase !important;
-    letter-spacing: .08em !important;
-    border-radius: 0 !important;
 }
 
 .pcc-nav-tabs .nav-link:hover {
-    color: var(--pcc-ink-2) !important;
-    border-bottom-color: var(--pcc-border-em) !important;
+    color: #0f172a !important;
+    border-bottom-color: #cbd5e1 !important;
 }
 
-.pcc-nav-tabs .nav-link.active,
-.pcc-nav-tabs .nav-link.active.fw-semibold {
-    color: var(--pcc-ink) !important;
-    border-bottom-color: var(--pcc-navy) !important;
+.pcc-nav-tabs .nav-link.active {
+    color: #0f172a !important;
+    border-bottom-color: #10b981 !important;
     font-weight: 700 !important;
 }
 
-.pcc-nav-tabs .nav-link.text-warning {
-    color: var(--pcc-warning) !important;
-}
-
-/* ══════════════════════════════════
-   CONTENT CARDS
-══════════════════════════════════ */
+/* Content Cards */
 .pcc-card {
-    background: var(--pcc-surface);
-    border: 1px solid var(--pcc-border);
-    border-radius: var(--pcc-r-xl);
-    box-shadow: var(--pcc-shadow-sm);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     overflow: hidden;
 }
 
 .pcc-card-header {
-    background: var(--pcc-surface);
-    border-bottom: 1px solid var(--pcc-border);
-    padding: 14px 18px 12px;
-    font-size: 13px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    padding: 16px 22px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--pcc-ink);
+    color: #0f172a;
 }
 
-/* ══════════════════════════════════
-   TABLES
-══════════════════════════════════ */
+/* Tables */
 .pcc-table {
-    font-size: 12px;
     width: 100%;
-    border-collapse: collapse;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .pcc-table th {
-    background: var(--pcc-surface-soft);
-    text-transform: uppercase;
-    font-size: 10px;
-    letter-spacing: .08em;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--pcc-ink-3);
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--pcc-border);
-    text-align: left;
-    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .pcc-table td {
-    padding: 10px 14px;
+    padding: 12px 18px;
     vertical-align: middle;
-    border-bottom: 1px solid var(--pcc-border);
-    color: var(--pcc-ink-2);
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    color: #334155;
+    transition: background-color 0.15s ease;
 }
 
 .pcc-table tr:hover td {
-    background: var(--pcc-surface-soft);
-    color: var(--pcc-ink);
+    background-color: #f8fafc;
 }
 
-.pcc-table tr:last-child td { border-bottom: none; }
-
-.pcc-table tfoot td {
-    background: var(--pcc-surface-soft);
-    border-bottom: none;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--pcc-ink);
+.pcc-search-input {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    width: 240px;
 }
 
-.pcc-table .text-end   { text-align: right !important; }
-.pcc-table .text-center{ text-align: center !important; }
+.pcc-search-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    outline: none;
+}
 
-/* ══════════════════════════════════
-   BUTTONS (pcc-btn)
-══════════════════════════════════ */
-.pcc-btn {
-    border-radius: var(--pcc-r);
-    font-weight: 600;
+.pcc-filter-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
     font-size: 12px;
-    padding: 0 14px;
-    height: 33px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    transition: all .13s ease;
-    background: var(--pcc-surface);
-    color: var(--pcc-ink-2);
-    border: 1px solid var(--pcc-border-em);
-    font-family: inherit;
+    font-weight: 600;
     cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #475569;
+    transition: all 0.15s ease;
 }
 
-.pcc-btn:hover {
-    background: var(--pcc-surface-soft);
-    color: var(--pcc-ink);
+.pcc-filter-pill:hover {
+    background: #f1f5f9;
+    color: #0f172a;
 }
 
-.pcc-btn:disabled, .pcc-btn[disabled] {
-    opacity: .4;
-    cursor: not-allowed;
-}
-
-/* ══════════════════════════════════
-   BADGES (pcc-badge)
-══════════════════════════════════ */
-.pcc-badge {
-    border-radius: 4px;
-    padding: 0 7px;
-    height: 18px;
-    display: inline-flex;
-    align-items: center;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    background: var(--pcc-surface-soft);
-    color: var(--pcc-ink-2);
-}
-
-/* State-specific badge colours */
-.pcc-badge-draft     { background: var(--pcc-surface-soft); color: var(--pcc-ink-2); }
-.pcc-badge-confirmed { background: #eff6ff; color: #1e3a8a; }
-.pcc-badge-paid      { background: #f0fdf4; color: #14532d; }
-.pcc-badge-open      { background: #fffbeb; color: #78350f; }
-.pcc-badge-closed    { background: var(--pcc-surface-soft); color: var(--pcc-ink-3); }
-
-/* Period state badges inside sidebar items */
-.o_period_item .pcc-badge,
-.o_period_item .badge {
-    background: rgba(255,255,255,.1) !important;
-    color: rgba(255,255,255,.7) !important;
-    font-size: 9px !important;
-    height: 16px !important;
-    padding: 0 5px !important;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    font-weight: 700;
-}
-
-/* ══════════════════════════════════
-   EXPENDITURE: summary big cards
-══════════════════════════════════ */
-.pcc-summary-big {
-    background: var(--pcc-surface);
-    border: 1px solid var(--pcc-border);
-    border-radius: var(--pcc-r-xl);
-    box-shadow: var(--pcc-shadow-sm);
-    padding: 28px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-}
-
-/* ══════════════════════════════════════════════════
-   RESPONSIVE — mobile breakpoints
-   Compound selectors beat Bootstrap !important utils.
-   At ≤768px the sidebar flips to a horizontal
-   scrollable period-tab strip at the top.
-══════════════════════════════════════════════════ */
-@media (max-width: 768px) {
-    /* Flip outer shell to column — keep height:100% and overflow:hidden so
-       inner .overflow-auto panels have a scroll boundary to work against */
-    .o_payroll_command_center.d-flex {
-        flex-direction: column !important;
-        overflow: hidden !important;
-        height: 100% !important;
-    }
-    /* Sidebar: full-width horizontal scrollable strip */
-    .o_pcc_sidebar.d-flex {
-        width: 100% !important;
-        max-width: 100% !important;
-        min-width: 0 !important;
-        flex: 0 0 auto !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        height: auto !important;
-        max-height: 80px !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        border-right: none !important;
-        border-bottom: 1px solid rgba(255, 255, 255, .08) !important;
-        padding: 0 !important;
-    }
-    /* Hide the "Payroll Periods" label header — no room in horizontal strip */
-    .o_pcc_sidebar .px-4.py-4:first-child {
-        display: none !important;
-    }
-    /* Period items become horizontal chips */
-    .o_period_item {
-        flex-direction: row !important;
-        align-items: center !important;
-        flex-shrink: 0 !important;
-        gap: 6px !important;
-        min-width: max-content !important;
-        padding: 0 14px !important;
-        margin: 0 !important;
-        border-left: none !important;
-        border-bottom: 2px solid transparent !important;
-        border-radius: 0 !important;
-        height: 80px !important;
-    }
-    .o_period_item.is-active {
-        background: rgba(255, 255, 255, .06) !important;
-        border-bottom-color: var(--pcc-accent) !important;
-    }
-    /* Hide employee count line inside horizontal chips */
-    .o_period_item .small {
-        display: none !important;
-    }
-    .o_period_item .fw-bold {
-        font-size: 11.5px !important;
-        white-space: nowrap !important;
-    }
-    /* Main area: min-height:0 allows it to shrink in column flex so the
-       inner .overflow-auto panel can create a real scroll boundary */
-    .o_pcc_main.flex-grow-1 {
-        flex: 1 1 0 !important;
-        min-height: 0 !important;
-    }
-    .o_pcc_header {
-        padding: 10px 14px !important;
-        height: auto !important;
-        min-height: 0 !important;
-    }
-    .o_pcc_main .flex-grow-1.overflow-auto {
-        padding: 12px !important;
-    }
-}
-
-@media (max-width: 480px) {
-    .pcc-stat-card {
-        padding: 12px !important;
-        min-width: 120px !important;
-    }
-    .pcc-summary-big {
-        padding: 16px !important;
-    }
+.pcc-filter-pill.is-active {
+    background: #0f172a;
+    color: #ffffff;
+    border-color: #0f172a;
 }

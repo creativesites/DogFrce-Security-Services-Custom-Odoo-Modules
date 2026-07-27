@@ -15,6 +15,7 @@ export class PayrollCommandCenter extends Component {
 
         this.state = useState({
             loading: true,
+            currencySymbol: "ZMW",
             periods: [],
             selectedPeriodId: null,
             payslips: [],
@@ -29,11 +30,29 @@ export class PayrollCommandCenter extends Component {
                 totalDeductions: 0,
             },
             activeTab: "overview",
+            payslipSearchTerm: "",
+            payslipStateFilter: "all",
+            periodSearchTerm: "",
         });
 
         onWillStart(async () => {
+            await this._loadCurrency();
             await this._loadPeriods();
         });
+    }
+
+    async _loadCurrency() {
+        try {
+            const companies = await this.orm.searchRead("res.company", [], ["currency_id"], { limit: 1 });
+            if (companies.length && companies[0].currency_id) {
+                const currencies = await this.orm.read("res.currency", [companies[0].currency_id[0]], ["symbol", "name"]);
+                if (currencies.length) {
+                    this.state.currencySymbol = currencies[0].symbol || currencies[0].name || "ZMW";
+                }
+            }
+        } catch (_e) {
+            this.state.currencySymbol = "ZMW";
+        }
     }
 
     // ── Computed getters ────────────────────────────────────────────────────
@@ -58,6 +77,38 @@ export class PayrollCommandCenter extends Component {
         return this.state.periods.find((p) => p.id === this.state.selectedPeriodId) || null;
     }
 
+    get filteredPeriods() {
+        if (!this.state.periods) return [];
+        const term = (this.state.periodSearchTerm || "").toLowerCase().trim();
+        if (!term) return this.state.periods;
+        return this.state.periods.filter((p) =>
+            (p.name || "").toLowerCase().includes(term) ||
+            (p.state || "").toLowerCase().includes(term)
+        );
+    }
+
+    get filteredPayslips() {
+        if (!this.state.payslips) return [];
+        let list = this.state.payslips;
+
+        // State filter
+        if (this.state.payslipStateFilter !== "all") {
+            list = list.filter((p) => p.state === this.state.payslipStateFilter);
+        }
+
+        // Search term filter
+        const term = (this.state.payslipSearchTerm || "").toLowerCase().trim();
+        if (term) {
+            list = list.filter((p) => {
+                const nameMatch = (p.name || "").toLowerCase().includes(term);
+                const empName = (p.employee_id && p.employee_id[1]) ? p.employee_id[1].toLowerCase() : "";
+                const empMatch = empName.includes(term);
+                return nameMatch || empMatch;
+            });
+        }
+        return list;
+    }
+
     // ── Data loading ────────────────────────────────────────────────────────
 
     async _loadPeriods() {
@@ -67,7 +118,7 @@ export class PayrollCommandCenter extends Component {
                 "security.payroll.period",
                 [],
                 ["name", "state", "date_from", "date_to", "total_net_pay", "payslip_count"],
-                { order: "date_from desc", limit: 6 }
+                { order: "date_from desc", limit: 12 }
             );
             this.state.periods = periods;
 
@@ -226,13 +277,42 @@ export class PayrollCommandCenter extends Component {
         this.state.activeTab = tab;
     }
 
+    setPayslipStateFilter(stateKey) {
+        this.state.payslipStateFilter = stateKey;
+    }
+
+    exportCsv() {
+        const period = this.selectedPeriod;
+        if (!period || !this.state.payslips.length) return;
+        const header = ["Reference", "Employee", "Worked Days", "State", "Gross Earnings", "Deductions", "Net Pay", "Anomaly Score"];
+        const rows = this.filteredPayslips.map((p) => [
+            p.name,
+            p.employee_id ? p.employee_id[1] : "",
+            p.worked_days || 0,
+            p.state,
+            p.total_earnings || 0,
+            p.total_deductions || 0,
+            p.net_pay || 0,
+            p.anomaly_score || 0,
+        ]);
+        const csv = [header, ...rows].map((r) => r.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `payroll_${period.name.replace(/\s+/g, "_")}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     // ── Formatting helpers ───────────────────────────────────────────────────
 
     formatCurrency(amount) {
-        if (!amount && amount !== 0) return "N$ 0.00";
+        const sym = this.state.currencySymbol || "ZMW";
+        if (!amount && amount !== 0) return `${sym} 0.00`;
         return (
-            "N$ " +
-            Number(amount).toLocaleString("en-NA", {
+            `${sym} ` +
+            Number(amount).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
             })
@@ -240,16 +320,16 @@ export class PayrollCommandCenter extends Component {
     }
 
     stateBadgeClass(state) {
-        if (state === "paid") return "bg-success";
-        if (state === "confirmed") return "bg-primary";
-        if (state === "cancelled") return "bg-secondary";
-        return "bg-secondary text-dark";
+        if (state === "paid") return "bg-success text-white";
+        if (state === "confirmed") return "bg-primary text-white";
+        if (state === "cancelled") return "bg-secondary text-white";
+        return "bg-warning text-dark";
     }
 
     periodStateBadgeClass(state) {
-        if (state === "processed") return "bg-success";
-        if (state === "closed") return "bg-dark";
-        return "bg-secondary text-dark";
+        if (state === "processed") return "bg-success text-white";
+        if (state === "closed") return "bg-dark text-white";
+        return "bg-secondary text-white";
     }
 }
 

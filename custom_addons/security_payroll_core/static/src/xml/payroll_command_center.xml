@@ -6,40 +6,57 @@
     <div class="o_payroll_command_center d-flex h-100 overflow-hidden">
 
         <!-- ===== LEFT SIDEBAR — PERIOD LIST ===== -->
-        <div class="o_pcc_sidebar d-flex flex-column"
-             style="width:260px; min-width:260px; overflow-y:auto;">
+        <div class="o_pcc_sidebar d-flex flex-column" style="width:280px; min-width:280px; overflow-y:auto;">
 
-            <div class="px-4 py-4 border-bottom" style="border-color: var(--pcc-border) !important;">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="fa fa-calendar text-primary"/>
-                    <strong class="small text-uppercase text-muted">Payroll Periods</strong>
+            <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="fa fa-calendar text-emerald" style="color:#10b981;"/>
+                        <strong class="text-white text-uppercase" style="font-size:12px;letter-spacing:0.05em;">Payroll Periods</strong>
+                    </div>
+                    <span class="badge bg-dark border border-secondary text-white-50 px-2 py-1" style="font-size:10px;">
+                        <t t-esc="state.periods.length"/> Periods
+                    </span>
                 </div>
-                <div class="small text-muted mt-1">Last 6 periods</div>
+                
+                <!-- Period Search Box -->
+                <div class="position-relative mt-2">
+                    <input type="text"
+                           class="pcc-sidebar-search"
+                           placeholder="Filter period name…"
+                           t-model="state.periodSearchTerm"/>
+                </div>
             </div>
 
-            <t t-if="state.periods.length === 0">
-                <div class="text-center text-muted p-3 small">
-                    No payroll periods found.
+            <t t-if="filteredPeriods.length === 0">
+                <div class="text-center text-muted p-4 small" style="color:rgba(255,255,255,0.5) !important;">
+                    <i class="fa fa-calendar-times-o fa-2x mb-2 d-block"/>
+                    No matching payroll periods found.
                 </div>
             </t>
 
-            <t t-foreach="state.periods" t-as="period" t-key="period.id">
-                <div t-att-class="'o_period_item px-4 py-3 border-bottom d-flex flex-column gap-1 ' + (state.selectedPeriodId === period.id ? 'is-active' : 'text-dark')"
-                     t-on-click="() => this.selectPeriod(period.id)"
-                     style="cursor:pointer; border-color: var(--pcc-border) !important;">
-                    <div class="fw-bold" style="font-size: 14px;">
-                        <t t-esc="period.name"/>
+            <div class="p-2">
+                <t t-foreach="filteredPeriods" t-as="period" t-key="period.id">
+                    <div t-att-class="'o_period_item ' + (state.selectedPeriodId === period.id ? 'is-active' : '')"
+                         t-on-click="() => this.selectPeriod(period.id)">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fw-bold text-white" style="font-size: 14px;"><t t-esc="period.name"/></span>
+                            <span t-att-class="'badge pcc-badge ' + periodStateBadgeClass(period.state)">
+                                <t t-esc="period.state"/>
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mt-2" style="font-size:12px;color:rgba(255,255,255,0.7);">
+                            <span style="font-size:11px;">
+                                <i class="fa fa-users me-1"/>
+                                <t t-esc="period.payslip_count || 0"/> Payslips
+                            </span>
+                            <span class="fw-bold text-white">
+                                <t t-esc="formatCurrency(period.total_net_pay)"/>
+                            </span>
+                        </div>
                     </div>
-                    <div class="d-flex align-items-center justify-content-between mt-2">
-                        <span t-att-class="'badge pcc-badge ' + periodStateBadgeClass(period.state)">
-                            <t t-esc="period.state"/>
-                        </span>
-                    </div>
-                    <div class="small text-muted fw-semibold mt-2">
-                        Net: <t t-esc="formatCurrency(period.total_net_pay)"/>
-                    </div>
-                </div>
-            </t>
+                </t>
+            </div>
 
         </div>
         <!-- END SIDEBAR -->
@@ -47,42 +64,57 @@
         <!-- ===== MAIN CONTENT AREA ===== -->
         <div class="o_pcc_main flex-grow-1 d-flex flex-column overflow-hidden">
 
-            <!-- Header -->
-            <div class="o_pcc_header d-flex align-items-center justify-content-between px-5 py-4">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center justify-content-center bg-primary text-white rounded-3 shadow-sm" style="width: 44px; height: 44px;">
-                        <i class="fa fa-money fa-lg"/>
-                    </div>
-                    <div>
-                        <h4 class="mb-1 fw-bold text-dark" style="letter-spacing: -0.02em;">Payroll Command Center</h4>
-                        <div class="text-muted small fw-semibold">
-                            <t t-if="selectedPeriod">
-                                Period: <t t-esc="selectedPeriod.name"/>
-                            </t>
-                            <t t-else="">
-                                Select a period from the left panel
-                            </t>
+            <!-- Executive Header Banner -->
+            <div class="o_pcc_header">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="ag-title-icon">
+                            <i class="fa fa-money"/>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Payroll Command Center</h3>
+                                <div class="ag-live-indicator">
+                                    <span class="ag-live-dot"/>ZRA Statutory 2026 Compliant
+                                </div>
+                            </div>
+                            <span style="color:rgba(255,255,255,0.7);font-size:13px;">
+                                <t t-if="selectedPeriod">
+                                    Active Execution Period: <strong class="text-white"><t t-esc="selectedPeriod.name"/></strong> 
+                                    (<t t-esc="selectedPeriod.date_from"/> to <t t-esc="selectedPeriod.date_to"/>)
+                                </t>
+                                <t t-else="">
+                                    Select a payroll period from the left panel
+                                </t>
+                            </span>
                         </div>
                     </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <t t-if="selectedPeriod">
-                        <button class="btn btn-outline-secondary pcc-btn"
-                                t-on-click="() => this.openPeriod(state.selectedPeriodId)">
-                            <i class="fa fa-external-link me-2"/>Open Period
-                        </button>
-                    </t>
+
+                    <!-- Header Action Toolbar -->
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <t t-if="selectedPeriod">
+                            <button class="pcc-top-btn"
+                                    t-on-click="() => this.openPeriod(state.selectedPeriodId)"
+                                    title="Open Period Form">
+                                <i class="fa fa-external-link me-1"/>Period Form
+                            </button>
+                            <button class="pcc-top-btn"
+                                    t-on-click="exportCsv"
+                                    style="background:#10b981;border-color:#10b981;"
+                                    title="Export Payslips to CSV">
+                                <i class="fa fa-download me-1"/>Export CSV
+                            </button>
+                        </t>
+                    </div>
                 </div>
             </div>
 
             <!-- Loading spinner -->
             <t t-if="state.loading">
                 <div class="d-flex justify-content-center align-items-center flex-grow-1">
-                    <div class="text-center">
-                        <div class="spinner-border text-primary mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted">Loading payroll data...</p>
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem; border-width:0.25em;"/>
+                        <p class="text-muted fw-semibold">Calculating statutory payroll metrics…</p>
                     </div>
                 </div>
             </t>
@@ -90,73 +122,117 @@
             <t t-else="">
                 <div class="flex-grow-1 d-flex flex-column overflow-auto p-4">
 
-                    <!-- ===== STATS BAR ===== -->
-                    <div class="d-flex gap-3 mb-4 flex-wrap">
+                    <!-- ===== EXECUTIVE KPI STATS RIBBON ===== -->
+                    <div class="row g-3 mb-4">
 
-                        <div class="pcc-stat-card text-center px-4 py-3 flex-fill" style="min-width:100px;">
-                            <div class="fs-3 fw-bold text-dark mb-1"><t t-esc="state.stats.total"/></div>
-                            <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:0.05em;">Total</div>
-                        </div>
-
-                        <div class="pcc-stat-card text-center px-4 py-3 flex-fill"
-                             t-on-click="() => this.setTab('payslips')"
-                             style="cursor:pointer; min-width:100px;">
-                            <div class="fs-3 fw-bold text-secondary mb-1"><t t-esc="state.stats.draft"/></div>
-                            <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:0.05em;">Draft</div>
-                        </div>
-
-                        <div class="pcc-stat-card text-center px-4 py-3 flex-fill" style="min-width:100px;">
-                            <div class="fs-3 fw-bold text-primary mb-1"><t t-esc="state.stats.confirmed"/></div>
-                            <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:0.05em;">Confirmed</div>
-                        </div>
-
-                        <div class="pcc-stat-card text-center px-4 py-3 flex-fill" style="min-width:100px;">
-                            <div class="fs-3 fw-bold text-success mb-1"><t t-esc="state.stats.paid"/></div>
-                            <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:0.05em;">Paid</div>
-                        </div>
-
-                        <div class="pcc-stat-card text-center px-4 py-3 flex-fill"
-                             t-on-click="() => this.setTab('anomalies')"
-                             style="cursor:pointer; min-width:100px;">
-                            <div t-att-class="'fs-3 fw-bold mb-1 ' + (state.stats.anomalyCount > 0 ? 'text-warning' : 'text-muted')">
-                                <t t-esc="state.stats.anomalyCount"/>
+                        <!-- Total Payslips -->
+                        <div class="col-12 col-sm-6 col-xl">
+                            <div class="pcc-stat-card pcc-border-blue">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="pcc-stat-lbl">Total Workforce</span>
+                                    <div class="pcc-stat-icon" style="color:#3b82f6;"><i class="fa fa-users fs-5"/></div>
+                                </div>
+                                <div class="pcc-stat-val"><t t-esc="state.stats.total"/></div>
+                                <span class="text-muted" style="font-size:12px;">Active payslip records</span>
                             </div>
-                            <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:0.05em;">Anomalies</div>
                         </div>
 
-                        <div class="pcc-stat-card text-center px-4 py-3 flex-fill" style="min-width:140px; border-bottom: 4px solid var(--pcc-success);">
-                            <div class="fs-5 fw-bold text-success mb-1 mt-1">
-                                <t t-esc="formatCurrency(state.stats.totalNet)"/>
+                        <!-- Draft Queue -->
+                        <div class="col-12 col-sm-6 col-xl">
+                            <div class="pcc-stat-card pcc-border-slate"
+                                 t-on-click="() => this.setTab('payslips')"
+                                 style="cursor:pointer;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="pcc-stat-lbl">Draft Queue</span>
+                                    <div class="pcc-stat-icon" style="color:#64748b;"><i class="fa fa-pencil-square-o fs-5"/></div>
+                                </div>
+                                <div class="pcc-stat-val text-slate-700"><t t-esc="state.stats.draft"/></div>
+                                <span class="text-muted" style="font-size:12px;">Pending manager approval</span>
                             </div>
-                            <div class="small fw-bold text-uppercase text-muted" style="letter-spacing:0.05em;">Total Net Pay</div>
+                        </div>
+
+                        <!-- Confirmed -->
+                        <div class="col-12 col-sm-6 col-xl">
+                            <div class="pcc-stat-card pcc-border-blue">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="pcc-stat-lbl">Approved Confirmed</span>
+                                    <div class="pcc-stat-icon" style="color:#2563eb;"><i class="fa fa-check-circle fs-5"/></div>
+                                </div>
+                                <div class="pcc-stat-val text-primary"><t t-esc="state.stats.confirmed"/></div>
+                                <span class="text-muted" style="font-size:12px;">Ready for bank disbursement</span>
+                            </div>
+                        </div>
+
+                        <!-- Disbursed Paid -->
+                        <div class="col-12 col-sm-6 col-xl">
+                            <div class="pcc-stat-card pcc-border-emerald">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="pcc-stat-lbl">Paid &amp; Disbursed</span>
+                                    <div class="pcc-stat-icon" style="color:#10b981;"><i class="fa fa-bank fs-5"/></div>
+                                </div>
+                                <div class="pcc-stat-val text-success"><t t-esc="state.stats.paid"/></div>
+                                <span class="text-muted" style="font-size:12px;">Settled bank payments</span>
+                            </div>
+                        </div>
+
+                        <!-- Compliance Anomalies -->
+                        <div class="col-12 col-sm-6 col-xl">
+                            <div class="pcc-stat-card pcc-border-warning"
+                                 t-on-click="() => this.setTab('anomalies')"
+                                 style="cursor:pointer;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="pcc-stat-lbl">Compliance Flags</span>
+                                    <div class="pcc-stat-icon" style="color:#f59e0b;"><i class="fa fa-shield fs-5"/></div>
+                                </div>
+                                <div t-att-class="'pcc-stat-val ' + (state.stats.anomalyCount > 0 ? 'text-warning' : 'text-muted')">
+                                    <t t-esc="state.stats.anomalyCount"/>
+                                </div>
+                                <span class="text-muted" style="font-size:12px;">Audit anomaly flags</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Net Disbursed -->
+                        <div class="col-12 col-sm-6 col-xl">
+                            <div class="pcc-stat-card pcc-border-purple" style="background:#f0fdf4;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="pcc-stat-lbl" style="color:#047857;">Total Net Payroll</span>
+                                    <div class="pcc-stat-icon" style="color:#059669;"><i class="fa fa-money fs-5"/></div>
+                                </div>
+                                <div class="pcc-stat-val text-success" style="font-size:22px;">
+                                    <t t-esc="formatCurrency(state.stats.totalNet)"/>
+                                </div>
+                                <span class="text-success small fw-semibold" style="font-size:11px;">
+                                    Net employee payable
+                                </span>
+                            </div>
                         </div>
 
                     </div>
-                    <!-- END STATS BAR -->
+                    <!-- END STATS RIBBON -->
 
-                    <!-- ===== TAB BAR ===== -->
-                    <ul class="nav nav-tabs pcc-nav-tabs mb-4 px-1">
+                    <!-- ===== TAB NAVIGATION ===== -->
+                    <ul class="nav pcc-nav-tabs mb-4">
                         <li class="nav-item">
-                            <button t-att-class="'nav-link' + (state.activeTab === 'overview' ? ' active fw-semibold' : '')"
+                            <button t-att-class="'nav-link' + (state.activeTab === 'overview' ? ' active' : '')"
                                     t-on-click="() => this.setTab('overview')">
-                                <i class="fa fa-th-large me-1"/>Overview
+                                <i class="fa fa-th-large me-2"/>Financial Overview
                             </button>
                         </li>
                         <li class="nav-item">
-                            <button t-att-class="'nav-link' + (state.activeTab === 'payslips' ? ' active fw-semibold' : '')"
+                            <button t-att-class="'nav-link' + (state.activeTab === 'payslips' ? ' active' : '')"
                                     t-on-click="() => this.setTab('payslips')">
-                                <i class="fa fa-file-text-o me-1"/>Payslips
-                                <span class="badge bg-secondary ms-1 small">
+                                <i class="fa fa-file-text-o me-2"/>Employee Payslips
+                                <span class="badge bg-secondary ms-2 rounded-pill">
                                     <t t-esc="state.stats.total"/>
                                 </span>
                             </button>
                         </li>
                         <li class="nav-item">
-                            <button t-att-class="'nav-link' + (state.activeTab === 'anomalies' ? ' active fw-semibold' : '') + (state.stats.anomalyCount > 0 ? ' text-warning' : '')"
+                            <button t-att-class="'nav-link' + (state.activeTab === 'anomalies' ? ' active' : '') + (state.stats.anomalyCount > 0 ? ' text-warning' : '')"
                                     t-on-click="() => this.setTab('anomalies')">
-                                <i class="fa fa-exclamation-triangle me-1"/>Anomalies
+                                <i class="fa fa-exclamation-triangle me-2"/>Compliance Anomalies
                                 <t t-if="state.stats.anomalyCount > 0">
-                                    <span class="badge bg-warning text-dark ms-1 small">
+                                    <span class="badge bg-warning text-dark ms-2 rounded-pill">
                                         <t t-esc="state.stats.anomalyCount"/>
                                     </span>
                                 </t>
@@ -171,27 +247,31 @@
                             <!-- Financial Summary Card -->
                             <div class="col-12 col-md-6">
                                 <div class="pcc-card h-100">
-                                    <div class="pcc-card-header">
-                                        <strong><i class="fa fa-bar-chart me-2 text-primary"/>Period Financial Summary</strong>
+                                    <div class="pcc-card-header d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="fa fa-bar-chart text-primary"/>
+                                            <span>Period Financial Breakdown</span>
+                                        </div>
+                                        <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:11px;">Statutory ZRA / NAPSA</span>
                                     </div>
-                                    <div class="card-body p-0">
-                                        <table class="pcc-table w-100">
+                                    <div class="p-0">
+                                        <table class="pcc-table">
                                             <tbody>
                                                 <tr>
-                                                    <td class="text-muted">Total Gross Earnings</td>
-                                                    <td class="text-end fw-semibold text-primary">
+                                                    <td class="fw-semibold text-slate-700">Gross Earnings &amp; Allowances</td>
+                                                    <td class="text-end fw-bold text-slate-900 fs-6">
                                                         <t t-esc="formatCurrency(state.stats.totalGross)"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td class="text-muted">Total Deductions</td>
-                                                    <td class="text-end fw-semibold text-danger">
+                                                    <td class="fw-semibold text-danger">Statutory Deductions (PAYE, NAPSA, NHIMA)</td>
+                                                    <td class="text-end fw-bold text-danger fs-6">
                                                         (<t t-esc="formatCurrency(state.stats.totalDeductions)"/>)
                                                     </td>
                                                 </tr>
-                                                <tr class="table-success">
-                                                    <td class="fw-bold">Net Pay (Total)</td>
-                                                    <td class="text-end fw-bold text-success">
+                                                <tr style="background:#f0fdf4;">
+                                                    <td class="fw-bold text-success fs-6">Total Net Employee Payable</td>
+                                                    <td class="text-end fw-bold text-success fs-5">
                                                         <t t-esc="formatCurrency(state.stats.totalNet)"/>
                                                     </td>
                                                 </tr>
@@ -201,54 +281,55 @@
                                 </div>
                             </div>
 
-                            <!-- Action Buttons Card -->
+                            <!-- Bulk Execution Actions Card -->
                             <div class="col-12 col-md-6">
                                 <div class="pcc-card h-100">
-                                    <div class="pcc-card-header">
-                                        <strong><i class="fa fa-bolt me-2 text-warning"/>Bulk Actions</strong>
+                                    <div class="pcc-card-header d-flex align-items-center gap-2">
+                                        <i class="fa fa-bolt text-warning"/>
+                                        <span>Payroll Operations Execution</span>
                                     </div>
-                                    <div class="card-body d-flex flex-column gap-3 p-4">
+                                    <div class="p-4 d-flex flex-column gap-3">
 
                                         <div>
-                                            <button class="btn btn-primary w-100 d-flex align-items-center justify-content-between pcc-btn"
+                                            <button class="btn btn-primary w-100 py-2 d-flex align-items-center justify-content-between fw-bold"
                                                     t-on-click="bulkConfirm"
                                                     t-att-disabled="state.stats.draft === 0 || !state.selectedPeriodId">
                                                 <span>
-                                                    <i class="fa fa-check me-2"/>Confirm All Drafts
+                                                    <i class="fa fa-check-circle me-2"/>Confirm All Draft Payslips
                                                 </span>
-                                                <span class="badge bg-white text-primary">
-                                                    <t t-esc="state.stats.draft"/>
+                                                <span class="badge bg-white text-dark ms-2">
+                                                    <t t-esc="state.stats.draft"/> Drafts
                                                 </span>
                                             </button>
-                                            <div class="small text-muted mt-1 px-1">
-                                                Moves all draft payslips to confirmed state.
+                                            <div class="small text-muted mt-1 px-1" style="font-size:11px;">
+                                                Approves all pending draft payslips for this active period.
                                             </div>
                                         </div>
 
                                         <div>
-                                            <button class="btn btn-success w-100 d-flex align-items-center justify-content-between pcc-btn"
+                                            <button class="btn btn-success w-100 py-2 d-flex align-items-center justify-content-between fw-bold"
                                                     t-on-click="bulkMarkPaid"
                                                     t-att-disabled="state.stats.confirmed === 0 || !state.selectedPeriodId">
                                                 <span>
-                                                    <i class="fa fa-money me-2"/>Mark All Confirmed as Paid
+                                                    <i class="fa fa-bank me-2"/>Mark All Confirmed as Paid
                                                 </span>
-                                                <span class="badge bg-white text-success">
-                                                    <t t-esc="state.stats.confirmed"/>
+                                                <span class="badge bg-white text-dark ms-2">
+                                                    <t t-esc="state.stats.confirmed"/> Confirmed
                                                 </span>
                                             </button>
-                                            <div class="small text-muted mt-1 px-1">
-                                                Marks all confirmed payslips as paid.
+                                            <div class="small text-muted mt-1 px-1" style="font-size:11px;">
+                                                Marks all confirmed payslips as fully paid and disbursed.
                                             </div>
                                         </div>
 
                                         <div>
-                                            <button class="btn btn-outline-secondary w-100 pcc-btn"
+                                            <button class="btn btn-outline-secondary w-100 py-2 fw-semibold"
                                                     t-on-click="() => this.openPeriod(state.selectedPeriodId)"
                                                     t-att-disabled="!state.selectedPeriodId">
-                                                <i class="fa fa-print me-2"/>Open Period for Batch Print
+                                                <i class="fa fa-print me-2"/>Open Period for Batch Printing
                                             </button>
-                                            <div class="small text-muted mt-1 px-1">
-                                                Open the period form to print a payslip batch report.
+                                            <div class="small text-muted mt-1 px-1" style="font-size:11px;">
+                                                Open period view to print batch payslip PDF reports.
                                             </div>
                                         </div>
 
@@ -259,46 +340,47 @@
                             <!-- Status Breakdown -->
                             <div class="col-12">
                                 <div class="pcc-card">
-                                    <div class="pcc-card-header">
-                                        <strong><i class="fa fa-pie-chart me-2 text-info"/>Payslip Status Breakdown</strong>
+                                    <div class="pcc-card-header d-flex align-items-center gap-2">
+                                        <i class="fa fa-pie-chart text-info"/>
+                                        <span>Payslip Status Workflow Distribution</span>
                                     </div>
-                                    <div class="card-body p-0">
-                                        <table class="pcc-table w-100 mb-0">
+                                    <div class="p-0">
+                                        <table class="pcc-table">
                                             <thead>
                                                 <tr>
-                                                    <th>Status</th>
+                                                    <th>Workflow State</th>
                                                     <th class="text-end">Count</th>
-                                                    <th class="text-end">% of Total</th>
+                                                    <th class="text-end">% of Total Workforce</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <tr>
-                                                    <td><span class="badge bg-secondary me-2">Draft</span>Draft</td>
-                                                    <td class="text-end"><t t-esc="state.stats.draft"/></td>
-                                                    <td class="text-end">
+                                                    <td><span class="badge bg-secondary me-2">Draft</span>Draft Pending Approval</td>
+                                                    <td class="text-end fw-semibold"><t t-esc="state.stats.draft"/></td>
+                                                    <td class="text-end fw-semibold">
                                                         <t t-esc="state.stats.total > 0 ? ((state.stats.draft / state.stats.total) * 100).toFixed(1) + '%' : '—'"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td><span class="badge bg-primary me-2">Confirmed</span>Confirmed</td>
-                                                    <td class="text-end"><t t-esc="state.stats.confirmed"/></td>
-                                                    <td class="text-end">
+                                                    <td><span class="badge bg-primary me-2">Confirmed</span>Confirmed Approved</td>
+                                                    <td class="text-end fw-semibold"><t t-esc="state.stats.confirmed"/></td>
+                                                    <td class="text-end fw-semibold">
                                                         <t t-esc="state.stats.total > 0 ? ((state.stats.confirmed / state.stats.total) * 100).toFixed(1) + '%' : '—'"/>
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td><span class="badge bg-success me-2">Paid</span>Paid</td>
-                                                    <td class="text-end"><t t-esc="state.stats.paid"/></td>
-                                                    <td class="text-end">
+                                                    <td><span class="badge bg-success me-2">Paid</span>Disbursed Paid</td>
+                                                    <td class="text-end fw-semibold"><t t-esc="state.stats.paid"/></td>
+                                                    <td class="text-end fw-semibold">
                                                         <t t-esc="state.stats.total > 0 ? ((state.stats.paid / state.stats.total) * 100).toFixed(1) + '%' : '—'"/>
                                                     </td>
                                                 </tr>
                                             </tbody>
-                                            <tfoot class="fw-bold" style="background: var(--pcc-surface-soft);">
+                                            <tfoot>
                                                 <tr>
-                                                    <td>Total</td>
-                                                    <td class="text-end"><t t-esc="state.stats.total"/></td>
-                                                    <td class="text-end">100%</td>
+                                                    <td class="fw-bold">Total Workforce Processed</td>
+                                                    <td class="text-end fw-bold"><t t-esc="state.stats.total"/></td>
+                                                    <td class="text-end fw-bold">100%</td>
                                                 </tr>
                                             </tfoot>
                                         </table>
@@ -313,93 +395,124 @@
                     <!-- ===== PAYSLIPS TAB ===== -->
                     <t t-if="state.activeTab === 'payslips'">
                         <div class="pcc-card">
-                            <div class="pcc-card-header d-flex align-items-center justify-content-between">
-                                <strong><i class="fa fa-file-text-o me-2 text-primary"/>All Payslips</strong>
-                                <span class="text-muted small">
-                                    <t t-esc="state.payslips.length"/> payslip(s)
-                                </span>
+                            <div class="pcc-card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa fa-file-text-o text-primary"/>
+                                    <span>Employee Payslips Directory</span>
+                                    <span class="badge bg-light text-secondary border px-2 py-1 ms-2" style="font-size:11px;">
+                                        <t t-esc="filteredPayslips.length"/> Records
+                                    </span>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <!-- Search Input -->
+                                    <div class="position-relative">
+                                        <i class="fa fa-search position-absolute text-muted" style="left:10px;top:50%;transform:translateY(-50%);font-size:12px;"/>
+                                        <input type="text"
+                                               class="pcc-search-input ps-4"
+                                               placeholder="Filter employee or ref…"
+                                               t-model="state.payslipSearchTerm"/>
+                                    </div>
+
+                                    <!-- Filter pills -->
+                                    <div class="d-flex align-items-center gap-1">
+                                        <button t-att-class="'pcc-filter-pill ' + (state.payslipStateFilter === 'all' ? 'is-active' : '')"
+                                                t-on-click="() => this.setPayslipStateFilter('all')">
+                                            All
+                                        </button>
+                                        <button t-att-class="'pcc-filter-pill ' + (state.payslipStateFilter === 'draft' ? 'is-active' : '')"
+                                                t-on-click="() => this.setPayslipStateFilter('draft')">
+                                            Draft
+                                        </button>
+                                        <button t-att-class="'pcc-filter-pill ' + (state.payslipStateFilter === 'confirmed' ? 'is-active' : '')"
+                                                t-on-click="() => this.setPayslipStateFilter('confirmed')">
+                                            Confirmed
+                                        </button>
+                                        <button t-att-class="'pcc-filter-pill ' + (state.payslipStateFilter === 'paid' ? 'is-active' : '')"
+                                                t-on-click="() => this.setPayslipStateFilter('paid')">
+                                            Paid
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body p-0">
-                                <t t-if="state.payslips.length === 0">
+
+                            <div class="p-0 table-responsive">
+                                <t t-if="filteredPayslips.length === 0">
                                     <div class="text-center text-muted p-5">
-                                        <i class="fa fa-file-o fa-3x mb-3 d-block"/>
-                                        No payslips found for this period. Generate payslips from the period form.
+                                        <i class="fa fa-file-o fa-3x mb-3 text-slate-300 d-block"/>
+                                        No payslips matching filter criteria for this period.
                                     </div>
                                 </t>
                                 <t t-else="">
-                                    <div class="table-responsive">
-                                        <table class="pcc-table w-100 mb-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Reference</th>
-                                                    <th>Employee</th>
-                                                    <th class="text-center">Days</th>
-                                                    <th class="text-center">Status</th>
-                                                    <th class="text-end">Gross</th>
-                                                    <th class="text-end">Deductions</th>
-                                                    <th class="text-end">Net Pay</th>
-                                                    <th class="text-center">Anomaly</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <t t-foreach="state.payslips" t-as="ps" t-key="ps.id">
-                                                    <tr t-att-class="(ps.anomaly_score || 0) > 0 ? 'table-warning' : ''"
-                                                        t-on-click="() => this.openPayslip(ps.id)"
-                                                        style="cursor:pointer;">
-                                                        <td class="fw-semibold text-primary small">
-                                                            <t t-esc="ps.name"/>
-                                                        </td>
-                                                        <td>
-                                                            <t t-esc="ps.employee_id and ps.employee_id[1] or '—'"/>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <t t-esc="ps.worked_days || 0"/>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <span t-att-class="'badge small ' + stateBadgeClass(ps.state)">
-                                                                <t t-esc="ps.state"/>
+                                    <table class="pcc-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Security Guard / Employee</th>
+                                                <th class="text-center">Worked Days</th>
+                                                <th class="text-center">Status</th>
+                                                <th class="text-end">Gross Earnings</th>
+                                                <th class="text-end">Deductions</th>
+                                                <th class="text-end">Net Payable</th>
+                                                <th class="text-center">Audit Anomaly</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="filteredPayslips" t-as="ps" t-key="ps.id">
+                                                <tr t-on-click="() => this.openPayslip(ps.id)" style="cursor:pointer;">
+                                                    <td class="fw-bold text-primary">
+                                                        <t t-esc="ps.name"/>
+                                                    </td>
+                                                    <td class="fw-semibold text-slate-800">
+                                                        <t t-esc="ps.employee_id and ps.employee_id[1] or '—'"/>
+                                                    </td>
+                                                    <td class="text-center fw-semibold text-slate-700">
+                                                        <t t-esc="ps.worked_days || 0"/>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <span t-att-class="'badge px-2 py-1 ' + stateBadgeClass(ps.state)">
+                                                            <t t-esc="ps.state"/>
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-end fw-semibold text-slate-800">
+                                                        <t t-esc="formatCurrency(ps.total_earnings)"/>
+                                                    </td>
+                                                    <td class="text-end text-danger fw-semibold">
+                                                        (<t t-esc="formatCurrency(ps.total_deductions)"/>)
+                                                    </td>
+                                                    <td class="text-end fw-bold text-success">
+                                                        <t t-esc="formatCurrency(ps.net_pay)"/>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <t t-if="(ps.anomaly_score || 0) > 0">
+                                                            <span class="badge bg-warning text-dark px-2 py-1">
+                                                                <i class="fa fa-exclamation-triangle me-1"/>
+                                                                <t t-esc="ps.anomaly_score"/> Flags
                                                             </span>
-                                                        </td>
-                                                        <td class="text-end small">
-                                                            <t t-esc="formatCurrency(ps.total_earnings)"/>
-                                                        </td>
-                                                        <td class="text-end small text-danger">
-                                                            (<t t-esc="formatCurrency(ps.total_deductions)"/>)
-                                                        </td>
-                                                        <td class="text-end small fw-semibold">
-                                                            <t t-esc="formatCurrency(ps.net_pay)"/>
-                                                        </td>
-                                                        <td class="text-center">
-                                                            <t t-if="(ps.anomaly_score || 0) > 0">
-                                                                <span class="badge bg-warning text-dark">
-                                                                    <i class="fa fa-exclamation-triangle me-1"/>
-                                                                    <t t-esc="ps.anomaly_score"/>
-                                                                </span>
-                                                            </t>
-                                                            <t t-else="">
-                                                                <span class="text-muted small">—</span>
-                                                            </t>
-                                                        </td>
-                                                    </tr>
-                                                </t>
-                                            </tbody>
-                                            <tfoot class="fw-bold" style="background: var(--pcc-surface-soft);">
-                                                <tr>
-                                                    <td colspan="4">Totals</td>
-                                                    <td class="text-end small">
-                                                        <t t-esc="formatCurrency(state.stats.totalGross)"/>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="text-muted small">—</span>
+                                                        </t>
                                                     </td>
-                                                    <td class="text-end small text-danger">
-                                                        (<t t-esc="formatCurrency(state.stats.totalDeductions)"/>)
-                                                    </td>
-                                                    <td class="text-end small text-success">
-                                                        <t t-esc="formatCurrency(state.stats.totalNet)"/>
-                                                    </td>
-                                                    <td></td>
                                                 </tr>
-                                            </tfoot>
-                                        </table>
-                                    </div>
+                                            </t>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="4" class="fw-bold">Totals</td>
+                                                <td class="text-end fw-bold text-slate-900">
+                                                    <t t-esc="formatCurrency(state.stats.totalGross)"/>
+                                                </td>
+                                                <td class="text-end fw-bold text-danger">
+                                                    (<t t-esc="formatCurrency(state.stats.totalDeductions)"/>)
+                                                </td>
+                                                <td class="text-end fw-bold text-success">
+                                                    <t t-esc="formatCurrency(state.stats.totalNet)"/>
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </t>
                             </div>
                         </div>
@@ -410,36 +523,35 @@
                     <t t-if="state.activeTab === 'anomalies'">
                         <div class="pcc-card">
                             <div class="pcc-card-header d-flex align-items-center justify-content-between">
-                                <strong>
-                                    <i class="fa fa-exclamation-triangle text-warning me-2"/>
-                                    Payslips with Anomalies
-                                </strong>
-                                <span class="badge bg-warning text-dark">
-                                    <t t-esc="anomalyPayslips.length"/> flagged
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fa fa-exclamation-triangle text-warning"/>
+                                    <span>Payroll Compliance Audit &amp; Anomaly Flags</span>
+                                </div>
+                                <span class="badge bg-warning text-dark px-2 py-1 fw-bold">
+                                    <t t-esc="anomalyPayslips.length"/> Flagged Records
                                 </span>
                             </div>
-                            <div class="card-body p-0">
+                            <div class="p-0">
                                 <t t-if="anomalyPayslips.length === 0">
                                     <div class="text-center text-muted p-5">
                                         <i class="fa fa-check-circle fa-3x text-success mb-3 d-block"/>
-                                        No anomalies detected in this period. All payslips look clean.
+                                        No statutory or payroll anomalies detected in this period. All payslips are 100% compliant.
                                     </div>
                                 </t>
                                 <t t-else="">
-                                    <div class="alert alert-warning m-3">
+                                    <div class="alert alert-warning m-3 border-warning" style="border-radius:10px;">
                                         <i class="fa fa-info-circle me-2"/>
-                                        The following payslips have anomaly scores greater than zero.
-                                        Review each payslip carefully before confirming or paying.
+                                        The following payslips have anomaly audit scores greater than zero. Please review the flag details before confirming or disbursing payments.
                                     </div>
                                     <div class="table-responsive">
-                                        <table class="pcc-table w-100 mb-0">
+                                        <table class="pcc-table">
                                             <thead style="background: #fffbeb;">
                                                 <tr>
                                                     <th>Reference</th>
                                                     <th>Employee</th>
                                                     <th class="text-center">Status</th>
                                                     <th class="text-center">Score</th>
-                                                    <th>Anomaly Flags</th>
+                                                    <th>Anomaly Flag Details</th>
                                                     <th class="text-end">Net Pay</th>
                                                 </tr>
                                             </thead>
@@ -448,26 +560,26 @@
                                                     <tr class="table-warning"
                                                         t-on-click="() => this.openPayslip(ps.id)"
                                                         style="cursor:pointer;">
-                                                        <td class="fw-semibold text-primary small">
+                                                        <td class="fw-bold text-primary">
                                                             <t t-esc="ps.name"/>
                                                         </td>
-                                                        <td>
+                                                        <td class="fw-semibold text-slate-800">
                                                             <t t-esc="ps.employee_id and ps.employee_id[1] or '—'"/>
                                                         </td>
                                                         <td class="text-center">
-                                                            <span t-att-class="'badge small ' + stateBadgeClass(ps.state)">
+                                                            <span t-att-class="'badge px-2 py-1 ' + stateBadgeClass(ps.state)">
                                                                 <t t-esc="ps.state"/>
                                                             </span>
                                                         </td>
                                                         <td class="text-center">
-                                                            <span class="badge bg-danger">
+                                                            <span class="badge bg-danger px-2 py-1">
                                                                 <t t-esc="ps.anomaly_score"/>
                                                             </span>
                                                         </td>
-                                                        <td class="small text-muted" style="max-width:300px; word-break:break-word;">
-                                                            <t t-esc="ps.anomaly_flags or 'No details recorded'"/>
+                                                        <td class="small text-muted" style="max-width:350px; word-break:break-word;">
+                                                            <t t-esc="ps.anomaly_flags or 'No specific details recorded'"/>
                                                         </td>
-                                                        <td class="text-end small fw-semibold">
+                                                        <td class="text-end fw-bold text-success">
                                                             <t t-esc="formatCurrency(ps.net_pay)"/>
                                                         </td>
                                                     </tr>
