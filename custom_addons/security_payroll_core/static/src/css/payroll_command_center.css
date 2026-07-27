@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   DOGFORCE — PAYROLL COMMAND CENTER
+   DOGFORCE — PAYROLL COMMAND CENTER & EXPENDITURE
    Modernized Executive Dashboard Styling
    ═══════════════════════════════════════════════════════════ */
 
@@ -28,12 +28,33 @@
     --pcc-shadow:    0 10px 25px -5px rgba(0,0,0,0.08);
 
     height: 100%;
+    min-height: 0;
+    max-height: 100vh;
     background: var(--pcc-bg);
     color: var(--pcc-ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    overflow: hidden;
 }
 
 .o_payroll_command_center * { box-sizing: border-box; }
+
+/* Main Area Flex Constraints for Proper Scrolling */
+.o_pcc_main {
+    flex: 1 1 0%;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.o_pcc_scroll_area {
+    flex: 1 1 0%;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+}
 
 /* Sidebar */
 .o_pcc_sidebar {
@@ -41,6 +62,9 @@
     color: #ffffff;
     box-shadow: 4px 0 20px rgba(0,0,0,0.15);
     z-index: 10;
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .pcc-sidebar-search {
@@ -93,6 +117,7 @@
     border-bottom: 3px solid #10b981;
     padding: 18px 32px !important;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+    flex-shrink: 0;
 }
 
 .ag-title-icon {
@@ -199,6 +224,7 @@
 /* Tabs */
 .pcc-nav-tabs {
     border-bottom: 1px solid #e2e8f0 !important;
+    flex-shrink: 0;
 }
 
 .pcc-nav-tabs .nav-link {
@@ -223,13 +249,15 @@
     font-weight: 700 !important;
 }
 
-/* Content Cards */
+/* Content Cards & Table Wrapper */
 .pcc-card {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .pcc-card-header {
@@ -239,9 +267,20 @@
     font-size: 14px;
     font-weight: 700;
     color: #0f172a;
+    flex-shrink: 0;
 }
 
-/* Tables */
+/* Scrollable Table Container */
+.pcc-table-wrapper,
+.o_payroll_command_center .table-responsive {
+    max-height: 580px;
+    overflow-y: auto !important;
+    overflow-x: auto !important;
+    position: relative;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Sticky Headers & Footers */
 .pcc-table {
     width: 100%;
     margin-bottom: 0;
@@ -250,7 +289,10 @@
 }
 
 .pcc-table th {
-    background: #f8fafc;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 5 !important;
+    background: #f8fafc !important;
     color: #475569;
     font-size: 11px;
     font-weight: 700;
@@ -258,6 +300,18 @@
     letter-spacing: 0.05em;
     padding: 12px 18px;
     border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.pcc-table tfoot td {
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 5 !important;
+    background: #f1f5f9 !important;
+    color: #0f172a;
+    font-weight: 700;
+    border-top: 2px solid #cbd5e1;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .pcc-table td {

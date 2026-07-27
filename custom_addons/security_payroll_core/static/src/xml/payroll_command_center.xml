@@ -120,7 +120,7 @@
             </t>
 
             <t t-else="">
-                <div class="flex-grow-1 d-flex flex-column overflow-auto p-4">
+                <div class="o_pcc_scroll_area flex-grow-1 overflow-auto p-4">
 
                     <!-- ===== EXECUTIVE KPI STATS RIBBON ===== -->
                     <div class="row g-3 mb-4">
@@ -254,7 +254,7 @@
                                         </div>
                                         <span class="badge bg-light text-secondary border px-2 py-1" style="font-size:11px;">Statutory ZRA / NAPSA</span>
                                     </div>
-                                    <div class="p-0">
+                                    <div class="p-0 pcc-table-wrapper">
                                         <table class="pcc-table">
                                             <tbody>
                                                 <tr>
@@ -344,7 +344,7 @@
                                         <i class="fa fa-pie-chart text-info"/>
                                         <span>Payslip Status Workflow Distribution</span>
                                     </div>
-                                    <div class="p-0">
+                                    <div class="p-0 pcc-table-wrapper">
                                         <table class="pcc-table">
                                             <thead>
                                                 <tr>
@@ -436,7 +436,7 @@
                                 </div>
                             </div>
 
-                            <div class="p-0 table-responsive">
+                            <div class="p-0 pcc-table-wrapper table-responsive">
                                 <t t-if="filteredPayslips.length === 0">
                                     <div class="text-center text-muted p-5">
                                         <i class="fa fa-file-o fa-3x mb-3 text-slate-300 d-block"/>
@@ -543,7 +543,7 @@
                                         <i class="fa fa-info-circle me-2"/>
                                         The following payslips have anomaly audit scores greater than zero. Please review the flag details before confirming or disbursing payments.
                                     </div>
-                                    <div class="table-responsive">
+                                    <div class="pcc-table-wrapper table-responsive">
                                         <table class="pcc-table">
                                             <thead style="background: #fffbeb;">
                                                 <tr>
