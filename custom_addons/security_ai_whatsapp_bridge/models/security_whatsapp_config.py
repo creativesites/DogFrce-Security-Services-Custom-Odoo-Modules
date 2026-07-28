@@ -42,6 +42,20 @@ class SecurityWhatsAppConfig(models.Model):
         default=True,
         help="If checked, general chitchat or unrelated messages are logged as ignored without sending a reply.",
     )
+    enable_ai_fallback = fields.Boolean(
+        string="Enable AI Engine Fallback",
+        default=True,
+        help="If enabled, unmatched queries will be routed to the Security AI Engine for intelligent conversational responses.",
+    )
+    max_history_context = fields.Integer(
+        string="Chat History Context Window",
+        default=5,
+        help="Number of recent messages from the same sender to include as conversation history context for AI processing.",
+    )
+    system_prompt_custom = fields.Text(
+        string="Custom AI Voice Instructions",
+        help="Optional additional instructions for the WhatsApp AI Control Room Assistant.",
+    )
 
     @api.model
     def get_config_action(self):

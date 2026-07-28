@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { RosterGrid } from "./roster_grid";
 
 /**
  * RosterBoard — Tier-3 OWL client action.
@@ -18,6 +19,7 @@ import { registry } from "@web/core/registry";
  * a display_notification dict (on error) or null (on success).
  */
 class RosterBoard extends Component {
+    static components = { RosterGrid };
     static props = { "*": true };
     static template = "security_shift_planner.RosterBoard";
 
@@ -53,12 +55,27 @@ class RosterBoard extends Component {
             suggestions: [],
             suggestionsLoaded: false,
             loadingSuggestions: false,
+            // Guard directory & search
+            allGuards: [],
+            guardSearchTerm: "",
+            guardTab: "suggested", // "suggested" or "all"
+
             stats: { assigned: 0, unassigned: 0, criticalGaps: 0 },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
             contextMenu: { visible: false, x: 0, y: 0, slot: null },
-            // Phase 4: drag-and-drop + swap dialog
+            // Drag-and-drop + swap dialog + override dialog
             dragOverSlotId: null,
             swapDialog: { visible: false, slot: null, reason: "" },
+            overrideDialog: {
+                visible: false,
+                slot: null,
+                guardId: null,
+                guardName: "",
+                reasons: [],
+                reasonInput: "",
+                submitting: false,
+                error: "",
+            },
             // Create-batch dialog
             createDialog: {
                 visible: false,
@@ -110,8 +127,26 @@ class RosterBoard extends Component {
         window.addEventListener("resize", handleResize);
 
         onWillStart(async () => {
-            await Promise.all([this.loadCompanyCycle(), this.loadBatches(), this.loadAllSites()]);
+            await Promise.all([this.loadCompanyCycle(), this.loadBatches(), this.loadAllSites(), this.loadAllGuards()]);
         });
+    }
+
+    async loadAllGuards() {
+        try {
+            const guards = await this.orm.searchRead(
+                "hr.employee",
+                [["security_guard", "=", true], ["active", "=", true], ["security_disqualified", "=", false]],
+                ["id", "name", "security_grade_id"],
+                { order: "name asc" }
+            );
+            this.state.allGuards = guards.map((g) => ({
+                id: g.id,
+                name: g.name,
+                grade: g.security_grade_id ? g.security_grade_id[1] : "—",
+            }));
+        } catch {
+            this.state.allGuards = [];
+        }
     }
 
     // ─── Data loaders ──────────────────────────────────────────────
@@ -175,7 +210,7 @@ class RosterBoard extends Component {
             [
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning", "critical_gap",
+                "fairness_warning", "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
             ]
         );
 
@@ -209,6 +244,9 @@ class RosterBoard extends Component {
                 suggestion_count: s.suggestion_count,
                 conflict: !!s.fairness_warning,
                 critical_gap: !!s.critical_gap,
+                is_override: !!s.is_override,
+                override_reason: s.override_reason || "",
+                wrong_fit_reasons: s.wrong_fit_reasons || "",
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -244,7 +282,7 @@ class RosterBoard extends Component {
             [
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning", "critical_gap",
+                "fairness_warning", "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
             ]
         );
 
@@ -276,6 +314,9 @@ class RosterBoard extends Component {
                 suggestion_count: s.suggestion_count,
                 conflict: !!s.fairness_warning,
                 critical_gap: !!s.critical_gap,
+                is_override: !!s.is_override,
+                override_reason: s.override_reason || "",
+                wrong_fit_reasons: s.wrong_fit_reasons || "",
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -824,50 +865,126 @@ class RosterBoard extends Component {
      * On error: show the notification inline (assignError) and as a toast.
      * On success: reload slot data and show a success toast.
      */
+    closeOverrideModal() {
+        this.state.overrideDialog = {
+            visible: false,
+            slot: null,
+            guardId: null,
+            guardName: "",
+            reasons: [],
+            reasonInput: "",
+            submitting: false,
+            error: "",
+        };
+    }
+
+    async confirmOverrideAssign() {
+        const dlg = this.state.overrideDialog;
+        if (!dlg.reasonInput || !dlg.reasonInput.trim()) {
+            dlg.error = "Please enter an override reason for audit logging.";
+            return;
+        }
+        dlg.submitting = true;
+        dlg.error = "";
+        const ok = await this.manualAssignGuard(
+            dlg.slot,
+            dlg.guardId,
+            dlg.guardName,
+            true,
+            dlg.reasonInput.trim()
+        );
+        dlg.submitting = false;
+        if (ok) {
+            this.closeOverrideModal();
+        }
+    }
+
+    async manualAssignGuard(slot, guardId, guardName, override = false, overrideReason = "", sourceSlotId = null) {
+        this.state.assignError = null;
+        try {
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_manual_assign",
+                [[slot.id], guardId],
+                { override: override, override_reason: overrideReason }
+            );
+
+            if (res.status === "hard_block") {
+                this.state.assignError = { guardName, message: res.message };
+                this.notification.add(res.message, { title: `Blocked: ${guardName}`, type: "danger" });
+                return false;
+            }
+
+            if (res.status === "override_required") {
+                this.state.overrideDialog = {
+                    visible: true,
+                    slot: slot,
+                    guardId: guardId,
+                    guardName: guardName,
+                    reasons: res.reasons || [],
+                    reasonInput: "",
+                    submitting: false,
+                    error: "",
+                };
+                return false;
+            }
+
+            if (res.status === "error") {
+                this.state.assignError = { guardName, message: res.message };
+                this.notification.add(res.message, { type: "danger" });
+                return false;
+            }
+
+            if (res.status === "success") {
+                if (sourceSlotId && sourceSlotId !== slot.id) {
+                    await this.orm.write("security.roster.slot", [sourceSlotId], {
+                        employee_id: false,
+                        state: "draft",
+                    });
+                }
+                await this.loadSlots(this.state.batchId);
+                this.state.selectedSlot = null;
+                this.state.suggestions = [];
+                this.state.suggestionsLoaded = false;
+                this.state.assignError = null;
+
+                if (res.is_override) {
+                    this.notification.add(
+                        `Assigned ${guardName} with manual override (WRONG FIT highlighted).`,
+                        { title: "Manual Override Recorded", type: "warning" }
+                    );
+                } else {
+                    this.notification.add(
+                        `${guardName} assigned successfully.`,
+                        { type: "success" }
+                    );
+                }
+                return true;
+            }
+        } catch (e) {
+            this.notification.add("Assignment error: " + (e.message || e), { type: "danger" });
+            return false;
+        }
+    }
+
+    get filteredAllGuards() {
+        const term = (this.state.guardSearchTerm || "").toLowerCase().trim();
+        if (!term) return this.state.allGuards;
+        return this.state.allGuards.filter(
+            (g) => g.name.toLowerCase().includes(term) || (g.grade && g.grade.toLowerCase().includes(term))
+        );
+    }
+
     async assignGuard(suggestion) {
         const slot = this.state.selectedSlot;
         if (!slot) return;
-        this.state.assignError = null;
-        try {
-            const result = await this.orm.call(
-                "security.slot.suggestion",
-                "action_assign_to_slot",
-                [[suggestion.id]]
-            );
+        await this.manualAssignGuard(slot, suggestion.employee_id, suggestion.employee_name);
+    }
 
-            // Python returned a notification dict — assignment blocked by a business rule
-            if (result && result.tag === "display_notification") {
-                const params = result.params || {};
-                this.state.assignError = {
-                    guardName: suggestion.employee_name,
-                    message: params.message || "Assignment not allowed.",
-                };
-                this.notification.add(params.message || "Assignment not allowed.", {
-                    title: params.title || "Cannot Assign",
-                    type: params.type || "danger",
-                    sticky: params.sticky || false,
-                });
-                return; // do not reload on failure
-            }
-
-            // Success: reload slots from server to reflect the new assignment
-            await this.loadSlots(this.state.batchId);
-            this.state.selectedSlot = null;
-            this.state.suggestions = [];
-            this.state.suggestionsLoaded = false;
-            this.state.assignError = null;
-            this.notification.add(
-                `${suggestion.employee_name} assigned successfully.`,
-                { type: "success" }
-            );
-        } catch (e) {
-            const msg = e.message || "Assignment failed.";
-            this.state.assignError = {
-                guardName: suggestion.employee_name,
-                message: msg,
-            };
-            this.notification.add(msg, { type: "danger" });
-        }
+    async assignGuardDirect(guard) {
+        const slot = this.state.selectedSlot;
+        if (!slot) return;
+        await this.manualAssignGuard(slot, guard.id, guard.name);
     }
 
     async unassignSlot() {
@@ -1115,31 +1232,19 @@ class RosterBoard extends Component {
     async onDropSlot(slot, ev) {
         ev.preventDefault();
         this.state.dragOverSlotId = null;
-        if (slot.state === "cancelled" || slot.employee_id) return;
+        if (slot.state === "cancelled") return;
         let data;
         try {
-            data = JSON.parse(ev.dataTransfer.getData("application/json"));
+            const raw = ev.dataTransfer.getData("text/plain") || ev.dataTransfer.getData("application/json");
+            data = JSON.parse(raw);
         } catch {
             return;
         }
-        if (!data || !data.employee_id) return;
-        try {
-            await this.orm.write("security.roster.slot", [slot.id], {
-                employee_id: data.employee_id,
-                state: "assigned",
-                critical_gap: false,
-            });
-            await this.loadSlots(this.state.batchId);
-            this.notification.add(
-                `${data.employee_name} assigned to ${slot.post_name}.`,
-                { type: "success" }
-            );
-        } catch (e) {
-            this.notification.add(
-                "Drop assignment failed: " + (e.message || e),
-                { type: "danger" }
-            );
-        }
+        const guardId = data.employee_id || data.guardId;
+        const guardName = data.employee_name || data.guardName || "Guard";
+        if (!guardId) return;
+
+        await this.manualAssignGuard(slot, guardId, guardName, false, "", data.sourceSlotId);
     }
 
     // ─── Auto-assign all ────────────────────────────────────────────

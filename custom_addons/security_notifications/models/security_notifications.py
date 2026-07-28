@@ -14,11 +14,16 @@ class SecurityNotification(models.Model):
 
     title = fields.Char(required=True)
     body = fields.Text()
+    company_id = fields.Many2one("res.company", string="Company", default=lambda self: self.env.company, required=True, index=True)
+    site_id = fields.Many2one("security.client.site", string="Site", index=True)
+    partner_id = fields.Many2one("res.partner", string="Client Partner", index=True)
     notification_type = fields.Selection([
         ("document_expiry", "Document Expiry"),
+        ("cert_expiry", "Certification Expiry"),
         ("invoice_overdue", "Invoice Overdue"),
         ("awol_alert", "AWOL Alert"),
         ("roster_gap", "Roster Gap"),
+        ("override_audit", "Ineligibility Override Audit"),
         ("sms_alert", "SMS Alert"),
         ("system", "System"),
     ], default="system", required=True)
@@ -138,6 +143,41 @@ class SecurityNotification(models.Model):
                     "recipient_ids": [(6, 0, hr_users[:3].ids)],
                     "related_model": "security.employee.document",
                     "related_id": doc.id,
+                    "company_id": doc.company_id.id if hasattr(doc, 'company_id') and doc.company_id else self.env.company.id,
+                })
+
+    @api.model
+    def action_scan_certification_expiry(self):
+        """Cron: create notifications for guard certifications expiring within 30 days."""
+        from datetime import date, timedelta
+        cutoff = date.today() + timedelta(days=30)
+        cert_model = self.env.get("security.guard.certification")
+        if not cert_model:
+            return
+        expiring = cert_model.search([
+            ("expiry_date", "<=", str(cutoff)),
+            ("expiry_date", ">=", str(date.today())),
+            ("state", "in", ["valid", "expiring"]),
+        ])
+        for cert in expiring:
+            existing = self.search([
+                ("notification_type", "=", "cert_expiry"),
+                ("related_model", "=", "security.guard.certification"),
+                ("related_id", "=", cert.id),
+                ("state", "!=", "dismissed"),
+            ], limit=1)
+            if not existing:
+                guard_name = cert.employee_id.name if cert.employee_id else "Guard"
+                cert_name = cert.certification_type_id.name if hasattr(cert, 'certification_type_id') and cert.certification_type_id else "Certification"
+                days_left = (cert.expiry_date - date.today()).days
+                self.create({
+                    "title": f"Cert Expiring ({days_left}d): {cert_name} — {guard_name}",
+                    "body": f"Certification '{cert_name}' for guard {guard_name} expires on {cert.expiry_date}. Risk of slot disqualification.",
+                    "notification_type": "cert_expiry",
+                    "severity": "warning" if days_left > 14 else "critical",
+                    "related_model": "security.guard.certification",
+                    "related_id": cert.id,
+                    "company_id": cert.company_id.id if hasattr(cert, 'company_id') and cert.company_id else self.env.company.id,
                 })
 
     @api.model

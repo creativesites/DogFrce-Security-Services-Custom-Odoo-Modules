@@ -10,215 +10,397 @@
         <field name="binding_type">report</field>
     </record>
 
+    <!-- Sub-templates for the designer -->
+    <template id="report_payslip_header">
+        <div class="row border-bottom pb-3 mb-4 align-items-center">
+            <div class="col-6">
+                <h4 class="fw-bold mb-1 pcc-primary" style="letter-spacing: 0.5px;"><t t-esc="res_company.name"/></h4>
+                <p class="text-muted small mb-0">Professional Guarding &amp; Operations</p>
+                <p class="text-muted small mb-0">Windhoek, Namibia</p>
+            </div>
+            <div class="col-6 text-end">
+                <h2 class="fw-bold mb-1 pcc-secondary" style="letter-spacing: 1px; text-transform: uppercase;"><t t-esc="tmpl_settings.get('label_payslip')"/></h2>
+                <span class="badge pcc-bg-primary text-white text-uppercase p-2" style="font-size: 11px;"><t t-esc="doc.state"/></span>
+            </div>
+        </div>
+    </template>
+
+    <template id="report_payslip_employee_info">
+        <div class="card border-0 mb-4 bg-light p-3 info-card">
+            <div class="row">
+                <div class="col-6">
+                    <h5 class="border-bottom pb-1 mb-2 fw-bold pcc-secondary">Employee Details</h5>
+                    <table class="table table-borderless table-sm mb-0 small">
+                        <tr>
+                            <td style="width: 35%;" class="text-muted py-1">Guard Name:</td>
+                            <td class="fw-bold py-1"><span t-field="doc.employee_id.name"/></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted py-1">Security Grade:</td>
+                            <td class="py-1">
+                                <span t-field="doc.employee_id.security_grade_id.name"/>
+                                <span t-if="not doc.employee_id.security_grade_id" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted py-1">SSC Number:</td>
+                            <td class="py-1">
+                                <span t-field="doc.employee_id.security_ssc_number"/>
+                                <span t-if="not doc.employee_id.security_ssc_number" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted py-1">Income Tax (PAYE) No:</td>
+                            <td class="py-1">
+                                <span t-field="doc.employee_id.security_tax_number"/>
+                                <span t-if="not doc.employee_id.security_tax_number" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-6">
+                    <h5 class="border-bottom pb-1 mb-2 fw-bold pcc-secondary">Payment &amp; Period Details</h5>
+                    <table class="table table-borderless table-sm mb-0 small">
+                        <tr>
+                            <td style="width: 35%;" class="text-muted py-1">Pay Period:</td>
+                            <td class="fw-bold py-1"><span t-field="doc.period_id.name"/></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted py-1">Bank Name:</td>
+                            <td class="py-1">
+                                <span t-field="doc.employee_id.security_bank_name"/>
+                                <span t-if="not doc.employee_id.security_bank_name" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted py-1">Bank Branch Code:</td>
+                            <td class="py-1">
+                                <span t-field="doc.employee_id.security_bank_branch"/>
+                                <span t-if="not doc.employee_id.security_bank_branch" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted py-1">Account Number:</td>
+                            <td class="py-1">
+                                <span t-field="doc.employee_id.security_bank_account_number"/>
+                                <span t-if="not doc.employee_id.security_bank_account_number" class="text-muted">-</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="report_payslip_attendance">
+        <t t-if="tmpl_settings.get('show_attendance_metrics')">
+            <h5 class="text-dark fw-bold mb-2 pcc-secondary"><i class="fa fa-clock-o me-1"/> Time and Attendance Summary</h5>
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0 small text-center">
+                    <thead t-attf-style="background-color: {{ tmpl_settings.get('header_bg_color') }} !important; color: {{ tmpl_settings.get('header_text_color') }} !important;">
+                        <tr>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Days</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Normal</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Saturday</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Sunday</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Public Hol.</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Night</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Overtime</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Unpaid</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">AWOL</th>
+                            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Rate</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-white">
+                            <td class="py-2 fw-bold"><span t-field="doc.worked_days" t-options='{"widget": "float", "precision": 1}'/></td>
+                            <td class="py-2"><span t-field="doc.normal_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2"><span t-field="doc.saturday_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2"><span t-field="doc.sunday_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2"><span t-field="doc.public_holiday_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2"><span t-field="doc.night_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2 fw-bold text-success"><span t-field="doc.overtime_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2 text-danger"><span t-field="doc.unpaid_hours" t-options='{"widget": "float", "precision": 2}'/></td>
+                            <td class="py-2 text-danger fw-bold"><span t-field="doc.awol_occurrences" t-options='{"widget": "float", "precision": 0}'/></td>
+                            <td class="py-2 fw-bold text-dark"><span t-field="doc.hourly_rate" t-options='{"widget": "float", "precision": 2}'/></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_payslip_earnings">
+        <div class="border rounded p-3 bg-white mb-4 block-card" style="min-height: 220px;">
+            <h6 class="fw-bold pcc-secondary mb-2"><i class="fa fa-plus-circle text-success me-1"/> Earnings</h6>
+            <table class="table table-sm table-borderless small w-100 earnings-table">
+                <thead t-attf-style="border-bottom: 2px solid {{ tmpl_settings.get('primary_color') }} !important;">
+                    <tr>
+                        <th class="pb-2">Description</th>
+                        <th class="text-end pb-2">Qty</th>
+                        <th class="text-end pb-2">Rate</th>
+                        <th class="text-end pb-2">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="doc.earning_line_ids" t-as="line">
+                        <td class="py-2"><span t-field="line.name"/></td>
+                        <td class="text-end py-2"><span t-field="line.quantity" t-options='{"widget": "float", "precision": 2}'/></td>
+                        <td class="text-end py-2"><span t-field="line.rate" t-options='{"widget": "float", "precision": 2}'/></td>
+                        <td class="text-end py-2 fw-bold"><span t-field="line.amount" t-options='{"widget": "float", "precision": 2}'/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </template>
+
+    <template id="report_payslip_deductions">
+        <div class="border rounded p-3 bg-white mb-4 block-card" style="min-height: 220px;">
+            <h6 class="fw-bold pcc-secondary mb-2"><i class="fa fa-minus-circle text-danger me-1"/> Deductions</h6>
+            <table class="table table-sm table-borderless small w-100 deductions-table">
+                <thead t-attf-style="border-bottom: 2px solid {{ tmpl_settings.get('secondary_color') }} !important;">
+                    <tr>
+                        <th class="pb-2">Description</th>
+                        <th class="text-end pb-2">Qty</th>
+                        <th class="text-end pb-2">Rate</th>
+                        <th class="text-end pb-2">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr t-foreach="doc.deduction_line_ids" t-as="line">
+                        <td class="py-2"><span t-field="line.name"/></td>
+                        <td class="text-end py-2"><span t-field="line.quantity" t-options='{"widget": "float", "precision": 2}'/></td>
+                        <td class="text-end py-2"><span t-field="line.rate" t-options='{"widget": "float", "precision": 2}'/></td>
+                        <td class="text-end py-2 fw-bold" style="color: #b80d0d;"><span t-field="line.amount" t-options='{"widget": "float", "precision": 2}'/></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </template>
+
+    <template id="report_payslip_ytd_totals">
+        <t t-if="tmpl_settings.get('show_ytd')">
+            <t t-set="ytd" t-value="doc.get_ytd_totals()"/>
+            <div class="mb-4">
+                <h5 class="text-dark fw-bold mb-2 pcc-secondary"><i class="fa fa-bar-chart me-1"/> Year-To-Date (YTD) Totals</h5>
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="small text-muted text-uppercase">YTD Earnings</div>
+                            <div class="fw-bold text-success fs-6"><t t-esc="ytd.get('earnings', 0.0)" t-options='{"widget": "float", "precision": 2}'/></div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded bg-light">
+                            <div class="small text-muted text-uppercase">YTD Deductions</div>
+                            <div class="fw-bold text-danger fs-6"><t t-esc="ytd.get('deductions', 0.0)" t-options='{"widget": "float", "precision": 2}'/></div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded pcc-bg-primary text-white">
+                            <div class="small text-white-50 text-uppercase">YTD Net Take-Home</div>
+                            <div class="fw-bold fs-6"><t t-esc="ytd.get('net_pay', 0.0)" t-options='{"widget": "float", "precision": 2}'/></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_payslip_leave_balances">
+        <t t-if="tmpl_settings.get('show_leave_balances')">
+            <t t-set="balances" t-value="doc.get_leave_balances()"/>
+            <div t-if="balances" class="mb-4">
+                <h5 class="text-dark fw-bold mb-2 pcc-secondary"><i class="fa fa-calendar-check-o me-1"/> Leave Balances</h5>
+                <div class="row g-2">
+                    <div t-foreach="balances" t-as="bal" class="col-4">
+                        <div class="p-2 border rounded bg-white text-center shadow-sm">
+                            <div class="small text-dark fw-bold text-truncate"><t t-esc="bal.get('type_name')"/></div>
+                            <div class="fs-5 fw-bold pcc-primary mt-1"><t t-esc="bal.get('balance_days', 0.0)" t-options='{"widget": "float", "precision": 1}'/> <span class="small fw-normal text-muted" style="font-size: 10px;">Days</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_payslip_totals">
+        <div class="row align-items-center mb-4">
+            <div class="col-6">
+                <div class="card border-0 bg-light p-3 small totals-card">
+                    <div class="row py-1">
+                        <div class="col-7 text-muted">Gross Earnings:</div>
+                        <div class="col-5 text-end fw-bold text-success"><span t-field="doc.total_earnings" t-options='{"widget": "float", "precision": 2}'/></div>
+                    </div>
+                    <div class="row py-1 border-bottom">
+                        <div class="col-7 text-muted">Total Deductions:</div>
+                        <div class="col-5 text-end fw-bold text-danger"><span t-field="doc.total_deductions" t-options='{"widget": "float", "precision": 2}'/></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 text-end">
+                <div class="p-3 border rounded shadow-sm d-inline-block text-start pcc-bg-primary text-white net-pay-box" style="min-width: 250px;">
+                    <div class="small text-uppercase opacity-75">Net Take-Home Pay</div>
+                    <h3 class="fw-bold mb-0 mt-1" style="font-size: 24px;"><span t-field="doc.net_pay" t-options='{"widget": "float", "precision": 2}'/></h3>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Company Announcement Banner -->
+        <t t-if="tmpl_settings.get('announcement_text')">
+            <div class="p-3 border rounded mb-4 text-center text-muted shadow-sm announcement-banner" style="border-left: 4px solid #f59e0b !important; background: #fffbeb;">
+                <i class="fa fa-bullhorn text-warning me-2"/> <t t-esc="tmpl_settings.get('announcement_text')"/>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_payslip_footer">
+        <div t-if="tmpl_settings.get('show_admin_signature') or tmpl_settings.get('show_guard_signature')" class="row mt-5 pt-4 border-top text-center small text-muted signature-block">
+            <div t-if="tmpl_settings.get('show_admin_signature')" class="col-4">
+                <p class="mb-4">Prepared By (Admin)</p>
+                <div class="border-top pt-2">Authorized Signature</div>
+            </div>
+            <div t-if="tmpl_settings.get('show_guard_signature')" class="col-4 offset-4">
+                <p class="mb-4">Received By (Employee)</p>
+                <div class="border-top pt-2">Guard Signature</div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Main dynamic template -->
     <template id="report_security_payslip">
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.external_layout">
-                    <div class="page" style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; font-size: 13px; line-height: 1.4;">
+                    <!-- Default setup for live preview vs standard rendering -->
+                    <t t-set="tmpl_data" t-value="template_data or {}"/>
+                    
+                    <t t-set="tmpl_id" t-value="doc.period_id and doc.period_id.rule_set_id and doc.period_id.rule_set_id.template_id or False"/>
+                    <t t-set="tmpl_settings" t-value="{
+                        'font_family': tmpl_data.get('font_family') or (tmpl_id and tmpl_id.font_family) or 'Inter',
+                        'primary_color': tmpl_data.get('primary_color') or (tmpl_id and tmpl_id.primary_color) or '#10b981',
+                        'secondary_color': tmpl_data.get('secondary_color') or (tmpl_id and tmpl_id.secondary_color) or '#0f172a',
+                        'base_layout': tmpl_data.get('base_layout') or (tmpl_id and tmpl_id.base_layout) or 'modern',
+                        'show_attendance_metrics': tmpl_data.get('show_attendance_metrics', True) if 'show_attendance_metrics' in tmpl_data else (tmpl_id.show_attendance_metrics if tmpl_id else True),
+                        'show_leave_balances': tmpl_data.get('show_leave_balances', True) if 'show_leave_balances' in tmpl_data else (tmpl_id.show_leave_balances if tmpl_id else True),
+                        'show_ytd': tmpl_data.get('show_ytd', True) if 'show_ytd' in tmpl_data else (tmpl_id.show_ytd if tmpl_id else True),
+                        'show_admin_signature': tmpl_data.get('show_admin_signature', True) if 'show_admin_signature' in tmpl_data else (tmpl_id.show_admin_signature if tmpl_id else True),
+                        'show_guard_signature': tmpl_data.get('show_guard_signature', True) if 'show_guard_signature' in tmpl_data else (tmpl_id.show_guard_signature if tmpl_id else True),
+                        'announcement_text': tmpl_data.get('announcement_text') or (tmpl_id and tmpl_id.announcement_text) or '',
+                        'header_bg_color': tmpl_data.get('header_bg_color') or (tmpl_id and tmpl_id.header_bg_color) or '#1e293b',
+                        'header_text_color': tmpl_data.get('header_text_color') or (tmpl_id and tmpl_id.header_text_color) or '#ffffff',
+                        'label_payslip': tmpl_data.get('label_payslip') or (tmpl_id and tmpl_id.label_payslip) or 'Payslip',
+                        'blocks': tmpl_data.get('blocks') or (tmpl_id and tmpl_id.block_order and json.loads(tmpl_id.block_order)) or ['header', 'employee_info', 'attendance', 'earnings_deductions_split', 'totals', 'footer']
+                    }"/>
+                    
+                    <style>
+                        .pcc-payslip-page {
+                            font-family: '<t t-esc="tmpl_settings.get('font_family')"/>', Helvetica, Arial, sans-serif;
+                            color: #334155;
+                            font-size: 13px;
+                            line-height: 1.45;
+                        }
+                        .pcc-primary { color: <t t-esc="tmpl_settings.get('primary_color')"/> !important; }
+                        .pcc-bg-primary { background-color: <t t-esc="tmpl_settings.get('primary_color')"/> !important; }
+                        .pcc-secondary { color: <t t-esc="tmpl_settings.get('secondary_color')"/> !important; }
+                        .pcc-bg-secondary { background-color: <t t-esc="tmpl_settings.get('secondary_color')"/> !important; }
                         
-                        <!-- Header Title -->
-                        <div class="row border-bottom pb-3 mb-4">
-                            <div class="col-6">
-                                <!-- <h3 class="text-primary fw-bold mb-1" style="color: #1e3d59;">DOGFORCE SECURITY SERVICES</h3> -->
-                                <p class="text-muted small mb-0">Professional Guarding &amp; Tactical Operations</p>
-                                <p class="text-muted small mb-0">Windhoek, Namibia</p>
-                            </div>
-                            <div class="col-6 text-end">
-                                <h2 class="fw-bold mb-1" style="color: #1e3d59; letter-spacing: 1px;">Payslip</h2>
-                                <span class="badge bg-success text-uppercase p-2" style="font-size: 11px;"><t t-esc="doc.state"/></span>
-                            </div>
-                        </div>
+                        /* Interactive designer styling */
+                        .preview-block-wrapper {
+                            transition: all 0.2s ease;
+                            border: 2px solid transparent;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        }
+                        .preview-block-wrapper:hover {
+                            border-color: rgba(16, 185, 129, 0.4) !important;
+                            background: rgba(16, 185, 129, 0.01);
+                        }
+                        
+                        /* Base layout variants */
+                        .layout-corporate .table {
+                            border: 1px solid #94a3b8 !important;
+                        }
+                        .layout-corporate th {
+                            border: 1px solid #cbd5e1 !important;
+                            background-color: <t t-esc="tmpl_settings.get('secondary_color')"/> !important;
+                            color: white !important;
+                        }
+                        .layout-corporate .card, .layout-corporate .border {
+                            border: 1px solid #cbd5e1 !important;
+                            border-radius: 4px !important;
+                        }
+                        
+                        .layout-minimalist .card {
+                            background: transparent !important;
+                            border: none !important;
+                            padding: 0 !important;
+                        }
+                        .layout-minimalist .border {
+                            border: none !important;
+                            border-bottom: 1px solid #e2e8f0 !important;
+                            border-radius: 0 !important;
+                        }
+                        .layout-minimalist .table, .layout-minimalist td, .layout-minimalist th {
+                            border: none !important;
+                            border-bottom: 1px solid #e2e8f0 !important;
+                        }
+                        .layout-minimalist th {
+                            background: transparent !important;
+                            color: #0f172a !important;
+                            font-weight: bold !important;
+                        }
+                        
+                        .layout-bold th {
+                            background-color: <t t-esc="tmpl_settings.get('primary_color')"/> !important;
+                            color: white !important;
+                        }
+                        .layout-bold .info-card {
+                            border-left: 5px solid <t t-esc="tmpl_settings.get('primary_color')"/> !important;
+                            border-radius: 4px;
+                            background: #f8fafc !important;
+                        }
+                        .layout-bold .block-card {
+                            border: 2px solid <t t-esc="tmpl_settings.get('primary_color')"/> !important;
+                            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+                        }
+                        .layout-bold .net-pay-box {
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+                        }
+                    </style>
 
-                        <!-- Employee & Period Info Grid -->
-                        <div class="card border-0 mb-4 bg-light p-3">
-                            <div class="row">
-                                <div class="col-6">
-                                    <h5 class="text-secondary border-bottom pb-1 mb-2 fw-bold" style="color: #ff6e40;">Employee Details</h5>
-                                    <table class="table table-borderless table-sm mb-0 small">
-                                        <tr>
-                                            <td style="width: 35%;" class="text-muted py-1">Guard Name:</td>
-                                            <td class="fw-bold py-1"><span t-field="doc.employee_id.name"/></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted py-1">Security Grade:</td>
-                                            <td class="py-1">
-                                                <span t-field="doc.employee_id.security_grade_id.name"/>
-                                                <span t-if="not doc.employee_id.security_grade_id" class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted py-1">SSC Number:</td>
-                                            <td class="py-1">
-                                                <span t-field="doc.employee_id.security_ssc_number"/>
-                                                <span t-if="not doc.employee_id.security_ssc_number" class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted py-1">Income Tax (PAYE) No:</td>
-                                            <td class="py-1">
-                                                <span t-field="doc.employee_id.security_tax_number"/>
-                                                <span t-if="not doc.employee_id.security_tax_number" class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                                <div class="col-6">
-                                    <h5 class="text-secondary border-bottom pb-1 mb-2 fw-bold" style="color: #ff6e40;">Payment &amp; Period Details</h5>
-                                    <table class="table table-borderless table-sm mb-0 small">
-                                        <tr>
-                                            <td style="width: 35%;" class="text-muted py-1">Pay Period:</td>
-                                            <td class="fw-bold py-1"><span t-field="doc.period_id.name"/></td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted py-1">Bank Name:</td>
-                                            <td class="py-1">
-                                                <span t-field="doc.employee_id.security_bank_name"/>
-                                                <span t-if="not doc.employee_id.security_bank_name" class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted py-1">Bank Branch Code:</td>
-                                            <td class="py-1">
-                                                <span t-field="doc.employee_id.security_bank_branch"/>
-                                                <span t-if="not doc.employee_id.security_bank_branch" class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td class="text-muted py-1">Account Number:</td>
-                                            <td class="py-1">
-                                                <span t-field="doc.employee_id.security_bank_account_number"/>
-                                                <span t-if="not doc.employee_id.security_bank_account_number" class="text-muted">-</span>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Worked Time summary bar -->
-                        <h5 class="text-dark fw-bold mb-2">Time and Attendance Summary</h5>
-                        <table class="table table-bordered table-sm mb-4 text-center small">
-                            <thead class="bg-secondary text-white">
-                                <tr>
-                                    <th class="py-2">Days</th>
-                                    <th class="py-2">Normal</th>
-                                    <th class="py-2">Saturday</th>
-                                    <th class="py-2">Sunday</th>
-                                    <th class="py-2">Public Hol.</th>
-                                    <th class="py-2">Night</th>
-                                    <th class="py-2">Overtime</th>
-                                    <th class="py-2">Unpaid</th>
-                                    <th class="py-2">AWOL</th>
-                                    <th class="py-2">Rate (NAD)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="bg-white">
-                                    <td class="py-2 fw-bold"><span t-field="doc.worked_days"/></td>
-                                    <td class="py-2"><span t-field="doc.normal_hours"/></td>
-                                    <td class="py-2"><span t-field="doc.saturday_hours"/></td>
-                                    <td class="py-2"><span t-field="doc.sunday_hours"/></td>
-                                    <td class="py-2"><span t-field="doc.public_holiday_hours"/></td>
-                                    <td class="py-2"><span t-field="doc.night_hours"/></td>
-                                    <td class="py-2 fw-bold text-success"><span t-field="doc.overtime_hours"/></td>
-                                    <td class="py-2 text-danger"><span t-field="doc.unpaid_hours"/></td>
-                                    <td class="py-2 text-danger fw-bold"><span t-field="doc.awol_occurrences"/></td>
-                                    <td class="py-2 fw-bold text-dark"><span t-field="doc.hourly_rate"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-                        <!-- Earnings vs Deductions Side by Side Ledger -->
-                        <div class="row mb-4">
-                            <!-- Earnings Column -->
-                            <div class="col-6 pr-2">
-                                <div class="border rounded p-3 bg-white" style="min-height: 250px;">
-                                    <h5 class="border-bottom pb-2 mb-3 fw-bold text-success">
-                                        <i class="fa fa-plus-circle me-1"/> Earnings (NAD)
-                                    </h5>
-                                    <table class="table table-sm table-borderless mb-0 small">
-                                        <thead>
-                                            <tr class="border-bottom">
-                                                <th class="pb-2">Description</th>
-                                                <th class="text-end pb-2">Qty</th>
-                                                <th class="text-end pb-2">Rate</th>
-                                                <th class="text-end pb-2">Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr t-foreach="doc.earning_line_ids" t-as="line">
-                                                <td class="py-2"><span t-field="line.name"/></td>
-                                                <td class="text-end py-2"><span t-field="line.quantity"/></td>
-                                                <td class="text-end py-2"><span t-field="line.rate"/></td>
-                                                <td class="text-end py-2 fw-bold"><span t-field="line.amount"/></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            <!-- Deductions Column -->
-                            <div class="col-6 pl-2">
-                                <div class="border rounded p-3 bg-white" style="min-height: 250px;">
-                                    <h5 class="border-bottom pb-2 mb-3 fw-bold text-danger">
-                                        <i class="fa fa-minus-circle me-1"/> Deductions (NAD)
-                                    </h5>
-                                    <table class="table table-sm table-borderless mb-0 small">
-                                        <thead>
-                                            <tr class="border-bottom">
-                                                <th class="pb-2">Description</th>
-                                                <th class="text-end pb-2">Qty</th>
-                                                <th class="text-end pb-2">Rate</th>
-                                                <th class="text-end pb-2">Amount</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr t-foreach="doc.deduction_line_ids" t-as="line">
-                                                <td class="py-2"><span t-field="line.name"/></td>
-                                                <td class="text-end py-2"><span t-field="line.quantity"/></td>
-                                                <td class="text-end py-2"><span t-field="line.rate"/></td>
-                                                <td class="text-end py-2 fw-bold" style="color: #b80d0d;"><span t-field="line.amount"/></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Financial Summary & Net Pay -->
-                        <div class="row align-items-center mb-5">
-                            <div class="col-6">
-                                <div class="card border-0 bg-light p-3 small">
-                                    <div class="row py-1">
-                                        <div class="col-7 text-muted">Gross Earnings:</div>
-                                        <div class="col-5 text-end fw-bold text-success"><span t-field="doc.total_earnings"/> NAD</div>
+                    <div t-attf-class="page pcc-payslip-page layout-{{ tmpl_settings.get('base_layout') }}">
+                        <t t-foreach="tmpl_settings.get('blocks')" t-as="block">
+                            <div t-att-data-block-id="block" class="preview-block-wrapper">
+                                <!-- We have to hardcode t-call unfortunately due to QWeb limitations, or use a series of t-if -->
+                                <t t-if="block == 'header'"><t t-call="security_payroll_core.report_payslip_header"/></t>
+                                <t t-if="block == 'employee_info'"><t t-call="security_payroll_core.report_payslip_employee_info"/></t>
+                                <t t-if="block == 'attendance'"><t t-call="security_payroll_core.report_payslip_attendance"/></t>
+                                <t t-if="block == 'leave_balances'"><t t-call="security_payroll_core.report_payslip_leave_balances"/></t>
+                                <t t-if="block == 'ytd_totals'"><t t-call="security_payroll_core.report_payslip_ytd_totals"/></t>
+                                
+                                <t t-if="block == 'earnings'">
+                                    <div class="row">
+                                        <div class="col-12"><t t-call="security_payroll_core.report_payslip_earnings"/></div>
                                     </div>
-                                    <div class="row py-1 border-bottom">
-                                        <div class="col-7 text-muted">Total Deductions:</div>
-                                        <div class="col-5 text-end fw-bold text-danger"><span t-field="doc.total_deductions"/> NAD</div>
+                                </t>
+                                <t t-if="block == 'deductions'">
+                                    <div class="row">
+                                        <div class="col-12"><t t-call="security_payroll_core.report_payslip_deductions"/></div>
                                     </div>
-                                </div>
-                            </div>
-                            <div class="col-6 text-end">
-                                <div class="p-3 border rounded shadow-sm d-inline-block bg-success text-white text-start" style="min-width: 250px; background-color: #2b7a78 !important;">
-                                    <div class="small text-uppercase opacity-75">Net Take-Home Pay</div>
-                                    <h3 class="fw-bold mb-0 mt-1" style="font-size: 24px;"><span t-field="doc.net_pay"/> NAD</h3>
-                                </div>
-                            </div>
-                        </div>
+                                </t>
 
-                        <!-- Sign-off Block -->
-                        <div class="row mt-5 pt-4 border-top text-center small text-muted">
-                            <div class="col-4">
-                                <p class="mb-4">Prepared By (DogForce Admin)</p>
-                                <div class="border-top pt-2">Authorized Signature</div>
+                                <t t-if="block == 'earnings_deductions_split'">
+                                    <div class="row">
+                                        <div class="col-6 pr-2"><t t-call="security_payroll_core.report_payslip_earnings"/></div>
+                                        <div class="col-6 pl-2"><t t-call="security_payroll_core.report_payslip_deductions"/></div>
+                                    </div>
+                                </t>
+                                
+                                <t t-if="block == 'totals'"><t t-call="security_payroll_core.report_payslip_totals"/></t>
+                                <t t-if="block == 'footer'"><t t-call="security_payroll_core.report_payslip_footer"/></t>
                             </div>
-                            <div class="col-4 offset-4">
-                                <p class="mb-4">Received By (Employee)</p>
-                                <div class="border-top pt-2">Guard Signature</div>
-                            </div>
-                        </div>
-
+                        </t>
                     </div>
                 </t>
             </t>

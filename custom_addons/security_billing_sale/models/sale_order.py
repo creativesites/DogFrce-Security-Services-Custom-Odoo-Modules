@@ -5,6 +5,13 @@ from odoo.exceptions import ValidationError
 class SaleOrder(models.Model):
     _inherit = "sale.order"
 
+    template_id = fields.Many2one(
+        "security.document.template",
+        string="Document Template",
+        domain="[('document_type', '=', 'quotation')]",
+        help="Visual template for this quotation.",
+    )
+
     billing_plan_ids = fields.One2many(
         "security.billing.plan",
         "sale_order_id",

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Authorized Whitelist — List View -->
+    <record id="view_security_whatsapp_whitelist_tree" model="ir.ui.view">
+        <field name="name">security.whatsapp.whitelist.list</field>
+        <field name="model">security.whatsapp.whitelist</field>
+        <field name="arch" type="xml">
+            <list string="Authorized Whitelist &amp; Field Contacts" editable="bottom">
+                <field name="name"/>
+                <field name="phone_number"/>
+                <field name="role" widget="badge"
+                       decoration-success="role == 'executive'"
+                       decoration-info="role == 'manager'"
+                       decoration-primary="role == 'supervisor'"
+                       decoration-muted="role == 'guard'"/>
+                <field name="employee_id"/>
+                <field name="partner_id"/>
+                <field name="can_submit_attendance" widget="boolean_toggle"/>
+                <field name="can_flag_awol" widget="boolean_toggle"/>
+                <field name="can_query_kpis" widget="boolean_toggle"/>
+                <field name="can_report_incidents" widget="boolean_toggle"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Authorized Whitelist — Form View -->
+    <record id="view_security_whatsapp_whitelist_form" model="ir.ui.view">
+        <field name="name">security.whatsapp.whitelist.form</field>
+        <field name="model">security.whatsapp.whitelist</field>
+        <field name="arch" type="xml">
+            <form string="Authorized Field Contact">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Contact Name / Label"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Identity &amp; Contact">
+                            <field name="phone_number" placeholder="+260971234567"/>
+                            <field name="employee_id" options="{'no_create': True}"/>
+                            <field name="partner_id" options="{'no_create': True}"/>
+                            <field name="role"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Command Permissions">
+                            <field name="can_submit_attendance"/>
+                            <field name="can_flag_awol"/>
+                            <field name="can_query_kpis"/>
+                            <field name="can_report_incidents"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Authorized Whitelist — Search View -->
+    <record id="view_security_whatsapp_whitelist_search" model="ir.ui.view">
+        <field name="name">security.whatsapp.whitelist.search</field>
+        <field name="model">security.whatsapp.whitelist</field>
+        <field name="arch" type="xml">
+            <search string="Search Authorized Senders">
+                <field name="name"/>
+                <field name="phone_number"/>
+                <field name="employee_id"/>
+                <field name="partner_id"/>
+                <filter string="Supervisors" name="filter_supervisors" domain="[('role', '=', 'supervisor')]"/>
+                <filter string="Managers" name="filter_managers" domain="[('role', '=', 'manager')]"/>
+                <filter string="Executives" name="filter_executives" domain="[('role', '=', 'executive')]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Group By Role" name="group_role" context="{'group_by': 'role'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Authorized Whitelist — Action -->
+    <record id="action_security_whatsapp_whitelist" model="ir.actions.act_window">
+        <field name="name">Authorized Whitelist &amp; Field Contacts</field>
+        <field name="res_model">security.whatsapp.whitelist</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_whatsapp_whitelist_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Whitelisted Contacts Added Yet!
+            </p>
+            <p>
+                Add supervisors, field officers, and managers here to grant them permission to execute attendance and operational commands via WhatsApp.
+            </p>
+        </field>
+    </record>
+
+</odoo>

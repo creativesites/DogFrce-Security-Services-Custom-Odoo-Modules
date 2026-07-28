@@ -58,8 +58,8 @@
 
 /* Sidebar */
 .o_pcc_sidebar {
-    background: linear-gradient(160deg, #0f172a 0%, #1e293b 60%, #0f291e 100%);
-    color: #ffffff;
+    background: #1a2332 !important;
+    color: #dce4f0 !important;
     box-shadow: 4px 0 20px rgba(0,0,0,0.15);
     z-index: 10;
     height: 100%;
@@ -113,10 +113,10 @@
 
 /* Header */
 .o_pcc_header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f291e 100%);
+    background: linear-gradient(135deg, #1a2332 0%, #263347 60%, #111827 100%) !important;
     border-bottom: 3px solid #10b981;
     padding: 18px 32px !important;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
+    box-shadow: 0 10px 25px -5px rgba(26, 35, 50, 0.2);
     flex-shrink: 0;
 }
 

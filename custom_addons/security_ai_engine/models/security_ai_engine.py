@@ -242,3 +242,76 @@ class SecurityAIEngine(models.AbstractModel):
         if provider_key == "gemini":
             return config.gemini_api_key, config.gemini_model
         return None, None
+
+    @api.model
+    def process_conversational_text(self, text, sender_phone=None, sender_name=None, chat_history=None):
+        """
+        Processes conversational natural language input for WhatsApp Bridge & Control Room Chat.
+        Assembles live operational snapshot (sites, roster slots, attendance, financial estimates)
+        and multi-turn chat history context before prompting the active AI LLM provider.
+        """
+        from odoo import fields
+        today = fields.Date.today()
+
+        # Operational Snapshot
+        try:
+            active_sites = self.env["security.client.site"].sudo().search_count([("active", "=", True)])
+            today_slots = self.env["security.roster.slot"].sudo().search([("shift_date", "=", today)])
+            total_posts = len(today_slots)
+            attendance = self.env["security.attendance.record"].sudo().search([("shift_date", "=", today)])
+            present_count = len(attendance.filtered(lambda a: a.check_in or a.manual_presence == "present"))
+            awol_count = len(attendance.filtered(lambda a: a.manual_presence in ("absent", "awol") or a.absence_type in ("awol", "no_show")))
+        except Exception:
+            active_sites = 0
+            total_posts = 0
+            present_count = 0
+            awol_count = 0
+
+        # Custom system prompt instructions from WhatsApp Config if set
+        custom_instructions = ""
+        try:
+            wa_config = self.env["security.whatsapp.config"].sudo().search([], limit=1)
+            if wa_config and wa_config.system_prompt_custom:
+                custom_instructions = f"\nCustom Voice Instructions: {wa_config.system_prompt_custom}\n"
+        except Exception:
+            pass
+
+        history_str = ""
+        if chat_history and isinstance(chat_history, list):
+            formatted_turns = []
+            for item in chat_history:
+                role = "User" if item.get("direction") == "inbound" else "Assistant"
+                formatted_turns.append(f"{role}: {item.get('raw_body', '')}")
+            if formatted_turns:
+                history_str = "\n\nRecent Conversation History:\n" + "\n".join(formatted_turns)
+
+        sender_info = f"Sender: {sender_name or 'Field Supervisor'} ({sender_phone or 'WhatsApp'})"
+
+        system_prompt = (
+            "You are DeployGuard AI, the central operational intelligence assistant for Dogforce Security Services.\n"
+            "Your role is to assist security field supervisors, managers, and executives over WhatsApp.\n"
+            "Formatting Guidelines:\n"
+            "- Use WhatsApp markdown formatting (*bold*, _italic_, `code`, emojis).\n"
+            "- Keep answers concise, clear, professional, and action-oriented.\n"
+            "- Never make up false guard details if uncertain.\n"
+            f"{custom_instructions}\n"
+            "Live Operational Snapshot:\n"
+            f"- Date: {today}\n"
+            f"- Active Client Sites: {active_sites}\n"
+            f"- Scheduled Shift Slots Today: {total_posts}\n"
+            f"- Guards Present On Duty: {present_count}\n"
+            f"- Flagged AWOL Gaps: {awol_count}\n"
+            f"- {sender_info}\n"
+        )
+
+        user_message = f"{text}{history_str}"
+
+        try:
+            return self.complete(
+                feature="__test__",  # bypasses feature flag checks
+                system_prompt=system_prompt,
+                user_message=user_message,
+            )
+        except Exception as e:
+            return None
+

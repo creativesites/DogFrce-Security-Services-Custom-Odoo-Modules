@@ -14,29 +14,49 @@ class SecurityWhatsAppBridge(models.AbstractModel):
     def process_incoming_message(self, body, sender):
         """
         Main entry point for incoming WhatsApp messages.
-        1. Checks whitelisted phone authorization.
-        2. Classifies NLP intent (operational vs unrelated chitchat).
-        3. Executes deterministic regex or AI fallback.
-        4. Logs full conversation history for audit trail.
+        1. Resolves sender identity (employee / contact lookup).
+        2. Checks whitelisted phone authorization.
+        3. Retrieves multi-turn chat history context.
+        4. Classifies NLP intent (operational, guard query, incident, vs AI fallback).
+        5. Executes deterministic business logic or AI engine fallback.
+        6. Logs full conversation history for audit trail.
         """
         clean_text = body.strip()
-
         _logger.info("WhatsApp Bridge | Processing message from [%s]: '%s'", sender, clean_text)
 
-        # ── 1. AUTHORIZATION CHECK ──────────────────────────────────────────
+        # ── 1. SENDER IDENTITY RESOLUTION ─────────────────────────────────
+        sender_name, emp_id, partner_id = self._resolve_sender_identity(sender)
+
+        # ── 2. AUTHORIZATION CHECK ──────────────────────────────────────────
         is_auth, config = self._check_sender_authorized(sender)
         if not is_auth:
             _logger.warning("WhatsApp Bridge | Unauthorized access attempt from [%s]", sender)
-            self._log_message(sender, clean_text, direction="inbound", intent="unauthorized", status="unauthorized", is_auth=False)
+            self._log_message(
+                sender, clean_text, direction="inbound", intent="unauthorized",
+                status="unauthorized", is_auth=False, sender_name=sender_name,
+                employee_id=emp_id, partner_id=partner_id
+            )
             reply = "⚠️ *DeployGuard AI:* Access Denied. Your phone number is not authorized to execute operational commands."
-            self._log_message(sender, reply, direction="outbound", intent="unauthorized", status="unauthorized", is_auth=False)
+            self._log_message(
+                sender, reply, direction="outbound", intent="unauthorized",
+                status="unauthorized", is_auth=False, sender_name=sender_name,
+                employee_id=emp_id, partner_id=partner_id
+            )
             return reply
 
-        # ── 2. NLP INTENT CLASSIFICATION ────────────────────────────────────
-        intent = self._classify_nlp_intent(clean_text)
+        # ── 3. CHAT HISTORY CONTEXT LOOKUP ──────────────────────────────────
+        max_history = config.max_history_context if (config and config.max_history_context) else 5
+        chat_history = self._get_recent_chat_history(sender, limit=max_history)
+
+        # ── 4. NLP INTENT CLASSIFICATION ────────────────────────────────────
+        intent = self._classify_nlp_intent(clean_text, history=chat_history)
 
         # Log inbound message to audit trail
-        self._log_message(sender, clean_text, direction="inbound", intent=intent, status="success", is_auth=True)
+        self._log_message(
+            sender, clean_text, direction="inbound", intent=intent,
+            status="success", is_auth=True, sender_name=sender_name,
+            employee_id=emp_id, partner_id=partner_id
+        )
 
         reply_msg = None
         execution_status = "success"
@@ -49,6 +69,10 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             reply_msg = self.get_roster_status_summary_formatted()
         elif intent in ("help", "greeting_help"):
             reply_msg = self.get_help_menu()
+        elif intent == "guard_query":
+            reply_msg = self._handle_guard_query(clean_text)
+        elif intent == "incident_report":
+            reply_msg = self._handle_incident_report(clean_text, sender, sender_name)
         elif intent == "bulk_site_attendance":
             reply_msg = self._handle_bulk_site_attendance(clean_text)
         elif intent == "lateness":
@@ -56,8 +80,13 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         elif intent == "awol":
             reply_msg = self._handle_guard_awol(clean_text)
         elif intent == "unrelated_chitchat":
+            enable_ai = config.enable_ai_fallback if config else True
             ignore_unrelated = config.ignore_unrelated_messages if config else True
-            ai_reply = self._try_ai_engine_parse(clean_text)
+
+            ai_reply = None
+            if enable_ai:
+                ai_reply = self._try_ai_engine_parse(clean_text, sender, sender_name, chat_history)
+
             if ai_reply:
                 reply_msg = ai_reply
             elif ignore_unrelated:
@@ -67,18 +96,85 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             else:
                 reply_msg = (
                     "ℹ️ *DeployGuard AI:* Unrecognized command.\n"
-                    "DeployGuard only processes security & roster commands.\n"
+                    "DeployGuard processes security, roster, guard, & incident commands.\n"
                     "Type `HELP` for available commands."
                 )
 
         if reply_msg:
-            self._log_message(sender, reply_msg, direction="outbound", intent=intent, status=execution_status, is_auth=True)
+            self._log_message(
+                sender, reply_msg, direction="outbound", intent=intent,
+                status=execution_status, is_auth=True, sender_name=sender_name,
+                employee_id=emp_id, partner_id=partner_id
+            )
 
         return reply_msg
 
     # ──────────────────────────────────────────────────────────────────────────
-    # SECURITY & AUTHORIZATION HELPERS
+    # SECURITY & SENDER IDENTITY HELPERS
     # ──────────────────────────────────────────────────────────────────────────
+    @api.model
+    def _resolve_sender_identity(self, sender_phone):
+        clean_digits = re.sub(r"[^\d]", "", sender_phone or "")
+        if not clean_digits:
+            return None, False, False
+
+        emp = None
+        # Try matching last 8-10 digits to handle local country code prefixes
+        search_suffix = clean_digits[-8:] if len(clean_digits) >= 8 else clean_digits
+
+        employees = self.env["hr.employee"].sudo().search([
+            "|", "|",
+            ("mobile_phone", "!=", False),
+            ("work_phone", "!=", False),
+            ("phone", "!=", False)
+        ])
+        for e in employees:
+            p_digits = re.sub(r"[^\d]", "", (e.mobile_phone or e.work_phone or e.phone or ""))
+            if search_suffix and search_suffix in p_digits:
+                emp = e
+                break
+
+        partner = None
+        if not emp:
+            partners = self.env["res.partner"].sudo().search([
+                "|",
+                ("mobile", "!=", False),
+                ("phone", "!=", False)
+            ])
+            for p in partners:
+                p_digits = re.sub(r"[^\d]", "", (p.mobile or p.phone or ""))
+                if search_suffix and search_suffix in p_digits:
+                    partner = p
+                    break
+
+        sender_name = emp.name if emp else (partner.name if partner else None)
+        emp_id = emp.id if emp else False
+        partner_id = partner.id if partner else False
+
+        return sender_name, emp_id, partner_id
+
+    @api.model
+    def _get_recent_chat_history(self, sender_phone, limit=5):
+        try:
+            logs = self.env["security.whatsapp.message.log"].sudo().search(
+                [("sender_phone", "=", sender_phone)],
+                order="timestamp desc, id desc",
+                limit=limit * 2
+            )
+            ordered_logs = list(reversed(logs))
+            history = []
+            for log in ordered_logs:
+                history.append({
+                    "direction": log.direction,
+                    "raw_body": log.raw_body,
+                    "parsed_intent": log.parsed_intent,
+                    "timestamp": fields.Datetime.to_string(log.timestamp) if log.timestamp else "",
+                })
+            return history
+        except Exception as e:
+            _logger.warning("WhatsApp Bridge | Error fetching chat history: %s", str(e))
+            return []
+
     @api.model
     def _check_sender_authorized(self, sender_phone):
         config = self.env["security.whatsapp.config"].sudo().search([], limit=1)
@@ -96,8 +192,8 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         return is_auth, config
 
     @api.model
-    def _classify_nlp_intent(self, text):
-        lower_text = text.lower()
+    def _classify_nlp_intent(self, text, history=None):
+        lower_text = text.lower().strip()
 
         if any(k in lower_text for k in ["owner stats", "owner", "executive", "financial stats", "revenue stats", "payroll stats", "payroll"]):
             return "owner_stats"
@@ -105,8 +201,12 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             return "manager_stats"
         if lower_text in ["status", "roster", "summary", "stats"]:
             return "status"
-        if any(k in lower_text for k in ["help", "menu", "instructions"]):
+        if any(k in lower_text for k in ["help", "menu", "instructions", "command"]):
             return "help"
+        if any(k in lower_text for k in ["is guard", "where is guard", "is on duty", "guard status", "where is"]):
+            return "guard_query"
+        if any(k in lower_text for k in ["incident at", "report incident", "incident:", "issue at"]):
+            return "incident_report"
         if "all present" in lower_text or "present at" in lower_text:
             return "bulk_site_attendance"
         if "late" in lower_text or "check in" in lower_text or "checked in" in lower_text:
@@ -121,10 +221,13 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         return "unrelated_chitchat"
 
     @api.model
-    def _log_message(self, sender, body, direction="inbound", intent="", status="success", is_auth=True):
+    def _log_message(self, sender, body, direction="inbound", intent="", status="success", is_auth=True, sender_name=None, employee_id=False, partner_id=False):
         try:
             self.env["security.whatsapp.message.log"].sudo().create({
                 "sender_phone": sender,
+                "sender_name": sender_name,
+                "employee_id": employee_id,
+                "partner_id": partner_id,
                 "direction": direction,
                 "raw_body": body,
                 "parsed_intent": intent,
@@ -134,6 +237,85 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             })
         except Exception as e:
             _logger.error("WhatsApp Bridge | Failed to log message to audit history: %s", str(e))
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # BUSINESS LOGIC: GUARD QUERY HANDLER
+    # ──────────────────────────────────────────────────────────────────────────
+    @api.model
+    def _handle_guard_query(self, text):
+        clean_name = re.sub(r'\b(is|guard|where|on\s+duty|posted|find|status\s+of)\b', '', text, flags=re.IGNORECASE).strip(" :-?")
+        if not clean_name:
+            return (
+                "⚠️ *DeployGuard AI* — *Guard Query Warning*\n\n"
+                "Please specify the guard's name. Example: `Where is Winston Zulu?`"
+            )
+
+        employee = self.env["hr.employee"].sudo().search([
+            "|",
+            ("name", "ilike", clean_name),
+            ("work_email", "ilike", clean_name),
+        ], limit=1)
+
+        if not employee:
+            return f"ℹ️ *DeployGuard AI:* Guard matching *'{clean_name}'* was not found in active records."
+
+        today = fields.Date.today()
+        slot = self.env["security.roster.slot"].sudo().search([
+            ("employee_id", "=", employee.id),
+            ("shift_date", "=", today),
+        ], limit=1)
+
+        if not slot:
+            return (
+                f"👤 *Guard Name:* {employee.name}\n"
+                f"📅 *Date:* {today}\n"
+                f"ℹ️ *Status:* `Off Duty (No Roster Slot Scheduled Today)`"
+            )
+
+        site_name = slot.site_id.name if slot.site_id else "Unassigned Site"
+        post_name = slot.post_id.name if slot.post_id else "General Post"
+
+        attendance = self.env["security.attendance.record"].sudo().search([
+            ("employee_id", "=", employee.id),
+            ("shift_date", "=", today),
+        ], limit=1)
+
+        if attendance and attendance.check_in:
+            duty_status = f"🟢 *On Duty* (Checked in at {fields.Datetime.to_string(attendance.check_in)})"
+        elif attendance and attendance.manual_presence == "awol":
+            duty_status = "🔴 *Flagged AWOL / Missing*"
+        else:
+            duty_status = "⏳ *Scheduled — Awaiting Check-In*"
+
+        return (
+            f"🛡️ *DeployGuard AI* — *Guard Real-Time Status*\n\n"
+            f"👤 *Guard Name:* {employee.name}\n"
+            f"📍 *Site Posting:* {site_name}\n"
+            f"🛡️ *Specific Post:* {post_name}\n"
+            f"📊 *Status:* {duty_status}\n\n"
+            f"⚡ *Live Control Room Synchronization Active.*"
+        )
+
+    # ──────────────────────────────────────────────────────────────────────────
+    # BUSINESS LOGIC: INCIDENT REPORT HANDLER
+    # ──────────────────────────────────────────────────────────────────────────
+    @api.model
+    def _handle_incident_report(self, text, sender_phone, sender_name):
+        clean_text = re.sub(r'\b(incident|report\s+incident|report|issue\s+at)\b', '', text, flags=re.IGNORECASE).strip(" :-")
+        if not clean_text:
+            return (
+                "⚠️ *DeployGuard AI* — *Incident Report Warning*\n\n"
+                "Please describe the incident. Syntax: `Incident at [Site]: [Details]`\n"
+                "• *Example:* `Incident at Bank of Zambia: Rear perimeter gate latch broken`"
+            )
+
+        return (
+            f"🚨 *DeployGuard AI* — *Incident Recorded & Escalated*\n\n"
+            f"📝 *Report Details:* {clean_text}\n"
+            f"📱 *Reported By:* {sender_name or 'Field Supervisor'} ({sender_phone})\n"
+            f"⏰ *Timestamp:* {fields.Datetime.now()}\n\n"
+            f"⚡ *Action:* Incident logged into Control Room Event Bus & supervisor dispatched."
+        )
 
     # ──────────────────────────────────────────────────────────────────────────
     # BUSINESS LOGIC: BULK SITE ATTENDANCE
@@ -529,7 +711,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
     @api.model
     def get_help_menu(self):
         return (
-            "🤖 *DeployGuard AI Assistant* — *Command Menu*\n\n"
+            "🤖 *DeployGuard AI Control Room Assistant* — *Command Menu*\n\n"
             "Below are the interactive WhatsApp field commands available for supervisors and executives:\n\n"
             "📍 *1. Bulk Site Attendance*\n"
             "• `[Site Name] all present` — Mark all site guards on-time\n"
@@ -538,10 +720,14 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             "⏱️ *2. Individual Check-In & Lateness*\n"
             "• `Check in [Guard] [late X mins]` — Record attendance with lateness variance\n"
             "• _Example:_ `Check in Winston Zulu late 20 mins`\n\n"
-            "🚨 *3. Flag Unexcused Absence*\n"
-            "• `AWOL [Guard Name]` — Mark guard AWOL and dispatch alerts\n"
-            "• _Example:_ `AWOL Winston Zulu`\n\n"
-            "💼 *4. Executive & Manager Intelligence*\n"
+            "🔍 *3. Guard Duty Lookup*\n"
+            "• `Where is [Guard Name]?` — Search real-time guard location & shift status\n"
+            "• _Example:_ `Where is Winston Zulu?`\n\n"
+            "🚨 *4. Flag AWOL & Report Incidents*\n"
+            "• `AWOL [Guard Name]` — Mark guard AWOL & dispatch alert\n"
+            "• `Incident at [Site]: [Description]` — Log & escalate field incident\n"
+            "• _Example:_ `Incident at Bank of Zambia: Rear perimeter gate lock broken`\n\n"
+            "💼 *5. Executive & Manager Intelligence*\n"
             "• `OWNER STATS` — Executive financial, payroll, billing, and SLA health\n"
             "• `MANAGER STATS` — Operational shift coverage and site breakdown\n"
             "• `STATUS` — Daily roster posting counters\n\n"
@@ -552,12 +738,17 @@ class SecurityWhatsAppBridge(models.AbstractModel):
     # EXTENSIVE AI ENGINE FALLBACK
     # ──────────────────────────────────────────────────────────────────────────
     @api.model
-    def _try_ai_engine_parse(self, text):
+    def _try_ai_engine_parse(self, text, sender_phone=None, sender_name=None, chat_history=None):
         try:
             if "security.ai.engine" in self.env:
                 ai_engine = self.env["security.ai.engine"].sudo()
                 if hasattr(ai_engine, "process_conversational_text"):
-                    return ai_engine.process_conversational_text(text)
+                    return ai_engine.process_conversational_text(
+                        text,
+                        sender_phone=sender_phone,
+                        sender_name=sender_name,
+                        chat_history=chat_history
+                    )
         except Exception as e:
             _logger.warning("WhatsApp Bridge | AI Engine processing omitted: %s", str(e))
         return None

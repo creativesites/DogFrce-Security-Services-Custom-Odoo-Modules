@@ -447,3 +447,11 @@ body[class*="o_theme_"] .modal-content {
         padding: 8px;
     }
 }
+
+/* Enforce high-visibility secondary text across all themes */
+body[class*="o_theme_"] .text-secondary,
+body[class*="o_theme_"] .text-muted,
+body[class*="o_theme_"] i.text-secondary,
+body[class*="o_theme_"] .fa.text-secondary {
+    color: #475569 !important;
+}

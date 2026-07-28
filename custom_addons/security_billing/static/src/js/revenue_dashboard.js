@@ -42,7 +42,7 @@ class RevenueDashboard extends Component {
     get kpis() {
         const d = this.state.data;
         if (!d) return [];
-        const sym = d.currency_symbol || "N$";
+        const sym = d.currency_symbol || "ZMW";
         return [
             {
                 label: "Approved Billing (MTD)",

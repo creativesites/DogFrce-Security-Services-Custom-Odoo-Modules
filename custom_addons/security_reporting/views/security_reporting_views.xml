@@ -394,7 +394,7 @@
                 <field name="incident_date" string="Date" widget="date"/>
                 <field name="employee_id" string="Guard"/>
                 <field name="incident_type_id" string="Type"/>
-                <field name="deduction_amount" string="Deduction (N$)"/>
+                <field name="deduction_amount" string="Deduction"/>
                 <field name="reliability_score_delta" string="Score Δ"
                        decoration-danger="reliability_score_delta &lt; 0"/>
                 <field name="high_trust_exclusion" string="High Trust Excl." widget="boolean" optional="show"/>
@@ -510,7 +510,7 @@
                        decoration-danger="state not in ['paid','cancelled'] and due_date and due_date &lt; current_date"/>
                 <field name="subtotal_amount" string="Subtotal" optional="show"/>
                 <field name="vat_amount" string="VAT" optional="show"/>
-                <field name="total_amount" string="Total (N$)"/>
+                <field name="total_amount" string="Total"/>
                 <field name="paid_amount" string="Paid" optional="show"/>
                 <field name="balance_amount" string="Outstanding" optional="show"/>
                 <field name="state" widget="badge"
@@ -621,7 +621,7 @@
                 <field name="partner_id" string="Client"/>
                 <field name="invoice_id" string="Invoice"/>
                 <field name="payment_date" string="Date" widget="date"/>
-                <field name="amount" string="Amount (N$)"/>
+                <field name="amount" string="Amount"/>
                 <field name="payment_method" string="Method" optional="show"/>
                 <field name="bank_reference" string="Bank Ref" optional="show"/>
                 <field name="reconciliation_status" widget="badge"

@@ -1,0 +1,320 @@
+/* WhatsApp Command & Control Room Design System */
+.dg-wa-container {
+    padding: 24px;
+    background: #0f172a;
+    color: #f8fafc;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Header & Action Bar */
+.dg-wa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #1e293b;
+}
+
+.dg-wa-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dg-wa-header-title h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0;
+}
+
+.dg-wa-badge-status {
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dg-wa-status-connected {
+    background: rgba(37, 211, 102, 0.15);
+    color: #25d366;
+    border: 1px solid rgba(37, 211, 102, 0.3);
+}
+
+.dg-wa-status-disconnected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.dg-wa-actions-bar {
+    display: flex;
+    gap: 12px;
+}
+
+.dg-wa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.dg-wa-btn-primary {
+    background: #25d366;
+    color: #0f172a;
+}
+
+.dg-wa-btn-primary:hover {
+    background: #20bd5a;
+}
+
+.dg-wa-btn-secondary {
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+}
+
+.dg-wa-btn-secondary:hover {
+    background: #334155;
+}
+
+/* KPI Cards Grid */
+.dg-wa-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.dg-wa-kpi-card {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.dg-wa-kpi-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 500;
+
+.dg-wa-kpi-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.dg-wa-kpi-val {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin-top: 12px;
+}
+
+.dg-wa-kpi-sub {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 4px;
+}
+
+/* Live Activity Stream & Charts Grid */
+.dg-wa-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 992px) {
+    .dg-wa-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dg-wa-panel {
+    background: rgba(30, 41, 59, 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.dg-wa-panel-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Activity Ticker List */
+.dg-wa-stream-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.2s;
+}
+
+.dg-wa-stream-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.dg-wa-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.dg-wa-stream-content {
+    flex: 1;
+}
+
+.dg-wa-stream-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.dg-wa-stream-sender {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.dg-wa-stream-time {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.dg-wa-stream-text {
+    font-size: 0.825rem;
+    color: #cbd5e1;
+    line-height: 1.4;
+}
+
+.dg-wa-intent-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #334155;
+    color: #38bdf8;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Live Control Room Chat Workspace */
+.dg-wa-chat-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: calc(100vh - 120px);
+    background: #0f172a;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #1e293b;
+}
+
+.dg-wa-chat-sidebar {
+    background: #1e293b;
+    border-right: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+}
+
+.dg-wa-thread-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.dg-wa-thread-item:hover, .dg-wa-thread-item.active {
+    background: #334155;
+}
+
+.dg-wa-chat-main {
+    display: flex;
+    flex-direction: column;
+    background: #0b1329;
+}
+
+.dg-wa-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.dg-wa-bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.dg-wa-bubble-inbound {
+    align-self: flex-start;
+    background: #1e293b;
+    color: #f1f5f9;
+    border-bottom-left-radius: 2px;
+}
+
+.dg-wa-bubble-outbound {
+    align-self: flex-end;
+    background: #059669;
+    color: #ffffff;
+    border-bottom-right-radius: 2px;
+}
+
+.dg-wa-chat-input-bar {
+    padding: 16px;
+    background: #1e293b;
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid #334155;
+}
+
+.dg-wa-chat-input-bar input {
+    flex: 1;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #f8fafc;
+    padding: 10px 16px;
+    border-radius: 8px;
+}

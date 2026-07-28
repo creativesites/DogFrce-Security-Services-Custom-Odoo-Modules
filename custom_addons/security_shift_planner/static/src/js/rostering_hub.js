@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { RosterGrid } from "./roster_grid";
 
 /**
  * RosteringHub — Single-page rostering workspace.
@@ -16,6 +17,7 @@ import { registry } from "@web/core/registry";
  * Batch creation uses an inline modal — no navigation away from the page.
  */
 class RosteringHub extends Component {
+    static components = { RosterGrid };
     static props = { "*": true };
     static template = "security_shift_planner.RosteringHub";
 
@@ -59,23 +61,112 @@ class RosteringHub extends Component {
             todaySlots: [],
             alerts:     [],
 
-            // ── create-batch modal
-            showCreate: false,
-            newBatch:   { date_from: "", date_to: "", note: "" },
+            // ── all client sites & company cycle defaults
+            allSites: [],
+            companyCycle: { startDay: 21, endDay: 20, autoGenerate: true },
+
+            // ── ineligibility override dialog
+            overrideDialog: {
+                visible: false,
+                slot: null,
+                guardId: null,
+                guardName: "",
+                reasons: [],
+                reasonInput: "",
+                submitting: false,
+                error: "",
+            },
+
+            // ── guard directory & search
+            allGuards: [],
+            guardSearchTerm: "",
+            guardTab: "suggested", // "suggested" or "all"
+
+            // ── create-batch modal (New Monthly Roster Batch engine)
+            createDialog: {
+                visible: false,
+                partnerId: null,
+                siteId: null,
+                month: "",
+                year: "",
+                cycleMode: "default",
+                dateFrom: "",
+                dateTo: "",
+                autoGenerateSlots: true,
+                copySourceId: null,
+                validating: false,
+                validation: null,
+                creating: false,
+                error: "",
+            },
         });
 
-        onWillStart(() => this.loadBatches());
+        onWillStart(async () => {
+            await this.loadCompanyCycle();
+            await this.loadAllSites();
+            await this.loadBatches();
+            await this.loadAllGuards();
+        });
+    }
+
+    async loadAllGuards() {
+        try {
+            const guards = await this.orm.searchRead(
+                "hr.employee",
+                [["security_guard", "=", true], ["active", "=", true], ["security_disqualified", "=", false]],
+                ["id", "name", "security_grade_id"],
+                { order: "name asc" }
+            );
+            this.state.allGuards = guards.map((g) => ({
+                id: g.id,
+                name: g.name,
+                grade: g.security_grade_id ? g.security_grade_id[1] : "—",
+            }));
+        } catch {
+            this.state.allGuards = [];
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Data loaders
     // ─────────────────────────────────────────────────────────────────────────
 
+    async loadCompanyCycle() {
+        try {
+            const defaults = await this.orm.call(
+                "res.config.settings",
+                "get_company_roster_cycle_defaults",
+                []
+            );
+            if (defaults) {
+                this.state.companyCycle.startDay = defaults.start_day;
+                this.state.companyCycle.endDay = defaults.end_day;
+                this.state.companyCycle.autoGenerate = defaults.auto_generate;
+            }
+        } catch {
+            // fallback defaults
+        }
+    }
+
+    async loadAllSites() {
+        try {
+            const sites = await this.orm.searchRead(
+                "security.client.site",
+                [["active", "=", true]],
+                ["id", "name", "partner_id"],
+                { order: "name" }
+            );
+            this.state.allSites = sites;
+        } catch {
+            this.state.allSites = [];
+        }
+    }
+
     async loadBatches() {
         const batches = await this.orm.searchRead(
             "security.roster.batch",
             [["state", "not in", ["cancelled"]]],
-            ["id", "name", "date_from", "date_to", "site_id", "state", "generated_slot_count"],
+            ["id", "name", "date_from", "date_to", "partner_id", "site_id", "state", "generated_slot_count"],
             { order: "date_from desc", limit: 60 }
         );
         this.state.batches = batches;
@@ -116,7 +207,8 @@ class RosteringHub extends Component {
             "security.roster.slot",
             [["batch_id", "=", this.state.batchId]],
             ["id", "shift_date", "site_id", "post_id", "shift_template_id",
-             "employee_id", "state", "suggestion_count", "fairness_warning"]
+             "employee_id", "state", "suggestion_count", "fairness_warning",
+             "critical_gap", "is_override", "override_reason", "wrong_fit_reasons"]
         );
 
         const tplIds = [...new Set(rawSlots.map(s => s.shift_template_id?.[0]).filter(Boolean))];
@@ -131,17 +223,21 @@ class RosteringHub extends Component {
         this.state.slots = rawSlots.map(s => {
             const tmpl = s.shift_template_id ? tplMap[s.shift_template_id[0]] : null;
             return {
-                id:            s.id,
-                shift_date:    s.shift_date,
-                site_id:       s.site_id?.[0]   ?? null,
-                site_name:     s.site_id?.[1]   ?? "—",
-                post_id:       s.post_id?.[0]   ?? null,
-                post_name:     s.post_id?.[1]   ?? "—",
-                employee_id:   s.employee_id?.[0] ?? null,
-                employee_name: s.employee_id?.[1] ?? null,
-                state:         s.state,
-                conflict:      !!s.fairness_warning,
-                shift_label:   tmpl ? this._fmtShift(tmpl) : "",
+                id:                s.id,
+                shift_date:        s.shift_date,
+                site_id:           s.site_id?.[0]   ?? null,
+                site_name:         s.site_id?.[1]   ?? "—",
+                post_id:           s.post_id?.[0]   ?? null,
+                post_name:         s.post_id?.[1]   ?? "—",
+                employee_id:       s.employee_id?.[0] ?? null,
+                employee_name:     s.employee_id?.[1] ?? null,
+                state:             s.state,
+                conflict:          !!s.fairness_warning,
+                critical_gap:      !!s.critical_gap,
+                is_override:       !!s.is_override,
+                override_reason:   s.override_reason || "",
+                wrong_fit_reasons: s.wrong_fit_reasons || "",
+                shift_label:       tmpl ? this._fmtShift(tmpl) : "",
             };
         });
 
@@ -222,6 +318,40 @@ class RosteringHub extends Component {
 
     get currentMobileDate() {
         return this.state.dates[this.state.mobileDayIdx] ?? null;
+    }
+
+    get createDialogPartners() {
+        const seen = new Set();
+        const partners = [];
+        for (const s of this.state.allSites) {
+            if (s.partner_id && !seen.has(s.partner_id[0])) {
+                seen.add(s.partner_id[0]);
+                partners.push({ id: s.partner_id[0], name: s.partner_id[1] });
+            }
+        }
+        return partners.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    get createDialogSites() {
+        const pid = this.state.createDialog.partnerId;
+        if (!pid) return [];
+        return this.state.allSites.filter((s) => s.partner_id && s.partner_id[0] === pid);
+    }
+
+    get dialogMonthOptions() {
+        return [
+            { value: "01", label: "January" }, { value: "02", label: "February" },
+            { value: "03", label: "March" }, { value: "04", label: "April" },
+            { value: "05", label: "May" }, { value: "06", label: "June" },
+            { value: "07", label: "July" }, { value: "08", label: "August" },
+            { value: "09", label: "September" }, { value: "10", label: "October" },
+            { value: "11", label: "November" }, { value: "12", label: "December" },
+        ];
+    }
+
+    get dialogYearOptions() {
+        const y = new Date().getFullYear();
+        return [String(y - 1), String(y), String(y + 1), String(y + 2)];
     }
 
     get batchWorkflowActions() {
@@ -365,29 +495,139 @@ class RosteringHub extends Component {
         }
     }
 
-    async assignGuard(sug) {
-        if (!this.state.selectedSlot) return;
+    closeOverrideModal() {
+        this.state.overrideDialog = {
+            visible: false,
+            slot: null,
+            guardId: null,
+            guardName: "",
+            reasons: [],
+            reasonInput: "",
+            submitting: false,
+            error: "",
+        };
+    }
+
+    async confirmOverrideAssign() {
+        const dlg = this.state.overrideDialog;
+        if (!dlg.reasonInput || !dlg.reasonInput.trim()) {
+            dlg.error = "Please enter an override reason for audit logging.";
+            return;
+        }
+        dlg.submitting = true;
+        dlg.error = "";
+        const ok = await this.manualAssignGuard(
+            dlg.slot,
+            dlg.guardId,
+            dlg.guardName,
+            true,
+            dlg.reasonInput.trim()
+        );
+        dlg.submitting = false;
+        if (ok) {
+            this.closeOverrideModal();
+        }
+    }
+
+    async manualAssignGuard(slot, guardId, guardName, override = false, overrideReason = "", sourceSlotId = null) {
         this.state.assignError = null;
         try {
             const res = await this.orm.call(
-                "security.slot.suggestion", "action_assign_to_slot", [[sug.id]]
+                "security.roster.slot",
+                "action_manual_assign",
+                [[slot.id], guardId],
+                { override: override, override_reason: overrideReason }
             );
-            if (res?.tag === "display_notification") {
-                const p = res.params || {};
-                this.state.assignError = { guardName: sug.employee_name, message: p.message || "Assignment not allowed." };
-                this.notification.add(p.message || "Assignment not allowed.", {
-                    title: p.title || "Cannot Assign", type: p.type || "danger",
-                });
-                return;
+
+            if (res.status === "hard_block") {
+                this.state.assignError = { guardName, message: res.message };
+                this.notification.add(res.message, { title: `Blocked: ${guardName}`, type: "danger" });
+                return false;
             }
-            await this.loadSlotsOnly();
-            this.closePanel();
-            this.notification.add(`${sug.employee_name} assigned.`, { type: "success" });
+
+            if (res.status === "override_required") {
+                this.state.overrideDialog = {
+                    visible: true,
+                    slot: slot,
+                    guardId: guardId,
+                    guardName: guardName,
+                    reasons: res.reasons || [],
+                    reasonInput: "",
+                    submitting: false,
+                    error: "",
+                };
+                return false;
+            }
+
+            if (res.status === "error") {
+                this.state.assignError = { guardName, message: res.message };
+                this.notification.add(res.message, { type: "danger" });
+                return false;
+            }
+
+            if (res.status === "success") {
+                if (sourceSlotId && sourceSlotId !== slot.id) {
+                    await this.orm.write("security.roster.slot", [sourceSlotId], {
+                        employee_id: false,
+                        state: "draft",
+                    });
+                }
+                await this.loadSlotsOnly();
+                this.closePanel();
+                this.state.assignError = null;
+
+                if (res.is_override) {
+                    this.notification.add(
+                        `Assigned ${guardName} with manual override (WRONG FIT recorded).`,
+                        { title: "Manual Override Recorded", type: "warning" }
+                    );
+                } else {
+                    this.notification.add(
+                        `${guardName} assigned successfully.`,
+                        { type: "success" }
+                    );
+                }
+                return true;
+            }
         } catch (e) {
-            const msg = e.message || "Assignment failed.";
-            this.state.assignError = { guardName: sug.employee_name, message: msg };
-            this.notification.add(msg, { type: "danger" });
+            this.notification.add("Assignment error: " + (e.message || e), { type: "danger" });
+            return false;
         }
+    }
+
+    get filteredAllGuards() {
+        const term = (this.state.guardSearchTerm || "").toLowerCase().trim();
+        if (!term) return this.state.allGuards;
+        return this.state.allGuards.filter(
+            (g) => g.name.toLowerCase().includes(term) || (g.grade && g.grade.toLowerCase().includes(term))
+        );
+    }
+
+    async assignGuard(sug) {
+        if (!this.state.selectedSlot) return;
+        await this.manualAssignGuard(this.state.selectedSlot, sug.employee_id, sug.employee_name);
+    }
+
+    async assignGuardDirect(guard) {
+        if (!this.state.selectedSlot) return;
+        await this.manualAssignGuard(this.state.selectedSlot, guard.id, guard.name);
+    }
+
+    async onDropSlot(slot, ev) {
+        ev.preventDefault();
+        if (slot.state === "cancelled") return;
+        let data;
+        try {
+            const raw = ev.dataTransfer.getData("text/plain") || ev.dataTransfer.getData("application/json");
+            data = JSON.parse(raw);
+        } catch {
+            return;
+        }
+        const guardId = data.employee_id || data.guardId;
+        const guardName = data.employee_name || data.guardName || "Guard";
+        if (!guardId) return;
+
+        await this.manualAssignGuard(slot, guardId, guardName, false, "", data.sourceSlotId);
     }
 
     async unassignSlot() {
@@ -497,51 +737,185 @@ class RosteringHub extends Component {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Batch creation modal
+    // New Monthly Roster Batch Creation Modal Engine
     // ─────────────────────────────────────────────────────────────────────────
 
-    openCreateModal() {
-        const today   = new Date();
-        const first   = new Date(today.getFullYear(), today.getMonth() + 1, 1);
-        const last    = new Date(today.getFullYear(), today.getMonth() + 2, 0);
-        this.state.newBatch = {
-            date_from: first.toISOString().slice(0, 10),
-            date_to:   last.toISOString().slice(0, 10),
-            note: "",
-        };
-        this.state.showCreate = true;
+    async openCreateModal(sourceBatch = null) {
+        const now = new Date();
+        let targetM = now.getMonth() + 1;
+        let targetY = now.getFullYear();
+
+        if (sourceBatch) {
+            const sDate = new Date(sourceBatch.date_to + "T00:00:00");
+            sDate.setDate(sDate.getDate() + 5);
+            targetM = sDate.getMonth() + 1;
+            targetY = sDate.getFullYear();
+        }
+
+        const dlg = this.state.createDialog;
+        dlg.visible = true;
+        dlg.partnerId = sourceBatch ? (Array.isArray(sourceBatch.partner_id) ? sourceBatch.partner_id[0] : sourceBatch.partner_id) : null;
+        dlg.siteId = sourceBatch ? (Array.isArray(sourceBatch.site_id) ? sourceBatch.site_id[0] : sourceBatch.site_id) : null;
+        dlg.month = String(targetM).padStart(2, "0");
+        dlg.year = String(targetY);
+        dlg.cycleMode = "default";
+        dlg.autoGenerateSlots = this.state.companyCycle.autoGenerate;
+        dlg.copySourceId = sourceBatch ? sourceBatch.id : null;
+        dlg.creating = false;
+        dlg.error = "";
+
+        await this.updateCycleDates();
     }
 
-    closeCreateModal() { this.state.showCreate = false; }
-
-    onNewField(field, ev) {
-        this.state.newBatch = { ...this.state.newBatch, [field]: ev.target.value };
+    closeCreateModal() {
+        this.state.createDialog.visible = false;
     }
 
-    async createBatch() {
-        const nb = this.state.newBatch;
-        if (!nb.date_from || !nb.date_to) {
-            this.notification.add("Please set both start and end dates.", { type: "warning" });
+    async onCycleModeChange(mode) {
+        this.state.createDialog.cycleMode = mode;
+        const now = new Date();
+        if (mode === "current") {
+            this.state.createDialog.month = String(now.getMonth() + 1).padStart(2, "0");
+            this.state.createDialog.year = String(now.getFullYear());
+        } else if (mode === "next") {
+            let nextM = now.getMonth() + 2;
+            let nextY = now.getFullYear();
+            if (nextM > 12) { nextM = 1; nextY++; }
+            this.state.createDialog.month = String(nextM).padStart(2, "0");
+            this.state.createDialog.year = String(nextY);
+        }
+        await this.updateCycleDates();
+    }
+
+    async onDialogPartnerChange(ev) {
+        const val = parseInt(ev.target.value);
+        this.state.createDialog.partnerId = isNaN(val) ? null : val;
+        this.state.createDialog.siteId = null;
+        await this.validateCreateBatch();
+    }
+
+    async onDialogSiteChange(ev) {
+        const val = parseInt(ev.target.value);
+        this.state.createDialog.siteId = isNaN(val) ? null : val;
+        await this.validateCreateBatch();
+    }
+
+    async onDialogMonthChange(ev) {
+        this.state.createDialog.month = ev.target.value;
+        await this.updateCycleDates();
+    }
+
+    async onDialogYearChange(ev) {
+        this.state.createDialog.year = ev.target.value;
+        await this.updateCycleDates();
+    }
+
+    async onDialogDateFromChange(ev) {
+        this.state.createDialog.dateFrom = ev.target.value;
+        this.state.createDialog.cycleMode = "custom";
+        await this.validateCreateBatch();
+    }
+
+    async onDialogDateToChange(ev) {
+        this.state.createDialog.dateTo = ev.target.value;
+        this.state.createDialog.cycleMode = "custom";
+        await this.validateCreateBatch();
+    }
+
+    async updateCycleDates() {
+        const dlg = this.state.createDialog;
+        if (dlg.cycleMode !== "custom" && dlg.month && dlg.year) {
+            try {
+                const res = await this.orm.call(
+                    "res.config.settings",
+                    "get_company_roster_cycle_defaults",
+                    [],
+                    { month: dlg.month, year: dlg.year }
+                );
+                if (res) {
+                    dlg.dateFrom = res.date_from;
+                    dlg.dateTo = res.date_to;
+                }
+            } catch {
+                const y = parseInt(dlg.year);
+                const m = parseInt(dlg.month);
+                dlg.dateFrom = `${y}-${String(m).padStart(2, "0")}-01`;
+                const lastDay = new Date(y, m, 0).getDate();
+                dlg.dateTo = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+            }
+        }
+        await this.validateCreateBatch();
+    }
+
+    async validateCreateBatch() {
+        const dlg = this.state.createDialog;
+        dlg.validating = true;
+        dlg.error = "";
+        try {
+            const res = await this.orm.call(
+                "security.roster.batch",
+                "validate_batch_creation",
+                [],
+                {
+                    partner_id: dlg.partnerId || false,
+                    site_id: dlg.siteId || false,
+                    date_from: dlg.dateFrom,
+                    date_to: dlg.dateTo,
+                }
+            );
+            dlg.validation = res;
+        } catch {
+            dlg.validation = { valid: true, errors: [], warnings: [], estimated_slots: 0 };
+        } finally {
+            dlg.validating = false;
+        }
+    }
+
+    async confirmCreateBatch() {
+        const dlg = this.state.createDialog;
+        if (!dlg.partnerId && !dlg.siteId) {
+            dlg.error = "Please select a client or client site.";
             return;
         }
-        this.state.creating = true;
+        if (!dlg.dateFrom || !dlg.dateTo) {
+            dlg.error = "Please specify Start Date and End Date.";
+            return;
+        }
+
+        if (dlg.validation && !dlg.validation.valid) {
+            dlg.error = (dlg.validation.errors || []).join(" ");
+            return;
+        }
+
+        dlg.creating = true;
+        dlg.error = "";
         try {
-            const newId = await this.orm.create("security.roster.batch", [{
-                date_from: nb.date_from,
-                date_to:   nb.date_to,
-                note:      nb.note || false,
-            }]);
-            this.state.showCreate = false;
+            const result = await this.orm.call(
+                "security.roster.batch",
+                "action_quick_create_batch",
+                [],
+                {
+                    partner_id: dlg.partnerId || false,
+                    site_id: dlg.siteId || false,
+                    date_from: dlg.dateFrom,
+                    date_to: dlg.dateTo,
+                    auto_generate: dlg.autoGenerateSlots,
+                    copy_source_id: dlg.copySourceId || false,
+                }
+            );
+            dlg.visible = false;
             await this.loadBatches();
-            this.state.batchId = newId;
-            this.state.batch   = this.state.batches.find(b => b.id === newId) || null;
+            this.state.batchId = result.batch_id;
             await this.loadBoardData();
-            this.state.view = "setup";
-            this.notification.add("Batch created. Now generate slots to populate the roster.", { type: "success" });
+            this.state.view = "roster";
+            this.notification.add(
+                `Monthly Roster Batch created: ${result.batch_name} (${result.slot_count} slot${result.slot_count !== 1 ? "s" : ""})`,
+                { type: "success" }
+            );
         } catch (e) {
-            this.notification.add("Create failed: " + (e.message || e), { type: "danger" });
+            dlg.error = e.message || "Failed to create roster batch.";
         } finally {
-            this.state.creating = false;
+            dlg.creating = false;
         }
     }
 

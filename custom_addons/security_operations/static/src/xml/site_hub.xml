@@ -29,7 +29,7 @@
                     <div>
                         <h4 class="mb-0 fw-bold"><t t-esc="state.site.name"/></h4>
                         <small class="text-muted">
-                            <t t-esc="state.site.partner_id[1]"/>
+                            <t t-esc="state.site.partner_id ? state.site.partner_id[1] : '—'"/>
                             <t t-if="state.site.location"> · <t t-esc="state.site.location"/></t>
                         </small>
                     </div>
@@ -121,7 +121,7 @@
                                     <h6 class="card-title text-muted text-uppercase small fw-bold">Site Details</h6>
                                     <dl class="mb-0">
                                         <dt class="small text-muted">Client</dt>
-                                        <dd><t t-esc="state.site.partner_id[1]"/></dd>
+                                        <dd><t t-esc="state.site.partner_id ? state.site.partner_id[1] : '—'"/></dd>
                                         <dt class="small text-muted">Location</dt>
                                         <dd><t t-esc="state.site.location || '—'"/></dd>
                                         <dt class="small text-muted">Supervisor</dt>
@@ -281,7 +281,7 @@
                             <tbody>
                                 <t t-foreach="state.guards" t-as="g" t-key="g.id">
                                     <tr>
-                                        <td class="fw-semibold"><t t-esc="g.employee_id[1]"/></td>
+                                        <td class="fw-semibold"><t t-esc="g.employee_id ? g.employee_id[1] : '—'"/></td>
                                         <td class="text-muted small"><t t-esc="g.post_id ? g.post_id[1] : '—'"/></td>
                                         <td class="text-muted small"><t t-esc="g.shift_template_id ? g.shift_template_id[1] : '—'"/></td>
                                         <td class="text-muted small"><t t-esc="g.shift_date"/></td>

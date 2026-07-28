@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+    <!-- Dashboard OWL Template -->
+    <t t-name="security_whatsapp.Dashboard">
+        <div class="dg-wa-container">
+            <!-- Header & Action Bar -->
+            <div class="dg-wa-header">
+                <div class="dg-wa-header-title">
+                    <i class="fa fa-whatsapp" style="font-size: 1.8rem; color: #25d366;"/>
+                    <h1>WhatsApp Control Room Dashboard</h1>
+                    <span t-att-class="'dg-wa-badge-status ' + (state.data.bridge_status === 'connected' ? 'dg-wa-status-connected' : 'dg-wa-status-disconnected')">
+                        <i t-att-class="'fa ' + (state.data.bridge_status === 'connected' ? 'fa-check-circle' : 'fa-exclamation-circle')"/>
+                        <t t-esc="state.data.bridge_status === 'connected' ? 'Bridge Connected' : 'Bridge Offline'"/>
+                    </span>
+                </div>
+                <div class="dg-wa-actions-bar">
+                    <button class="dg-wa-btn dg-wa-btn-secondary" t-on-click="refreshDashboard">
+                        <i class="fa fa-refresh"/> Refresh Metrics
+                    </button>
+                    <button class="dg-wa-btn dg-wa-btn-primary" t-on-click="openSettings">
+                        <i class="fa fa-qrcode"/> QR Device Pairing
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top KPI Cards -->
+            <div class="dg-wa-kpi-grid">
+                <div class="dg-wa-kpi-card">
+                    <div class="dg-wa-kpi-header">
+                        <span>TODAY'S MESSAGES</span>
+                        <div class="dg-wa-kpi-icon" style="background: rgba(14, 165, 233, 0.2); color: #38bdf8;">
+                            <i class="fa fa-comments"/>
+                        </div>
+                    </div>
+                    <div class="dg-wa-kpi-val"><t t-esc="state.data.today_messages_count || 0"/></div>
+                    <div class="dg-wa-kpi-sub"><t t-esc="state.data.inbound_count || 0"/> Inbound / <t t-esc="state.data.outbound_count || 0"/> Outbound</div>
+                </div>
+
+                <div class="dg-wa-kpi-card">
+                    <div class="dg-wa-kpi-header">
+                        <span>ATTENDANCE LOGGED</span>
+                        <div class="dg-wa-kpi-icon" style="background: rgba(37, 211, 102, 0.2); color: #25d366;">
+                            <i class="fa fa-check-square-o"/>
+                        </div>
+                    </div>
+                    <div class="dg-wa-kpi-val"><t t-esc="state.data.attendance_logged || 0"/></div>
+                    <div class="dg-wa-kpi-sub">Field check-ins &amp; lateness logged</div>
+                </div>
+
+                <div class="dg-wa-kpi-card">
+                    <div class="dg-wa-kpi-header">
+                        <span>AWOL &amp; INCIDENTS</span>
+                        <div class="dg-wa-kpi-icon" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">
+                            <i class="fa fa-warning"/>
+                        </div>
+                    </div>
+                    <div class="dg-wa-kpi-val"><t t-esc="(state.data.awol_flagged || 0) + (state.data.incidents_reported || 0)"/></div>
+                    <div class="dg-wa-kpi-sub"><t t-esc="state.data.awol_flagged || 0"/> AWOL / <t t-esc="state.data.incidents_reported || 0"/> Incidents</div>
+                </div>
+
+                <div class="dg-wa-kpi-card">
+                    <div class="dg-wa-kpi-header">
+                        <span>AI RESOLUTION RATE</span>
+                        <div class="dg-wa-kpi-icon" style="background: rgba(168, 85, 247, 0.2); color: #c084fc;">
+                            <i class="fa fa-magic"/>
+                        </div>
+                    </div>
+                    <div class="dg-wa-kpi-val"><t t-esc="state.data.ai_resolution_rate || 100"/>%</div>
+                    <div class="dg-wa-kpi-sub">Rule &amp; LLM Auto-Parsed</div>
+                </div>
+            </div>
+
+            <!-- Main Live Stream -->
+            <div class="dg-wa-main-grid">
+                <div class="dg-wa-panel">
+                    <div class="dg-wa-panel-title">
+                        <span><i class="fa fa-bolt" style="color: #f59e0b;"/> Live Field Activity Stream</span>
+                        <button class="dg-wa-btn dg-wa-btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" t-on-click="openAuditLogs">
+                            View All Logs →
+                        </button>
+                    </div>
+                    <div class="dg-wa-stream-list">
+                        <t t-if="state.data.recent_activity &amp;&amp; state.data.recent_activity.length">
+                            <t t-foreach="state.data.recent_activity" t-as="item" t-key="item.id">
+                                <div class="dg-wa-stream-item">
+                                    <div class="dg-wa-avatar">
+                                        <t t-esc="item.sender_name ? item.sender_name.charAt(0).toUpperCase() : 'W'"/>
+                                    </div>
+                                    <div class="dg-wa-stream-content">
+                                        <div class="dg-wa-stream-meta">
+                                            <span class="dg-wa-stream-sender"><t t-esc="item.sender_name"/> (<t t-esc="item.sender_phone"/>)</span>
+                                            <span class="dg-wa-stream-time"><t t-esc="item.timestamp"/></span>
+                                        </div>
+                                        <div class="dg-wa-stream-text">
+                                            <strong>Inbound:</strong> "<t t-esc="item.raw_body"/>"
+                                        </div>
+                                        <t t-if="item.reply_body">
+                                            <div class="dg-wa-stream-text" style="color: #38bdf8; margin-top: 2px;">
+                                                <strong>Reply:</strong> <t t-esc="item.reply_body"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                    <span class="dg-wa-intent-tag"><t t-esc="item.parsed_intent"/></span>
+                                </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <div style="text-align: center; padding: 40px; color: #64748b;">
+                                <i class="fa fa-comments-o" style="font-size: 2rem; margin-bottom: 8px;"/>
+                                <p>No WhatsApp messages received today.</p>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Right Side Widget: Quick Info -->
+                <div class="dg-wa-panel">
+                    <div class="dg-wa-panel-title">
+                        <span><i class="fa fa-shield" style="color: #25d366;"/> Control Room Overview</span>
+                    </div>
+                    <div style="line-height: 1.6; font-size: 0.875rem; color: #cbd5e1;">
+                        <p><strong>Whitelisted Senders:</strong> <t t-esc="state.data.allowed_numbers_count || 0"/> Authorized Senders</p>
+                        <p><strong>AI Engine Fallback:</strong> Enabled (Gemini 3.6 Flash)</p>
+                        <hr style="border-color: #334155; margin: 16px 0;"/>
+                        <p><strong>Quick Field Commands:</strong></p>
+                        <ul style="padding-left: 18px; font-size: 0.8rem; color: #94a3b8;">
+                            <li><code>Check in [Guard] late X mins</code></li>
+                            <li><code>[Site] all present</code></li>
+                            <li><code>Where is [Guard]?</code></li>
+                            <li><code>AWOL [Guard]</code></li>
+                            <li><code>Incident at [Site]: [Details]</code></li>
+                            <li><code>OWNER STATS</code> / <code>MANAGER STATS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+
+    <!-- Live Control Room Workspace OWL Template -->
+    <t t-name="security_whatsapp.ChatWorkspace">
+        <div class="dg-wa-container" style="padding: 12px;">
+            <div class="dg-wa-chat-layout">
+                <!-- Left Sidebar Thread List -->
+                <div class="dg-wa-chat-sidebar">
+                    <div style="padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0; font-size: 1rem; color: #ffffff;">Conversations</h3>
+                        <button class="dg-wa-btn dg-wa-btn-secondary" style="padding: 4px 8px;" t-on-click="loadThreads">
+                            <i class="fa fa-refresh"/>
+                        </button>
+                    </div>
+                    <div style="flex: 1; overflow-y: auto;">
+                        <t t-if="state.threads &amp;&amp; state.threads.length">
+                            <t t-foreach="state.threads" t-as="thread" t-key="thread.phone">
+                                <div t-att-class="'dg-wa-thread-item ' + (state.activePhone === thread.phone ? 'active' : '')" t-on-click="() => this.selectThread(thread.phone)">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                        <span style="font-weight: 700; color: #f1f5f9;"><t t-esc="thread.sender_name"/></span>
+                                        <span style="font-size: 0.75rem; color: #64748b;"><t t-esc="thread.last_timestamp"/></span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                        <t t-esc="thread.last_message"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                        <t t-else="">
+                            <div style="padding: 24px; text-align: center; color: #64748b;">No active threads found.</div>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Right Main Chat Transcript -->
+                <div class="dg-wa-chat-main">
+                    <t t-if="state.activeThread">
+                        <div style="padding: 14px 20px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.05rem; color: #ffffff;"><t t-esc="state.activeThread.sender_name"/></h3>
+                                <span style="font-size: 0.8rem; color: #25d366;"><t t-esc="state.activeThread.phone"/></span>
+                            </div>
+                        </div>
+
+                        <!-- Chat Messages transcript -->
+                        <div class="dg-wa-chat-messages">
+                            <t t-foreach="state.activeThread.messages" t-as="msg" t-key="msg.id">
+                                <div t-att-class="'dg-wa-bubble ' + (msg.direction === 'inbound' ? 'dg-wa-bubble-inbound' : 'dg-wa-bubble-outbound')">
+                                    <div><t t-esc="msg.raw_body"/></div>
+                                    <t t-if="msg.reply_body">
+                                        <div style="margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; opacity: 0.9;">
+                                            <i class="fa fa-reply"/> <t t-esc="msg.reply_body"/>
+                                        </div>
+                                    </t>
+                                    <div style="font-size: 0.68rem; opacity: 0.6; text-align: right; margin-top: 4px;">
+                                        <t t-esc="msg.timestamp"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </div>
+
+                        <!-- Chat Reply Bar -->
+                        <div class="dg-wa-chat-input-bar">
+                            <input type="text" placeholder="Type a manual reply to send over WhatsApp..." t-model="state.replyText" t-on-keydown="onInputKeydown"/>
+                            <button class="dg-wa-btn dg-wa-btn-primary" t-on-click="sendReply">
+                                Send Reply <i class="fa fa-paper-plane"/>
+                            </button>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; color: #64748b;">
+                            <div style="text-align: center;">
+                                <i class="fa fa-comments" style="font-size: 3rem; margin-bottom: 12px; color: #334155;"/>
+                                <h3>Select a conversation thread to view chat transcript</h3>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

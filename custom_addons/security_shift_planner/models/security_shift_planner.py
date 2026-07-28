@@ -26,88 +26,11 @@ class SecuritySlotSuggestion(models.Model):
     score = fields.Float(default=0.0)
     score_breakdown = fields.Text(readonly=True)
 
-    def action_assign_to_slot(self):
+    def action_assign_to_slot(self, override=False, override_reason=False):
         for suggestion in self:
             slot = suggestion.slot_id
             employee = suggestion.employee_id
-            reason = self._check_assignment_eligibility(slot, employee)
-            if reason:
-                return {
-                    "type": "ir.actions.client",
-                    "tag": "display_notification",
-                    "params": {
-                        "title": f"Cannot Assign {employee.name}",
-                        "message": reason,
-                        "type": "danger",
-                        "sticky": True,
-                    },
-                }
-            slot.employee_id = employee
-            slot.state = "assigned"
-
-    def _check_assignment_eligibility(self, slot, employee):
-        """Return a human-readable reason string if ineligible, else None."""
-        if not employee.active:
-            return f"{employee.name} is no longer active."
-        if employee.security_disqualified:
-            return f"{employee.name} is disqualified from duty."
-        if not employee.security_guard:
-            return f"{employee.name} is not registered as a security guard."
-        # Grade check
-        post_type = slot.post_id.post_type_id if slot.post_id else False
-        if post_type and post_type.min_grade_id:
-            emp_seq = employee.security_grade_id.sequence if employee.security_grade_id else 0
-            if not employee.security_grade_id or emp_seq > post_type.min_grade_id.sequence:
-                return (
-                    f"{employee.name} is Grade {employee.security_grade_id.name or 'None'} "
-                    f"but this post requires at least Grade {post_type.min_grade_id.name}."
-                )
-        # On leave
-        leave_model = self.env.get("security.leave.request")
-        if leave_model and slot.shift_date:
-            if leave_model.search_count([
-                ("employee_id", "=", employee.id),
-                ("state", "=", "approved"),
-                ("date_from", "<=", slot.shift_date),
-                ("date_to", ">=", slot.shift_date),
-            ]):
-                return f"{employee.name} has approved leave on {slot.shift_date}."
-        # Double-booking
-        if self.env["security.roster.slot"].search_count([
-            ("shift_date", "=", slot.shift_date),
-            ("employee_id", "=", employee.id),
-            ("state", "not in", ["cancelled"]),
-            ("id", "!=", slot.id),
-        ]):
-            return f"{employee.name} is already assigned to another post on {slot.shift_date}."
-        # Site/client exclusion
-        site_id = slot.site_id.id if slot.site_id else False
-        partner_id = slot.partner_id.id if slot.partner_id else False
-        if site_id or partner_id:
-            exclusion = self.env["security.guard.exclusion"].search([
-                ("employee_id", "=", employee.id),
-                ("active", "=", True),
-                "|",
-                ("site_id", "=", site_id),
-                ("partner_id", "=", partner_id),
-            ], limit=1)
-            if exclusion:
-                target = exclusion.site_id.name or exclusion.partner_id.name or "this location"
-                return (
-                    f"{employee.name} is excluded from {target}. "
-                    f"Reason: {exclusion.reason or 'no reason recorded'}."
-                )
-        # Missing certifications
-        required_cert_ids = set()
-        if post_type:
-            required_cert_ids |= set(post_type.required_certification_ids.ids)
-        if slot.shift_requirement_id:
-            required_cert_ids |= set(slot.shift_requirement_id.required_certification_ids.ids)
-        missing = required_cert_ids - set(employee.security_certification_ids.ids)
-        if missing:
-            names = self.env["security.certification"].browse(list(missing)).mapped("name")
-            return f"{employee.name} is missing: {', '.join(names)}."
-        return None
+            return slot.action_manual_assign(employee.id, override=override, override_reason=override_reason)
 
 
 class SecurityRosterBatch(models.Model):
@@ -385,6 +308,170 @@ class SecurityRosterSlot(models.Model):
         string="Critical Gap",
         help="Set by auto-fill when no eligible guard was found for this slot.",
     )
+
+    def check_guard_eligibility(self, employee):
+        """
+        Check if an employee is eligible for assignment to this slot.
+        Returns a dict:
+          - hard_block (bool): True if guard is inactive, disqualified, or not a guard.
+          - reasons (list of str): Detailed human-readable warnings / incompatibility reasons.
+        """
+        self.ensure_one()
+        if isinstance(employee, int):
+            employee = self.env["hr.employee"].browse(employee)
+
+        hard_blocks = []
+        if not employee.active:
+            hard_blocks.append(f"{employee.name} is no longer active.")
+        if employee.security_disqualified:
+            hard_blocks.append(f"{employee.name} is disqualified from duty.")
+        if not employee.security_guard:
+            hard_blocks.append(f"{employee.name} is not registered as a security guard.")
+
+        if hard_blocks:
+            return {"hard_block": True, "reasons": hard_blocks}
+
+        warnings = []
+        # 1. Minimum Grade Requirement
+        post_type = self.post_id.post_type_id if self.post_id else False
+        if post_type and post_type.min_grade_id:
+            emp_seq = employee.security_grade_id.sequence if employee.security_grade_id else 0
+            if not employee.security_grade_id or emp_seq > post_type.min_grade_id.sequence:
+                warnings.append(
+                    f"Grade Requirement Mismatch: {employee.name} is Grade {employee.security_grade_id.name or 'None'}, "
+                    f"but this post requires at least Grade {post_type.min_grade_id.name}."
+                )
+
+        # 2. Approved Leave Check
+        leave_model = self.env.get("security.leave.request")
+        if leave_model and self.shift_date:
+            if leave_model.search_count([
+                ("employee_id", "=", employee.id),
+                ("state", "=", "approved"),
+                ("date_from", "<=", self.shift_date),
+                ("date_to", ">=", self.shift_date),
+            ]):
+                warnings.append(f"Approved Leave: {employee.name} has approved leave on {self.shift_date}.")
+
+        # 3. Double-Booking Check
+        if self.env["security.roster.slot"].search_count([
+            ("shift_date", "=", self.shift_date),
+            ("employee_id", "=", employee.id),
+            ("state", "not in", ["cancelled"]),
+            ("id", "!=", self.id),
+        ]):
+            warnings.append(f"Double-Booking: {employee.name} is already assigned to another post on {self.shift_date}.")
+
+        # 4. Location Exclusion Check
+        site_id = self.site_id.id if self.site_id else False
+        partner_id = self.partner_id.id if self.partner_id else False
+        if site_id or partner_id:
+            exclusion = self.env["security.guard.exclusion"].search([
+                ("employee_id", "=", employee.id),
+                ("active", "=", True),
+                "|",
+                ("site_id", "=", site_id),
+                ("partner_id", "=", partner_id),
+            ], limit=1)
+            if exclusion:
+                target = exclusion.site_id.name or exclusion.partner_id.name or "this location"
+                warnings.append(
+                    f"Location Exclusion: {employee.name} is excluded from {target} ({exclusion.reason or 'no reason specified'})."
+                )
+
+        # 5. Missing Certifications Check
+        required_cert_ids = set()
+        if post_type:
+            required_cert_ids |= set(post_type.required_certification_ids.ids)
+        if self.shift_requirement_id:
+            required_cert_ids |= set(self.shift_requirement_id.required_certification_ids.ids)
+        missing = required_cert_ids - set(employee.security_certification_ids.ids)
+        if missing:
+            names = self.env["security.certification"].browse(list(missing)).mapped("name")
+            warnings.append(f"Missing Certifications: {employee.name} lacks: {', '.join(names)}.")
+
+        return {"hard_block": False, "reasons": warnings}
+
+    def action_manual_assign(self, employee_id, override=False, override_reason=False):
+        """
+        Assign an employee to this slot with manual override support.
+        """
+        self.ensure_one()
+        employee = self.env["hr.employee"].browse(employee_id)
+        if not employee.exists():
+            return {"status": "error", "message": "Selected guard does not exist."}
+
+        eligibility = self.check_guard_eligibility(employee)
+
+        if eligibility["hard_block"]:
+            return {
+                "status": "hard_block",
+                "message": "\n".join(eligibility["reasons"]),
+            }
+
+        reasons = eligibility["reasons"]
+
+        if reasons and not override:
+            return {
+                "status": "override_required",
+                "slot_id": self.id,
+                "guard_id": employee.id,
+                "guard_name": employee.name,
+                "reasons": reasons,
+            }
+
+        # Perform assignment
+        if reasons and override:
+            if not override_reason or not str(override_reason).strip():
+                return {
+                    "status": "error",
+                    "message": "An override reason is required when assigning an ineligible guard.",
+                }
+            self.write({
+                "employee_id": employee.id,
+                "state": "assigned",
+                "is_override": True,
+                "override_reason": str(override_reason).strip(),
+                "wrong_fit_reasons": "\n".join(reasons),
+                "critical_gap": False,
+            })
+            if self.batch_id and hasattr(self.batch_id, "message_post"):
+                self.batch_id.message_post(
+                    body=(
+                        f"<b>Manual Ineligibility Override:</b> {employee.name} assigned to "
+                        f"post <b>{self.post_id.name}</b> on {self.shift_date}.<br/>"
+                        f"<b>Override Reason:</b> {override_reason}<br/>"
+                        f"<b>Warnings:</b><br/>" + "<br/>".join(reasons)
+                    ),
+                    message_type="comment",
+                )
+            if "security.notification" in self.env:
+                self.env["security.notification"].sudo().create({
+                    "title": f"Manual Override: {employee.name} assigned at {self.site_id.name or 'Site'}",
+                    "body": f"Guard {employee.name} assigned with override on {self.shift_date}. Reason: {override_reason}. Warnings: {', '.join(reasons)}",
+                    "notification_type": "override_audit",
+                    "severity": "warning",
+                    "related_model": "security.roster.slot",
+                    "related_id": self.id,
+                    "company_id": self.company_id.id if self.company_id else self.env.company.id,
+                    "site_id": self.site_id.id if self.site_id else False,
+                    "partner_id": self.site_id.partner_id.id if self.site_id and hasattr(self.site_id, "partner_id") and self.site_id.partner_id else False,
+                })
+        else:
+            self.write({
+                "employee_id": employee.id,
+                "state": "assigned",
+                "is_override": False,
+                "override_reason": False,
+                "wrong_fit_reasons": False,
+                "critical_gap": False,
+            })
+
+        return {
+            "status": "success",
+            "message": f"Successfully assigned {employee.name}.",
+            "is_override": self.is_override,
+        }
 
     def _compute_suggestion_count(self):
         for slot in self:

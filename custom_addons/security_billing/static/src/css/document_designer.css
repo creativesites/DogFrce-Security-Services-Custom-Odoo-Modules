@@ -1,0 +1,138 @@
+/* Document Designer Premium Styling */
+
+.doc-designer-container {
+    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f1f5f9;
+}
+
+.designer-tab {
+    transition: all 0.2s ease-in-out;
+}
+
+.designer-tab.active {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+}
+
+.designer-tab:not(.active):hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.designer-sidebar {
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+    overflow-y: auto;
+    font-size: 13.5px;
+    letter-spacing: -0.1px;
+}
+
+/* Custom inputs, color-pickers, sliders, and selects */
+.designer-input {
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    padding: 0.45rem 0.75rem !important;
+    font-size: 13px !important;
+    color: #1e293b !important;
+    background-color: #f8fafc !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.designer-input:focus {
+    border-color: #10b981 !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Range slider design */
+.form-range::-webkit-slider-thumb {
+    background: #10b981 !important;
+}
+.form-range::-moz-range-thumb {
+    background: #10b981 !important;
+}
+.form-range::-ms-thumb {
+    background: #10b981 !important;
+}
+
+/* Styled Form Switches */
+.form-switch .form-check-input {
+    height: 1.35em;
+    width: 2.4em;
+    cursor: pointer;
+    background-color: #e2e8f0;
+    border-color: #cbd5e1;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2394a3b8'/%3e%3c/svg%3e");
+    transition: background-position 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #10b981 !important;
+    border-color: #10b981 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
+}
+
+.form-switch .form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Draggable builder blocks */
+.pcc-builder-block {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.pcc-builder-block:hover {
+    border-color: #10b981 !important;
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.pcc-drag-handle {
+    cursor: grab;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.pcc-builder-block:hover .pcc-drag-handle {
+    opacity: 0.9;
+    color: #10b981;
+}
+
+/* Premium A4 Preview frames and background */
+.pcc-preview-container {
+    background-color: #e2e8f0 !important;
+    background-image: 
+        radial-gradient(#94a3b8 1px, transparent 1px), 
+        radial-gradient(#94a3b8 1px, #e2e8f0 1px);
+    background-size: 24px 24px;
+    background-position: 0 0, 12px 12px;
+}
+
+.pcc-paper-sheet {
+    box-shadow: 
+        0 20px 25px -5px rgba(15, 23, 42, 0.15), 
+        0 8px 10px -6px rgba(15, 23, 42, 0.15),
+        0 0 0 1px rgba(15, 23, 42, 0.05) !important;
+    border: 1px solid rgba(255,255,255,0.8);
+    transform-origin: top center;
+}
+
+/* Custom scrollbars for side navigation */
+.designer-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.designer-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.designer-sidebar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 100px;
+}
+.designer-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

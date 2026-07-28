@@ -12,6 +12,10 @@
                         string="Suggest Guards" icon="fa-magic"
                         invisible="employee_id != False"/>
             </xpath>
+            <!-- Inject critical_gap field inside the slot details group -->
+            <xpath expr="//field[@name='employee_id']" position="after">
+                <field name="critical_gap" widget="boolean_toggle"/>
+            </xpath>
             <!-- Suggestions panel injected before the first group in the sheet -->
             <xpath expr="//sheet/group[1]" position="before">
                 <div class="alert alert-info mb-3" invisible="suggestion_count == 0">

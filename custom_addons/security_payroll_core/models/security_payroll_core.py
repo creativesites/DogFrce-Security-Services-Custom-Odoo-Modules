@@ -4,6 +4,16 @@ from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
 
+class SecurityPayrollRuleSet(models.Model):
+    _inherit = "security.payroll.rule.set"
+
+    template_id = fields.Many2one(
+        "security.payslip.template",
+        string="Payslip Template",
+        help="Visual template for payslips generated under this rule set.",
+    )
+
+
 class SecurityPayrollPeriod(models.Model):
     _name = "security.payroll.period"
     _description = "Security Payroll Period"
@@ -402,6 +412,51 @@ class SecurityPayslip(models.Model):
     def action_reset_to_draft(self):
         for payslip in self:
             payslip.state = "draft"
+
+    def get_ytd_totals(self):
+        """
+        Calculates the Year-To-Date totals (earnings, deductions, net_pay)
+        for this employee during the current calendar year.
+        """
+        self.ensure_one()
+        if not self.period_id or not self.period_id.date_from:
+            return {'earnings': self.total_earnings, 'deductions': self.total_deductions, 'net_pay': self.net_pay}
+        
+        start_date = self.period_id.date_from.replace(month=1, day=1)
+        payslips = self.search([
+            ('employee_id', '=', self.employee_id.id),
+            ('state', 'in', ('confirmed', 'paid')),
+            ('period_id.date_from', '>=', start_date),
+            ('period_id.date_from', '<=', self.period_id.date_from),
+        ])
+        
+        # Fallback to current if no other payslips found
+        earnings = sum(payslips.mapped('total_earnings')) or self.total_earnings
+        deductions = sum(payslips.mapped('total_deductions')) or self.total_deductions
+        net_pay = sum(payslips.mapped('net_pay')) or self.net_pay
+        
+        return {
+            'earnings': earnings,
+            'deductions': deductions,
+            'net_pay': net_pay,
+        }
+
+    def get_leave_balances(self):
+        """
+        Returns a list of leave balance dictionary items for this employee.
+        """
+        self.ensure_one()
+        if not self.employee_id:
+            return []
+        
+        balances = self.env['security.leave.balance'].search([
+            ('employee_id', '=', self.employee_id.id)
+        ])
+        return [{
+            'type_name': bal.leave_type_id.name,
+            'balance_days': bal.balance_days,
+        } for bal in balances]
+
 
     def action_compute_from_sources(self):
         attendance_model = self.env["security.attendance.record"]

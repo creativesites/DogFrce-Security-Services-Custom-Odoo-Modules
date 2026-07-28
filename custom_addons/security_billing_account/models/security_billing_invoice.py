@@ -34,6 +34,12 @@ class SecurityBillingInvoice(models.Model):
                 ("company_id", "=", self.env.company.id)
             ], limit=1)
 
+            if not journal:
+                # Standard Odoo account.move requires a valid sales journal.
+                # If no journal exists (e.g., during database seeding before accounting COA is set up),
+                # we skip the sync gracefully to avoid NotNullViolation database crashes.
+                continue
+
             vals = {
                 "move_type": "out_invoice",
                 "partner_id": inv.partner_id.id,

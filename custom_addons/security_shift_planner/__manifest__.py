@@ -17,9 +17,11 @@
         "web.assets_backend": [
             "security_shift_planner/static/src/css/roster_board.css",
             "security_shift_planner/static/src/css/rostering_hub.css",
+            "security_shift_planner/static/src/js/roster_grid.js",
             "security_shift_planner/static/src/js/roster_board.js",
             "security_shift_planner/static/src/js/rostering_hub.js",
             "security_shift_planner/static/src/js/weekly_checkin.js",
+            "security_shift_planner/static/src/xml/roster_grid.xml",
             "security_shift_planner/static/src/xml/roster_board.xml",
             "security_shift_planner/static/src/xml/rostering_hub.xml",
             "security_shift_planner/static/src/xml/weekly_checkin.xml",

@@ -8,6 +8,7 @@
     "depends": ["security_documents", "security_leave", "security_billing", "security_attendance", "mail"],
     "data": [
         "security/ir.model.access.csv",
+        "security/security_notifications_security.xml",
         "data/security_notifications_cron.xml",
         "views/security_notifications_views.xml",
     ],

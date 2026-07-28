@@ -159,6 +159,12 @@ class SecurityBillingInvoice(models.Model):
     _rec_name = "name"
 
     name = fields.Char(required=True)
+    template_id = fields.Many2one(
+        "security.document.template",
+        string="Document Template",
+        domain="[('document_type', '=', 'invoice')]",
+        help="Visual template for this invoice.",
+    )
     partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     billing_plan_id = fields.Many2one("security.billing.plan")
     service_date_from = fields.Date()
@@ -829,7 +835,20 @@ class SecurityBillingInvoiceLine(models.Model):
         compute="_compute_subtotal",
         store=True,
     )
+    tax_ids = fields.Many2many("account.tax", string="Taxes")
+    price_unit = fields.Float(string="Unit Price", compute="_compute_aliases", inverse="_inverse_price_unit")
+    price_subtotal = fields.Float(string="Subtotal", compute="_compute_aliases")
     note = fields.Text()
+
+    @api.depends("unit_price", "subtotal")
+    def _compute_aliases(self):
+        for line in self:
+            line.price_unit = line.unit_price
+            line.price_subtotal = line.subtotal
+
+    def _inverse_price_unit(self):
+        for line in self:
+            line.unit_price = line.price_unit
 
     @api.depends("quantity", "unit_price", "guard_count")
     def _compute_subtotal(self):
@@ -955,8 +974,67 @@ class SecurityBillingDashboard(models.AbstractModel):
                 ).mapped("total_amount")
             )
 
+        # Draft invoice metrics
+        draft_invoices = Invoice.search([("state", "=", "draft")])
+        draft_count = len(draft_invoices)
+        draft_total = sum(draft_invoices.mapped("total_amount"))
+
+        # Collection efficiency rate
+        collection_rate = round((collected_mtd / invoiced_mtd * 100.0), 1) if invoiced_mtd > 0 else 100.0
+
+        # AR Aging Buckets calculation
+        aging_0_30 = 0.0
+        aging_31_60 = 0.0
+        aging_61_90 = 0.0
+        aging_90_plus = 0.0
+
+        partner_overdue = {}  # partner_id -> {partner_name, partner_id, total, count, max_days}
+
+        unpaid_invoices = Invoice.search([("state", "in", ["sent", "draft"])])
+        for inv in unpaid_invoices:
+            if not inv.due_date:
+                continue
+            amt = inv.balance_amount if hasattr(inv, "balance_amount") and inv.balance_amount else inv.total_amount
+            if amt <= 0.01:
+                continue
+            if inv.due_date < today:
+                days_overdue = (today - inv.due_date).days
+                if days_overdue <= 30:
+                    aging_0_30 += amt
+                elif days_overdue <= 60:
+                    aging_31_60 += amt
+                elif days_overdue <= 90:
+                    aging_61_90 += amt
+                else:
+                    aging_90_plus += amt
+
+                pid = inv.partner_id.id
+                if pid not in partner_overdue:
+                    partner_overdue[pid] = {
+                        "partner_id": pid,
+                        "partner_name": inv.partner_id.name or "Unknown Client",
+                        "total_overdue": 0.0,
+                        "invoice_count": 0,
+                        "max_days_overdue": 0,
+                    }
+                partner_overdue[pid]["total_overdue"] += amt
+                partner_overdue[pid]["invoice_count"] += 1
+                if days_overdue > partner_overdue[pid]["max_days_overdue"]:
+                    partner_overdue[pid]["max_days_overdue"] = days_overdue
+
+        high_risk_clients = sorted(
+            list(partner_overdue.values()),
+            key=lambda x: x["total_overdue"],
+            reverse=True
+        )[:8]
+
+        # Mode counts for active plans
+        mode_counts = {"recurring": 0, "shift": 0, "adhoc": 0}
         plans_data = []
         for plan in active_plans:
+            if plan.billing_mode in mode_counts:
+                mode_counts[plan.billing_mode] += 1
+
             last_inv = Invoice.search(
                 [("billing_plan_id", "=", plan.id), ("state", "!=", "cancelled")],
                 order="invoice_date desc",
@@ -973,6 +1051,7 @@ class SecurityBillingDashboard(models.AbstractModel):
                 "id": plan.id,
                 "name": plan.name,
                 "client": plan.partner_id.name,
+                "mode_key": plan.billing_mode,
                 "mode": dict(self.env["security.billing.plan"]._fields["billing_mode"].selection).get(plan.billing_mode, plan.billing_mode),
                 "last_inv_date": str(last_inv.invoice_date) if last_inv and last_inv.invoice_date else "",
                 "last_inv_total": last_inv.total_amount if last_inv else 0.0,
@@ -1006,13 +1085,27 @@ class SecurityBillingDashboard(models.AbstractModel):
                 "overdue": is_overdue,
             })
 
+        currency_sym = self.env.company.currency_id.symbol or "ZMW"
+
         return {
             "month_label": today.strftime("%B %Y"),
+            "currency_symbol": currency_sym,
             "active_plan_count": len(active_plans),
             "invoiced_mtd": invoiced_mtd,
             "collected_mtd": collected_mtd,
+            "collection_rate": collection_rate,
             "outstanding_total": outstanding_total,
             "overdue_total": overdue_total,
+            "draft_count": draft_count,
+            "draft_total": draft_total,
+            "aging": {
+                "0_30": aging_0_30,
+                "31_60": aging_31_60,
+                "61_90": aging_61_90,
+                "90_plus": aging_90_plus,
+            },
+            "high_risk_clients": high_risk_clients,
+            "mode_counts": mode_counts,
             "plans": plans_data,
             "recent_invoices": recent_data,
         }

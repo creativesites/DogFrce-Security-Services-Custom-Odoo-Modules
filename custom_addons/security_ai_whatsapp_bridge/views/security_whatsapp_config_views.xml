@@ -53,8 +53,11 @@
                                 <field name="restrict_authorized_numbers"/>
                                 <field name="authorized_numbers" placeholder="+260971234567, 260965000111, +260955888999" invisible="not restrict_authorized_numbers"/>
                             </group>
-                            <group string="NLP &amp; Message Filtering">
+                            <group string="NLP, Chat Context &amp; AI Engine">
                                 <field name="ignore_unrelated_messages"/>
+                                <field name="enable_ai_fallback"/>
+                                <field name="max_history_context" invisible="not enable_ai_fallback"/>
+                                <field name="system_prompt_custom" placeholder="e.g. Always respond politely in Zambian English..." invisible="not enable_ai_fallback"/>
                             </group>
                         </page>
                         <page string="Supported Commands">

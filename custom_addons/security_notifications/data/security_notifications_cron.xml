@@ -32,4 +32,15 @@
         <field name="nextcall" eval="(DateTime.now() + timedelta(minutes=10)).strftime('%Y-%m-%d %H:%M:%S')"/>
         <field name="active">True</field>
     </record>
+
+    <record id="ir_cron_scan_certification_expiry" model="ir.cron">
+        <field name="name">Security: Scan Guard Certification Expiry Notifications</field>
+        <field name="model_id" ref="model_security_notification"/>
+        <field name="state">code</field>
+        <field name="code">model.action_scan_certification_expiry()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(hours=6)).strftime('%Y-%m-%d 06:00:00')"/>
+        <field name="active">True</field>
+    </record>
 </odoo>

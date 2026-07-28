@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_security_quotation" model="ir.actions.report">
+        <field name="name">Security Quotation</field>
+        <field name="model">sale.order</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">security_billing_sale.report_security_quotation</field>
+        <field name="report_file">security_billing_sale.report_security_quotation</field>
+        <field name="binding_model_id" ref="sale.model_sale_order"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Main dynamic template for Quotations -->
+    <template id="report_security_quotation">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    
+                    <t t-set="tmpl_data" t-value="template_data or {}"/>
+                    <t t-set="tmpl_id" t-value="doc.template_id or False"/>
+                    <t t-set="tmpl_settings" t-value="{
+                        'font_family': tmpl_data.get('font_family') or (tmpl_id and tmpl_id.font_family) or 'Inter',
+                        'primary_color': tmpl_data.get('primary_color') or (tmpl_id and tmpl_id.primary_color) or '#10b981',
+                        'secondary_color': tmpl_data.get('secondary_color') or (tmpl_id and tmpl_id.secondary_color) or '#0f172a',
+                        'base_layout': tmpl_data.get('base_layout') or (tmpl_id and tmpl_id.base_layout) or 'modern',
+                        'show_payment_terms': tmpl_data.get('show_payment_terms', True) if 'show_payment_terms' in tmpl_data else (tmpl_id.show_payment_terms if tmpl_id else True),
+                        'show_bank_details': tmpl_data.get('show_bank_details', True) if 'show_bank_details' in tmpl_data else (tmpl_id.show_bank_details if tmpl_id else True),
+                        'show_company_logo': tmpl_data.get('show_company_logo', True) if 'show_company_logo' in tmpl_data else (tmpl_id.show_company_logo if tmpl_id else True),
+                        'show_watermark': tmpl_data.get('show_watermark', False) if 'show_watermark' in tmpl_data else (tmpl_id.show_watermark if tmpl_id else False),
+                        'show_tax_column': tmpl_data.get('show_tax_column', True) if 'show_tax_column' in tmpl_data else (tmpl_id.show_tax_column if tmpl_id else True),
+                        'logo_height': tmpl_data.get('logo_height') or (tmpl_id and tmpl_id.logo_height) or 60,
+                        'logo_alignment': tmpl_data.get('logo_alignment') or (tmpl_id and tmpl_id.logo_alignment) or 'left',
+                        'custom_footer_note': tmpl_data.get('custom_footer_note') or (tmpl_id and tmpl_id.custom_footer_note) or '',
+                        'header_bg_color': tmpl_data.get('header_bg_color') or (tmpl_id and tmpl_id.header_bg_color) or '#1e293b',
+                        'header_text_color': tmpl_data.get('header_text_color') or (tmpl_id and tmpl_id.header_text_color) or '#ffffff',
+                        'label_billed_to': tmpl_data.get('label_billed_to') or (tmpl_id and tmpl_id.label_billed_to) or 'Billed To',
+                        'blocks': tmpl_data.get('blocks') or (tmpl_id and tmpl_id.block_order and json.loads(tmpl_id.block_order)) or ['header', 'client_info', 'line_items', 'totals', 'terms', 'footer']
+                    }"/>
+
+                    <style>
+                        .doc-page {
+                            font-family: '<t t-esc="tmpl_settings.get('font_family')"/>', Helvetica, Arial, sans-serif;
+                            color: #334155;
+                            font-size: 14px;
+                            line-height: 1.5;
+                        }
+                        .doc-primary { color: <t t-esc="tmpl_settings.get('primary_color')"/> !important; }
+                        .doc-bg-primary { background-color: <t t-esc="tmpl_settings.get('primary_color')"/> !important; }
+                        .doc-secondary { color: <t t-esc="tmpl_settings.get('secondary_color')"/> !important; }
+                        .doc-bg-secondary { background-color: <t t-esc="tmpl_settings.get('secondary_color')"/> !important; }
+                        
+                        /* Interactive designer style wrappers */
+                        .preview-block-wrapper {
+                            transition: all 0.2s ease;
+                            border: 2px solid transparent;
+                            border-radius: 4px;
+                            cursor: pointer;
+                        }
+                        .preview-block-wrapper:hover {
+                            border-color: rgba(16, 185, 129, 0.4) !important;
+                            background: rgba(16, 185, 129, 0.01);
+                        }
+                        
+                        /* Base layout variants */
+                        .layout-corporate .table {
+                            border: 1px solid #94a3b8 !important;
+                        }
+                        .layout-corporate th {
+                            border: 1px solid #cbd5e1 !important;
+                            background-color: <t t-esc="tmpl_settings.get('header_bg_color')"/> !important;
+                            color: <t t-esc="tmpl_settings.get('header_text_color')"/> !important;
+                        }
+                        .layout-corporate .card, .layout-corporate .border {
+                            border: 1px solid #cbd5e1 !important;
+                            border-radius: 4px !important;
+                        }
+                        
+                        .layout-minimalist .card {
+                            background: transparent !important;
+                            border: none !important;
+                            padding: 0 !important;
+                        }
+                        .layout-minimalist .border {
+                            border: none !important;
+                            border-bottom: 1px solid #e2e8f0 !important;
+                            border-radius: 0 !important;
+                        }
+                        .layout-minimalist .table, .layout-minimalist td, .layout-minimalist th {
+                            border: none !important;
+                            border-bottom: 1px solid #e2e8f0 !important;
+                        }
+                        .layout-minimalist th {
+                            background: transparent !important;
+                            color: #0f172a !important;
+                            font-weight: bold !important;
+                        }
+                        
+                        .layout-bold th {
+                            background-color: <t t-esc="tmpl_settings.get('primary_color')"/> !important;
+                            color: white !important;
+                        }
+                        .layout-bold .card {
+                            border-left: 5px solid <t t-esc="tmpl_settings.get('primary_color')"/> !important;
+                            border-radius: 4px;
+                        }
+                        .layout-bold .table {
+                            border: 2px solid <t t-esc="tmpl_settings.get('primary_color')"/> !important;
+                        }
+                    </style>
+
+                    <div t-attf-class="page doc-page position-relative layout-{{ tmpl_settings.get('base_layout') }}">
+                        <t t-if="tmpl_settings.get('show_watermark')">
+                            <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="z-index:-1; opacity:0.04; font-size:120px; font-weight:bold; transform:rotate(-45deg);">
+                                DRAFT
+                            </div>
+                        </t>
+
+                        <t t-foreach="tmpl_settings.get('blocks')" t-as="block">
+                            <div t-att-data-block-id="block" class="preview-block-wrapper">
+                                <!-- We reuse the modular blocks defined in security_billing -->
+                                <t t-if="block == 'header'"><t t-call="security_billing.report_document_header"/></t>
+                                <t t-if="block == 'client_info'"><t t-call="security_billing.report_document_client_info"/></t>
+                                <t t-if="block == 'line_items'"><t t-call="security_billing.report_document_line_items"/></t>
+                                <t t-if="block == 'totals'"><t t-call="security_billing.report_document_totals"/></t>
+                                <t t-if="block == 'terms'"><t t-call="security_billing.report_document_terms"/></t>
+                                <t t-if="block == 'footer'"><t t-call="security_billing.report_document_footer"/></t>
+                            </div>
+                        </t>
+                    </div>
+
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

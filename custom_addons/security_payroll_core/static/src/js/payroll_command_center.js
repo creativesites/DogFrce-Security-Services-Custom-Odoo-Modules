@@ -41,6 +41,10 @@ export class PayrollCommandCenter extends Component {
         });
     }
 
+    openPayslipDesigner() {
+        this.action.doAction("security_payroll_core.action_payslip_designer");
+    }
+
     async _loadCurrency() {
         try {
             const companies = await this.orm.searchRead("res.company", [], ["currency_id"], { limit: 1 });

@@ -42,7 +42,6 @@
         'security_mobile',
         'security_documents',
         'security_notifications',
-        'security_licensing',
         'security_dogforce_migration',
         'security_dogforce_data',
         'security_help',

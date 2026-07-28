@@ -8,6 +8,7 @@
     "depends": ["security_billing", "sale"],
     "data": [
         "views/sale_order_views.xml",
+        "reports/security_quotation_report.xml",
     ],
     "auto_install": True,
     "installable": True,

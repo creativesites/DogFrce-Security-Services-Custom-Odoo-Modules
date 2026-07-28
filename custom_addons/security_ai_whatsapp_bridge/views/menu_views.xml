@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Client Action: Operational Dashboard -->
+    <record id="action_whatsapp_dashboard_client" model="ir.actions.client">
+        <field name="name">WhatsApp Control Room Dashboard</field>
+        <field name="tag">security_whatsapp.Dashboard</field>
+    </record>
+
+    <!-- Client Action: Live Control Room Chat Workspace -->
+    <record id="action_whatsapp_chat_workspace_client" model="ir.actions.client">
+        <field name="name">Live Control Room Workspace</field>
+        <field name="tag">security_whatsapp.ChatWorkspace</field>
+    </record>
+
+    <!-- Root App Menu: WhatsApp -->
+    <menuitem id="menu_security_whatsapp_root"
+              name="WhatsApp"
+              parent="security_base.menu_security_root"
+              sequence="25"/>
+
+    <!-- Sub-menu 1: Control Room Dashboard -->
+    <menuitem id="menu_security_whatsapp_dashboard"
+              name="Dashboard"
+              parent="menu_security_whatsapp_root"
+              action="action_whatsapp_dashboard_client"
+              sequence="10"/>
+
+    <!-- Sub-menu 2: Live Control Room Workspace -->
+    <menuitem id="menu_security_whatsapp_workspace"
+              name="Live Control Room"
+              parent="menu_security_whatsapp_root"
+              action="action_whatsapp_chat_workspace_client"
+              sequence="20"/>
+
+    <!-- Sub-menu 3: Conversation Audit Logs -->
+    <menuitem id="menu_security_whatsapp_message_log_main"
+              name="Conversation Audit Logs"
+              parent="menu_security_whatsapp_root"
+              action="action_security_whatsapp_message_log"
+              sequence="30"/>
+
+    <!-- Sub-menu 4: Configuration Parent -->
+    <menuitem id="menu_security_whatsapp_config_parent"
+              name="Configuration"
+              parent="menu_security_whatsapp_root"
+              sequence="90"/>
+
+    <!-- Sub-menu 4.1: Authorized Whitelist -->
+    <menuitem id="menu_security_whatsapp_whitelist_item"
+              name="Authorized Whitelist"
+              parent="menu_security_whatsapp_config_parent"
+              action="action_security_whatsapp_whitelist"
+              sequence="10"/>
+
+    <!-- Sub-menu 4.2: Settings & Gateway -->
+    <menuitem id="menu_security_whatsapp_settings_item"
+              name="Bridge Settings &amp; Gateway"
+              parent="menu_security_whatsapp_config_parent"
+              action="action_security_whatsapp_config_server"
+              sequence="20"/>
+
+</odoo>

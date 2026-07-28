@@ -1,32 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!-- ======================================================= -->
-    <!-- ZM Payslip Template Override                            -->
-    <!-- Inherits security_payroll_core.report_security_payslip  -->
-    <!-- Changes for ZM payrolls:                               -->
-    <!--   1. Company address — dynamic city/country             -->
-    <!--   2. SSC Number → NAPSA / NHIMA / TPIN                 -->
-    <!--   3. All hardcoded "NAD" currency labels replaced with  -->
-    <!--      the rule set's currency code (ZMW for ZM, NAD for  -->
-    <!--      NA, etc.) — works for any localization.            -->
+    <!-- ZM Payslip Sub-Template Overrides                       -->
+    <!-- Targets sub-templates in security_payroll_core         -->
     <!-- ======================================================= -->
 
-    <template id="report_security_zm_payslip" inherit_id="security_payroll_core.report_security_payslip">
-
-        <!-- ── 1. Company address ──────────────────────────────── -->
-        <xpath expr="//p[text()='Windhoek, Namibia']" position="replace">
+    <!-- ── 1. Company address in Header ──────────────────────── -->
+    <template id="report_security_zm_payslip_header" inherit_id="security_payroll_core.report_payslip_header">
+        <xpath expr="//p[contains(text(),'Windhoek')]" position="replace">
             <p class="text-muted small mb-0"
                t-if="not (doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM')">
-                Windhoek, Namibia
+                <t t-esc="res_company.city or 'Windhoek'"/>, <t t-esc="res_company.country_id.name or 'Namibia'"/>
             </p>
             <p class="text-muted small mb-0"
                t-if="doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM'">
-                <t t-esc="env.company.city or 'Lusaka'"/>, <t t-esc="env.company.country_id.name or 'Zambia'"/>
+                <t t-esc="res_company.city or 'Lusaka'"/>, <t t-esc="res_company.country_id.name or 'Zambia'"/>
             </p>
         </xpath>
+    </template>
 
-        <!-- ── 2. SSC Number → ZM statutory IDs ──────────────── -->
-        <xpath expr="//tr[td[text()='SSC Number:']]" position="replace">
+    <!-- ── 2. SSC Number → ZM statutory IDs in Employee Info ──── -->
+    <template id="report_security_zm_payslip_employee_info" inherit_id="security_payroll_core.report_payslip_employee_info">
+        <xpath expr="//tr[td[contains(text(),'SSC Number')]]" position="replace">
             <tr t-if="not (doc.period_id.rule_set_id and doc.period_id.rule_set_id.country_code == 'ZM')">
                 <td class="text-muted py-1">SSC Number:</td>
                 <td class="py-1">
@@ -58,54 +53,57 @@
                 </tr>
             </t>
         </xpath>
+    </template>
 
-        <!-- ── 3a. Attendance table "Rate (NAD)" header ────────── -->
-        <xpath expr="//th[text()='Rate (NAD)']" position="replace">
-            <th class="py-2">
+    <!-- ── 3a. Attendance table "Rate" header ─────────────────── -->
+    <template id="report_security_zm_payslip_attendance" inherit_id="security_payroll_core.report_payslip_attendance">
+        <xpath expr="//th[text()='Rate']" position="replace">
+            <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">
                 Rate (<t t-esc="doc.period_id.rule_set_id.currency_id.name or 'NAD'"/>)
             </th>
         </xpath>
+    </template>
 
-        <!-- ── 3b. Earnings column heading ─────────────────────── -->
-        <xpath expr="//h5[contains(.,'Earnings (NAD)')]" position="replace">
-            <h5 class="border-bottom pb-2 mb-3 fw-bold text-success">
-                <i class="fa fa-plus-circle me-1"/>
+    <!-- ── 3b. Earnings column heading ────────────────────────── -->
+    <template id="report_security_zm_payslip_earnings" inherit_id="security_payroll_core.report_payslip_earnings">
+        <xpath expr="//h6[contains(.,'Earnings')]" position="replace">
+            <h6 class="fw-bold pcc-secondary mb-2">
+                <i class="fa fa-plus-circle text-success me-1"/>
                 Earnings (<t t-esc="doc.period_id.rule_set_id.currency_id.name or 'NAD'"/>)
-            </h5>
+            </h6>
         </xpath>
+    </template>
 
-        <!-- ── 3c. Deductions column heading ───────────────────── -->
-        <xpath expr="//h5[contains(.,'Deductions (NAD)')]" position="replace">
-            <h5 class="border-bottom pb-2 mb-3 fw-bold text-danger">
-                <i class="fa fa-minus-circle me-1"/>
+    <!-- ── 3c. Deductions column heading ──────────────────────── -->
+    <template id="report_security_zm_payslip_deductions" inherit_id="security_payroll_core.report_payslip_deductions">
+        <xpath expr="//h6[contains(.,'Deductions')]" position="replace">
+            <h6 class="fw-bold pcc-secondary mb-2">
+                <i class="fa fa-minus-circle text-danger me-1"/>
                 Deductions (<t t-esc="doc.period_id.rule_set_id.currency_id.name or 'NAD'"/>)
-            </h5>
+            </h6>
         </xpath>
+    </template>
 
-        <!-- ── 3d. Financial summary: Gross Earnings amount ─────── -->
+    <!-- ── 3d/e/f. Financial summary & Net pay in Totals ──────── -->
+    <template id="report_security_zm_payslip_totals" inherit_id="security_payroll_core.report_payslip_totals">
         <xpath expr="//div[span[@t-field='doc.total_earnings']]" position="replace">
             <div class="col-5 text-end fw-bold text-success">
                 <span t-field="doc.total_earnings"/>
                 <t t-esc="' ' + (doc.period_id.rule_set_id.currency_id.name or 'NAD')"/>
             </div>
         </xpath>
-
-        <!-- ── 3e. Financial summary: Total Deductions amount ───── -->
         <xpath expr="//div[span[@t-field='doc.total_deductions']]" position="replace">
             <div class="col-5 text-end fw-bold text-danger">
                 <span t-field="doc.total_deductions"/>
                 <t t-esc="' ' + (doc.period_id.rule_set_id.currency_id.name or 'NAD')"/>
             </div>
         </xpath>
-
-        <!-- ── 3f. Net take-home pay amount ─────────────────────── -->
         <xpath expr="//h3[span[@t-field='doc.net_pay']]" position="replace">
             <h3 class="fw-bold mb-0 mt-1" style="font-size: 24px;">
                 <span t-field="doc.net_pay"/>
                 <t t-esc="' ' + (doc.period_id.rule_set_id.currency_id.name or 'NAD')"/>
             </h3>
         </xpath>
-
     </template>
 
 </odoo>

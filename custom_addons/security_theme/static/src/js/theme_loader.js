@@ -1,6 +1,9 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
+import { patch } from "@web/core/utils/patch";
+import { WebClient } from "@web/webclient/webclient";
+import { useService } from "@web/core/utils/hooks";
 
 const THEMES = [
     'dogforce_navy',
@@ -85,3 +88,14 @@ const themeService = {
 };
 
 registry.category('services').add('security_theme_loader', themeService);
+
+patch(WebClient.prototype, {
+    setup() {
+        super.setup();
+        try {
+            useService("security_theme_loader");
+        } catch (_e) {
+            console.error("Failed to load security_theme_loader service:", _e);
+        }
+    }
+});

@@ -75,6 +75,13 @@
     <field name="sequence">10</field>
 </record>
 
+<record id="cat_whatsapp" model="security.help.category">
+    <field name="name">WhatsApp AI Bridge</field>
+    <field name="icon">fa-whatsapp</field>
+    <field name="color">#25d366</field>
+    <field name="sequence">11</field>
+</record>
+
 
 <!-- ═══════════════════════════════════════════════════════
      GETTING STARTED
@@ -476,99 +483,71 @@
 
 <record id="art_create_roster" model="security.help.article">
     <field name="category_id" ref="cat_roster"/>
-    <field name="title">Creating a Monthly Roster</field>
-    <field name="summary">Step-by-step: from blank batch to fully assigned roster</field>
+    <field name="title">Creating a Monthly Roster Batch</field>
+    <field name="summary">Step-by-step: using the Batch Manager modal/sheet, company cycle defaults, and auto slot generation</field>
     <field name="sequence">2</field>
-    <field name="tags">roster create generate monthly batch slots assign</field>
+    <field name="tags">roster create generate monthly batch slots assign cycle modal bottom sheet</field>
     <field name="body"><![CDATA[
-<h2>Creating a Monthly Roster</h2>
+<h2>Creating a Monthly Roster Batch</h2>
 
-<h3>Before you start — Prerequisites</h3>
-<p>Make sure these are set up first:</p>
+<h3>Prerequisites</h3>
+<p>Ensure client sites, posts, shift templates, and guard profiles are created before generating monthly roster slots.</p>
+
+<h3>Company Roster Cycle Defaults</h3>
+<p>Most security companies operate on a fixed monthly billing & payroll cycle rather than a calendar month. In DeployGuard, you can set your company's cycle under <strong>Scheduling → Settings → Roster Cycle Settings</strong>:</p>
 <ul>
-  <li>Client sites and posts are created</li>
-  <li>Shift templates exist (e.g. Day 06:00–18:00, Night 18:00–06:00)</li>
-  <li>Shift requirements are configured for each post</li>
-  <li>Guards have correct grades and active documents</li>
+  <li><strong>Cycle Start Day:</strong> e.g., <code>21</code> (21st of the month)</li>
+  <li><strong>Cycle End Day:</strong> e.g., <code>22</code> (22nd of the following month)</li>
+</ul>
+<p>When creating a new roster batch, start and end dates automatically pre-fill to match your company's defined cycle.</p>
+
+<h3>Step 1 — Open the Batch Manager</h3>
+<p>You can manage batches without leaving the Roster Board:</p>
+<ul>
+  <li>On <strong>Desktop</strong>: Click <strong>"Manage Batches"</strong> in the Roster Board top bar to open an interactive modal.</li>
+  <li>On <strong>Mobile</strong>: Tap <strong>"Batches"</strong> to open a smooth, responsive bottom sheet.</li>
 </ul>
 
-<h3>Step 1 — Create a new Roster Batch</h3>
+<h3>Step 2 — Create or Copy a Roster Batch</h3>
 <ol>
-  <li>Go to <strong>Scheduling → Roster Batches</strong></li>
-  <li>Click <strong>New</strong></li>
-  <li>Set the <strong>Month</strong> and <strong>Year</strong></li>
-  <li>Give it a name (e.g. "June 2026 Roster")</li>
-  <li>Save — status is now <strong>Draft</strong></li>
+  <li>Click <strong>New Batch</strong>.</li>
+  <li>Enter the Batch Name (e.g. <em>"June 2026 Monthly Roster"</em>) and select the start/end dates.</li>
+  <li>Alternatively, click <strong>"Copy Batch"</strong> to duplicate an existing monthly roster layout and assignments with a single click!</li>
+  <li>Click <strong>Save &amp; Generate Slots</strong>. Status moves to <strong>Generated</strong>.</li>
 </ol>
 
-<h3>Step 2 — Generate Slots</h3>
-<ol>
-  <li>Click the <strong>Generate Roster</strong> button</li>
-  <li>The system reads all shift requirements and creates one slot per requirement per day</li>
-  <li>Status moves to <strong>Generated</strong></li>
-  <li>You will now see all empty slots listed under the batch</li>
-</ol>
+<h3>Step 3 — Assign Guards &amp; Shift Swaps</h3>
+<p>Assign guards visually on the <strong>Roster Board</strong> or use the guard shift exchange feature to handle guard slot swap requests.</p>
 
-<h3>Step 3 — Assign Guards</h3>
-<p>You have two ways to assign guards:</p>
-<ul>
-  <li><strong>Roster Board</strong> (recommended) — an interactive visual board. Open it from <strong>Scheduling → Roster Board</strong>. See the Roster Board article for details.</li>
-  <li><strong>Slot list</strong> — open each slot individually and select a guard from the dropdown.</li>
-</ul>
-
-<h3>Step 4 — Submit for Approval</h3>
-<p>Once all slots are filled, click <strong>Submit</strong> on the Roster Batch record. A manager must then click <strong>Approve</strong>.</p>
-
-<h3>Step 5 — Confirm</h3>
-<p>After approval, click <strong>Confirm</strong> to lock the roster. It is now ready for attendance posting.</p>
-
-<div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px 16px; border-radius:6px; margin-top:16px;">
-  <strong>Tip:</strong> Use the AI Shift Planner to get ranked guard suggestions for each empty slot. It checks grades, certifications, leave conflicts, and double-bookings automatically.
-</div>
+<h3>Step 4 — Approve &amp; Lock</h3>
+<p>Once all slots are assigned, submit the batch for approval and click <strong>Confirm</strong> to lock the roster for attendance posting.</p>
     ]]></field>
 </record>
 
 <record id="art_roster_board" model="security.help.article">
     <field name="category_id" ref="cat_roster"/>
     <field name="title">Using the Roster Board</field>
-    <field name="summary">The interactive visual tool for assigning guards to shifts</field>
+    <field name="summary">The interactive visual tool for assigning guards, managing batches, and handling shift swaps</field>
     <field name="sequence">3</field>
-    <field name="tags">roster board assign guard slot visual interactive suggestion</field>
+    <field name="tags">roster board assign guard slot visual interactive suggestion modal bottom sheet swap</field>
     <field name="body"><![CDATA[
 <h2>The Roster Board</h2>
-<p>The Roster Board is an interactive visual tool that makes assigning guards to shifts much faster. Open it from <strong>Scheduling → Roster Board</strong>.</p>
+<p>The Roster Board is an interactive visual tool for managing shift assignments and monthly batches across all client sites. Open it from <strong>Scheduling → Roster Board</strong>.</p>
 
-<h3>Layout</h3>
+<h3>Key Features</h3>
 <ul>
-  <li><strong>Left sidebar</strong> — Select the month, site, and view options</li>
-  <li><strong>Main grid</strong> — Shows the calendar with all slots. Rows = posts, columns = days.</li>
-  <li><strong>Slot cards</strong> — Each cell is a shift slot. Colours show assignment status (empty = grey, assigned = blue).</li>
+  <li><strong>Batch Manager Modal &amp; Bottom Sheet:</strong> Create, switch, or duplicate monthly batches directly from the header (responsive modal on desktop, bottom sheet on mobile).</li>
+  <li><strong>Grid View:</strong> View posts on rows and calendar days on columns. Colors indicate assignment status (grey = empty, blue = assigned).</li>
+  <li><strong>AI Shift Ranking:</strong> Click any empty slot to view ranked guard suggestions scored by grade, reliability, certification validity, and leave conflicts.</li>
+  <li><strong>Guard Shift Exchange:</strong> Swap shifts between two guards seamlessly while preserving audit trails.</li>
 </ul>
 
-<h3>Assigning a Guard</h3>
+<h3>Assigning Guards with AI Guidance</h3>
 <ol>
-  <li>Click on an empty (grey) slot</li>
-  <li>A panel opens on the right showing <strong>Suggested Guards</strong></li>
-  <li>The AI ranks candidates by score — best match at the top</li>
-  <li>Each suggestion shows the guard's name, grade, reliability score, and any flags (leave conflict, certification warning)</li>
-  <li>Click <strong>Assign</strong> next to a guard to fill the slot</li>
+  <li>Click an empty shift slot cell.</li>
+  <li>Review suggested guards in the right sidebar.</li>
+  <li>Click <strong>Assign</strong> to fill the slot.</li>
 </ol>
-
-<h3>Reading the Suggestion Cards</h3>
-<ul>
-  <li><span style="color:#16a34a;">●</span> <strong>Green score</strong> — Best available match</li>
-  <li><span style="color:#d97706;">●</span> <strong>Amber score</strong> — Acceptable but some concerns</li>
-  <li><span style="color:#dc2626;">●</span> <strong>Red score</strong> — Not recommended (shown for completeness)</li>
-  <li><strong>⚠ Leave conflict</strong> — This guard has approved leave on this date</li>
-  <li><strong>⚠ Double booked</strong> — Guard is already assigned to another slot at the same time</li>
-</ul>
-
-<h3>Removing or Swapping an Assignment</h3>
-<p>Click on a filled (blue) slot to see the current assignment. Click <strong>Remove</strong> to clear it, then assign a different guard.</p>
-
-<div style="background:#dcfce7; border-left:4px solid #16a34a; padding:12px 16px; border-radius:6px; margin-top:16px;">
-  <strong>Tip:</strong> Filter by site in the left sidebar to focus on one client at a time. This is much easier than scrolling through all slots at once.
-</div>
     ]]></field>
 </record>
 
@@ -1917,48 +1896,147 @@
      WHATSAPP AI BRIDGE & FIELD ATTENDANCE
 ════════════════════════════════════════════════════════ -->
 
-<record id="art_whatsapp_ai_field_guide" model="security.help.article">
-    <field name="category_id" ref="cat_attendance"/>
-    <field name="title">WhatsApp AI Bridge &amp; Field Attendance Guide</field>
-    <field name="summary">Complete guide to supervisors taking field attendance, tracking lateness, bulk site check-ins, and executive stats via WhatsApp.</field>
-    <field name="sequence">10</field>
-    <field name="tags">whatsapp ai bridge field attendance lateness site bulk owner stats manager stats awol</field>
-    <field name="body"><![CDATA[
-<h2>DeployGuard WhatsApp AI Bridge &amp; Field Operations</h2>
-<p>DeployGuard connects real-time field operations with Odoo using a zero-cost WhatsApp transport bridge. Supervisors in the field can log attendance, record lateness, mark bulk site check-ins, and query live executive metrics directly over WhatsApp messages.</p>
+<!-- ═══════════════════════════════════════════════════════
+     WHATSAPP AI BRIDGE & CONTROL ROOM
+════════════════════════════════════════════════════════ -->
 
-<h3>1. Field Attendance &amp; Lateness Tracking</h3>
-<p>Supervisors can record guard check-ins directly from site posts:</p>
+<record id="art_whatsapp_overview" model="security.help.article">
+    <field name="category_id" ref="cat_whatsapp"/>
+    <field name="title">WhatsApp Bridge Overview &amp; Device Pairing</field>
+    <field name="summary">Zero-cost Baileys transport bridge, pairing QR code device linking, whitelist security, and operational status</field>
+    <field name="sequence">1</field>
+    <field name="tags">whatsapp bridge baileys QR code link device setup whitelist security transport</field>
+    <field name="body"><![CDATA[
+<h2>WhatsApp AI Transport Bridge</h2>
+<p>DeployGuard features a built-in, zero-cost WhatsApp transport bridge powered by the Node.js Baileys service. It allows field supervisors, control room managers, and company directors to interact with Odoo directly via WhatsApp.</p>
+
+<h3>1. Key Capabilities</h3>
 <ul>
-  <li><strong>On-time Check-in:</strong> Type <code>Check in [Guard Name]</code>. The guard is marked present at their scheduled shift start time.</li>
-  <li><strong>Late Check-in:</strong> Type <code>Check in [Guard Name] late [X] minutes</code> (e.g., <code>Check in Winston Zulu late 20 minutes</code>). The system automatically calculates the check-in time variance and logs lateness minutes for payroll.</li>
+  <li><strong>Zero Per-Message API Costs:</strong> Connects directly to a dedicated company WhatsApp phone number via web socket transport.</li>
+  <li><strong>Automatic Identity Mapping:</strong> Resolves sender phone numbers against <code>hr.employee</code> and <code>res.partner</code> records.</li>
+  <li><strong>Field Operations:</strong> Process bulk site attendance, check-ins with lateness variance, AWOL flags, and site incidents in real time.</li>
+  <li><strong>Executive Intelligence:</strong> Instant metrics on revenue, active client posts, coverage rates, and SLA penalty risks.</li>
+  <li><strong>Generative AI Support:</strong> Built-in fallback to <code>security.ai.engine</code> for natural language understanding and multi-turn conversations.</li>
+</ul>
+
+<h3>2. Pairing a Device (QR Code Setup)</h3>
+<ol>
+  <li>Go to <strong>Configuration → WhatsApp Settings</strong>.</li>
+  <li>Ensure the Bridge Status shows <strong>Connected</strong>.</li>
+  <li>If setting up for the first time or reconnecting, open the QR Code scanner modal in Odoo.</li>
+  <li>Open WhatsApp on the dedicated company control room phone → <strong>Settings → Linked Devices → Link a Device</strong>.</li>
+  <li>Scan the QR code displayed on the screen. Once paired, the status turns green (<strong>Active</strong>).</li>
+</ol>
+
+<h3>3. Whitelist Security &amp; Access Control</h3>
+<p>To prevent unauthorized commands, administrators can restrict incoming WhatsApp commands to whitelisted mobile numbers under <strong>WhatsApp Settings → Allowed Phone Numbers</strong>.</p>
+    ]]></field>
+</record>
+
+<record id="art_whatsapp_field_commands" model="security.help.article">
+    <field name="category_id" ref="cat_whatsapp"/>
+    <field name="title">WhatsApp Field Operations &amp; Commands</field>
+    <field name="summary">Command reference: Bulk site check-ins, lateness tracking, guard location query, AWOL, and incident reporting</field>
+    <field name="sequence">2</field>
+    <field name="tags">whatsapp field commands attendance lateness site bulk checkin awol incident guard location query</field>
+    <field name="body"><![CDATA[
+<h2>WhatsApp Field Operations &amp; Interactive Commands</h2>
+
+<p>Supervisors and field officers can manage postings and track shift attendance directly using natural text messages on WhatsApp.</p>
+
+<h3>1. Individual Check-In &amp; Lateness Tracking</h3>
+<ul>
+  <li><strong>On-time Check-in:</strong> Type <code>Check in [Guard Name]</code><br/><em>Example:</em> <code>Check in Winston Zulu</code> — Marks the guard present at their scheduled start time.</li>
+  <li><strong>Late Check-in:</strong> Type <code>Check in [Guard Name] late [X] minutes</code><br/><em>Example:</em> <code>Check in Winston Zulu late 25 minutes</code> — Marks the guard present and logs 25 minutes of lateness for payroll variance reporting.</li>
 </ul>
 
 <h3>2. Bulk Site-Level Attendance</h3>
-<p>Instead of logging individual guards one by one, supervisors can report whole site postings at once:</p>
+<p>Report an entire client site posting with a single message:</p>
 <ul>
-  <li><strong>All Present:</strong> Type <code>[Site Name] all present</code> (e.g., <code>Bank of Zambia all present</code>). All guards scheduled at the site today are marked present on-time.</li>
-  <li><strong>All Present Except Exceptions:</strong> Type <code>[Site Name] all present except [Guard Name]</code> (e.g., <code>Bank of Zambia all present except Winston Zulu</code>). Named guards are flagged as AWOL, while all other site guards are marked present.</li>
+  <li><strong>All Present:</strong> Type <code>[Site Name] all present</code><br/><em>Example:</em> <code>Bank of Zambia all present</code> — Marks all guards scheduled at Bank of Zambia today as present and on time.</li>
+  <li><strong>All Present Except:</strong> Type <code>[Site Name] all present except [Guard Name]</code><br/><em>Example:</em> <code>Bank of Zambia all present except Winston Zulu</code> — Flags Winston Zulu as AWOL and marks all other scheduled site guards as present.</li>
 </ul>
 
-<h3>3. Flagging Unexcused Absences (AWOL)</h3>
-<p>To flag an absent guard, type <code>AWOL [Guard Name]</code>. The system logs an unexcused absence, notifies the Central Control Room, and registers an incident on the Central Intelligence Bus.</p>
-
-<h3>4. Role-Based Intelligence Commands</h3>
+<h3>3. Guard Duty Status &amp; Location Lookup</h3>
+<p>Find where any guard is posted in real time:</p>
 <ul>
-  <li><strong>Owner / Executive Stats (<code>OWNER STATS</code>):</strong> Displays active client sites, estimated monthly recurring billing, active posts today, roster coverage rate %, and SLA penalty risks.</li>
-  <li><strong>Manager / Operations Stats (<code>MANAGER STATS</code>):</strong> Displays total posts scheduled today, active guards on duty, AWOL gaps, pending check-ins, and top site coverage breakdown.</li>
-  <li><strong>Roster Status (<code>STATUS</code>):</strong> Queries daily scheduled posts, active guards, and missing gaps.</li>
-  <li><strong>Command Help (<code>HELP</code>):</strong> Displays the interactive WhatsApp command menu.</li>
+  <li>Type <code>Where is [Guard Name]?</code> or <code>Is [Guard Name] on duty?</code><br/><em>Example:</em> <code>Where is Winston Zulu?</code> — Returns real-time posting info: site name, post, shift times (e.g., 06:00–18:00), and duty status (Present, Late, AWOL, or Off Duty).</li>
 </ul>
 
-<h3>5. Hybrid Deterministic &amp; AI Processing Architecture</h3>
-<p>The bridge operates using a two-tier hybrid architecture:</p>
-<ol>
-  <li><strong>Rule-Based Fast Engine:</strong> High-speed regex rule parsing executes instantly without external AI dependencies or costs.</li>
-  <li><strong>Extensive AI Fallback:</strong> If unstructured natural language is received, the message is routed to the <code>security.ai.engine</code> LLM parser to extract intent and execute actions.</li>
-</ol>
-]]></field>
+<h3>4. Flagging Unexcused Absences (AWOL)</h3>
+<ul>
+  <li>Type <code>AWOL [Guard Name]</code><br/><em>Example:</em> <code>AWOL Winston Zulu</code> — Logs an unexcused absence, notifies the Control Room, and updates reliability scoring.</li>
+</ul>
+
+<h3>5. Incident Reporting</h3>
+<ul>
+  <li>Type <code>Incident at [Site Name]: [Description]</code><br/><em>Example:</em> <code>Incident at Bank of Zambia: Rear perimeter gate lock broken</code> — Logs a new site incident record in Odoo and alerts control room supervisors.</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_whatsapp_executive_kpis" model="security.help.article">
+    <field name="category_id" ref="cat_whatsapp"/>
+    <field name="title">Executive KPIs &amp; AI Intelligence via WhatsApp</field>
+    <field name="summary">Command reference for company directors and managers: OWNER STATS, MANAGER STATS, STATUS, and AI fallback</field>
+    <field name="sequence">3</field>
+    <field name="tags">whatsapp executive owner stats manager stats status metrics AI engine fallback</field>
+    <field name="body"><![CDATA[
+<h2>Executive KPIs &amp; Manager Intelligence Commands</h2>
+
+<p>Company directors and operations managers can query live business metrics anytime over WhatsApp.</p>
+
+<h3>1. Owner / Executive Stats (<code>OWNER STATS</code>)</h3>
+<p>Returns a high-level financial and operational summary:</p>
+<ul>
+  <li>Active Client Sites &amp; Total Posts</li>
+  <li>Estimated Monthly Recurring Contract Billing (MRR)</li>
+  <li>Active Guards on Duty Today</li>
+  <li>Roster Coverage Rate %</li>
+  <li>SLA Penalty Risks &amp; Missing Gap Alerts</li>
+</ul>
+
+<h3>2. Operations Manager Stats (<code>MANAGER STATS</code>)</h3>
+<p>Returns a detailed shift deployment report:</p>
+<ul>
+  <li>Total Posts Scheduled Today</li>
+  <li>Guards Present vs Late vs AWOL</li>
+  <li>Pending Check-ins requiring supervisor action</li>
+  <li>Top Site Coverage Breakdown</li>
+</ul>
+
+<h3>3. Roster Status (<code>STATUS</code>)</h3>
+<p>Quick operational query showing active posts, present guards, and unassigned gaps for the current date.</p>
+
+<h3>4. Natural Language AI Fallback</h3>
+<p>When messages don't match standard commands, the bridge routes the query to <code>security.ai.engine</code>. The AI reads live operational snapshots and multi-turn chat context to provide helpful, intelligent answers!</p>
+    ]]></field>
+</record>
+
+<record id="art_whatsapp_audit_logs" model="security.help.article">
+    <field name="category_id" ref="cat_whatsapp"/>
+    <field name="title">WhatsApp Conversation Logs &amp; Context Memory</field>
+    <field name="summary">Reviewing message logs in Odoo, sender employee/contact resolution, multi-turn chat history, and custom AI prompts</field>
+    <field name="sequence">4</field>
+    <field name="tags">whatsapp log audit employee contact resolve multi turn chat history custom prompt voice settings</field>
+    <field name="body"><![CDATA[
+<h2>WhatsApp Audit Logs &amp; Multi-Turn Conversation Memory</h2>
+
+<h3>1. Conversation Message Audit Trail</h3>
+<p>All inbound and outbound WhatsApp messages are recorded under <strong>WhatsApp → Message Logs</strong>:</p>
+<ul>
+  <li><strong>Matched Employee:</strong> Automatically displays the linked <code>hr.employee</code> record.</li>
+  <li><strong>Matched Partner/Contact:</strong> Displays linked client contact or vendor record.</li>
+  <li><strong>Raw &amp; Cleaned Message:</strong> Shows exact incoming text and processed command response.</li>
+  <li><strong>Execution Status:</strong> Indicates Success, AI Processed, or Error.</li>
+</ul>
+
+<h3>2. Multi-Turn Chat Context Memory</h3>
+<p>Under <strong>WhatsApp Settings → AI Configuration</strong>, administrators can set the <strong>Max History Context</strong> (default 5 messages). This ensures the AI remembers preceding messages in a conversation thread when generating responses.</p>
+
+<h3>3. Custom AI Persona Instructions</h3>
+<p>Configure the <strong>Custom System Prompt</strong> in WhatsApp Settings to customize the tone, language style (e.g., professional, concise, or local Zambian English context), and operational guidance for the AI assistant.</p>
+    ]]></field>
 </record>
 
 </odoo>

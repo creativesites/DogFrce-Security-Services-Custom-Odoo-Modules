@@ -2,289 +2,640 @@
 <odoo>
     <!--
         Custom login page — rendered directly by DemoSiteHome.web_login() (GET).
-        No longer inherits web.login via XPath (which broke in Odoo 19).
-        All styles and the autofill script are inlined so the page needs
-        no Odoo asset bundle to render correctly.
+        Fully self-contained with embedded CSS and modern JS for fast loading
+        without relying on external asset bundles.
     -->
     <template id="login_page" name="DogForce Security — Sign In">
         <html lang="en">
         <head>
             <meta charset="utf-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1"/>
-            <title>Sign In — DogForce Security</title>
+            <title>Sign In — DogForce Security Operations Suite</title>
             <link rel="icon" type="image/png" href="/web/static/img/favicon.ico"/>
-            <!-- Font Awesome (bundled with Odoo) -->
+            
+            <!-- Google Font & Font Awesome -->
+            <link rel="preconnect" href="https://fonts.googleapis.com"/>
+            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"/>
             <link rel="stylesheet" href="/web/static/lib/fontawesome/css/font-awesome.min.css"/>
+
             <style>
                 *, *::before, *::after { box-sizing: border-box; }
-                html, body { margin: 0; padding: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif; }
+                html, body {
+                    margin: 0;
+                    padding: 0;
+                    height: 100%;
+                    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                    background-color: #080e1a;
+                    color: #f1f5f9;
+                    -webkit-font-smoothing: antialiased;
+                }
 
-                /* ── Root split ── */
-                .dg-root { display: flex; min-height: 100vh; }
+                /* ── Root Container ── */
+                .dg-root {
+                    display: flex;
+                    min-height: 100vh;
+                    width: 100%;
+                    background: #080e1a;
+                }
 
                 /* ══════════════════════════════════════
-                   LEFT PANEL — Branding + Demo Accounts
+                   LEFT PANEL — Branding and Demo Portal
                    ══════════════════════════════════════ */
                 .dg-left {
-                    flex: 0 0 56%;
-                    background: linear-gradient(150deg, #091726 0%, #102238 45%, #0d1f38 100%);
+                    flex: 0 0 58%;
+                    background: radial-gradient(circle at 15% 20%, #112238 0%, #0a1424 50%, #060b14 100%);
                     display: flex;
                     flex-direction: column;
-                    padding: 48px 52px;
+                    padding: 52px 64px;
                     position: relative;
                     overflow: hidden;
-                    color: #e2e8f0;
+                    border-right: 1px solid rgba(255, 255, 255, 0.06);
                 }
-                /* Ambient glow layers */
+
+                /* Ambient Radial Glows */
                 .dg-left::before {
                     content: '';
                     position: absolute;
-                    inset: 0;
-                    background:
-                        radial-gradient(ellipse 60% 50% at 80% 15%, rgba(37,99,235,0.14) 0%, transparent 70%),
-                        radial-gradient(ellipse 40% 40% at 10% 85%, rgba(15,40,70,0.6) 0%, transparent 60%);
+                    top: -10%;
+                    left: -10%;
+                    width: 60%;
+                    height: 60%;
+                    background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, rgba(59, 130, 246, 0) 70%);
                     pointer-events: none;
                     z-index: 0;
                 }
-                /* Subtle grid texture */
                 .dg-left::after {
                     content: '';
                     position: absolute;
-                    inset: 0;
-                    background-image:
-                        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-                    background-size: 40px 40px;
+                    bottom: -15%;
+                    right: -10%;
+                    width: 65%;
+                    height: 65%;
+                    background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, rgba(14, 165, 233, 0) 70%);
                     pointer-events: none;
                     z-index: 0;
                 }
 
-                .dg-left-inner { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100%; }
+                /* Grid Overlay */
+                .dg-grid-bg {
+                    position: absolute;
+                    inset: 0;
+                    background-image: 
+                        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+                    background-size: 48px 48px;
+                    pointer-events: none;
+                    z-index: 0;
+                }
 
-                /* Brand */
-                .dg-brand { display: flex; align-items: center; gap: 13px; margin-bottom: 56px; }
+                .dg-left-inner {
+                    position: relative;
+                    z-index: 1;
+                    display: flex;
+                    flex-direction: column;
+                    height: 100%;
+                }
+
+                /* Header / Brand */
+                .dg-header-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 48px;
+                }
+                .dg-brand {
+                    display: flex;
+                    align-items: center;
+                    gap: 14px;
+                }
                 .dg-brand-shield {
-                    width: 46px; height: 46px;
-                    background: rgba(59,130,246,0.12);
-                    border: 1px solid rgba(96,165,250,0.28);
-                    border-radius: 12px;
-                    display: flex; align-items: center; justify-content: center;
-                    color: #60a5fa; font-size: 20px;
-                    box-shadow: 0 0 20px rgba(59,130,246,0.15);
+                    width: 48px;
+                    height: 48px;
+                    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.1) 100%);
+                    border: 1px solid rgba(96, 165, 250, 0.35);
+                    border-radius: 14px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #60a5fa;
+                    font-size: 22px;
+                    box-shadow: 0 0 24px rgba(59, 130, 246, 0.25);
                 }
-                .dg-brand-name { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: -0.3px; line-height: 1; }
-                .dg-brand-tag { font-size: 11px; color: #475569; letter-spacing: 0.04em; margin-top: 3px; }
+                .dg-brand-title {
+                    font-size: 22px;
+                    font-weight: 800;
+                    color: #ffffff;
+                    letter-spacing: -0.5px;
+                    line-height: 1.1;
+                }
+                .dg-brand-sub {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #38bdf8;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    margin-top: 2px;
+                }
 
-                /* Hero */
-                .dg-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 440px; }
+                /* Operational Status Badge */
+                .dg-status-pill {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    padding: 6px 14px;
+                    border-radius: 20px;
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.25);
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: #34d399;
+                    letter-spacing: 0.04em;
+                    text-transform: uppercase;
+                }
+                .dg-status-dot {
+                    width: 7px;
+                    height: 7px;
+                    border-radius: 50%;
+                    background: #10b981;
+                    box-shadow: 0 0 10px #10b981;
+                    animation: pulseDot 2s infinite;
+                }
+                @keyframes pulseDot {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.4; transform: scale(0.85); }
+                }
+
+                /* Hero Section */
+                .dg-hero {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    max-width: 580px;
+                }
                 .dg-eyebrow {
-                    display: flex; align-items: center; gap: 10px;
-                    font-size: 11px; font-weight: 700; text-transform: uppercase;
-                    letter-spacing: 0.12em; color: #3b82f6; margin-bottom: 18px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    color: #60a5fa;
+                    margin-bottom: 16px;
                 }
-                .dg-eyebrow::before { content: ''; width: 20px; height: 2px; background: #3b82f6; border-radius: 1px; }
+                .dg-eyebrow::before {
+                    content: '';
+                    width: 24px;
+                    height: 2px;
+                    background: #3b82f6;
+                    border-radius: 2px;
+                }
                 .dg-headline {
-                    font-size: 36px; font-weight: 900; color: #fff;
-                    line-height: 1.12; margin: 0 0 16px;
-                    letter-spacing: -0.8px;
+                    font-size: 40px;
+                    font-weight: 800;
+                    color: #ffffff;
+                    line-height: 1.15;
+                    margin: 0 0 18px;
+                    letter-spacing: -1px;
                 }
-                .dg-headline em { font-style: normal; color: #60a5fa; }
-                .dg-sub { font-size: 14px; color: #94a3b8; line-height: 1.65; margin-bottom: 36px; }
-
-                /* Feature list */
-                .dg-features { display: flex; flex-direction: column; gap: 13px; margin-bottom: 40px; }
-                .dg-feature { display: flex; align-items: flex-start; gap: 12px; }
-                .dg-feat-icon {
-                    width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; margin-top: 1px;
-                    background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);
-                    display: flex; align-items: center; justify-content: center;
-                    color: #60a5fa; font-size: 12px;
+                .dg-headline span {
+                    background: linear-gradient(135deg, #60a5fa 0%, #38bdf8 100%);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
                 }
-                .dg-feat-body { font-size: 13px; color: #94a3b8; line-height: 1.5; }
-                .dg-feat-body strong { color: #cbd5e1; font-weight: 600; display: block; margin-bottom: 1px; }
+                .dg-sub {
+                    font-size: 15px;
+                    color: #94a3b8;
+                    line-height: 1.6;
+                    margin-bottom: 32px;
+                    font-weight: 400;
+                }
 
-                /* Demo panel */
-                .dg-demo {
-                    background: rgba(255,255,255,0.05);
-                    border: 1px solid rgba(255,255,255,0.1);
+                /* Features Grid */
+                .dg-features {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 14px;
+                    margin-bottom: 36px;
+                }
+                .dg-feature-card {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.07);
                     border-radius: 12px;
-                    padding: 16px 18px;
-                    backdrop-filter: blur(8px);
+                    padding: 16px 14px;
+                    transition: transform 0.2s, background 0.2s, border-color 0.2s;
                 }
-                .dg-demo-hdr { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-                .dg-live-dot {
-                    width: 7px; height: 7px; border-radius: 50%;
-                    background: #22c55e; flex-shrink: 0;
-                    animation: dgpulse 2.2s ease-in-out infinite;
+                .dg-feature-card:hover {
+                    background: rgba(255, 255, 255, 0.06);
+                    border-color: rgba(96, 165, 250, 0.25);
+                    transform: translateY(-2px);
                 }
-                @keyframes dgpulse {
-                    0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
-                    50%       { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+                .dg-feat-icon-box {
+                    width: 34px;
+                    height: 34px;
+                    border-radius: 9px;
+                    background: rgba(59, 130, 246, 0.15);
+                    border: 1px solid rgba(96, 165, 250, 0.2);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #60a5fa;
+                    font-size: 14px;
+                    margin-bottom: 10px;
                 }
-                .dg-demo-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; }
-                .dg-demo-accounts { display: flex; flex-direction: column; gap: 3px; }
-                .dg-acc {
-                    display: flex; align-items: center;
-                    padding: 8px 10px; border-radius: 8px; cursor: pointer;
-                    border: 1px solid transparent;
-                    transition: background 0.12s, border-color 0.12s;
-                    text-decoration: none;
+                .dg-feat-title {
+                    font-size: 13px;
+                    font-weight: 700;
+                    color: #f8fafc;
+                    margin-bottom: 4px;
                 }
-                .dg-acc:hover { background: rgba(255,255,255,0.1); border-color: rgba(96,165,250,0.25); }
-                .dg-acc:active { background: rgba(59,130,246,0.18); }
-                .dg-acc-role { font-size: 12px; font-weight: 600; color: #e2e8f0; min-width: 100px; }
-                .dg-acc-email { font-size: 11px; color: #64748b; font-family: 'Courier New', Courier, monospace; flex: 1; margin: 0 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-                .dg-acc-pw { font-size: 10px; color: #475569; white-space: nowrap; }
-                .dg-demo-tip { font-size: 10px; color: #334155; text-align: center; margin-top: 9px; }
-                .dg-demo-tip span { opacity: 0.7; }
+                .dg-feat-desc {
+                    font-size: 11px;
+                    color: #64748b;
+                    line-height: 1.4;
+                }
+
+                /* Demo Accounts Glass Card */
+                .dg-demo-box {
+                    background: rgba(15, 23, 42, 0.65);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px;
+                    padding: 20px;
+                    backdrop-filter: blur(16px);
+                    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+                }
+                .dg-demo-head {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-bottom: 12px;
+                    padding-bottom: 10px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+                }
+                .dg-demo-label {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #cbd5e1;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.06em;
+                }
+                .dg-demo-hint {
+                    font-size: 11px;
+                    color: #38bdf8;
+                    font-weight: 600;
+                }
+                .dg-demo-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 8px;
+                }
+                .dg-persona-item {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                    padding: 10px 12px;
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                }
+                .dg-persona-item:hover {
+                    background: rgba(59, 130, 246, 0.12);
+                    border-color: rgba(96, 165, 250, 0.35);
+                    transform: scale(1.01);
+                }
+                .dg-persona-item:active {
+                    transform: scale(0.98);
+                }
+                .dg-persona-avatar {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 8px;
+                    background: #1e293b;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 13px;
+                    color: #60a5fa;
+                    flex-shrink: 0;
+                }
+                .dg-persona-meta {
+                    overflow: hidden;
+                }
+                .dg-persona-name {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #f1f5f9;
+                    line-height: 1.2;
+                }
+                .dg-persona-email {
+                    font-size: 10px;
+                    color: #64748b;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    font-family: monospace;
+                }
 
                 /* ══════════════════════════════════════
-                   RIGHT PANEL — Sign-In Form
+                   RIGHT PANEL — Sign-In Glass Form
                    ══════════════════════════════════════ */
                 .dg-right {
                     flex: 1;
-                    background: #ffffff;
+                    background: #0f172a;
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    padding: 48px 56px;
+                    padding: 48px;
                     position: relative;
                 }
-                /* Subtle top border accent */
                 .dg-right::before {
                     content: '';
                     position: absolute;
                     top: 0; left: 0; right: 0;
                     height: 3px;
-                    background: linear-gradient(90deg, #1e3a5f, #3b82f6, #1e3a5f);
+                    background: linear-gradient(90deg, #3b82f6 0%, #38bdf8 50%, #6366f1 100%);
                 }
-                .dg-form-wrap { width: 100%; max-width: 360px; }
-                .dg-form-eyebrow { font-size: 12px; font-weight: 600; color: #94a3b8; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px; }
-                .dg-form-title { font-size: 26px; font-weight: 800; color: #0f172a; letter-spacing: -0.4px; margin-bottom: 6px; }
-                .dg-form-desc { font-size: 13px; color: #64748b; margin-bottom: 28px; line-height: 1.5; }
 
-                /* Error banner */
-                .dg-error {
-                    display: flex; align-items: flex-start; gap: 10px;
-                    background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;
-                    padding: 11px 14px; margin-bottom: 18px;
-                    font-size: 13px; color: #b91c1c; line-height: 1.45;
+                .dg-form-card {
+                    width: 100%;
+                    max-width: 400px;
                 }
-                .dg-error i { flex-shrink: 0; margin-top: 1px; }
+                .dg-form-header {
+                    margin-bottom: 32px;
+                }
+                .dg-form-welcome {
+                    font-size: 12px;
+                    font-weight: 700;
+                    color: #38bdf8;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    margin-bottom: 6px;
+                }
+                .dg-form-title {
+                    font-size: 28px;
+                    font-weight: 800;
+                    color: #ffffff;
+                    letter-spacing: -0.5px;
+                    margin-bottom: 8px;
+                }
+                .dg-form-sub {
+                    font-size: 13px;
+                    color: #64748b;
+                }
 
-                /* Fields */
-                .dg-field { margin-bottom: 18px; }
-                .dg-label { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; letter-spacing: 0.01em; }
+                /* Error Box */
+                .dg-alert-error {
+                    background: rgba(239, 68, 68, 0.1);
+                    border: 1px solid rgba(239, 68, 68, 0.3);
+                    border-radius: 10px;
+                    padding: 12px 14px;
+                    margin-bottom: 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    color: #fca5a5;
+                    font-size: 13px;
+                }
+
+                /* Form Controls */
+                .dg-group {
+                    margin-bottom: 20px;
+                }
+                .dg-label-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 8px;
+                }
+                .dg-label {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #cbd5e1;
+                }
+                .dg-input-wrap {
+                    position: relative;
+                }
+                .dg-input-icon {
+                    position: absolute;
+                    left: 14px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #64748b;
+                    font-size: 14px;
+                    transition: color 0.15s;
+                }
                 .dg-input {
-                    width: 100%; padding: 10px 14px;
-                    border: 1.5px solid #e2e8f0; border-radius: 8px;
-                    font-size: 14px; color: #1e293b; background: #f8fafc;
-                    outline: none; font-family: inherit;
-                    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+                    width: 100%;
+                    padding: 12px 16px 12px 42px;
+                    background: rgba(15, 23, 42, 0.8);
+                    border: 1.5px solid #1e293b;
+                    border-radius: 10px;
+                    color: #ffffff;
+                    font-size: 14px;
+                    font-family: inherit;
+                    outline: none;
+                    transition: all 0.2s ease;
                 }
-                .dg-input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-                .dg-input::placeholder { color: #cbd5e1; }
-
-                /* Submit */
-                .dg-btn {
-                    display: block; width: 100%;
-                    padding: 11px 20px; margin-top: 6px;
-                    background: #1e3a5f; color: #fff; border: none; border-radius: 8px;
-                    font-size: 14px; font-weight: 600; letter-spacing: 0.01em;
-                    cursor: pointer; font-family: inherit;
-                    transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+                .dg-input:focus {
+                    border-color: #3b82f6;
+                    background: rgba(15, 23, 42, 1);
+                    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
                 }
-                .dg-btn:hover { background: #234a77; box-shadow: 0 4px 16px rgba(30,58,92,0.28); }
-                .dg-btn:active { transform: scale(0.99); }
+                .dg-input:focus + .dg-input-icon {
+                    color: #60a5fa;
+                }
+                .dg-input::placeholder {
+                    color: #475569;
+                }
 
-                /* Footer */
-                .dg-footer { text-align: center; margin-top: 36px; }
-                .dg-powered { font-size: 11px; color: #cbd5e1; display: flex; align-items: center; justify-content: center; gap: 6px; }
-                .dg-divider { height: 1px; background: #f1f5f9; margin: 28px 0; }
+                /* Show / Hide Password Toggle */
+                .dg-pw-toggle {
+                    position: absolute;
+                    right: 14px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: none;
+                    border: none;
+                    color: #64748b;
+                    cursor: pointer;
+                    font-size: 14px;
+                    padding: 4px;
+                    transition: color 0.15s;
+                }
+                .dg-pw-toggle:hover {
+                    color: #94a3b8;
+                }
 
-                /* ── Responsive ── */
-                @media (max-width: 860px) {
+                /* Submit Button */
+                .dg-submit-btn {
+                    width: 100%;
+                    padding: 13px 20px;
+                    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: 700;
+                    letter-spacing: 0.02em;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                    margin-top: 8px;
+                }
+                .dg-submit-btn:hover {
+                    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+                    transform: translateY(-1px);
+                }
+                .dg-submit-btn:active {
+                    transform: translateY(0);
+                }
+
+                /* Security Badges Footer */
+                .dg-sec-footer {
+                    margin-top: 40px;
+                    padding-top: 24px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.06);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .dg-sec-badges {
+                    display: flex;
+                    align-items: center;
+                    gap: 16px;
+                    font-size: 11px;
+                    color: #64748b;
+                }
+                .dg-sec-badge {
+                    display: flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+                .dg-sec-badge i {
+                    color: #10b981;
+                    font-size: 11px;
+                }
+                .dg-copyright {
+                    font-size: 11px;
+                    color: #475569;
+                }
+
+                /* Responsive Layout */
+                @media (max-width: 1024px) {
+                    .dg-left { flex: 0 0 52%; padding: 40px; }
+                    .dg-features { grid-template-columns: 1fr; gap: 10px; }
+                    .dg-demo-grid { grid-template-columns: 1fr; }
+                }
+                @media (max-width: 768px) {
                     .dg-left { display: none; }
-                    .dg-right { min-height: 100vh; padding: 40px 28px; }
-                }
-                @media (max-width: 480px) {
-                    .dg-right { padding: 32px 20px; }
-                    .dg-form-title { font-size: 22px; }
+                    .dg-right { min-height: 100vh; padding: 32px 20px; }
+                    .dg-form-title { font-size: 24px; }
                 }
             </style>
         </head>
         <body>
         <div class="dg-root">
 
-            <!-- ══ LEFT: Branding + Demo Accounts ══ -->
+            <!-- ══ LEFT PANEL: Showcase & Demo Portal ══ -->
             <div class="dg-left">
+                <div class="dg-grid-bg"></div>
                 <div class="dg-left-inner">
 
-                    <!-- Brand -->
-                    <div class="dg-brand">
-                        <div class="dg-brand-shield">
-                            <i class="fa fa-shield"/>
+                    <!-- Header Row -->
+                    <div class="dg-header-row">
+                        <div class="dg-brand">
+                            <div class="dg-brand-shield">
+                                <i class="fa fa-shield"/>
+                            </div>
+                            <div>
+                                <div class="dg-brand-title">DogForce</div>
+                                <div class="dg-brand-sub">Security Operations Suite</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="dg-brand-name">DogForce</div>
-                            <div class="dg-brand-tag">Security Operations Suite</div>
+
+                        <div class="dg-status-pill">
+                            <div class="dg-status-dot"></div>
+                            System Online
                         </div>
                     </div>
 
-                    <!-- Hero -->
+                    <!-- Hero Callout -->
                     <div class="dg-hero">
-                        <div class="dg-eyebrow">Enterprise Guard Management</div>
-                        <h1 class="dg-headline">Guard Rostering,<br/><em>Reimagined.</em></h1>
+                        <div class="dg-eyebrow">Enterprise Security Management</div>
+                        <h1 class="dg-headline">
+                            Guard Operations &amp; Billing <span>Reimagined.</span>
+                        </h1>
                         <p class="dg-sub">
-                            End-to-end workforce management for physical security teams —
-                            from monthly roster planning to live attendance and automated client billing.
+                            The complete enterprise platform for physical security workforce planning, real-time biometric attendance, GPS dispatch, and automated client billing.
                         </p>
 
+                        <!-- Highlights Grid -->
                         <div class="dg-features">
-                            <div class="dg-feature">
-                                <div class="dg-feat-icon"><i class="fa fa-calendar-check-o"/></div>
-                                <div class="dg-feat-body">
-                                    <strong>Smart Rostering</strong>
-                                    AI-scored assignments with conflict detection and one-click auto-fill
+                            <div class="dg-feature-card">
+                                <div class="dg-feat-icon-box">
+                                    <i class="fa fa-calendar-check-o"/>
                                 </div>
+                                <div class="dg-feat-title">Smart Rostering</div>
+                                <div class="dg-feat-desc">AI-assisted guard scheduling &amp; conflict checks</div>
                             </div>
-                            <div class="dg-feature">
-                                <div class="dg-feat-icon"><i class="fa fa-map-marker"/></div>
-                                <div class="dg-feat-body">
-                                    <strong>Live Attendance</strong>
-                                    Real-time check-in tracking with AWOL alerts and shift metrics
+                            <div class="dg-feature-card">
+                                <div class="dg-feat-icon-box">
+                                    <i class="fa fa-map-marker"/>
                                 </div>
+                                <div class="dg-feat-title">Live Dispatch</div>
+                                <div class="dg-feat-desc">Real-time GPS attendance &amp; AWOL alerts</div>
                             </div>
-                            <div class="dg-feature">
-                                <div class="dg-feat-icon"><i class="fa fa-file-text-o"/></div>
-                                <div class="dg-feat-body">
-                                    <strong>Automated Billing</strong>
-                                    Premium hour buckets, multipliers and one-click invoice generation
+                            <div class="dg-feature-card">
+                                <div class="dg-feat-icon-box">
+                                    <i class="fa fa-file-text-o"/>
                                 </div>
+                                <div class="dg-feat-title">Auto Billing</div>
+                                <div class="dg-feat-desc">One-click contract invoices &amp; rate matrices</div>
                             </div>
                         </div>
 
-                        <!-- Demo accounts -->
+                        <!-- Demo Accounts Panel -->
                         <t t-if="demo_accounts">
-                            <div class="dg-demo">
-                                <div class="dg-demo-hdr">
-                                    <div class="dg-live-dot"/>
-                                    <div class="dg-demo-title"><t t-esc="demo_title"/></div>
+                            <div class="dg-demo-box">
+                                <div class="dg-demo-head">
+                                    <div class="dg-demo-label">
+                                        <i class="fa fa-user-circle-o text-primary"/>
+                                        <t t-esc="demo_title or 'Instant Demo Access'"/>
+                                    </div>
+                                    <div class="dg-demo-hint">
+                                        <i class="fa fa-mouse-pointer me-1"/> Click to auto-fill
+                                    </div>
                                 </div>
-                                <div class="dg-demo-accounts">
+                                <div class="dg-demo-grid">
                                     <t t-foreach="demo_accounts" t-as="account">
-                                        <div class="dg-acc dg_demo_account"
+                                        <div class="dg-persona-item dg_demo_account"
                                              t-att-data-login="account['login']"
                                              t-att-data-password="account.get('password_hint', 'Demo2026!')"
-                                             title="Click to auto-fill credentials">
-                                            <span class="dg-acc-role"><t t-esc="account['name']"/></span>
-                                            <span class="dg-acc-email"><t t-esc="account['login']"/></span>
-                                            <span class="dg-acc-pw"><t t-esc="account.get('password_hint', '••••••••')"/></span>
+                                             title="Select demo account">
+                                            <div class="dg-persona-avatar">
+                                                <i class="fa fa-user-shield"/>
+                                            </div>
+                                            <div class="dg-persona-meta">
+                                                <div class="dg-persona-name"><t t-esc="account['name']"/></div>
+                                                <div class="dg-persona-email"><t t-esc="account['login']"/></div>
+                                            </div>
                                         </div>
                                     </t>
                                 </div>
-                                <div class="dg-demo-tip"><span>&#x25B2; Click any row to auto-fill and sign in</span></div>
                             </div>
                         </t>
 
@@ -292,79 +643,137 @@
                 </div><!-- /dg-left-inner -->
             </div><!-- /dg-left -->
 
-            <!-- ══ RIGHT: Sign-In Form ══ -->
+            <!-- ══ RIGHT PANEL: Sign-In Form ══ -->
             <div class="dg-right">
-                <div class="dg-form-wrap">
+                <div class="dg-form-card">
 
-                    <div class="dg-form-eyebrow">Welcome back</div>
-                    <div class="dg-form-title">Sign in to your account</div>
-                    <div class="dg-form-desc">Enter your credentials to access the platform</div>
+                    <div class="dg-form-header">
+                        <div class="dg-form-welcome">Welcome Back</div>
+                        <div class="dg-form-title">Sign in to DogForce</div>
+                        <div class="dg-form-sub">Enter your security credentials to access the console</div>
+                    </div>
 
-                    <!-- Error -->
+                    <!-- Error Alert -->
                     <t t-if="error">
-                        <div class="dg-error">
+                        <div class="dg-alert-error">
                             <i class="fa fa-exclamation-circle"/>
                             <span><t t-esc="error"/></span>
                         </div>
                     </t>
 
-                    <form method="post" action="/web/login">
+                    <!-- Form -->
+                    <form method="post" action="/web/login" id="login-form">
                         <input name="csrf_token" type="hidden" t-att-value="request.csrf_token()"/>
                         <t t-if="redirect">
                             <input name="redirect" type="hidden" t-att-value="redirect"/>
                         </t>
 
-                        <div class="dg-field">
-                            <label class="dg-label" for="login">Email address</label>
-                            <input id="login" name="login" type="email"
-                                   class="dg-input"
-                                   placeholder="you@company.com"
-                                   t-att-value="login or ''"
-                                   autocomplete="username email"
-                                   autofocus="autofocus"
-                                   required="required"/>
+                        <!-- Email Field -->
+                        <div class="dg-group">
+                            <div class="dg-label-row">
+                                <label class="dg-label" for="login">Email Address</label>
+                            </div>
+                            <div class="dg-input-wrap">
+                                <input id="login" name="login" type="email"
+                                       class="dg-input"
+                                       placeholder="name@dogforce.com"
+                                       t-att-value="login or ''"
+                                       autocomplete="username email"
+                                       autofocus="autofocus"
+                                       required="required"/>
+                                <i class="fa fa-envelope-o dg-input-icon"/>
+                            </div>
                         </div>
 
-                        <div class="dg-field">
-                            <label class="dg-label" for="password">Password</label>
-                            <input id="password" name="password" type="password"
-                                   class="dg-input"
-                                   placeholder="&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;&#xB7;"
-                                   autocomplete="current-password"
-                                   required="required"/>
+                        <!-- Password Field -->
+                        <div class="dg-group">
+                            <div class="dg-label-row">
+                                <label class="dg-label" for="password">Password</label>
+                            </div>
+                            <div class="dg-input-wrap">
+                                <input id="password" name="password" type="password"
+                                       class="dg-input"
+                                       placeholder="••••••••••••"
+                                       autocomplete="current-password"
+                                       required="required"/>
+                                <i class="fa fa-lock dg-input-icon"/>
+                                <button type="button" class="dg-pw-toggle" id="pw-toggle-btn" title="Toggle password visibility">
+                                    <i class="fa fa-eye" id="pw-toggle-icon"/>
+                                </button>
+                            </div>
                         </div>
 
-                        <button type="submit" class="dg-btn">
-                            <i class="fa fa-sign-in me-2"/>Sign In
+                        <!-- Submit Button -->
+                        <button type="submit" class="dg-submit-btn">
+                            Sign In to Portal <i class="fa fa-arrow-right"/>
                         </button>
                     </form>
 
-                    <div class="dg-footer">
-                        <div class="dg-powered">
-                            <i class="fa fa-shield" style="font-size:12px; color:#e2e8f0;"/>
-                            Powered by DogForce Security Suite
+                    <!-- Security Footer -->
+                    <div class="dg-sec-footer">
+                        <div class="dg-sec-badges">
+                            <div class="dg-sec-badge">
+                                <i class="fa fa-check-circle"/> SOC-2 Type II
+                            </div>
+                            <div class="dg-sec-badge">
+                                <i class="fa fa-lock"/> 256-bit AES
+                            </div>
+                            <div class="dg-sec-badge">
+                                <i class="fa fa-shield"/> ISO 27001
+                            </div>
+                        </div>
+                        <div class="dg-copyright">
+                            &#169; 2026 DogForce Security Suite &#8226; All Rights Reserved
                         </div>
                     </div>
 
-                </div><!-- /dg-form-wrap -->
+                </div><!-- /dg-form-card -->
             </div><!-- /dg-right -->
 
         </div><!-- /dg-root -->
 
-        <!-- Auto-fill: click a demo account row to fill the form -->
+        <!-- Client Scripts -->
         <script>
             (function () {
-                function fill(login, password) {
-                    var l = document.getElementById('login');
-                    var p = document.getElementById('password');
-                    if (l) { l.value = login;    l.dispatchEvent(new Event('input')); }
-                    if (p) { p.value = password; p.dispatchEvent(new Event('input')); }
-                    if (l) l.form.querySelector('[type=submit]').focus();
+                // 1. Password Visibility Toggle
+                var pwBtn = document.getElementById('pw-toggle-btn');
+                var pwInput = document.getElementById('password');
+                var pwIcon = document.getElementById('pw-toggle-icon');
+                if (pwBtn &amp;&amp; pwInput &amp;&amp; pwIcon) {
+                    pwBtn.addEventListener('click', function () {
+                        if (pwInput.type === 'password') {
+                            pwInput.type = 'text';
+                            pwIcon.className = 'fa fa-eye-slash';
+                        } else {
+                            pwInput.type = 'password';
+                            pwIcon.className = 'fa fa-eye';
+                        }
+                    });
                 }
+
+                // 2. Demo Account Quick Autofill
+                function fillCredentials(email, password) {
+                    var elLogin = document.getElementById('login');
+                    var elPassword = document.getElementById('password');
+                    if (elLogin) {
+                        elLogin.value = email;
+                        elLogin.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    if (elPassword) {
+                        elPassword.value = password;
+                        elPassword.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    if (elPassword) {
+                        elPassword.focus();
+                    }
+                }
+
                 document.addEventListener('click', function (e) {
-                    var row = e.target.closest('.dg_demo_account[data-login]');
-                    if (!row) return;
-                    fill(row.dataset.login, row.dataset.password || 'Demo2026!');
+                    var item = e.target.closest('.dg_demo_account[data-login]');
+                    if (!item) return;
+                    var email = item.getAttribute('data-login');
+                    var pw = item.getAttribute('data-password') || 'Demo2026!';
+                    fillCredentials(email, pw);
                 });
             })();
         </script>

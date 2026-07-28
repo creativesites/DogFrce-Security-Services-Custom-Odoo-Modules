@@ -1,0 +1,481 @@
+/* ==========================================================================
+   DogForce Security Services — Billing Command Center Premium Light Executive Theme
+   Designed for maximum readability, technical clarity, and executive-level appeal.
+   ========================================================================== */
+
+:root {
+    --bcc-bg-main: #f8fafc;
+    --bcc-bg-card: #ffffff;
+    --bcc-border-color: #f1f5f9;
+    --bcc-border-color-dark: #e2e8f0;
+    
+    /* Typography */
+    --bcc-font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    
+    /* Core brand shades (Charcoal & Premium Slate) */
+    --bcc-charcoal: #0f172a;
+    --bcc-slate-dark: #1e293b;
+    --bcc-slate-medium: #475569;
+    --bcc-slate-light: #64748b;
+    --bcc-slate-muted: #94a3b8;
+    
+    /* Refined accents (desaturated, highly professional) */
+    --bcc-accent-indigo: #4f46e5;
+    --bcc-accent-emerald: #10b981;
+    --bcc-accent-cyan: #0ea5e9;
+    --bcc-accent-amber: #f59e0b;
+    --bcc-accent-crimson: #ef4444;
+}
+
+.bcc-root {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    background-color: var(--bcc-bg-main);
+    color: var(--bcc-charcoal);
+    font-family: var(--bcc-font-family);
+    padding: 0;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.bcc-root * {
+    box-sizing: border-box;
+}
+
+/* ── Header Bar ── */
+.bcc-header {
+    flex: 0 0 auto;
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--bcc-border-color);
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.01), 0 1px 2px rgba(15, 23, 42, 0.005);
+    z-index: 10;
+}
+
+.bcc-header-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.bcc-header-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background-color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bcc-charcoal);
+    font-size: 18px;
+}
+
+.bcc-header-text h2 {
+    color: var(--bcc-charcoal);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.bcc-header-text span {
+    color: var(--bcc-slate-light);
+    font-size: 0.8rem;
+    font-weight: 500;
+    margin-top: 2px;
+    display: block;
+}
+
+.bcc-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.bcc-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+}
+
+.bcc-btn-primary {
+    background-color: var(--bcc-charcoal);
+    color: #ffffff;
+}
+
+.bcc-btn-primary:hover {
+    background-color: var(--bcc-slate-dark);
+}
+
+.bcc-btn-secondary {
+    background-color: #ffffff;
+    color: var(--bcc-slate-medium);
+    border: 1px solid var(--bcc-border-color-dark);
+}
+
+.bcc-btn-secondary:hover {
+    background-color: #f8fafc;
+    border-color: var(--bcc-slate-muted);
+    color: var(--bcc-charcoal);
+}
+
+/* ── Main Dashboard Body ── */
+.bcc-body {
+    flex: 1 1 auto;
+    padding: 32px;
+}
+
+.bcc-container {
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+/* ── Hero KPI Cards ── */
+.bcc-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.bcc-card {
+    background: var(--bcc-bg-card);
+    border: 1px solid var(--bcc-border-color);
+    border-radius: 10px;
+    padding: 24px;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01), 0 1px 2px rgba(0, 0, 0, 0.005);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bcc-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.04), 0 4px 12px -5px rgba(0, 0, 0, 0.02);
+    border-color: var(--bcc-border-color-dark);
+}
+
+/* Eliminate colorful bars on top of cards completely */
+.bcc-card::before {
+    display: none !important;
+}
+
+.bcc-kpi-label {
+    font-size: 0.725rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bcc-slate-light);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bcc-kpi-label i {
+    color: var(--bcc-slate-muted) !important;
+}
+
+.bcc-kpi-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--bcc-charcoal) !important;
+    letter-spacing: -0.02em;
+}
+
+.bcc-kpi-sub {
+    font-size: 0.75rem;
+    margin-top: 10px;
+    color: var(--bcc-slate-muted) !important;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.bcc-kpi-sub i {
+    font-size: 10px;
+}
+
+/* Soft inline status indicators instead of colorful text */
+.bcc-val-emerald { color: var(--bcc-slate-medium) !important; }
+.bcc-val-indigo { color: var(--bcc-slate-medium) !important; }
+.bcc-val-amber { color: var(--bcc-slate-medium) !important; }
+.bcc-val-crimson { color: var(--bcc-slate-medium) !important; }
+.bcc-val-cyan { color: var(--bcc-slate-medium) !important; }
+
+/* ── Segmented Navigation Tabs (Stripe style) ── */
+.bcc-tabs {
+    display: flex;
+    gap: 24px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--bcc-border-color);
+    margin-bottom: 28px;
+    width: 100%;
+}
+
+.bcc-tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--bcc-slate-light);
+    font-weight: 500;
+    font-size: 0.875rem;
+    padding: 12px 4px;
+    border-radius: 0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.bcc-tab-btn:hover {
+    color: var(--bcc-charcoal);
+    background: transparent;
+}
+
+.bcc-tab-btn.active {
+    color: var(--bcc-charcoal);
+    background: transparent;
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.bcc-tab-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: var(--bcc-charcoal);
+}
+
+/* ── Filter Toolbar ── */
+.bcc-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: #ffffff;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--bcc-border-color);
+    margin-bottom: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+    flex-wrap: wrap;
+}
+
+.bcc-search-box {
+    position: relative;
+    min-width: 280px;
+    flex-grow: 1;
+    max-width: 400px;
+}
+
+.bcc-search-input {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--bcc-border-color-dark);
+    border-radius: 6px;
+    padding: 8px 12px 8px 36px;
+    color: var(--bcc-charcoal);
+    font-size: 0.825rem;
+    transition: all 0.15s ease;
+}
+
+.bcc-search-input:focus {
+    outline: none;
+    border-color: var(--bcc-charcoal);
+    box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.05);
+}
+
+.bcc-search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--bcc-slate-muted);
+    font-size: 0.85rem;
+}
+
+.bcc-filter-pills {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.bcc-pill {
+    background: #ffffff;
+    border: 1px solid var(--bcc-border-color-dark);
+    color: var(--bcc-slate-medium);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.775rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.bcc-pill:hover {
+    background: #f8fafc;
+    color: var(--bcc-charcoal);
+}
+
+.bcc-pill.active {
+    background: var(--bcc-charcoal);
+    color: #ffffff;
+    border-color: var(--bcc-charcoal);
+}
+
+/* ── Light Custom Tables ── */
+.bcc-table-container {
+    background: var(--bcc-bg-card);
+    border: 1px solid var(--bcc-border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+.bcc-table-header {
+    background: #ffffff;
+    color: var(--bcc-charcoal);
+    border-bottom: 1px solid var(--bcc-border-color);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.bcc-table-header i {
+    color: var(--bcc-slate-muted) !important;
+}
+
+.bcc-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: var(--bcc-charcoal);
+    font-size: 0.825rem;
+}
+
+.bcc-table th {
+    background: #fafbfe;
+    color: var(--bcc-slate-light);
+    font-weight: 600;
+    font-size: 0.725rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 14px 24px;
+    text-align: left;
+    border-bottom: 1px solid var(--bcc-border-color);
+}
+
+.bcc-table td {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--bcc-border-color);
+    vertical-align: middle;
+}
+
+.bcc-table tbody tr {
+    transition: background 0.1s ease;
+}
+
+.bcc-table tbody tr:hover {
+    background: #fafbfe;
+}
+
+/* Elegant Soft Overdue Indicators */
+.bcc-table tr.bcc-row-overdue {
+    background: #fffbeb;
+}
+.bcc-table tr.bcc-row-overdue:hover {
+    background: #fef3c7;
+}
+
+.bcc-table .btn-outline-secondary {
+    border-color: var(--bcc-border-color-dark);
+    color: var(--bcc-slate-medium);
+    background-color: #ffffff;
+    font-size: 0.775rem;
+    border-radius: 4px;
+}
+
+.bcc-table .btn-outline-secondary:hover {
+    background-color: #f8fafc;
+    border-color: var(--bcc-slate-muted);
+    color: var(--bcc-charcoal);
+}
+
+/* ── Badges ── */
+.bcc-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: none;
+}
+
+.bcc-badge-draft { background: #f1f5f9; color: var(--bcc-slate-medium); }
+.bcc-badge-sent { background: #eff6ff; color: #1e40af; }
+.bcc-badge-paid { background: #f0fdf4; color: #16803d; }
+.bcc-badge-cancelled { background: #f8fafc; color: var(--bcc-slate-muted); }
+.bcc-badge-overdue { background: #fff1f2; color: #9f1239; margin-left: 4px; }
+
+/* Progress Bars inside AR tab */
+.progress {
+    border-radius: 3px;
+    background-color: #f1f5f9 !important;
+}
+
+.progress-bar {
+    background-color: var(--bcc-charcoal) !important;
+    border-radius: 3px;
+}
+
+/* ── Automated Ops ── */
+.acc-emerald h4 i {
+    color: var(--bcc-slate-muted) !important;
+}
+
+.acc-emerald .d-flex {
+    border: 1px solid var(--bcc-border-color) !important;
+}
+
+/* Custom Page Scrollbar */
+.bcc-root::-webkit-scrollbar {
+    width: 6px;
+}
+.bcc-root::-webkit-scrollbar-track {
+    background: var(--bcc-bg-main);
+}
+.bcc-root::-webkit-scrollbar-thumb {
+    background: var(--bcc-border-color-dark);
+    border-radius: 3px;
+}
+.bcc-root::-webkit-scrollbar-thumb:hover {
+    background: var(--bcc-slate-muted);
+}

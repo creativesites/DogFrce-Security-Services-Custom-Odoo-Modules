@@ -746,8 +746,15 @@ class DemoBuilderZM:
             ("july", date(2026, 7, 1), date(2026, 7, 14)),
         ]
         
-        # Guard pools for these sites
-        guard_pool = [self.ref(f"guard_c{i:02d}") for i in range(1, 31)] + [self.ref(f"guard_b{i:02d}") for i in range(1, 15)]
+        # Select 43 unique guards (excluding guard_c08, our star guard, to avoid overlapping assignments) and split them into 5 disjoint pools
+        pool_all = [self.ref(f"guard_c{i:02d}") for i in range(1, 31) if i != 8] + [self.ref(f"guard_b{i:02d}") for i in range(1, 15)]
+        pools_by_site = {
+            "site_absa_cairo": pool_all[0:8],       # 8 guards
+            "site_absa_longacres": pool_all[8:18],   # 10 guards (3 requirements, needs more)
+            "site_absa_woodlands": pool_all[18:26],  # 8 guards
+            "site_east_park_mall": pool_all[26:34],  # 8 guards
+            "site_manda_hill_mall": pool_all[34:43], # 9 guards
+        }
         
         slot_index = 0
         for m_tag, d_from, d_to in months:
@@ -774,12 +781,13 @@ class DemoBuilderZM:
                             continue
                             
                         for slot_num in range(1, requirement.guard_count + 1):
-                            # Deterministic guard allocation
-                            g_idx = (slot_index + day_offset) % len(guard_pool)
-                            guard = guard_pool[g_idx]
+                            # Deterministic guard allocation from site-specific pool to prevent overlapping assignments
+                            site_pool = pools_by_site[site_xmlid]
+                            g_idx = (slot_index + day_offset) % len(site_pool)
+                            guard = site_pool[g_idx]
                             
-                            # Peter Mwansa is always on time and active at ABSA Woodlands
-                            if site_xmlid == "site_absa_woodlands" and day_offset % 2 == 0:
+                            # Peter Mwansa is always on time and active at ABSA Woodlands (only assign to first slot of day shift to avoid overlapping shifts)
+                            if site_xmlid == "site_absa_woodlands" and day_offset % 2 == 0 and req_xmlid == "req_post_site_absa_woodlands_gate_day" and slot_num == 1:
                                 guard = self.ref("guard_c08") # guard_c08 is Peter Mwansa
                                 
                             slot = self.get_or_create(
@@ -863,8 +871,8 @@ class DemoBuilderZM:
             # Seed check-in
             check_in_time = start + timedelta(minutes=25 if is_late else 0) - timedelta(minutes=int(slot_index % 10))
             
-            # Missed check-out seed (18 instances across May/June/July)
-            has_missed_checkout = (not is_peter) and (slot_index % 40 == 0)
+            # Missed check-out seed (disabled during seeding to prevent hr_attendance overlapping check-in validation errors)
+            has_missed_checkout = False
             if has_missed_checkout:
                 check_out_time = False # null check-out
             else:
@@ -957,6 +965,22 @@ class DemoBuilderZM:
         # 1. Create payroll periods and generate 430 total payroll records (payslips)
         # across April, May, June, July 2026 utilizing Zambia rules
         rule_set = self.env["security.payroll.rule.set"].search([("country_code", "=", "ZM")], limit=1)
+        
+        # Ensure a default template exists
+        template = self.env["security.payslip.template"].search([], limit=1)
+        if not template:
+            template = self.get_or_create(
+                "payslip_template_default",
+                "security.payslip.template",
+                {
+                    "name": "Zambia Modern Template",
+                    "base_layout": "modern",
+                    "primary_color": "#10b981",
+                    "secondary_color": "#0f172a",
+                    "font_family": "Inter",
+                }
+            )
+        
         if not rule_set:
             rule_set = self.get_or_create(
                 "rule_set_zm_default_demo",
@@ -973,8 +997,12 @@ class DemoBuilderZM:
                     "employer_nhima_rate": 0.005,
                     "vat_rate": 16.0,
                     "legal_invoice_text": "This invoice is subject to 16% VAT under Zambia Revenue Authority (ZRA) regulations.",
+                    "template_id": template.id,
                 },
             )
+        else:
+            if not rule_set.template_id:
+                rule_set.template_id = template.id
             
         periods_specs = [
             ("period_april", "2026-04-01", "2026-04-30"),

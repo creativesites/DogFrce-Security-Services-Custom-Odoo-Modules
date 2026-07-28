@@ -237,6 +237,12 @@ class SecurityAttendanceRecord(models.Model):
         required=True,
         ondelete="cascade",
     )
+    roster_batch_id = fields.Many2one(
+        related="roster_slot_id.batch_id",
+        store=True,
+        readonly=True,
+        string="Roster Batch",
+    )
     attendance_batch_id = fields.Many2one(
         "security.attendance.batch",
         ondelete="set null",

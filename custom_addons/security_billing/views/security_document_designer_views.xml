@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_document_designer" model="ir.actions.client">
+        <field name="name">Document Designer</field>
+        <field name="tag">security_document_designer</field>
+        <field name="target">main</field>
+    </record>
+
+    <!-- Menu Item for Document Designer -->
+    <menuitem id="menu_security_document_designer"
+              name="Document Designer"
+              parent="security_operations.menu_security_billing_root"
+              action="action_document_designer"
+              sequence="30" />
+</odoo>

@@ -28,8 +28,8 @@
 
     /* ── Used by inline XML styles ── */
     --text: #0d1726;
-    --text-sub: #8b95a5;
-    --text-muted: #8b95a5;
+    --text-sub: #475569;
+    --text-muted: #475569;
     --red: #dc2626;
     --acid: #16a34a;
 
@@ -114,7 +114,8 @@
 .dg-sidebar {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(160deg, #0a1929 0%, #102238 45%, #1a3a5c 100%);
+    background: #1a2332 !important;
+    color: #dce4f0 !important;
     /* min-height: 0 required — grid child must shrink below content size */
     min-height: 0;
     overflow: hidden;

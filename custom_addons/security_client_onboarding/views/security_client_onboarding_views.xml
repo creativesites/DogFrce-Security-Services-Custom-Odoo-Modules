@@ -60,8 +60,8 @@
                                 <field name="post_id"/>
                                 <field name="shift_template_id"/>
                                 <field name="guard_count"/>
-                                <field name="bill_rate" string="Bill Rate (N$)"/>
-                                <field name="pay_rate" string="Pay Rate (N$)"/>
+                                <field name="bill_rate" string="Bill Rate"/>
+                                <field name="pay_rate" string="Pay Rate"/>
                             </list>
                         </field>
                     </group>
@@ -201,20 +201,20 @@
     />
 
     <menuitem
-        id="menu_security_client_onboarding_ops"
-        name="Onboard New Client"
-        parent="security_operations.menu_security_roster"
-        action="action_security_client_onboarding_wizard"
-        sequence="5"
-        groups="hr.group_hr_user,security_base.group_security_supervisor"
-    />
-
-    <menuitem
         id="menu_security_roster_setup_check"
         name="Roster Setup Check"
         parent="security_operations.menu_security_roster"
         action="action_security_roster_setup_wizard"
-        sequence="6"
+        sequence="36"
+        groups="hr.group_hr_user,security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_client_onboarding_ops"
+        name="Onboard New Client"
+        parent="security_operations.menu_security_roster"
+        action="action_security_client_onboarding_wizard"
+        sequence="37"
         groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 

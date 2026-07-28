@@ -456,7 +456,8 @@ export class ExecutiveDashboard extends Component {
     // ── Formatting ────────────────────────────────────────────────────────────
 
     formatCurrency(v) {
-        return "N$ " + Number(v || 0).toLocaleString("en-NA", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const sym = (this.state.data && this.state.data.currency_symbol) || "ZMW";
+        return `${sym} ` + Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     get trendArrow() {

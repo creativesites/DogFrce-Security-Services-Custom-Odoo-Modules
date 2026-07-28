@@ -28,7 +28,7 @@
         name="Roster Board"
         parent="security_operations.menu_security_roster"
         action="action_roster_board"
-        sequence="10"
+        sequence="2"
         groups="hr.group_hr_user"
     />
 

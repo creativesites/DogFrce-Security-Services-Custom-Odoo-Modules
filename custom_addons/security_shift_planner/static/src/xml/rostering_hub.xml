@@ -471,74 +471,15 @@
               </div>
 
               <!-- Grid table -->
-              <div class="rh-grid-scroll">
-                <table class="rh-grid-table">
-                  <thead>
-                    <tr>
-                      <th class="rh-th-label">Site / Post</th>
-                      <t t-foreach="state.dates" t-as="d" t-key="d">
-                        <th t-att-class="'rh-th-date' + (isToday(d) ? ' rh-th-today' : isWeekend(d) ? ' rh-th-weekend' : '')">
-                          <div class="rh-th-day" t-esc="fmtDateShort(d)"/>
-                          <div class="rh-th-dow" t-esc="dayName(d)"/>
-                          <div t-if="isToday(d)" class="rh-today-dot"/>
-                        </th>
-                      </t>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <t t-foreach="visibleSites" t-as="site" t-key="site.id">
-                      <!-- Site header row -->
-                      <tr>
-                        <td class="rh-td-site-header" colspan="999">
-                          <i class="fa fa-building me-1" style="color:#3b82f6;"/>
-                          <t t-esc="site.name"/>
-                        </td>
-                      </tr>
-                      <!-- Post rows -->
-                      <t t-foreach="getPostsForSite(site.id)" t-as="post" t-key="post.id">
-                        <tr>
-                          <td class="rh-td-post-label">
-                            <i class="fa fa-map-marker me-1" style="color:#94a3b8;"/>
-                            <t t-esc="post.name"/>
-                          </td>
-                          <t t-foreach="state.dates" t-as="d" t-key="d">
-                            <t t-set="cellSlots" t-value="getSlotsForCell(site.id, post.id, d)"/>
-                            <td t-att-class="'rh-td-cell' + (isToday(d) ? ' rh-cell-today' : isWeekend(d) ? ' rh-cell-weekend' : '')">
-                              <t t-if="cellSlots.length === 0">
-                                <div class="rh-cell-empty">—</div>
-                              </t>
-                              <t t-foreach="cellSlots" t-as="slot" t-key="slot.id">
-                                <t t-if="slot.state === 'cancelled'">
-                                  <div class="rh-slot rh-slot-cancelled">
-                                    <span class="rh-slot-text">Cancelled</span>
-                                  </div>
-                                </t>
-                                <t t-elif="slot.employee_id">
-                                  <div t-on-click="() => this.selectSlot(slot)"
-                                       t-att-class="'rh-slot rh-slot-assigned' + (slot.conflict ? ' rh-slot-conflict' : '')">
-                                    <t t-if="slot.conflict">
-                                      <span class="rh-conflict-tag">!</span>
-                                    </t>
-                                    <div class="rh-slot-name" t-esc="slot.employee_name"/>
-                                    <div t-if="slot.shift_label" class="rh-slot-time" t-esc="slot.shift_label"/>
-                                  </div>
-                                </t>
-                                <t t-else="">
-                                  <div t-on-click="() => this.selectSlot(slot)"
-                                       class="rh-slot rh-slot-empty">
-                                    <div class="rh-slot-unassigned">+</div>
-                                    <div t-if="slot.shift_label" class="rh-slot-time" t-esc="slot.shift_label"/>
-                                  </div>
-                                </t>
-                              </t>
-                            </td>
-                          </t>
-                        </tr>
-                      </t>
-                    </t>
-                  </tbody>
-                </table>
-              </div>
+              <!-- Grid Component -->
+              <RosterGrid
+                  mode="'light'"
+                  dates="state.dates"
+                  sites="visibleSites"
+                  slots="state.slots"
+                  selectedSlotId="state.selectedSlot ? state.selectedSlot.id : null"
+                  onSelectSlot="(slot) => this.selectSlot(slot)"
+                  onDropSlot="(slot, ev) => this.onDropSlot(slot, ev)"/>
             </div>
           </t>
         </t>
@@ -713,56 +654,132 @@
             </div>
           </t>
 
+          <!-- Guard Search + Tab Switcher Bar -->
+          <div style="padding:8px 12px; background:#f8fafc; border-bottom:1px solid #e2e8f0; flex-shrink:0;">
+            <div class="input-group input-group-sm mb-2">
+              <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+              <input type="text" class="form-control border-start-0 ps-0" placeholder="Search guard name or grade…"
+                     t-att-value="state.guardSearchTerm"
+                     t-on-input="(ev) => { state.guardSearchTerm = ev.target.value; }"/>
+            </div>
+            <div class="d-flex rounded bg-light p-1" style="font-size:11px; font-weight:700;">
+              <button t-att-class="'btn btn-sm flex-fill py-1 rounded ' + (state.guardTab === 'suggested' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+                      t-on-click="() => { state.guardTab = 'suggested'; }">
+                <i class="fa fa-star me-1 text-warning"/>Suggested (<t t-esc="state.suggestions.length"/>)
+              </button>
+              <button t-att-class="'btn btn-sm flex-fill py-1 rounded ' + (state.guardTab === 'all' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+                      t-on-click="() => { state.guardTab = 'all'; }">
+                <i class="fa fa-users me-1 text-info"/>All Guards (<t t-esc="filteredAllGuards.length"/>)
+              </button>
+            </div>
+          </div>
+
           <!-- Suggestions list -->
           <div class="rh-suggestions-body">
-            <t t-if="state.loadingSuggestions">
-              <div class="rh-loading-center">
-                <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>Scoring guards…
-              </div>
-            </t>
-            <t t-elif="state.suggestions.length">
-              <div class="rh-sug-header">
-                <i class="fa fa-list-ol me-1"/>Ranked Suggestions (<t t-esc="state.suggestions.length"/>)
-              </div>
-              <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
-                <div class="rh-sug-card">
-                  <div class="rh-sug-top">
-                    <div class="rh-sug-meta">
-                      <span class="rh-rank-badge">#<t t-esc="sug.rank"/></span>
-                      <span class="rh-sug-name" t-esc="sug.employee_name"/>
+
+            <!-- TAB 1: SUGGESTED MATCHES -->
+            <t t-if="state.guardTab === 'suggested'">
+              <t t-if="state.loadingSuggestions">
+                <div class="rh-loading-center">
+                  <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>Scoring guards…
+                </div>
+              </t>
+              <t t-elif="state.suggestions.length">
+                <div class="rh-sug-header">
+                  <i class="fa fa-list-ol me-1"/>Ranked Suggestions (<t t-esc="state.suggestions.length"/>)
+                </div>
+                <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
+                  <div class="rh-sug-card">
+                    <div class="rh-sug-top">
+                      <div class="rh-sug-meta">
+                        <span class="rh-rank-badge">#<t t-esc="sug.rank"/></span>
+                        <span class="rh-sug-name" t-esc="sug.employee_name"/>
+                      </div>
+                      <div class="rh-sug-score"
+                           t-att-style="'color:' + scoreColor(sug.score)"
+                           t-esc="Math.round(sug.score)"/>
                     </div>
-                    <div class="rh-sug-score"
-                         t-att-style="'color:' + scoreColor(sug.score)"
-                         t-esc="Math.round(sug.score)"/>
+                    <t t-if="sug.grade">
+                      <div class="rh-sug-grade"><i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/></div>
+                    </t>
+                    <div class="rh-score-bar-track">
+                      <div class="rh-score-bar-fill"
+                           t-att-style="'width:' + Math.min(100, sug.score/150*100) + '%; background:' + scoreBarColor(sug.score)"/>
+                    </div>
+                    <div t-if="sug.score_breakdown" class="rh-sug-breakdown" t-esc="sug.score_breakdown"/>
+                    <button class="rh-btn rh-btn-assign w-100 mt-2"
+                            t-on-click="() => this.assignGuard(sug)">
+                      <i class="fa fa-check me-1"/>Assign
+                    </button>
                   </div>
-                  <t t-if="sug.grade">
-                    <div class="rh-sug-grade"><i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/></div>
-                  </t>
-                  <div class="rh-score-bar-track">
-                    <div class="rh-score-bar-fill"
-                         t-att-style="'width:' + Math.min(100, sug.score/150*100) + '%; background:' + scoreBarColor(sug.score)"/>
+                </t>
+              </t>
+
+              <!-- When 0 suggestions match requirements -->
+              <t t-elif="state.suggestionsLoaded and state.suggestions.length === 0">
+                <div class="alert alert-warning py-3 px-3 mb-3 border-start border-4 border-warning" style="font-size:11px; background:#fffbeb;">
+                  <div style="font-size:12px; font-weight:700; color:#92400e;" class="mb-1">
+                    <i class="fa fa-exclamation-triangle me-1 text-warning"/>No 100% Eligible Guard Suggestions
                   </div>
-                  <div t-if="sug.score_breakdown" class="rh-sug-breakdown" t-esc="sug.score_breakdown"/>
-                  <button class="rh-btn rh-btn-assign w-100 mt-2"
-                          t-on-click="() => this.assignGuard(sug)">
-                    <i class="fa fa-check me-1"/>Assign
+                  <div style="color:#78350f;">
+                    All guards have requirement warnings (e.g. leave or grade). Select any guard below to assign with a manual override:
+                  </div>
+                </div>
+
+                <!-- List all guards for override assignment -->
+                <t t-foreach="filteredAllGuards" t-as="guard" t-key="guard.id">
+                  <div class="p-2 mb-2 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
+                    <div>
+                      <div style="font-size:12px; font-weight:700; color:#1e293b;" t-esc="guard.name"/>
+                      <div style="font-size:10px; color:#64748b;">Grade: <t t-esc="guard.grade"/></div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-warning text-dark py-1 px-2"
+                            style="font-size:11px; font-weight:600;"
+                            t-on-click="() => this.assignGuardDirect(guard)">
+                      <i class="fa fa-warning me-1 text-warning"/>Assign (Override)
+                    </button>
+                  </div>
+                </t>
+              </t>
+
+              <t t-else="">
+                <div class="rh-loading-center" style="color:#94a3b8;">
+                  <i class="fa fa-magic d-block mb-2" style="font-size:28px; color:#cbd5e1;"/>
+                  <div class="mb-2">Click "Suggest Guards" for top matches, or pick from "All Guards".</div>
+                  <button class="btn btn-sm btn-outline-secondary" t-on-click="() => { state.guardTab = 'all'; }">
+                    <i class="fa fa-users me-1"/>Browse All Guards
                   </button>
                 </div>
               </t>
             </t>
-            <t t-elif="state.suggestionsLoaded">
-              <div class="rh-loading-center">
-                <i class="fa fa-exclamation-circle d-block mb-2" style="color:#fbbf24; font-size:28px;"/>
-                <div style="font-weight:600; color:#475569;">No Eligible Guards</div>
-                <div style="font-size:11px; color:#94a3b8;">No guards matched the criteria for this slot.</div>
+
+            <!-- TAB 2: ALL GUARDS DIRECTORY -->
+            <t t-if="state.guardTab === 'all'">
+              <div class="rh-sug-header">
+                <i class="fa fa-users me-1"/>All Active Guards (<t t-esc="filteredAllGuards.length"/>)
               </div>
+
+              <t t-if="filteredAllGuards.length === 0">
+                <div class="text-center py-4 text-muted" style="font-size:12px;">
+                  No guards found matching "<t t-esc="state.guardSearchTerm"/>"
+                </div>
+              </t>
+
+              <t t-foreach="filteredAllGuards" t-as="guard" t-key="guard.id">
+                <div class="p-2 mb-2 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
+                  <div>
+                    <div style="font-size:12px; font-weight:700; color:#1e293b;" t-esc="guard.name"/>
+                    <div style="font-size:10px; color:#64748b;">Grade: <t t-esc="guard.grade"/></div>
+                  </div>
+                  <button class="btn btn-sm btn-primary py-1 px-2"
+                          style="font-size:11px; font-weight:600;"
+                          t-on-click="() => this.assignGuardDirect(guard)">
+                    <i class="fa fa-check me-1"/>Assign Guard
+                  </button>
+                </div>
+              </t>
             </t>
-            <t t-else="">
-              <div class="rh-loading-center" style="color:#94a3b8;">
-                <i class="fa fa-magic d-block mb-2" style="font-size:28px; color:#cbd5e1;"/>
-                Click "Suggest Guards" to run the scoring engine.
-              </div>
-            </t>
+
           </div>
         </div>
       </t>
@@ -888,6 +905,250 @@
       <span>Setup</span>
     </button>
   </nav>
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       CREATE ROSTER BATCH DIALOG MODAL
+       ─────────────────────────────────────────────────────────────────────── -->
+  <t t-if="state.createDialog.visible">
+    <div class="rb-modal-overlay" t-on-click="closeCreateModal">
+      <div class="rb-modal-box rb-modal-md" t-on-click.stop="">
+
+        <!-- Modal header -->
+        <div class="rb-modal-header d-flex align-items-center justify-content-between px-4 py-3">
+          <div>
+            <div class="fw-bold text-white d-flex align-items-center gap-2" style="font-size:16px;">
+              <i class="fa fa-calendar-plus-o text-primary"/>
+              <span>New Monthly Roster Batch</span>
+            </div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+              Dogforce Cycle Prefill: <t t-esc="state.companyCycle.startDay"/>th to <t t-esc="state.companyCycle.endDay"/>th
+            </div>
+          </div>
+          <button class="rb-btn-close-icon" t-on-click="closeCreateModal">&#x2715;</button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="rb-modal-body p-4">
+
+          <!-- Cycle Mode Quick Selectors -->
+          <div class="mb-3">
+            <label class="rb-form-label mb-1">Monthly Cycle Option</label>
+            <div class="d-flex flex-wrap gap-1">
+              <button t-att-class="'rb-cycle-pill ' + (state.createDialog.cycleMode === 'default' ? 'active' : '')"
+                      t-on-click="() => this.onCycleModeChange('default')">
+                <i class="fa fa-shield me-1"/>Dogforce Cycle (<t t-esc="state.companyCycle.startDay"/>th–<t t-esc="state.companyCycle.endDay"/>th)
+              </button>
+              <button t-att-class="'rb-cycle-pill ' + (state.createDialog.cycleMode === 'current' ? 'active' : '')"
+                      t-on-click="() => this.onCycleModeChange('current')">
+                Current Cycle
+              </button>
+              <button t-att-class="'rb-cycle-pill ' + (state.createDialog.cycleMode === 'next' ? 'active' : '')"
+                      t-on-click="() => this.onCycleModeChange('next')">
+                Next Month Cycle
+              </button>
+            </div>
+          </div>
+
+          <!-- Client & Site -->
+          <div class="row g-2 mb-3">
+            <div class="col-12 col-md-6">
+              <label class="rb-form-label">Client <span class="text-danger">*</span></label>
+              <select class="form-select form-select-sm rb-select"
+                      t-on-change="onDialogPartnerChange">
+                <option value="">-- Select Client --</option>
+                <t t-foreach="createDialogPartners" t-as="p" t-key="p.id">
+                  <option t-att-value="p.id"
+                          t-att-selected="p.id === state.createDialog.partnerId"
+                          t-esc="p.name"/>
+                </t>
+              </select>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="rb-form-label">Site <span class="text-muted fw-normal">(blank for all)</span></label>
+              <select class="form-select form-select-sm rb-select"
+                      t-att-disabled="!state.createDialog.partnerId"
+                      t-on-change="onDialogSiteChange">
+                <option value="">All Client Sites</option>
+                <t t-foreach="createDialogSites" t-as="s" t-key="s.id">
+                  <option t-att-value="s.id"
+                          t-att-selected="s.id === state.createDialog.siteId"
+                          t-esc="s.name"/>
+                </t>
+              </select>
+            </div>
+          </div>
+
+          <!-- Target Month & Year -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="rb-form-label">Target Month</label>
+              <select class="form-select form-select-sm rb-select"
+                      t-on-change="onDialogMonthChange">
+                <t t-foreach="dialogMonthOptions" t-as="mo" t-key="mo.value">
+                  <option t-att-value="mo.value"
+                          t-att-selected="mo.value === state.createDialog.month"
+                          t-esc="mo.label"/>
+                </t>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="rb-form-label">Target Year</label>
+              <select class="form-select form-select-sm rb-select"
+                      t-on-change="onDialogYearChange">
+                <t t-foreach="dialogYearOptions" t-as="yr" t-key="yr">
+                  <option t-att-value="yr"
+                          t-att-selected="yr === state.createDialog.year"
+                          t-esc="yr"/>
+                </t>
+              </select>
+            </div>
+          </div>
+
+          <!-- Computed Date Range Fields -->
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="rb-form-label">Start Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm rb-input"
+                     t-att-value="state.createDialog.dateFrom"
+                     t-on-change="onDialogDateFromChange"/>
+            </div>
+            <div class="col-6">
+              <label class="rb-form-label">End Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control form-control-sm rb-input"
+                     t-att-value="state.createDialog.dateTo"
+                     t-on-change="onDialogDateToChange"/>
+            </div>
+          </div>
+
+          <!-- Options -->
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" id="rhAutoGenerateCheck"
+                   t-att-checked="state.createDialog.autoGenerateSlots"
+                   t-on-change="(ev) => this.state.createDialog.autoGenerateSlots = ev.target.checked"/>
+            <label class="form-check-label text-light" style="font-size:12px;" for="rhAutoGenerateCheck">
+              Automatically generate empty shift slots from site requirements
+            </label>
+          </div>
+
+          <!-- Live Validation & Preview Banner -->
+          <div t-if="state.createDialog.validation" class="mb-3">
+            <div t-if="state.createDialog.validation.valid"
+                 class="p-3 rounded border border-secondary"
+                 style="background:#0f172a; font-size:12px;">
+              <div class="fw-bold text-info mb-1">
+                <i class="fa fa-info-circle me-1"/>Batch Scope Preview
+              </div>
+              <div class="d-flex justify-content-between text-muted mb-1">
+                <span>Cycle Duration:</span>
+                <span class="text-white"><t t-esc="state.createDialog.validation.duration_days"/> days</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted mb-1">
+                <span>Estimated Slots:</span>
+                <span class="text-white font-monospace"><t t-esc="state.createDialog.validation.estimated_slots"/> slots</span>
+              </div>
+              <t t-foreach="state.createDialog.validation.warnings || []" t-as="warn" t-key="warn">
+                <div class="text-warning mt-1" style="font-size:11px;">
+                  <i class="fa fa-warning me-1"/><t t-esc="warn"/>
+                </div>
+              </t>
+            </div>
+            <div t-else="" class="p-3 rounded border border-danger bg-danger bg-opacity-10 text-danger" style="font-size:12px;">
+              <i class="fa fa-exclamation-triangle me-1"/>
+              <t t-foreach="state.createDialog.validation.errors || []" t-as="err" t-key="err">
+                <div><t t-esc="err"/></div>
+              </t>
+            </div>
+          </div>
+
+          <!-- Error Message Banner -->
+          <div t-if="state.createDialog.error" class="alert alert-danger py-2 px-3 mb-3" style="font-size:12px;">
+            <i class="fa fa-exclamation-circle me-1"/><t t-esc="state.createDialog.error"/>
+          </div>
+
+        </div><!-- /rb-modal-body -->
+
+        <!-- Modal footer -->
+        <div class="rb-modal-footer px-4 py-3 d-flex justify-content-end gap-2 border-top border-dark">
+          <button class="rb-btn rb-btn-ghost" t-on-click="closeCreateModal">Cancel</button>
+          <button class="rb-btn rb-btn-success"
+                  t-on-click="confirmCreateBatch"
+                  t-att-disabled="state.createDialog.creating || state.createDialog.validating || (state.createDialog.validation and !state.createDialog.validation.valid)">
+            <i t-att-class="state.createDialog.creating ? 'fa fa-spinner fa-spin me-1' : 'fa fa-check me-1'"/>
+            <t t-if="state.createDialog.creating">Creating Batch…</t>
+            <t t-else="">Create Monthly Batch</t>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </t>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       INELIGIBILITY OVERRIDE DIALOG MODAL (Rostering Hub)
+       ═══════════════════════════════════════════════════════════ -->
+  <t t-if="state.overrideDialog and state.overrideDialog.visible">
+    <div style="position:fixed; inset:0; z-index:10001; background:rgba(15,23,42,.75); display:flex; align-items:center; justify-content:center;"
+         t-on-click.self="closeOverrideModal">
+      <div style="background:#0f172a; border:1px solid #334155; border-radius:14px; padding:28px; width:480px; max-width:92vw; box-shadow:0 24px 64px rgba(0,0,0,.5); color:#f8fafc;">
+
+        <!-- Header -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div>
+            <div style="font-size:16px; font-weight:700; color:#f59e0b;" class="d-flex align-items-center gap-2">
+              <i class="fa fa-exclamation-triangle"/>
+              <span>Manual Ineligibility Override</span>
+            </div>
+            <div style="font-size:12px; color:#94a3b8; margin-top:2px;">
+              Assigning <strong class="text-white" t-esc="state.overrideDialog.guardName"/>
+            </div>
+          </div>
+          <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; padding:4px;"
+                  t-on-click="closeOverrideModal">
+            &#x2715;
+          </button>
+        </div>
+
+        <!-- Incompatibility Reasons List -->
+        <div style="background:#1e293b; border:1px solid #78350f; border-left:4px solid #f59e0b; border-radius:8px; padding:12px; margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:700; color:#fde68a; margin-bottom:6px;">
+            System Ineligibility Warnings:
+          </div>
+          <t t-foreach="state.overrideDialog.reasons" t-as="r" t-key="r">
+            <div style="font-size:11px; color:#cbd5e1; margin-bottom:4px;" class="d-flex align-items-start gap-1">
+              <i class="fa fa-warning text-warning mt-1 me-1"/>
+              <span t-esc="r"/>
+            </div>
+          </t>
+        </div>
+
+        <!-- Reason input -->
+        <div style="font-size:12px; font-weight:600; color:#e2e8f0; margin-bottom:6px;">
+          Override Justification <span class="text-danger">*</span>
+        </div>
+        <textarea
+            style="width:100%; background:#020617; border:1px solid #334155; border-radius:8px; padding:10px 12px; font-size:12px; color:#f8fafc; resize:vertical; min-height:80px; outline:none;"
+            placeholder="e.g., Client waiver approved / Emergency relief shift / Supervisor override granted…"
+            t-on-input="(ev) => { state.overrideDialog.reasonInput = ev.target.value; }"
+        />
+
+        <div t-if="state.overrideDialog.error" class="text-danger mt-2" style="font-size:12px;">
+          <i class="fa fa-exclamation-circle me-1"/><t t-esc="state.overrideDialog.error"/>
+        </div>
+
+        <!-- Footer buttons -->
+        <div class="d-flex gap-2 justify-content-end mt-4">
+          <button class="rb-btn rb-btn-ghost" t-on-click="closeOverrideModal">Cancel</button>
+          <button class="rb-btn rb-btn-warning"
+                  t-on-click="confirmOverrideAssign"
+                  t-att-disabled="state.overrideDialog.submitting">
+            <i t-att-class="state.overrideDialog.submitting ? 'fa fa-spinner fa-spin me-1' : 'fa fa-check me-1'"/>
+            Assign with Override (WRONG FIT)
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </t>
 
 </div><!-- /rh-shell -->
 

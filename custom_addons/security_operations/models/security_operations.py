@@ -871,61 +871,12 @@ class SecurityRosterBatch(models.Model):
         }
 
     def action_auto_fill_open_slots(self):
-        """Assign the top scoring eligible guard to every unassigned slot in this batch."""
-        for batch in self:
-            open_slots = batch.slot_ids.filtered(lambda s: not s.employee_id and s.state != "cancelled")
-            filled = 0
-            for slot in open_slots:
-                req = slot.shift_requirement_id
-                domain = [("security_guard", "=", True), ("active", "=", True), ("security_disqualified", "=", False)]
-                candidates = self.env["hr.employee"].search(domain)
-                # Filter: no double-booking on same date
-                already_assigned = self.env["security.roster.slot"].search([
-                    ("shift_date", "=", slot.shift_date),
-                    ("employee_id", "in", candidates.ids),
-                    ("id", "!=", slot.id),
-                    ("state", "!=", "cancelled"),
-                ]).mapped("employee_id").ids
-                candidates = candidates.filtered(lambda e: e.id not in already_assigned)
-                # Filter: grade requirement
-                if req and slot.post_type_id and slot.post_type_id.min_grade_id:
-                    min_seq = slot.post_type_id.min_grade_id.sequence
-                    candidates = candidates.filtered(
-                        lambda e: e.security_grade_id and e.security_grade_id.sequence <= min_seq
-                    )
-                # Filter: site exclusions
-                excluded = self.env["security.guard.exclusion"].search([
-                    ("active", "=", True),
-                    "|",
-                    ("site_id", "=", slot.site_id.id or False),
-                    ("partner_id", "=", slot.partner_id.id or False),
-                ]).mapped("employee_id").ids
-                candidates = candidates.filtered(lambda e: e.id not in excluded)
-                if not candidates:
-                    continue
-                # Prefer preferred guard if set and eligible
-                chosen = None
-                if req and req.preferred_employee_id and req.preferred_employee_id in candidates:
-                    chosen = req.preferred_employee_id
-                else:
-                    # Pick by reliability score desc
-                    scored = candidates.sorted(
-                        key=lambda e: e.security_reliability_score if hasattr(e, "security_reliability_score") else 0,
-                        reverse=True,
-                    )
-                    chosen = scored[0] if scored else None
-                if chosen:
-                    slot.write({"employee_id": chosen.id, "state": "assigned"})
-                    filled += 1
-            return {
-                "type": "ir.actions.client",
-                "tag": "display_notification",
-                "params": {
-                    "title": "Auto-Fill Complete",
-                    "message": f"{filled} of {len(open_slots)} open slots filled.",
-                    "type": "success" if filled == len(open_slots) else "warning",
-                },
-            }
+        """[DEPRECATED] Unified auto-fill delegate.
+
+        Preserved for backward compatibility. Delegates directly to the authoritative
+        scoring engine method `action_auto_fill_slots`.
+        """
+        return self.action_auto_fill_slots()
 
     def action_auto_fill_slots(self):
         """Auto-assign available guards to all empty (unassigned) slots in this batch."""
@@ -1117,6 +1068,8 @@ class SecurityRosterSlot(models.Model):
         required=True,
     )
     override_reason = fields.Char()
+    is_override = fields.Boolean("Is Override", default=False)
+    wrong_fit_reasons = fields.Text("Wrong Fit Ineligibility Reasons")
     overtime_planned = fields.Boolean(default=False)
     high_value_shift = fields.Boolean(
         compute="_compute_shift_flags",

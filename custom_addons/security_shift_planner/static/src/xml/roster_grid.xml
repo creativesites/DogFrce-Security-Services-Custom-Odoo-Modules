@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shift_planner.RosterGrid" owl="1">
+    <div class="rb-grid-wrapper">
+        <table class="rb-grid-table">
+            <thead>
+                <tr>
+                    <th class="rb-sticky-col rb-th-site"
+                        style="min-width:160px; position:sticky; left:0; top:0; z-index:3; background:#1e3a5f; color:#e2e8f0; padding:8px 12px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.6px; border-right:2px solid #2d5490; border-bottom:2px solid #e2e8f0;">
+                        Site / Post
+                    </th>
+                    <t t-foreach="props.dates" t-as="d" t-key="d">
+                        <th class="rb-th-date text-center"
+                            t-att-style="'min-width:110px; position:sticky; top:0; z-index:2; padding:6px 4px; font-size:11px; border-bottom:2px solid #e2e8f0; border-right:1px solid #e2e8f0; ' + (isToday(d) ? 'background:#eff6ff; color:#1d4ed8;' : isWeekend(d) ? 'background:#fefce8; color:#92400e;' : 'background:#f8fafc; color:#475569;')">
+                            <div class="fw-semibold" t-esc="formatDateShort(d)"/>
+                            <div style="font-size:10px; opacity:.7;" t-esc="dayName(d)"/>
+                            <div t-if="isToday(d)" style="width:4px; height:4px; background:#3b82f6; border-radius:50%; margin:2px auto 0;"/>
+                        </th>
+                    </t>
+                </tr>
+            </thead>
+            <tbody>
+                <t t-foreach="props.sites" t-as="site" t-key="site.id">
+                    <!-- Site Header Row -->
+                    <tr>
+                        <td colspan="999"
+                            style="position:sticky; left:0; background:#e8edf3; color:#1e3a5f; font-size:12px; font-weight:700; padding:5px 12px; border-top:2px solid #cbd5e1; border-bottom:1px solid #d1d5db; letter-spacing:.2px;">
+                            <i class="fa fa-building me-2" style="color:#3b82f6;"/>
+                            <t t-esc="site.name"/>
+                        </td>
+                    </tr>
+
+                    <!-- Post Rows for Site -->
+                    <t t-foreach="getPostsForSite(site.id)" t-as="post" t-key="post.id">
+                        <tr class="rb-post-row">
+                            <td style="position:sticky; left:0; z-index:1; background:#fff; border-right:2px solid #e2e8f0; border-bottom:1px solid #f1f5f9; padding:4px 12px 4px 20px; min-width:160px; vertical-align:top;">
+                                <div style="font-size:11px; color:#64748b; font-weight:500; white-space:nowrap;">
+                                    <i class="fa fa-map-marker me-1" style="color:#94a3b8;"/>
+                                    <t t-esc="post.name"/>
+                                </div>
+                            </td>
+
+                            <t t-foreach="props.dates" t-as="d" t-key="d">
+                                <t t-set="slots" t-value="getSlotsForCell(site.id, post.id, d)"/>
+                                <td style="padding:3px; vertical-align:top; border-right:1px solid #f1f5f9; border-bottom:1px solid #f1f5f9; min-width:110px;">
+                                    <t t-if="slots.length === 0">
+                                        <div style="height:30px; display:flex; align-items:center; justify-content:center; color:#cbd5e1; font-size:12px;">—</div>
+                                    </t>
+                                    <t t-foreach="slots" t-as="slot" t-key="slot.id">
+                                        <!-- Cancelled slot -->
+                                        <t t-if="slot.state === 'cancelled'">
+                                            <div style="background:#f8fafc; border-left:3px solid #cbd5e1; border-radius:4px; padding:4px 7px; margin-bottom:2px; opacity:.5; font-size:11px; min-height:30px;">
+                                                <span style="color:#94a3b8; font-style:italic; font-size:10px;">Cancelled</span>
+                                            </div>
+                                        </t>
+
+                                        <!-- Active slot -->
+                                        <t t-else="">
+                                            <div t-on-contextmenu="(ev) => this.onSlotContextMenu(slot, ev)">
+                                                <!-- Assigned slot -->
+                                                <t t-if="slot.employee_id">
+                                                    <div t-on-click="() => this.selectSlot(slot)"
+                                                         t-att-draggable="true"
+                                                         t-on-dragstart="(ev) => this.onDragStartAssignedSlot(slot, ev)"
+                                                         t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                         t-on-dragleave="onDragLeaveSlot"
+                                                         t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : (slot.is_override ? '#fef3c7' : (slot.conflict ? '#fee2e2' : '#dcfce7'))) + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : (slot.is_override ? '#f59e0b' : (slot.conflict ? '#dc2626' : '#16a34a'))) + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:grab; min-height:30px; transition:box-shadow .15s;'">
+                                                        <div class="d-flex align-items-center flex-wrap gap-1">
+                                                            <t t-if="slot.is_override">
+                                                                <span style="font-size:9px; font-weight:700; color:#b45309; background:#fde68a; border:1px solid #f59e0b; padding:1px 4px; border-radius:2px; margin-right:3px;"
+                                                                      t-att-title="'WRONG FIT INELIGIBILITY:\n' + (slot.wrong_fit_reasons || 'Ineligible guard assigned') + '\n\nOVERRIDE REASON:\n' + (slot.override_reason || 'No reason specified')">
+                                                                    <i class="fa fa-exclamation-triangle me-1"/>WRONG FIT
+                                                                </span>
+                                                            </t>
+                                                            <t t-elif="slot.conflict">
+                                                                <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
+                                                            </t>
+                                                        </div>
+                                                        <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.is_override ? '#b45309' : (slot.conflict ? '#991b1b' : '#15803d')) + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
+                                                             t-esc="slot.employee_name"/>
+                                                        <div t-if="slot.shift_label" style="font-size:9px; color:#16a34a; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                    </div>
+                                                </t>
+
+                                                <!-- Critical Gap slot -->
+                                                <t t-elif="slot.critical_gap">
+                                                    <div t-on-click="() => this.selectSlot(slot)"
+                                                         t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                         t-on-dragleave="onDragLeaveSlot"
+                                                         t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                         t-att-class="state.dragOverSlotId === slot.id ? 'rb-cell-critical-gap rb-drop-hover' : 'rb-cell-critical-gap'">
+                                                        <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">CRITICAL GAP</span>
+                                                        <div t-if="slot.shift_label" style="font-size:9px; color:#f87171; margin-top:2px;" t-esc="slot.shift_label"/>
+                                                    </div>
+                                                </t>
+
+                                                <!-- Unassigned confirmed slot -->
+                                                <t t-elif="slot.state === 'confirmed'">
+                                                    <div t-on-click="() => this.selectSlot(slot)"
+                                                         t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                         t-on-dragleave="onDragLeaveSlot"
+                                                         t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : '#fef9c3') + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : '#ca8a04') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                        <div style="font-size:10px; font-weight:700; color:#92400e; text-transform:uppercase; letter-spacing:.4px;">Unassigned</div>
+                                                        <div t-if="slot.shift_label" style="font-size:9px; color:#a16207; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                    </div>
+                                                </t>
+
+                                                <!-- Unassigned draft slot -->
+                                                <t t-else="">
+                                                    <div t-on-click="() => this.selectSlot(slot)"
+                                                         t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                         t-on-dragleave="onDragLeaveSlot"
+                                                         t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : '#f1f5f9') + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : '#94a3b8') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:pointer; min-height:30px; transition:box-shadow .15s;'">
+                                                        <div style="font-size:10px; color:#94a3b8; font-style:italic;">Unassigned</div>
+                                                        <div t-if="slot.shift_label" style="font-size:9px; color:#94a3b8; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                    </div>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </t>
+                                </td>
+                            </t>
+                        </tr>
+                    </t>
+                </t>
+            </tbody>
+        </table>
+    </div>
+</t>
+</templates>

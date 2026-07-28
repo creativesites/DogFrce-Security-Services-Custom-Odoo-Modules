@@ -18,8 +18,8 @@
 
 /* Sidebar */
 .eq-nav-sidebar {
-    background: linear-gradient(160deg, #1e1b4b 0%, #2e1065 60%, #0f172a 100%);
-    color: #ffffff !important;
+    background: #1a2332 !important;
+    color: #dce4f0 !important;
     min-height: 0;
     overflow-y: auto;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
@@ -27,24 +27,24 @@
 }
 
 .eq-brand {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid #263347;
 }
 
 .eq-select {
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    color: #ffffff !important;
+    background-color: #263347 !important;
+    border: 1px solid #364b66 !important;
+    color: #dce4f0 !important;
     font-size: 12px !important;
     border-radius: 8px !important;
 }
 
 .eq-select option {
-    background-color: #2e1065 !important;
-    color: #ffffff !important;
+    background-color: #1a2332 !important;
+    color: #dce4f0 !important;
 }
 
 .eq-select:focus {
-    background-color: rgba(255, 255, 255, 0.18) !important;
+    background-color: #2d3b55 !important;
     border-color: #a855f7 !important;
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25) !important;
 }
@@ -60,10 +60,10 @@
 
 /* Glass Header Banner */
 .eq-header {
-    background: linear-gradient(135deg, #1e1b4b 0%, #2e1065 60%, #0f172a 100%);
+    background: linear-gradient(135deg, #1a2332 0%, #263347 60%, #111827 100%) !important;
     border-bottom: 3px solid #a855f7;
     padding: 16px 28px !important;
-    box-shadow: 0 10px 25px -5px rgba(30, 27, 75, 0.25);
+    box-shadow: 0 10px 25px -5px rgba(26, 35, 50, 0.25);
     flex-shrink: 0;
 }
 

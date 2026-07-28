@@ -45,4 +45,13 @@
         <field name="view_mode">form</field>
         <field name="target">new</field>
     </record>
+
+    <menuitem
+        id="menu_security_roster_generate_wizard"
+        name="Generate Roster"
+        parent="security_operations.menu_security_roster"
+        action="action_security_roster_generate_wizard"
+        sequence="3"
+        groups="hr.group_hr_user"
+    />
 </odoo>

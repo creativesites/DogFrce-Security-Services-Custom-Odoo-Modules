@@ -92,6 +92,12 @@
 
                     <!-- Header Action Toolbar -->
                     <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <button class="pcc-top-btn"
+                                t-on-click="openPayslipDesigner"
+                                style="background:#8b5cf6;border-color:#8b5cf6;"
+                                title="Open Visual Payslip Designer">
+                            <i class="fa fa-paint-brush me-1"/>Payslip Designer
+                        </button>
                         <t t-if="selectedPeriod">
                             <button class="pcc-top-btn"
                                     t-on-click="() => this.openPeriod(state.selectedPeriodId)"

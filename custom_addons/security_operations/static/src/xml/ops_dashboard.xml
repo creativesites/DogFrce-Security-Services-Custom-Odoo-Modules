@@ -11,10 +11,10 @@
 
         <!-- Brand Header -->
         <div class="od-brand px-4 py-3">
-            <div class="fw-bold" style="font-size:15px; color:#1e1b4b; letter-spacing:.3px;">
-                <i class="fa fa-dashboard me-2" style="color:#2563eb;"/>DogForce Operations
+            <div class="fw-bold" style="font-size:15px; color:#ffffff; letter-spacing:.3px;">
+                <i class="fa fa-dashboard me-2" style="color:#38bdf8;"/>DogForce Operations
             </div>
-            <div style="font-size:11px; color:#64748b; margin-top:2px;">Shift &amp; Incident Control</div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Shift &amp; Incident Control</div>
         </div>
 
         <!-- Site Filter -->
@@ -83,9 +83,9 @@
         <!-- Top Header & KPI Strip -->
         <div class="od-header px-4 py-2 d-flex align-items-center justify-content-between gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="input-group input-group-sm" style="width:240px;">
-                    <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
-                    <input type="text" class="form-control border-start-0 ps-0" placeholder="Search site, guard, post..." t-on-input="onSearchInput"/>
+                <div class="input-group input-group-sm od-search-group" style="width:240px;">
+                    <span class="input-group-text od-search-addon"><i class="fa fa-search"/></span>
+                    <input type="text" class="form-control od-search-input" placeholder="Search site, guard, post..." t-on-input="onSearchInput"/>
                 </div>
             </div>
 

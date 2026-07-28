@@ -151,9 +151,9 @@
 
                             <!-- Guard info -->
                             <div class="ah-col-guard">
-                                <div class="ah-guard-name" t-esc="rec.employee_id[1] || 'Unassigned'"/>
+                                <div class="ah-guard-name" t-esc="rec.employee_id ? rec.employee_id[1] : 'Unassigned'"/>
                                 <div class="ah-guard-meta">
-                                    <span t-esc="rec.site_id[1] || '—'"/>
+                                    <span t-esc="rec.site_id ? rec.site_id[1] : '—'"/>
                                     <t t-if="rec.post_id">
                                         <span class="ah-meta-sep">·</span>
                                         <span t-esc="rec.post_id[1]"/>

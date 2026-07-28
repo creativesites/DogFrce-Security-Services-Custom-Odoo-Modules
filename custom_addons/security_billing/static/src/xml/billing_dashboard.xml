@@ -1,167 +1,417 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="security_billing.BillingCommandCenter">
-<div class="bcc-root o_action" style="background:#f0f2f5; min-height:100vh; font-size:0.875rem;">
+<div class="bcc-root o_action">
 
-    <!-- Loading -->
+    <!-- Loading State -->
     <t t-if="state.loading">
-        <div style="display:flex;align-items:center;justify-content:center;min-height:300px;gap:12px;color:#6c757d;">
-            <div class="spinner-border text-primary"/>
-            <span class="fs-5">Loading Billing Command Center…</span>
+        <div style="display:flex; align-items:center; justify-content:center; min-height:400px; gap:14px; color:#64748b;">
+            <div class="spinner-border text-emerald" style="width: 2.5rem; height: 2.5rem; color: #059669;"/>
+            <span class="fs-5 fw-bold">Loading Billing Command Center…</span>
         </div>
     </t>
 
     <t t-elif="state.data">
         <t t-set="d" t-value="state.data"/>
 
-        <!-- Header -->
-        <div style="background:linear-gradient(135deg,#0d3b66,#1a6e5e);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <i class="fa fa-usd fa-2x" style="color:rgba(255,255,255,0.9);" title="Billing"/>
-                <div>
-                    <h3 style="margin:0;color:white;font-weight:700;">Billing Command Center</h3>
-                    <span style="color:rgba(255,255,255,0.7);font-size:12px;"><t t-esc="d.month_label"/></span>
+        <!-- Header Bar (#1a2332 dark accent) -->
+        <div class="bcc-header">
+            <div class="bcc-header-title">
+                <div class="bcc-header-icon">
+                    <i class="fa fa-university" title="Billing"/>
+                </div>
+                <div class="bcc-header-text">
+                    <h2>Billing Command Center</h2>
+                    <span>DogForce Security Billing &amp; Financial Operations • <strong class="text-dark"><t t-esc="d.month_label"/></strong></span>
                 </div>
             </div>
-            <button class="btn btn-light btn-sm" t-on-click="openAllInvoices">
-                <i class="fa fa-list me-1"/>All Invoices
-            </button>
+
+            <div class="bcc-actions-bar">
+                <button class="bcc-btn bcc-btn-primary" t-on-click="openNewInvoice">
+                    <i class="fa fa-plus-circle"/> New Invoice
+                </button>
+                <button class="bcc-btn bcc-btn-secondary" t-on-click="openWizard">
+                    <i class="fa fa-magic"/> Contract Wizard
+                </button>
+                <button class="bcc-btn bcc-btn-secondary" t-on-click="runAutoBilling" t-att-disabled="state.isGenerating">
+                    <i t-att-class="state.isGenerating ? 'fa fa-spinner fa-spin' : 'fa fa-play-circle'"/> Auto-Billing Batch
+                </button>
+                <button class="bcc-btn bcc-btn-secondary" t-on-click="openDocumentDesigner">
+                    <i class="fa fa-paint-brush"/> Document Designer
+                </button>
+                <button class="bcc-btn bcc-btn-secondary" t-on-click="openAllInvoices">
+                    <i class="fa fa-list"/> All Invoices
+                </button>
+            </div>
         </div>
 
-        <!-- KPI cards -->
-        <div class="p-4">
-            <div class="row g-3 mb-4">
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Active Plans</div>
-                            <div class="fs-1 fw-bold text-primary"><t t-esc="d.active_plan_count"/></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Invoiced MTD</div>
-                            <div class="fs-5 fw-bold text-dark"><t t-esc="fmt(d.invoiced_mtd)"/></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Collected MTD</div>
-                            <div class="fs-5 fw-bold text-success"><t t-esc="fmt(d.collected_mtd)"/></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-6 col-lg-3">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body text-center">
-                            <div class="text-muted small fw-semibold text-uppercase mb-1">Outstanding</div>
-                            <div t-att-class="'fs-5 fw-bold ' + (d.overdue_total > 0 ? 'text-danger' : 'text-warning')">
-                                <t t-esc="fmt(d.outstanding_total)"/>
-                            </div>
-                            <div t-if="d.overdue_total > 0" class="text-danger x-small">
-                                <t t-esc="fmt(d.overdue_total)"/> overdue
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Main Body (Light theme scrollable area) -->
+        <div class="bcc-body">
+            <div class="bcc-container">
 
-            <!-- Two-column layout -->
-            <div class="row g-3">
-                <!-- Active Billing Plans -->
-                <div class="col-lg-7">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-semibold py-2">
-                            <i class="fa fa-file-text-o me-2 text-muted"/>Active Billing Plans
+                <!-- Hero KPI Cards -->
+                <div class="bcc-kpi-grid">
+                    <!-- Active Plans -->
+                    <div class="bcc-card acc-indigo">
+                        <div class="bcc-kpi-label">
+                            <span>Active Billing Plans</span>
+                            <i class="fa fa-file-text-o text-indigo fs-6"/>
                         </div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Client / Plan</th>
-                                        <th>Mode</th>
-                                        <th class="text-end">Last Invoice</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="d.plans" t-as="plan" t-key="plan.id">
-                                        <tr t-att-class="plan.is_overdue ? 'table-danger' : ''"
-                                            style="cursor:pointer;" t-on-click="() => this.openPlan(plan.id)">
-                                            <td>
-                                                <div class="fw-semibold"><t t-esc="plan.client"/></div>
-                                                <div class="text-muted x-small"><t t-esc="plan.name"/></div>
-                                            </td>
-                                            <td class="text-muted small"><t t-esc="plan.mode"/></td>
-                                            <td class="text-end small">
-                                                <t t-if="plan.last_inv_total">
-                                                    <t t-esc="fmt(plan.last_inv_total)"/>
-                                                    <div class="text-muted x-small"><t t-esc="plan.last_inv_date"/></div>
-                                                </t>
-                                                <t t-else=""><span class="text-muted">—</span></t>
-                                            </td>
-                                            <td class="text-center">
-                                                <t t-if="plan.last_inv_state">
-                                                    <span t-att-class="stateBadgeClass(plan.last_inv_state)">
-                                                        <t t-esc="stateLabel(plan.last_inv_state)"/>
+                        <div class="bcc-kpi-value bcc-val-indigo"><t t-esc="d.active_plan_count"/></div>
+                        <div class="bcc-kpi-sub" t-if="d.mode_counts">
+                            <t t-esc="d.mode_counts.recurring || 0"/> Recurring • <t t-esc="d.mode_counts.shift || 0"/> Shift • <t t-esc="d.mode_counts.adhoc || 0"/> Ad-Hoc
+                        </div>
+                    </div>
+
+                    <!-- Invoiced MTD -->
+                    <div class="bcc-card acc-emerald">
+                        <div class="bcc-kpi-label">
+                            <span>Invoiced MTD</span>
+                            <i class="fa fa-calculator text-emerald fs-6"/>
+                        </div>
+                        <div class="bcc-kpi-value bcc-val-emerald"><t t-esc="fmt(d.invoiced_mtd)"/></div>
+                        <div class="bcc-kpi-sub"><t t-esc="d.month_label"/> total revenue billed</div>
+                    </div>
+
+                    <!-- Collected MTD -->
+                    <div class="bcc-card acc-cyan">
+                        <div class="bcc-kpi-label">
+                            <span>Collected MTD</span>
+                            <i class="fa fa-check-circle-o text-cyan fs-6"/>
+                        </div>
+                        <div class="bcc-kpi-value bcc-val-cyan"><t t-esc="fmt(d.collected_mtd)"/></div>
+                        <div class="bcc-kpi-sub bcc-val-emerald fw-bold">
+                            <i class="fa fa-line-chart me-1"/><t t-esc="d.collection_rate"/>% Collection Efficiency
+                        </div>
+                    </div>
+
+                    <!-- Outstanding AR -->
+                    <div t-att-class="'bcc-card ' + (d.overdue_total > 0 ? 'acc-crimson' : 'acc-amber')">
+                        <div class="bcc-kpi-label">
+                            <span>Outstanding AR</span>
+                            <i class="fa fa-clock-o fs-6"/>
+                        </div>
+                        <div t-att-class="'bcc-kpi-value ' + (d.overdue_total > 0 ? 'bcc-val-crimson' : 'bcc-val-amber')">
+                            <t t-esc="fmt(d.outstanding_total)"/>
+                        </div>
+                        <div class="bcc-kpi-sub bcc-val-crimson fw-bold" t-if="d.overdue_total > 0">
+                            <i class="fa fa-exclamation-triangle me-1"/><t t-esc="fmt(d.overdue_total)"/> Overdue
+                        </div>
+                        <div class="bcc-kpi-sub text-muted" t-else="">Zero overdue balances</div>
+                    </div>
+
+                    <!-- Draft Invoices -->
+                    <div class="bcc-card acc-amber">
+                        <div class="bcc-kpi-label">
+                            <span>Draft Queue</span>
+                            <i class="fa fa-pencil-square-o text-amber fs-6"/>
+                        </div>
+                        <div class="bcc-kpi-value bcc-val-amber"><t t-esc="d.draft_count"/></div>
+                        <div class="bcc-kpi-sub"><t t-esc="fmt(d.draft_total)"/> awaiting confirm</div>
+                    </div>
+                </div>
+
+                <!-- Navigation Tabs -->
+                <div class="bcc-tabs">
+                    <button t-att-class="'bcc-tab-btn ' + (state.activeTab === 'overview' ? 'active' : '')"
+                            t-on-click="() => this.setTab('overview')">
+                        <i class="fa fa-dashboard"/> Command Hub
+                    </button>
+                    <button t-att-class="'bcc-tab-btn ' + (state.activeTab === 'aging' ? 'active' : '')"
+                            t-on-click="() => this.setTab('aging')">
+                        <i class="fa fa-clock-o"/> AR Aging &amp; Collections
+                    </button>
+                    <button t-att-class="'bcc-tab-btn ' + (state.activeTab === 'insights' ? 'active' : '')"
+                            t-on-click="() => this.setTab('insights')">
+                        <i class="fa fa-pie-chart"/> Revenue Insights
+                    </button>
+                    <button t-att-class="'bcc-tab-btn ' + (state.activeTab === 'actions' ? 'active' : '')"
+                            t-on-click="() => this.setTab('actions')">
+                        <i class="fa fa-cogs"/> Automated Operations
+                    </button>
+                </div>
+
+                <!-- TAB 1: COMMAND HUB OVERVIEW -->
+                <t t-if="state.activeTab === 'overview'">
+
+                    <!-- Toolbar Filters -->
+                    <div class="bcc-toolbar">
+                        <div class="bcc-search-box">
+                            <i class="fa fa-search bcc-search-icon"/>
+                            <input type="text" class="bcc-search-input" placeholder="Search plans, contract IDs, or clients…"
+                                   t-model="state.searchQuery"/>
+                        </div>
+
+                        <div class="bcc-filter-pills">
+                            <button t-att-class="'bcc-pill ' + (state.modeFilter === 'all' ? 'active' : '')"
+                                    t-on-click="() => this.setModeFilter('all')">All Modes</button>
+                            <button t-att-class="'bcc-pill ' + (state.modeFilter === 'recurring' ? 'active' : '')"
+                                    t-on-click="() => this.setModeFilter('recurring')">Recurring Contracts</button>
+                            <button t-att-class="'bcc-pill ' + (state.modeFilter === 'shift' ? 'active' : '')"
+                                    t-on-click="() => this.setModeFilter('shift')">Per Shift</button>
+                            <button t-att-class="'bcc-pill ' + (state.modeFilter === 'adhoc' ? 'active' : '')"
+                                    t-on-click="() => this.setModeFilter('adhoc')">Ad Hoc</button>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <!-- Active Billing Plans Table -->
+                        <div class="col-lg-8">
+                            <div class="bcc-table-container">
+                                <div class="bcc-table-header">
+                                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i class="fa fa-file-text-o text-emerald"/> Active Security Billing Plans
+                                        <span class="badge bg-light text-dark px-2 py-1" style="font-size:11px; border:1px solid #cbd5e1;">
+                                            <t t-esc="filteredPlans.length"/> Plans
+                                        </span>
+                                    </div>
+                                </div>
+                                <table class="bcc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Client / Plan Name</th>
+                                            <th>Mode</th>
+                                            <th class="text-end">Last Invoice</th>
+                                            <th class="text-center">Status</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="filteredPlans" t-as="plan" t-key="plan.id">
+                                            <tr t-att-class="plan.is_overdue ? 'bcc-row-overdue' : ''">
+                                                <td>
+                                                    <div class="fw-bold text-dark fs-6"><t t-esc="plan.client"/></div>
+                                                    <div class="text-muted small"><t t-esc="plan.name"/></div>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border">
+                                                        <t t-esc="plan.mode"/>
                                                     </span>
-                                                    <t t-if="plan.is_overdue">
-                                                        <div class="text-danger x-small fw-semibold mt-1">OVERDUE</div>
+                                                </td>
+                                                <td class="text-end">
+                                                    <t t-if="plan.last_inv_total">
+                                                        <div class="fw-bold text-emerald"><t t-esc="fmt(plan.last_inv_total)"/></div>
+                                                        <div class="text-muted small"><t t-esc="plan.last_inv_date"/></div>
                                                     </t>
-                                                </t>
-                                                <t t-else=""><span class="text-muted small">No invoices</span></t>
-                                            </td>
-                                        </tr>
-                                    </t>
-                                    <t t-if="d.plans.length === 0">
-                                        <tr><td colspan="4" class="text-center text-muted py-3">No active billing plans.</td></tr>
-                                    </t>
-                                </tbody>
-                            </table>
+                                                    <t t-else=""><span class="text-muted">—</span></t>
+                                                </td>
+                                                <td class="text-center">
+                                                    <t t-if="plan.last_inv_state">
+                                                        <span t-att-class="stateBadgeClass(plan.last_inv_state)">
+                                                            <t t-esc="stateLabel(plan.last_inv_state)"/>
+                                                        </span>
+                                                        <t t-if="plan.is_overdue">
+                                                            <div class="bcc-badge bcc-badge-overdue mt-1">OVERDUE</div>
+                                                        </t>
+                                                    </t>
+                                                    <t t-else=""><span class="text-muted small">No Invoices</span></t>
+                                                </td>
+                                                <td class="text-end">
+                                                    <button class="btn btn-sm btn-outline-secondary py-1 px-3 fw-semibold" t-on-click="() => this.openPlan(plan.id)">
+                                                        <i class="fa fa-folder-open-o"/> Open
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="filteredPlans.length === 0">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-5">
+                                                    <i class="fa fa-filter fa-2x mb-2 d-block opacity-50"/>
+                                                    No billing plans matched your search filter.
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Recent Invoices -->
-                <div class="col-lg-5">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-white fw-semibold py-2">
-                            <i class="fa fa-clock-o me-2 text-muted"/>Recent Invoices
-                        </div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Client</th>
-                                        <th class="text-end">Amount</th>
-                                        <th class="text-center">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <t t-foreach="d.recent_invoices" t-as="inv" t-key="inv.id">
-                                        <tr t-att-class="inv.overdue ? 'table-warning' : ''"
-                                            style="cursor:pointer;" t-on-click="() => this.openInvoice(inv.id)">
-                                            <td>
-                                                <div class="fw-semibold small"><t t-esc="inv.client"/></div>
-                                                <div class="text-muted x-small"><t t-esc="inv.date"/></div>
-                                            </td>
-                                            <td class="text-end small fw-semibold"><t t-esc="fmt(inv.total)"/></td>
-                                            <td class="text-center">
-                                                <span t-att-class="stateBadgeClass(inv.state)">
-                                                    <t t-esc="stateLabel(inv.state)"/>
-                                                </span>
-                                            </td>
+                        <!-- Recent Invoices Stream -->
+                        <div class="col-lg-4">
+                            <div class="bcc-table-container">
+                                <div class="bcc-table-header">
+                                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                        <i class="fa fa-history text-cyan"/> Recent Invoices
+                                    </div>
+                                    <button class="btn btn-link btn-sm text-primary text-decoration-none p-0 fw-bold" t-on-click="openAllInvoices">View All →</button>
+                                </div>
+                                <table class="bcc-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Client / Number</th>
+                                            <th class="text-end">Amount</th>
+                                            <th class="text-center">Status</th>
                                         </tr>
-                                    </t>
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        <t t-foreach="filteredInvoices" t-as="inv" t-key="inv.id">
+                                            <tr t-on-click="() => this.openInvoice(inv.id)" style="cursor:pointer;">
+                                                <td>
+                                                    <div class="fw-bold text-dark"><t t-esc="inv.client"/></div>
+                                                    <div class="text-muted small"><t t-esc="inv.name"/> • <t t-esc="inv.date"/></div>
+                                                </td>
+                                                <td class="text-end fw-bold text-dark">
+                                                    <t t-esc="fmt(inv.total)"/>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span t-att-class="stateBadgeClass(inv.state)">
+                                                        <t t-esc="stateLabel(inv.state)"/>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                        <t t-if="filteredInvoices.length === 0">
+                                            <tr>
+                                                <td colspan="3" class="text-center text-muted py-5">No recent invoices found.</td>
+                                            </tr>
+                                        </t>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </t>
+
+                <!-- TAB 2: AR AGING & COLLECTIONS -->
+                <t t-if="state.activeTab === 'aging'">
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-lg-3">
+                            <div class="bcc-card acc-emerald">
+                                <div class="bcc-kpi-label">0–30 Days Overdue</div>
+                                <div class="bcc-kpi-value bcc-val-emerald"><t t-esc="fmt((d.aging &amp;&amp; d.aging['0_30']) || 0)"/></div>
+                                <div class="progress mt-3" style="height: 6px; background: #e2e8f0;">
+                                    <div class="progress-bar bg-success" style="width: 100%;"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="bcc-card acc-amber">
+                                <div class="bcc-kpi-label">31–60 Days Overdue</div>
+                                <div class="bcc-kpi-value bcc-val-amber"><t t-esc="fmt((d.aging &amp;&amp; d.aging['31_60']) || 0)"/></div>
+                                <div class="progress mt-3" style="height: 6px; background: #e2e8f0;">
+                                    <div class="progress-bar bg-warning" style="width: 100%;"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="bcc-card acc-crimson">
+                                <div class="bcc-kpi-label">61–90 Days Overdue</div>
+                                <div class="bcc-kpi-value bcc-val-crimson"><t t-esc="fmt((d.aging &amp;&amp; d.aging['61_90']) || 0)"/></div>
+                                <div class="progress mt-3" style="height: 6px; background: #e2e8f0;">
+                                    <div class="progress-bar bg-danger" style="width: 100%;"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-lg-3">
+                            <div class="bcc-card acc-crimson" style="background: #fef2f2;">
+                                <div class="bcc-kpi-label text-crimson">90+ Days Critical</div>
+                                <div class="bcc-kpi-value bcc-val-crimson"><t t-esc="fmt((d.aging &amp;&amp; d.aging['90_plus']) || 0)"/></div>
+                                <div class="progress mt-3" style="height: 6px; background: #fca5a5;">
+                                    <div class="progress-bar bg-danger" style="width: 100%;"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- High-Risk Overdue Clients Directory -->
+                    <div class="bcc-table-container">
+                        <div class="bcc-table-header">
+                            <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                                <i class="fa fa-exclamation-triangle text-warning"/> High-Risk Overdue Clients Directory
+                            </div>
+                        </div>
+                        <table class="bcc-table">
+                            <thead>
+                                <tr>
+                                    <th>Client Name</th>
+                                    <th class="text-center">Overdue Invoices</th>
+                                    <th class="text-center">Max Days Overdue</th>
+                                    <th class="text-end">Total Overdue Balance</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="d.high_risk_clients" t-as="c" t-key="c.partner_id">
+                                    <tr class="bcc-row-overdue">
+                                        <td>
+                                            <div class="fw-bold text-dark fs-6"><t t-esc="c.partner_name"/></div>
+                                        </td>
+                                        <td class="text-center fw-bold">
+                                            <span class="badge bg-danger"><t t-esc="c.invoice_count"/> Invoices</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="bcc-val-crimson fw-bold"><t t-esc="c.max_days_overdue"/> Days</span>
+                                        </td>
+                                        <td class="text-end fw-bold bcc-val-crimson fs-6">
+                                            <t t-esc="fmt(c.total_overdue)"/>
+                                        </td>
+                                        <td class="text-end">
+                                            <button class="btn btn-outline-danger btn-sm rounded-pill fw-bold px-3" t-on-click="() => this.openPartner(c.partner_id)">
+                                                <i class="fa fa-user me-1"/> Open Client
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-if="d.high_risk_clients.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-5">
+                                            <i class="fa fa-check-circle text-emerald fa-2x mb-2 d-block"/>
+                                            No high-risk overdue clients detected. All collections are up to date!
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+
+                <!-- TAB 3: REVENUE INSIGHTS -->
+                <t t-if="state.activeTab === 'insights'">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="bcc-card acc-indigo text-center h-100 p-4">
+                                <div class="bcc-kpi-label justify-content-center">Recurring Contracts</div>
+                                <div class="bcc-kpi-value bcc-val-indigo my-3"><t t-esc="(d.mode_counts &amp;&amp; d.mode_counts.recurring) || 0"/></div>
+                                <p class="text-muted small">Fixed monthly retainer plans auto-invoiced on regular billing cycles.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bcc-card acc-emerald text-center h-100 p-4">
+                                <div class="bcc-kpi-label justify-content-center">Per Shift Billing</div>
+                                <div class="bcc-kpi-value bcc-val-emerald my-3"><t t-esc="(d.mode_counts &amp;&amp; d.mode_counts.shift) || 0"/></div>
+                                <p class="text-muted small">Billing verified directly against completed guard attendance slots.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bcc-card acc-amber text-center h-100 p-4">
+                                <div class="bcc-kpi-label justify-content-center">Ad Hoc Services</div>
+                                <div class="bcc-kpi-value bcc-val-amber my-3"><t t-esc="(d.mode_counts &amp;&amp; d.mode_counts.adhoc) || 0"/></div>
+                                <p class="text-muted small">On-demand event security, VIP escorts, and specialized deployment.</p>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- TAB 4: AUTOMATED OPERATIONS -->
+                <t t-if="state.activeTab === 'actions'">
+                    <div class="bcc-card acc-emerald p-4">
+                        <h4 class="text-dark fw-bold mb-2"><i class="fa fa-cogs text-emerald me-2"/>Automated Billing Operations Console</h4>
+                        <p class="text-muted mb-4">Run batch invoicing processes across active security contracts with automatic service date calculation and payment term verification.</p>
+
+                        <div class="d-flex align-items-center gap-3 p-4 rounded-3 mb-4" style="background:#f8fafc; border:1px solid #e2e8f0;">
+                            <i class="fa fa-play-circle text-emerald fa-3x"/>
+                            <div>
+                                <div class="fw-bold text-dark fs-5">Run Monthly Auto-Billing Batch</div>
+                                <div class="text-muted small">Generates new draft invoices for qualifying active plans for the current month (<t t-esc="d.month_label"/>).</div>
+                            </div>
+                            <button class="bcc-btn bcc-btn-primary ms-auto py-2 px-4 fs-6" t-on-click="runAutoBilling" t-att-disabled="state.isGenerating">
+                                <t t-if="state.isGenerating"><i class="fa fa-spinner fa-spin me-2"/>Processing Batch…</t>
+                                <t t-else=""><i class="fa fa-play me-2"/>Run Batch Now</t>
+                            </button>
+                        </div>
+                    </div>
+                </t>
+
             </div>
         </div>
     </t>

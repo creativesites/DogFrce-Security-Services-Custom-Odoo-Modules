@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="demo_invoice_template_modern" model="security.document.template">
+        <field name="name">Modern Invoice</field>
+        <field name="document_type">invoice</field>
+        <field name="base_layout">modern</field>
+        <field name="primary_color">#10b981</field>
+        <field name="secondary_color">#0f172a</field>
+        <field name="font_family">Inter</field>
+        <field name="show_payment_terms">True</field>
+        <field name="show_bank_details">True</field>
+        <field name="show_company_logo">True</field>
+        <field name="block_order">["header", "client_info", "line_items", "totals", "terms", "footer"]</field>
+    </record>
+
+    <record id="demo_quotation_template_modern" model="security.document.template">
+        <field name="name">Modern Quotation</field>
+        <field name="document_type">quotation</field>
+        <field name="base_layout">modern</field>
+        <field name="primary_color">#3b82f6</field>
+        <field name="secondary_color">#1e293b</field>
+        <field name="font_family">Inter</field>
+        <field name="show_payment_terms">True</field>
+        <field name="show_bank_details">False</field>
+        <field name="show_company_logo">True</field>
+        <field name="block_order">["header", "client_info", "line_items", "totals", "terms", "footer"]</field>
+    </record>
+
+</odoo>

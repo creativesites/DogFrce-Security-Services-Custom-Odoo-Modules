@@ -9,6 +9,8 @@ class SecurityWhatsAppMessageLog(models.Model):
 
     sender_phone = fields.Char(string="Sender Phone Number", index=True, required=True)
     sender_name = fields.Char(string="Sender Display Name")
+    employee_id = fields.Many2one("hr.employee", string="Matched Employee", index=True)
+    partner_id = fields.Many2one("res.partner", string="Matched Contact", index=True)
     direction = fields.Selection(
         [
             ("inbound", "Inbound"),

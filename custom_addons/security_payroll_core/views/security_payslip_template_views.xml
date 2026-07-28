@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Model list view (for management/assignment) -->
+    <record id="view_security_payslip_template_tree" model="ir.ui.view">
+        <field name="name">security.payslip.template.list</field>
+        <field name="model">security.payslip.template</field>
+        <field name="arch" type="xml">
+            <list string="Payslip Templates">
+                <field name="name"/>
+                <field name="base_layout"/>
+                <field name="font_family"/>
+                <field name="primary_color" widget="color"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- The Client Action for the Owl UI Designer -->
+    <record id="action_payslip_designer" model="ir.actions.client">
+        <field name="name">Payslip Designer</field>
+        <field name="tag">security_payslip_designer</field>
+        <field name="target">main</field>
+    </record>
+
+    <!-- Standard Window Action for Templates List -->
+    <record id="action_security_payslip_template" model="ir.actions.act_window">
+        <field name="name">Payslip Templates</field>
+        <field name="res_model">security.payslip.template</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Payslip Template
+            </p>
+            <p>
+                Visual settings and layouts for payslips.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_payslip_designer"
+              name="Payslip Designer"
+              parent="security_operations.menu_security_payroll"
+              action="action_payslip_designer"
+              sequence="20"/>
+              
+    <menuitem id="menu_payslip_templates"
+              name="Payslip Templates List"
+              parent="security_operations.menu_security_payroll"
+              action="action_security_payslip_template"
+              sequence="21"/>
+</odoo>
