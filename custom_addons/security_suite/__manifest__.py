@@ -45,6 +45,7 @@
         'security_dogforce_migration',
         'security_dogforce_data',
         'security_help',
+        'security_tour',
     ],
     'data': [],
     'installable': True,
