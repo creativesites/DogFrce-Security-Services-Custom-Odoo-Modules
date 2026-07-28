@@ -521,7 +521,19 @@
                 <div class="rh-info-row">
                   <span class="rh-info-label">Slots</span>
                   <span class="rh-info-value">
-                    <t t-esc="state.stats.assigned"/> / <t t-esc="state.stats.total"/> assigned
+                    <t t-esc="state.stats.assigned"/> / <t t-esc="state.stats.total"/> assigned (<t t-esc="state.stats.fulfillmentRate"/>%)
+                  </span>
+                </div>
+                <div class="rh-info-row">
+                  <span class="rh-info-label">Compliance</span>
+                  <span class="rh-info-value fw-bold text-success">
+                    <t t-esc="state.stats.complianceScore"/> / 100
+                  </span>
+                </div>
+                <div class="rh-info-row">
+                  <span class="rh-info-label">Overrides</span>
+                  <span class="rh-info-value" t-att-class="state.stats.overrideRatio > 15 ? 'text-danger fw-bold' : 'text-muted'">
+                    <t t-esc="state.stats.overrides"/> slots (<t t-esc="state.stats.overrideRatio"/>%)
                   </span>
                 </div>
               </t>

@@ -187,6 +187,43 @@
             </div>
         </div>
 
+        <!-- Enterprise Analytics KPI Summary Bar -->
+        <div t-if="state.batchId" class="d-flex align-items-center gap-3 px-4 py-2 bg-white border-bottom shadow-sm overflow-x-auto" style="font-size:12px; min-height:48px;">
+            <div class="d-flex align-items-center gap-2 px-3 py-1 rounded bg-light border">
+                <i class="fa fa-chart-line text-primary" style="font-size:16px;"/>
+                <div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Fulfillment Rate</div>
+                    <div class="fw-bold text-dark"><t t-esc="state.stats.fulfillmentRate"/>%</div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 px-3 py-1 rounded bg-light border">
+                <i class="fa fa-exclamation-triangle text-warning" style="font-size:16px;"/>
+                <div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Override Ratio</div>
+                    <div class="fw-bold" t-att-class="state.stats.overrideRatio > 15 ? 'text-danger' : 'text-dark'">
+                        <t t-esc="state.stats.overrideRatio"/>% (<t t-esc="state.stats.overrides"/> slots)
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 px-3 py-1 rounded bg-light border">
+                <i class="fa fa-shield text-success" style="font-size:16px;"/>
+                <div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Compliance Score</div>
+                    <div class="fw-bold text-success"><t t-esc="state.stats.complianceScore"/> / 100</div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 px-3 py-1 rounded bg-light border">
+                <i class="fa fa-clock-o text-danger" style="font-size:16px;"/>
+                <div>
+                    <div style="font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase;">Critical Gaps</div>
+                    <div class="fw-bold text-danger"><t t-esc="state.stats.criticalGaps"/></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Grid + Guard Pool wrapper -->
         <div class="rb-workspace d-flex">
 

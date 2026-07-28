@@ -60,7 +60,16 @@ class RosterBoard extends Component {
             guardSearchTerm: "",
             guardTab: "suggested", // "suggested" or "all"
 
-            stats: { assigned: 0, unassigned: 0, criticalGaps: 0 },
+            stats: {
+                total: 0,
+                assigned: 0,
+                unassigned: 0,
+                criticalGaps: 0,
+                overrides: 0,
+                fulfillmentRate: 0,
+                overrideRatio: 0,
+                complianceScore: 100,
+            },
             assignError: null,   // { guardName, message } shown inline in Guard Pool
             contextMenu: { visible: false, x: 0, y: 0, slot: null },
             // Drag-and-drop + swap dialog + override dialog
@@ -265,13 +274,30 @@ class RosterBoard extends Component {
         this.state.sites = Object.values(siteMap).sort((a, b) => a.name.localeCompare(b.name));
         this.state.posts = Object.values(postMap);
 
-        // Stats (exclude cancelled from counts)
-        const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
-        this.state.stats.assigned = activeSlots.filter((s) => s.employee_id).length;
-        this.state.stats.unassigned = activeSlots.filter((s) => !s.employee_id).length;
-        this.state.stats.criticalGaps = activeSlots.filter((s) => !s.employee_id && s.critical_gap).length;
-
+        this._updateStats();
         this.state.loading = false;
+    }
+
+    _updateStats() {
+        const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
+        const total = activeSlots.length;
+        const assigned = activeSlots.filter((s) => s.employee_id).length;
+        const unassigned = total - assigned;
+        const overrides = activeSlots.filter((s) => s.employee_id && s.is_override).length;
+        const fulfillmentRate = total > 0 ? Math.round((assigned / total) * 100) : 0;
+        const overrideRatio = total > 0 ? Math.round((overrides / total) * 100) : 0;
+        const complianceScore = Math.max(0, 100 - overrideRatio);
+
+        this.state.stats = {
+            total,
+            assigned,
+            unassigned,
+            overrides,
+            fulfillmentRate,
+            overrideRatio,
+            complianceScore,
+            criticalGaps: activeSlots.filter((s) => !s.employee_id && s.critical_gap).length,
+        };
     }
 
     // Reload only the slot data for the current batch (used after assign/unassign/auto-fill)
@@ -321,10 +347,7 @@ class RosterBoard extends Component {
             };
         });
 
-        const activeSlots = this.state.slots.filter((s) => s.state !== "cancelled");
-        this.state.stats.assigned = activeSlots.filter((s) => s.employee_id).length;
-        this.state.stats.unassigned = activeSlots.filter((s) => !s.employee_id).length;
-        this.state.stats.criticalGaps = activeSlots.filter((s) => !s.employee_id && s.critical_gap).length;
+        this._updateStats();
     }
 
     // ─── Computed getters ───────────────────────────────────────────

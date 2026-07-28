@@ -847,3 +847,27 @@
     font-size: 13px;
 }
 
+/* Touchscreen and Mobile Optimization Rules */
+@media (max-width: 768px), (pointer: coarse) {
+    .rb-btn {
+        min-height: 40px;
+        padding: 8px 14px;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .rb-btn:active {
+        transform: scale(0.97);
+    }
+
+    .rb-timeline, .rb-guard-pool {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rb-suggestion-card, .rb-slot-card {
+        touch-action: manipulation;
+    }
+}
+

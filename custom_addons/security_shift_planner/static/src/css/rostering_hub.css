@@ -570,3 +570,21 @@
 }
 .rh-input:focus { border-color: #1e6fc4; box-shadow: 0 0 0 3px rgba(30,111,196,0.12); }
 textarea.rh-input { resize: vertical; }
+
+/* Touchscreen and Mobile Optimization Rules */
+@media (max-width: 768px), (pointer: coarse) {
+    .rh-btn {
+        min-height: 42px;
+        padding: 10px 14px;
+        font-size: 13px;
+        touch-action: manipulation;
+    }
+
+    .rh-btn:active {
+        transform: scale(0.98);
+    }
+
+    .rh-sug-card, .rh-slot-card {
+        touch-action: manipulation;
+    }
+}

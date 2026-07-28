@@ -3,7 +3,7 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
-import { RosterGrid } from "./roster_grid";
+import { RosterGrid } from "@security_shift_planner/js/roster_grid";
 
 /**
  * RosteringHub — Single-page rostering workspace.
@@ -263,12 +263,24 @@ class RosteringHub extends Component {
 
     _refreshStats() {
         const active   = this.state.slots.filter(s => s.state !== "cancelled");
+        const total    = active.length;
         const assigned = active.filter(s => s.employee_id).length;
+        const unassigned = total - assigned;
+        const overrides = active.filter(s => s.employee_id && s.is_override).length;
+        const fulfillmentRate = total > 0 ? Math.round((assigned / total) * 100) : 0;
+        const overrideRatio = total > 0 ? Math.round((overrides / total) * 100) : 0;
+        const complianceScore = Math.max(0, 100 - overrideRatio);
+
         this.state.stats = {
-            total:      active.length,
+            total,
             assigned,
-            unassigned: active.length - assigned,
+            unassigned,
+            overrides,
+            fulfillmentRate,
+            overrideRatio,
+            complianceScore,
             conflicts:  active.filter(s => s.conflict).length,
+            criticalGaps: active.filter(s => !s.employee_id && s.critical_gap).length,
         };
     }
 
