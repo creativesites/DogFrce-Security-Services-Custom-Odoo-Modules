@@ -446,16 +446,32 @@ class SecurityRosterSlot(models.Model):
                     message_type="comment",
                 )
             if "security.notification" in self.env:
+                comp_id = False
+                if hasattr(self, "company_id") and self.company_id:
+                    comp_id = self.company_id.id
+                elif hasattr(self, "batch_id") and self.batch_id and hasattr(self.batch_id, "company_id") and self.batch_id.company_id:
+                    comp_id = self.batch_id.company_id.id
+                else:
+                    comp_id = self.env.company.id
+
+                site_id_val = self.site_id.id if hasattr(self, "site_id") and self.site_id else False
+                site_name_val = self.site_id.name if hasattr(self, "site_id") and self.site_id and self.site_id.name else "Site"
+                partner_id_val = False
+                if hasattr(self, "partner_id") and self.partner_id:
+                    partner_id_val = self.partner_id.id
+                elif hasattr(self, "site_id") and self.site_id and hasattr(self.site_id, "partner_id") and self.site_id.partner_id:
+                    partner_id_val = self.site_id.partner_id.id
+
                 self.env["security.notification"].sudo().create({
-                    "title": f"Manual Override: {employee.name} assigned at {self.site_id.name or 'Site'}",
+                    "title": f"Manual Override: {employee.name} assigned at {site_name_val}",
                     "body": f"Guard {employee.name} assigned with override on {self.shift_date}. Reason: {override_reason}. Warnings: {', '.join(reasons)}",
                     "notification_type": "override_audit",
                     "severity": "warning",
                     "related_model": "security.roster.slot",
                     "related_id": self.id,
-                    "company_id": self.company_id.id if self.company_id else self.env.company.id,
-                    "site_id": self.site_id.id if self.site_id else False,
-                    "partner_id": self.site_id.partner_id.id if self.site_id and hasattr(self.site_id, "partner_id") and self.site_id.partner_id else False,
+                    "company_id": comp_id,
+                    "site_id": site_id_val,
+                    "partner_id": partner_id_val,
                 })
         else:
             self.write({

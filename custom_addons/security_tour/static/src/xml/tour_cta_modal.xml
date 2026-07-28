@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="security_tour.TourCtaModal" owl="1">
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); z-index: 1060;">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 520px;">
+                <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="background: #0f172a; color: #ffffff;">
+                    <!-- Modal Header with Zuri Avatar -->
+                    <div class="p-4 text-center border-bottom border-secondary border-opacity-25" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);">
+                        <img src="/security_tour/static/src/img/zuri_mascot.svg" alt="Zuri Mascot" style="width: 72px; height: 72px;" class="mb-2"/>
+                        <h4 class="fw-bold mb-1 text-white">Ready to See It With Your Own Data?</h4>
+                        <p class="text-blue-200 small mb-0" style="color: #93c5fd;">Eliminate ghost guards &amp; automate your security payroll today.</p>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="p-4">
+                        <div class="d-flex align-items-center mb-3 p-3 rounded-3" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+                            <i class="fa fa-check-circle text-success me-3 fs-4"/>
+                            <div>
+                                <div class="fw-bold text-white fs-6">Free 14-Day Trial &amp; Custom Setup</div>
+                                <div class="text-secondary small" style="color: #94a3b8 !important;">Our team will help map your client sites, shift roster rules, and ZM/NA statutory payroll.</div>
+                            </div>
+                        </div>
+
+                        <t t-if="state.submitted">
+                            <div class="alert alert-success text-center mb-0">
+                                <i class="fa fa-heart fa-2x mb-2 d-block"/>
+                                <strong>Thank you!</strong> Our team will reach out to you within 2 hours to set up your free trial.
+                            </div>
+                        </t>
+
+                        <t t-else="">
+                            <div class="mb-3">
+                                <label class="form-label small text-uppercase text-secondary fw-bold" style="color: #94a3b8 !important;">Company / Contact Name</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" placeholder="e.g. Lusaka Security Services" t-model="state.name"/>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small text-uppercase text-secondary fw-bold" style="color: #94a3b8 !important;">Phone / WhatsApp Number</label>
+                                <input type="text" class="form-control bg-dark text-white border-secondary border-opacity-50" placeholder="+260 971 234 567" t-model="state.phone"/>
+                            </div>
+                        </t>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="p-3 bg-black bg-opacity-25 d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25">
+                        <button class="btn btn-link text-secondary text-decoration-none btn-sm" t-on-click="close">Explore Platform Demo</button>
+                        <t t-if="!state.submitted">
+                            <button class="btn btn-primary px-4 fw-bold rounded-3" t-on-click="submitLead" t-att-disabled="state.submitting">
+                                <i t-att-class="state.submitting ? 'fa fa-spinner fa-spin me-2' : 'fa fa-paper-plane me-2'"/>
+                                Request Free Trial
+                            </button>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

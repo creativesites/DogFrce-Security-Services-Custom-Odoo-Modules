@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_tour_definition_user,security.tour.definition user,model_security_tour_definition,base.group_user,1,0,0,0
+access_security_tour_definition_manager,security.tour.definition manager,model_security_tour_definition,base.group_system,1,1,1,1

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Tour Definition Security Category -->
+        <record id="module_category_security_tour" model="ir.module.category">
+            <field name="name">Product Tours &amp; Onboarding</field>
+            <field name="description">Manage product tours and onboarding definitions.</field>
+            <field name="sequence">90</field>
+        </record>
+    </data>
+</odoo>

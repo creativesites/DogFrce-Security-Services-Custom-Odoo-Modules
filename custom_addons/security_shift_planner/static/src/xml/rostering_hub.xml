@@ -852,47 +852,131 @@
         </div>
       </t>
 
+      <!-- Guard Search + Tab Switcher Bar -->
+      <div style="padding:8px 12px; background:#f8fafc; border-bottom:1px solid #e2e8f0; flex-shrink:0;">
+        <div class="input-group input-group-sm mb-2">
+          <span class="input-group-text bg-white border-end-0"><i class="fa fa-search text-muted"/></span>
+          <input type="text" class="form-control border-start-0 ps-0" placeholder="Search guard name or grade…"
+                 t-att-value="state.guardSearchTerm"
+                 t-on-input="(ev) => { state.guardSearchTerm = ev.target.value; }"/>
+        </div>
+        <div class="d-flex rounded bg-light p-1" style="font-size:11px; font-weight:700;">
+          <button t-att-class="'btn btn-sm flex-fill py-1 rounded ' + (state.guardTab === 'suggested' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+                  t-on-click="() => { state.guardTab = 'suggested'; }">
+            <i class="fa fa-star me-1 text-warning"/>Suggested (<t t-esc="state.suggestions.length"/>)
+          </button>
+          <button t-att-class="'btn btn-sm flex-fill py-1 rounded ' + (state.guardTab === 'all' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+                  t-on-click="() => { state.guardTab = 'all'; }">
+            <i class="fa fa-users me-1 text-info"/>All Guards (<t t-esc="filteredAllGuards.length"/>)
+          </button>
+        </div>
+      </div>
+
       <div class="rh-suggestions-body rh-suggestions-mobile">
-        <t t-if="state.loadingSuggestions">
-          <div class="rh-loading-center"><i class="fa fa-spinner fa-spin fa-lg"/>  Scoring guards…</div>
-        </t>
-        <t t-elif="state.suggestions.length">
-          <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
-            <div class="rh-sug-card">
-              <div class="rh-sug-top">
-                <div class="rh-sug-meta">
-                  <span class="rh-rank-badge">#<t t-esc="sug.rank"/></span>
-                  <span class="rh-sug-name" t-esc="sug.employee_name"/>
+
+        <!-- TAB 1: SUGGESTED MATCHES -->
+        <t t-if="state.guardTab === 'suggested'">
+          <t t-if="state.loadingSuggestions">
+            <div class="rh-loading-center">
+              <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>Scoring guards…
+            </div>
+          </t>
+          <t t-elif="state.suggestions.length">
+            <div class="rh-sug-header">
+              <i class="fa fa-list-ol me-1"/>Ranked Suggestions (<t t-esc="state.suggestions.length"/>)
+            </div>
+            <t t-foreach="state.suggestions" t-as="sug" t-key="sug.id">
+              <div class="rh-sug-card">
+                <div class="rh-sug-top">
+                  <div class="rh-sug-meta">
+                    <span class="rh-rank-badge">#<t t-esc="sug.rank"/></span>
+                    <span class="rh-sug-name" t-esc="sug.employee_name"/>
+                  </div>
+                  <div class="rh-sug-score"
+                       t-att-style="'color:' + scoreColor(sug.score)"
+                       t-esc="Math.round(sug.score)"/>
                 </div>
-                <div class="rh-sug-score"
-                     t-att-style="'color:' + scoreColor(sug.score)"
-                     t-esc="Math.round(sug.score)"/>
+                <t t-if="sug.grade">
+                  <div class="rh-sug-grade"><i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/></div>
+                </t>
+                <div class="rh-score-bar-track">
+                  <div class="rh-score-bar-fill"
+                       t-att-style="'width:' + Math.min(100, sug.score/150*100) + '%; background:' + scoreBarColor(sug.score)"/>
+                </div>
+                <div t-if="sug.score_breakdown" class="rh-sug-breakdown" t-esc="sug.score_breakdown"/>
+                <button class="rh-btn rh-btn-assign w-100 mt-2"
+                        t-on-click="() => this.assignGuard(sug)">
+                  <i class="fa fa-check me-1"/>Assign
+                </button>
               </div>
-              <t t-if="sug.grade">
-                <div class="rh-sug-grade"><i class="fa fa-id-badge me-1"/>Grade: <t t-esc="sug.grade"/></div>
-              </t>
-              <div class="rh-score-bar-track">
-                <div class="rh-score-bar-fill"
-                     t-att-style="'width:' + Math.min(100, sug.score/150*100) + '%; background:' + scoreBarColor(sug.score)"/>
+            </t>
+          </t>
+
+          <!-- When 0 suggestions match requirements -->
+          <t t-elif="state.suggestionsLoaded and state.suggestions.length === 0">
+            <div class="alert alert-warning py-3 px-3 mb-3 border-start border-4 border-warning" style="font-size:11px; background:#fffbeb;">
+              <div style="font-size:12px; font-weight:700; color:#92400e;" class="mb-1">
+                <i class="fa fa-exclamation-triangle me-1 text-warning"/>No 100% Eligible Guard Suggestions
               </div>
-              <button class="rh-btn rh-btn-assign w-100 mt-2"
-                      t-on-click="() => this.assignGuard(sug)">
-                <i class="fa fa-check me-1"/>Assign
+              <div style="color:#78350f;">
+                All guards have requirement warnings (e.g. leave or grade). Select any guard below to assign with a manual override:
+              </div>
+            </div>
+
+            <!-- List all guards for override assignment -->
+            <t t-foreach="filteredAllGuards" t-as="guard" t-key="guard.id">
+              <div class="p-2 mb-2 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                  <div style="font-size:12px; font-weight:700; color:#1e293b;" t-esc="guard.name"/>
+                  <div style="font-size:10px; color:#64748b;">Grade: <t t-esc="guard.grade"/></div>
+                </div>
+                <button class="btn btn-sm btn-outline-warning text-dark py-1 px-2"
+                        style="font-size:11px; font-weight:600;"
+                        t-on-click="() => this.assignGuardDirect(guard)">
+                  <i class="fa fa-warning me-1 text-warning"/>Assign (Override)
+                </button>
+              </div>
+            </t>
+          </t>
+
+          <t t-else="">
+            <div class="rh-loading-center" style="color:#94a3b8;">
+              <i class="fa fa-magic d-block mb-2" style="font-size:28px; color:#cbd5e1;"/>
+              <div class="mb-2">Tap "Suggest Guards" for top matches, or pick from "All Guards".</div>
+              <button class="btn btn-sm btn-outline-secondary" t-on-click="() => { state.guardTab = 'all'; }">
+                <i class="fa fa-users me-1"/>Browse All Guards
               </button>
             </div>
           </t>
         </t>
-        <t t-elif="state.suggestionsLoaded">
-          <div class="rh-loading-center">
-            <i class="fa fa-exclamation-circle d-block mb-1" style="color:#fbbf24; font-size:24px;"/>
-            No eligible guards for this slot.
+
+        <!-- TAB 2: ALL GUARDS DIRECTORY -->
+        <t t-if="state.guardTab === 'all'">
+          <div class="rh-sug-header">
+            <i class="fa fa-users me-1"/>All Active Guards (<t t-esc="filteredAllGuards.length"/>)
           </div>
+
+          <t t-if="filteredAllGuards.length === 0">
+            <div class="text-center py-4 text-muted" style="font-size:12px;">
+              No guards found matching "<t t-esc="state.guardSearchTerm"/>"
+            </div>
+          </t>
+
+          <t t-foreach="filteredAllGuards" t-as="guard" t-key="guard.id">
+            <div class="p-2 mb-2 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
+              <div>
+                <div style="font-size:12px; font-weight:700; color:#1e293b;" t-esc="guard.name"/>
+                <div style="font-size:10px; color:#64748b;">Grade: <t t-esc="guard.grade"/></div>
+              </div>
+              <button class="btn btn-sm btn-primary py-1 px-2"
+                      style="font-size:11px; font-weight:600;"
+                      t-on-click="() => this.assignGuardDirect(guard)">
+                <i class="fa fa-check me-1"/>Assign Guard
+              </button>
+            </div>
+          </t>
         </t>
-        <t t-else="">
-          <div class="rh-loading-center" style="color:#94a3b8; font-size:13px;">
-            Tap "Suggest Guards" to find the best available guards.
-          </div>
-        </t>
+
       </div>
     </div>
   </t>

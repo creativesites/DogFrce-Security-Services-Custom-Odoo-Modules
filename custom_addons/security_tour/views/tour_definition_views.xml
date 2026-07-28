@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_tour_definition_tree" model="ir.ui.view">
+        <field name="name">security.tour.definition.tree</field>
+        <field name="model">security.tour.definition</field>
+        <field name="arch" type="xml">
+            <list string="DeployGuard Product Tours">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="technical_name"/>
+                <field name="category"/>
+                <field name="estimated_minutes"/>
+                <field name="step_count"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_tour_definition_form" model="ir.ui.view">
+        <field name="name">security.tour.definition.form</field>
+        <field name="model">security.tour.definition</field>
+        <field name="arch" type="xml">
+            <form string="Product Tour Definition">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="e.g. 3-Minute Prospect Tour"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="technical_name"/>
+                            <field name="category"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="estimated_minutes"/>
+                            <field name="step_count"/>
+                            <field name="icon_class"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Details">
+                        <field name="description"/>
+                        <field name="start_url"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_tour_definition" model="ir.actions.act_window">
+        <field name="name">Product Tour Registry</field>
+        <field name="res_model">security.tour.definition</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Menu Under Help / Settings -->
+    <menuitem id="menu_security_tour_root"
+              name="Product Tours"
+              parent="security_help.menu_help_root"
+              sequence="30"/>
+
+    <menuitem id="menu_security_tour_definition"
+              name="Tour Registry"
+              parent="menu_security_tour_root"
+              action="action_security_tour_definition"
+              sequence="10"/>
+</odoo>

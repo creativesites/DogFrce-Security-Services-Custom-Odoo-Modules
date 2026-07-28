@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="security_tour.TourRunnerOverlay" owl="1">
+        <t t-if="state.active">
+            <!-- Backdrop / Overlay if modal step or full screen step -->
+            <div class="dg-tour-runner-shell" style="position: fixed; inset: 0; z-index: 99999; pointer-events: none;">
+                
+                <!-- Floating Zuri Mascot Popover Card -->
+                <div class="dg-tour-popover shadow-lg" t-att-style="popoverStyle" style="pointer-events: auto;">
+                    <div class="dg-tour-header">
+                        <div class="dg-tour-mascot-box">
+                            <img class="dg-tour-mascot-img" src="/security_tour/static/src/img/zuri_mascot.svg" alt="Zuri Mascot"/>
+                            <div>
+                                <div class="dg-tour-title-text"><t t-esc="currentStep.title || 'Zuri Guide'"/></div>
+                                <div class="dg-tour-subtitle"><t t-esc="state.tourName || 'DeployGuard Tour'"/></div>
+                            </div>
+                        </div>
+                        <button class="btn-close btn-close-white ms-auto" style="font-size: 10px;" t-on-click="closeTour"/>
+                    </div>
+                    <div class="dg-tour-body">
+                        <p class="mb-0"><t t-esc="currentStep.content"/></p>
+                    </div>
+                    <div class="dg-tour-footer">
+                        <div class="dg-tour-progress">
+                            Step <t t-esc="state.stepIndex + 1"/> of <t t-esc="totalSteps"/>
+                        </div>
+                        <div class="dg-tour-actions">
+                            <button t-if="state.stepIndex + 1 &lt; totalSteps" class="dg-tour-btn dg-tour-btn-skip" t-on-click="closeTour">Exit Tour</button>
+                            <button class="dg-tour-btn dg-tour-btn-next" t-on-click="nextStep">
+                                <t t-if="state.stepIndex + 1 === totalSteps">Finish Tour <i class="fa fa-check ms-1"/></t>
+                                <t t-else="">Next Feature <i class="fa fa-arrow-right ms-1"/></t>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </t>
+
+        <!-- Prospect CTA Modal when tour completes -->
+        <t t-if="state.showCtaModal">
+            <TourCtaModal close="() => this.closeCtaModal()"/>
+        </t>
+    </t>
+</templates>

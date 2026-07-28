@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 1. Prospect Demo Tour -->
+        <record id="tour_prospect_demo" model="security.tour.definition">
+            <field name="name">DeployGuard 3-Minute Prospect Tour</field>
+            <field name="technical_name">deployguard_prospect_demo_tour</field>
+            <field name="sequence">1</field>
+            <field name="category">prospect</field>
+            <field name="description">Comprehensive interactive demo showcasing Rostering Hub auto-fill, WhatsApp field commands, statutory payroll, and live revenue tracking.</field>
+            <field name="estimated_minutes">3</field>
+            <field name="step_count">6</field>
+            <field name="icon_class">fa-rocket</field>
+            <field name="start_url">/web</field>
+        </record>
+
+        <!-- 2. Supervisor Tour -->
+        <record id="tour_supervisor_onboarding" model="security.tour.definition">
+            <field name="name">Field Supervisor Onboarding</field>
+            <field name="technical_name">deployguard_supervisor_tour</field>
+            <field name="sequence">2</field>
+            <field name="category">supervisor</field>
+            <field name="description">Learn how to mark attendance on Posting Sheets, handle AWOL replacements, and use WhatsApp quick commands on shift.</field>
+            <field name="estimated_minutes">2</field>
+            <field name="step_count">4</field>
+            <field name="icon_class">fa-shield</field>
+            <field name="start_url">/web</field>
+        </record>
+
+        <!-- 3. Manager Tour -->
+        <record id="tour_manager_onboarding" model="security.tour.definition">
+            <field name="name">Operations Manager Roster Command</field>
+            <field name="technical_name">deployguard_manager_tour</field>
+            <field name="sequence">3</field>
+            <field name="category">manager</field>
+            <field name="description">Master the Roster Board, resolve coverage gaps, auto-assign guards with AI scoring, and lock published rosters.</field>
+            <field name="estimated_minutes">2</field>
+            <field name="step_count">4</field>
+            <field name="icon_class">fa-calendar-check-o</field>
+            <field name="start_url">/web</field>
+        </record>
+
+        <!-- 4. Owner / Executive Tour -->
+        <record id="tour_owner_onboarding" model="security.tour.definition">
+            <field name="name">Executive Dashboard &amp; Zuri AI Command</field>
+            <field name="technical_name">deployguard_owner_tour</field>
+            <field name="sequence">4</field>
+            <field name="category">owner</field>
+            <field name="description">Explore live company health, financial KPIs, AI anomaly alerts, and ask Zuri natural language security queries.</field>
+            <field name="estimated_minutes">2</field>
+            <field name="step_count">3</field>
+            <field name="icon_class">fa-tachometer</field>
+            <field name="start_url">/web</field>
+        </record>
+    </data>
+</odoo>

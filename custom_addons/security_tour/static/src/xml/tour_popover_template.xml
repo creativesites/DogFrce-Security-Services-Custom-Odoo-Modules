@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="security_tour.TourPopover" owl="1">
+        <div class="dg-tour-popover">
+            <div class="dg-tour-header">
+                <div class="dg-tour-mascot-box">
+                    <img class="dg-tour-mascot-img" src="/security_tour/static/src/img/zuri_mascot.svg" alt="Zuri Mascot"/>
+                    <div>
+                        <div class="dg-tour-title-text"><t t-esc="title || 'Zuri Guide'"/></div>
+                        <div class="dg-tour-subtitle">DeployGuard Tour</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dg-tour-body">
+                <t t-out="content"/>
+            </div>
+            <div class="dg-tour-footer">
+                <div class="dg-tour-progress">
+                    Step <t t-esc="stepIndex + 1"/> of <t t-esc="totalSteps"/>
+                </div>
+                <div class="dg-tour-actions">
+                    <button t-if="stepIndex + 1 &lt; totalSteps" class="dg-tour-btn dg-tour-btn-skip" t-on-click="onSkip">Skip</button>
+                    <button class="dg-tour-btn dg-tour-btn-next" t-on-click="onNext">
+                        <t t-if="stepIndex + 1 === totalSteps">Got It!</t>
+                        <t t-else="">Next <i class="fa fa-arrow-right ms-1"/></t>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+</templates>

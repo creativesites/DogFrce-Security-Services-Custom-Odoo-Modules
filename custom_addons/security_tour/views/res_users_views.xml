@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_users_form_tour_inherit" model="ir.ui.view">
+        <field name="name">res.users.form.tour.inherit</field>
+        <field name="model">res.users</field>
+        <field name="inherit_id" ref="base.view_users_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Product Tours &amp; Onboarding" name="product_tours">
+                    <group string="Tour Completion Status">
+                        <field name="tour_prospect_demo_done" readonly="1"/>
+                        <field name="tour_supervisor_done" readonly="1"/>
+                        <field name="tour_manager_done" readonly="1"/>
+                        <field name="tour_owner_done" readonly="1"/>
+                    </group>
+                    <group string="Preferences">
+                        <field name="tour_auto_launch_enabled"/>
+                    </group>
+                    <button name="action_reset_all_tours"
+                            type="object"
+                            string="Reset All Onboarding Tours"
+                            class="btn-secondary"
+                            confirm="Are you sure you want to reset onboarding tour progress for this account?"/>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
