@@ -145,6 +145,12 @@ export class TourRunnerOverlay extends Component {
             showCtaModal: false,
         });
 
+        // Explicitly bind methods to 'this' so OWL event listeners never lose context
+        this.nextStep = this.nextStep.bind(this);
+        this.closeTour = this.closeTour.bind(this);
+        this.closeCtaModal = this.closeCtaModal.bind(this);
+        this.startTour = this.startTour.bind(this);
+
         // Store reference globally so systray launcher can start tours
         window.__deployguard_tour_runner__ = this;
     }

@@ -139,7 +139,7 @@
                     <!-- ── Records ───────────────────────────────────── -->
                     <t t-foreach="group[1]" t-as="rec" t-key="rec.id">
                         <div t-attf-class="ah-row ah-row-data {{ state.expandedId === rec.id ? 'ah-row-expanded' : '' }}"
-                             t-on-click="() => toggleExpand(rec.id)">
+                             t-on-click="() => this.toggleExpand(rec.id)">
 
                             <!-- Status stripe -->
                             <div t-attf-class="ah-col-stripe ah-stripe-{{ effStatus(rec) }}"/>
@@ -319,7 +319,7 @@
 
                                 <div class="ah-detail-footer">
                                     <button class="ah-btn ah-btn-outline ah-btn-sm"
-                                        t-on-click.stop="() => openRecord(rec.id)">
+                                        t-on-click.stop="() => this.openRecord(rec.id)">
                                         <i class="fa fa-external-link me-1"/>Open Full Record
                                     </button>
                                 </div>

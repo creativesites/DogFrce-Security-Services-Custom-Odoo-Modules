@@ -79,6 +79,7 @@ class AttendanceHistory extends Component {
             dateTo: new Date().toISOString().slice(0, 10),
         });
 
+        this.toggleExpand = this.toggleExpand.bind(this);
         onWillStart(() => this._load());
     }
 

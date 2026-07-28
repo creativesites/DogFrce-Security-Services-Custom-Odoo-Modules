@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
     <t t-name="security_tour.TourRunnerOverlay" owl="1">
         <t t-if="state.active">
-            <!-- Backdrop / Overlay if modal step or full screen step -->
+            <!-- Backdrop / Overlay shell -->
             <div class="dg-tour-runner-shell" style="position: fixed; inset: 0; z-index: 99999; pointer-events: none;">
                 
                 <!-- Floating Zuri Mascot Popover Card -->
@@ -15,7 +15,7 @@
                                 <div class="dg-tour-subtitle"><t t-esc="state.tourName || 'DeployGuard Tour'"/></div>
                             </div>
                         </div>
-                        <button class="btn-close btn-close-white ms-auto" style="font-size: 10px;" t-on-click="closeTour"/>
+                        <button class="btn-close btn-close-white ms-auto" style="font-size: 10px;" t-on-click="() => this.closeTour()"/>
                     </div>
                     <div class="dg-tour-body">
                         <p class="mb-0"><t t-esc="currentStep.content"/></p>
@@ -25,8 +25,8 @@
                             Step <t t-esc="state.stepIndex + 1"/> of <t t-esc="totalSteps"/>
                         </div>
                         <div class="dg-tour-actions">
-                            <button t-if="state.stepIndex + 1 &lt; totalSteps" class="dg-tour-btn dg-tour-btn-skip" t-on-click="closeTour">Exit Tour</button>
-                            <button class="dg-tour-btn dg-tour-btn-next" t-on-click="nextStep">
+                            <button t-if="state.stepIndex + 1 &lt; totalSteps" class="dg-tour-btn dg-tour-btn-skip" t-on-click="() => this.closeTour()">Exit Tour</button>
+                            <button class="dg-tour-btn dg-tour-btn-next" t-on-click="() => this.nextStep()">
                                 <t t-if="state.stepIndex + 1 === totalSteps">Finish Tour <i class="fa fa-check ms-1"/></t>
                                 <t t-else="">Next Feature <i class="fa fa-arrow-right ms-1"/></t>
                             </button>

@@ -528,6 +528,7 @@ export class AiOutputWidget extends Component {
 
     setup() {
         this.state = useState({ expanded: true });
+        this.toggleExpand = this.toggleExpand.bind(this);
     }
 
     get rawValue() {
