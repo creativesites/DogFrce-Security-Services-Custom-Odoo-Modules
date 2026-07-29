@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_backup_vault" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.backup.vault</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="90"/>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="Backup Vault &amp; Offsite" name="security_backup_vault">
+                    <block title="Storage &amp; Monitoring Settings">
+                        <setting string="Local Backup Directory" help="Local directory path where database dumps and filestores are archived.">
+                            <field name="backup_storage_path" placeholder="/var/lib/odoo/backups"/>
+                        </setting>
+                        <setting string="Low Disk Alert Threshold (%)" help="Triggers alert when free server disk space drops below this percentage.">
+                            <field name="backup_disk_alert_threshold"/>
+                        </setting>
+                        <setting string="WhatsApp Alert Destination" help="Phone number to receive critical disk and backup failure alerts.">
+                            <field name="backup_alert_whatsapp_number" placeholder="+26481xxxxxxx"/>
+                        </setting>
+                    </block>
+                    <block title="Cloudflare R2 Offsite Storage Credentials">
+                        <setting string="S3 Endpoint URL" help="Cloudflare R2 S3 Endpoint URL">
+                            <field name="r2_endpoint" placeholder="https://&lt;account_id&gt;.r2.cloudflarestorage.com"/>
+                        </setting>
+                        <setting string="Bucket Name" help="Cloudflare R2 Bucket Name">
+                            <field name="r2_bucket" placeholder="dogforce-production-backups"/>
+                        </setting>
+                        <setting string="Access Key ID" help="S3 Access Key ID">
+                            <field name="r2_access_key"/>
+                        </setting>
+                        <setting string="Secret Access Key" help="S3 Secret Access Key">
+                            <field name="r2_secret_key" password="True"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_security_backup_config_settings" model="ir.actions.act_window">
+        <field name="name">Backup Vault Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'security_backup_vault', 'bin_size': False}</field>
+    </record>
+
+    <menuitem id="menu_security_backup_settings" name="Settings" parent="menu_security_backup_root" action="action_security_backup_config_settings" sequence="90"/>
+</odoo>

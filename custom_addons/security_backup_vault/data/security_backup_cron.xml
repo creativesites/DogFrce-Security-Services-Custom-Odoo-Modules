@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Sequence for Backup Reference -->
+        <record id="seq_security_backup_record" model="ir.sequence">
+            <field name="name">DeployGuard Backup Reference Sequence</field>
+            <field name="code">security.backup.record</field>
+            <field name="prefix">BK/</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Cron 1: Nightly Full Backup (2:00 AM) -->
+        <record id="cron_nightly_full_backup" model="ir.cron">
+            <field name="name">Backup Vault: Nightly Full Backup &amp; Filestore Snapshot</field>
+            <field name="model_id" ref="model_security_backup_manager"/>
+            <field name="state">code</field>
+            <field name="code">model.run_nightly_full_backup()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Cron 2: Offsite Cloudflare R2 Sync (2:30 AM) -->
+        <record id="cron_offsite_r2_sync" model="ir.cron">
+            <field name="name">Backup Vault: Sync Unsynced Backups to Cloudflare R2</field>
+            <field name="model_id" ref="model_security_backup_manager"/>
+            <field name="state">code</field>
+            <field name="code">model.sync_offsite_r2_cron()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Cron 3: Weekly Integrity Restore Validation (Sundays 3:00 AM) -->
+        <record id="cron_weekly_integrity_check" model="ir.cron">
+            <field name="name">Backup Vault: Weekly Throwaway DB Integrity Test</field>
+            <field name="model_id" ref="model_security_backup_manager"/>
+            <field name="state">code</field>
+            <field name="code">model.run_weekly_integrity_check_cron()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">weeks</field>
+            <field name="active" eval="True"/>
+        </record>
+
+        <!-- Cron 4: Hourly Disk Space & Health Check -->
+        <record id="cron_disk_space_check" model="ir.cron">
+            <field name="name">Backup Vault: Hourly Server Free Disk Space Monitor</field>
+            <field name="model_id" ref="model_security_backup_manager"/>
+            <field name="state">code</field>
+            <field name="code">model.check_disk_space_cron()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

@@ -213,6 +213,14 @@ class SecurityDemandPlan(models.Model):
         readonly=True,
     )
 
+    @api.onchange("rotation_pattern")
+    def _onchange_rotation_pattern(self):
+        for plan in self:
+            if plan.rotation_pattern in ["4_2", "2_2_2"]:
+                plan.relief_factor = 1.65  # 1.50 base + 10% leave/sick reserve
+            elif plan.rotation_pattern == "6_1":
+                plan.relief_factor = 1.28  # 1.167 base + 10% leave/sick reserve
+
     @api.depends(
         "posts_count",
         "shift_duration",
@@ -229,10 +237,10 @@ class SecurityDemandPlan(models.Model):
         for plan in self:
             posts = max(1, plan.posts_count)
 
-            # 1. Weekly Post Hours
+            # 1. Weekly Post Hours & Daily Shifts
             if plan.operating_schedule == "24_7":
                 hours_per_week = 168.0  # 24 * 7
-                shifts_per_day = 2.0 if plan.shift_duration == "12h" else 3.0
+                shifts_per_day = 3.0 if plan.shift_duration == "8h" else 2.0
             elif plan.operating_schedule in ["day_12", "night_12"]:
                 hours_per_week = 84.0   # 12 * 7
                 shifts_per_day = 1.0
@@ -241,28 +249,17 @@ class SecurityDemandPlan(models.Model):
                 shifts_per_day = 1.0
 
             # 2. Guard Headcount Sizing
-            # Total daily shift slots = posts * shifts_per_day
-            daily_shift_slots = posts * shifts_per_day
-
-            # Base headcount required on duty per day
-            if plan.operating_schedule == "24_7":
-                # With 12h shifts: posts * 2 shift teams
-                base_headcount = posts * 2.0
-            else:
-                base_headcount = float(posts)
-
-            # Apply rotation / relief coverage factor (rest days & leave reserves)
-            rf = plan.relief_factor if plan.relief_factor > 1.0 else 1.333
-            needed_guards = math.ceil(base_headcount * (rf / 2.0 if plan.operating_schedule == "24_7" else rf))
+            rf = plan.relief_factor if plan.relief_factor >= 1.0 else 1.333
+            needed_guards = math.ceil(posts * shifts_per_day * rf)
             # Ensure minimum guards cover daily posts
-            needed_guards = max(needed_guards, math.ceil(base_headcount * 1.25))
+            needed_guards = max(needed_guards, math.ceil(posts * shifts_per_day * 1.10))
 
             # 3. Supervisor Headcount
-            # Standard ratio: 1 supervisor per 12-15 on-duty guards per shift
+            # Standard ratio: 1 supervisor per 12 on-duty guards per shift
             guards_per_shift = posts
             supervisors_per_shift = max(1, math.ceil(guards_per_shift / 12.0))
             if plan.operating_schedule == "24_7":
-                needed_supervisors = math.ceil(supervisors_per_shift * 2 * 1.25)
+                needed_supervisors = math.ceil(supervisors_per_shift * shifts_per_day * 1.25)
             else:
                 needed_supervisors = supervisors_per_shift
 
@@ -314,7 +311,13 @@ class SecurityDemandPlan(models.Model):
             supervisor_payroll = round(needed_supervisors * plan.supervisor_monthly_pay, 2)
             total_payroll = guard_payroll + supervisor_payroll
 
-            equipment_cost = round((needed_vehicles * plan.vehicle_monthly_cost) + (needed_radios * 150.0) + (needed_torches * 80.0), 2)
+            equipment_cost = round(
+                (needed_vehicles * plan.vehicle_monthly_cost) +
+                (needed_radios * 150.0) +
+                (needed_torches * 80.0) +
+                (needed_bodycams * 100.0),
+                2
+            )
             gross_profit = round(monthly_revenue - total_payroll - equipment_cost, 2)
             margin_pct = round((gross_profit / monthly_revenue * 100.0), 1) if monthly_revenue > 0 else 0.0
 

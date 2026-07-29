@@ -1,0 +1,70 @@
+# DogForce Production Docker Compose Stack
+# Isolated Production Environment (dogforce_prod)
+services:
+  db_prod:
+    image: postgres:16-alpine
+    container_name: dogforce-prod-db
+    environment:
+      POSTGRES_DB: dogforce_prod
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-DogForce_Prod_Db_2026_SecurePass!}
+    volumes:
+      - ../.local/prod/postgres:/var/lib/postgresql/data
+      - ../.local/prod/backups:/var/lib/odoo/backups
+    shm_size: 256mb
+    command: >
+      postgres
+      -c shared_buffers=1GB
+      -c work_mem=16MB
+      -c maintenance_work_mem=128MB
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/odoo/backups/wal/%f && cp %p /var/lib/odoo/backups/wal/%f'
+      -c archive_timeout=300
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo} -d dogforce_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  odoo_prod:
+    image: odoo:19.0
+    container_name: dogforce-prod-odoo
+    depends_on:
+      db_prod:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    environment:
+      HOST: db_prod
+      USER: ${POSTGRES_USER:-odoo}
+      PASSWORD: ${POSTGRES_PASSWORD:-DogForce_Prod_Db_2026_SecurePass!}
+    command: >
+      odoo
+      --workers=2
+      --max-cron-threads=1
+      --limit-memory-soft=2147483648
+      --limit-memory-hard=2684354560
+      --limit-time-cpu=600
+      --limit-time-real=1200
+    volumes:
+      - ../.local/prod/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ../custom_addons:/mnt/extra-addons
+      - ../.local/prod/filestore:/var/lib/odoo/filestore
+      - ../.local/prod/backups:/var/lib/odoo/backups
+    restart: unless-stopped
+
+  whatsapp_prod:
+    build:
+      context: ../whatsapp_service
+    container_name: dogforce-prod-whatsapp-bridge
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../.local/prod/whatsapp_session:/app/session
+    environment:
+      - PORT=3000
+      - ODOO_WEBHOOK_URL=http://odoo_prod:8069/api/whatsapp/webhook
+    restart: unless-stopped

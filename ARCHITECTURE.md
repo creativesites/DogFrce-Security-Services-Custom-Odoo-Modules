@@ -253,6 +253,14 @@ Leave types, employee balances, and approval workflow. Approved leave links to p
 - ZM payslip PDF: XPath overrides replace SSC lines with NAPSA/NHIMA/WCF lines and localize currency
 - Tests: `security_l10n_zm/tests/test_zm_payroll.py` — 7 scenarios (NAPSA cap, no-cap, NHIMA, PAYE deductibility, floor cap, combined)
 
+**Interactive Payslip Designer** (`security_payroll_core` OWL Client Action):
+A high-end, visual tool registered as `security_payslip_designer` for customizing dynamic employee payslips:
+- **Style Presets & Typography**: Standardized palettes (Slate, Emerald, Midnight, Tactical) paired with professional typography (Inter, Roboto, system-ui).
+- **Layout Engines**: Supports multiple structural variations (`modern`, `corporate`, `minimalist`, `bold`).
+- **Drag-and-Drop Reordering**: Interactive block sorting (Company Header, Employee Details, Attendance Metrics, Leave Balances, YTD Totals, Earnings/Deductions, Totals, Signature Footer).
+- **Interactive Inspector**: Quick-toggle visual controllers for elements like YTD summary card, leave balance breakdown, signature lines, and company announcements.
+- **Dynamic ZMW Precision**: Forces numerical and shift values to render with exactly 2 decimal places to comply with Zambian financial and reporting guidelines.
+
 ### 3.6 Deductions and Discipline — `security_loans`, `security_discipline`
 
 - **Loans:** employee loan schedules with automatic payslip deduction lines
@@ -268,6 +276,17 @@ Billing uses a **custom invoice model** (`security.billing.invoice`), not Odoo A
 - Invoices compute VAT, amount-in-words, and branding for Namibian format
 - Accounting controls track client payments and ageing
 - Client reports aggregate attendance into service summaries for client delivery
+
+**Billing Command Center** (`security_billing` OWL Dashboard):
+A full-screen dashboard redesigned into an ultra-premium **slate-on-light executive theme** utilizing `--bcc-charcoal: #0f172a`, pure white background containers, and elegant border lines:
+- **Brand Accents**: Promotes a light theme with deep corporate accents (`#1a2332`) and soft-lit gradients.
+- **Scroll Mechanics**: Standardized on a non-restricted native page-scrolling setup (`.bcc-root` at `overflow-y: auto`), allowing the page to scroll beautifully without nested iframe traps or cut-off widgets.
+- **KPI and AR Aging Summary**: Embeds real-time financial indicators and AR aging analytics cards (Current, 30, 60, 90+ days) with responsive hover elevations.
+
+**Interactive Document Designer** (`security_billing` client action):
+A powerful web-based template customizer for generating high-end corporate contracts, client notifications, and official letters:
+- **DOMParser Secure Insertion**: Resolves QWeb and raw-string escape issues by leveraging `DOMParser` on the Javascript client-side, cleanly separating and injecting the associated stylesheets and target page element (`.doc-page`).
+- **OWL Dynamic Markup Wrapper**: Renders raw HTML securely in real-time inside the preview iframe by wrapping the parsed DOM result inside Odoo's client-side `markup()` utility to ensure reactive live rendering.
 
 ### 3.8 Fiscal Compliance — `security_zra_invoice`
 

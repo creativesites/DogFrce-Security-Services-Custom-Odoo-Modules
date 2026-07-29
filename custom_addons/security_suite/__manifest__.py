@@ -26,6 +26,7 @@
         'security_ai_engine',
         'security_ai_whatsapp_bridge',
         'security_attendance',
+        'security_backup_vault',
         'security_base',
         'security_billing',
         'security_billing_account',

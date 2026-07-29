@@ -98,10 +98,10 @@ Modules with automated tests: `security_payroll_core`, `security_attendance`, `s
 | `security_attendance` | Posting sheets, scheduled-vs-actual attendance metrics |
 | `security_leave` | Leave types, balances, requests |
 | `security_l10n_na` | Namibia payroll rules — PAYE brackets, SSC rates, public holidays |
-| `security_payroll_core` | Payroll periods, payslips, statutory calculations |
+| `security_payroll_core` | Payroll periods, payslips, statutory calculations, and interactive Payslip Designer |
 | `security_loans` | Employee loans and payroll deductions |
 | `security_discipline` | Behavioral incidents and reliability impact |
-| `security_billing` | Client contracts, billing plans, invoices |
+| `security_billing` | Client contracts, billing plans, invoices, Billing Command Center, and Document Designer |
 | `security_accounting_controls` | Client payments, ageing, reconciliation status |
 | `security_client_reports` | Client-facing service/attendance reports |
 | `security_reporting` | Pivot and graph dashboards |

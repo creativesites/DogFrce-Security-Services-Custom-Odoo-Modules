@@ -1123,7 +1123,11 @@ class SecurityRosterSlot(models.Model):
     )
     def _compute_readiness(self):
         for slot in self:
-            reqs = slot.resource_requirement_ids
+            try:
+                with self.env.cr.savepoint():
+                    reqs = slot.resource_requirement_ids
+            except Exception:
+                reqs = self.env['security.roster.slot.resource']
             if not reqs:
                 if slot.employee_id:
                     slot.readiness_score = 100.0

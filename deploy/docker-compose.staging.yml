@@ -1,0 +1,42 @@
+# DogForce Staging Docker Compose Stack
+# Isolated Staging / UAT Environment (dogforce_staging)
+services:
+  db_staging:
+    image: postgres:16-alpine
+    container_name: dogforce-staging-db
+    environment:
+      POSTGRES_DB: dogforce_staging
+      POSTGRES_USER: ${POSTGRES_USER:-odoo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-DogForce_Staging_Db_2026_SecurePass!}
+    volumes:
+      - ../.local/staging/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-odoo} -d dogforce_staging"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  odoo_staging:
+    image: odoo:19.0
+    container_name: dogforce-staging-odoo
+    depends_on:
+      db_staging:
+        condition: service_healthy
+    ports:
+      - "8070:8069"
+    environment:
+      HOST: db_staging
+      USER: ${POSTGRES_USER:-odoo}
+      PASSWORD: ${POSTGRES_PASSWORD:-DogForce_Staging_Db_2026_SecurePass!}
+    command: >
+      odoo
+      --workers=1
+      --max-cron-threads=1
+      --limit-memory-soft=1073741824
+      --limit-memory-hard=1610612736
+    volumes:
+      - ../.local/staging/odoo.conf:/etc/odoo/odoo.conf:ro
+      - ../custom_addons:/mnt/extra-addons
+      - ../.local/staging/filestore:/var/lib/odoo/filestore
+    restart: unless-stopped

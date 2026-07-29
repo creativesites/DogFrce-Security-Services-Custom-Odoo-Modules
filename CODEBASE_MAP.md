@@ -43,10 +43,10 @@ Mounted into the Odoo Docker container at `/mnt/extra-addons`. Each subdirectory
 | `security_attendance` | Posting sheets and scheduled-vs-actual attendance |
 | `security_leave` | Leave types, balances, requests |
 | `security_l10n_na` | Namibia payroll — PAYE brackets, SSC rates, public holidays, payslip PDF |
-| `security_payroll_core` | Payroll periods, payslips, statutory calculations |
+| `security_payroll_core` | Payroll periods, payslips, statutory calculations, and drag-and-drop Payslip Designer |
 | `security_loans` | Employee loans and payroll deductions |
 | `security_discipline` | Behavioral incidents and reliability impact |
-| `security_billing` | Client contracts, billing plans, invoices |
+| `security_billing` | Client contracts, billing plans, invoices, Billing Command Center, and Document Designer |
 | `security_accounting_controls` | Client payments and ageing |
 | `security_client_reports` | Client-facing service/attendance reports |
 | `security_reporting` | Pivot and graph dashboards (views only) |

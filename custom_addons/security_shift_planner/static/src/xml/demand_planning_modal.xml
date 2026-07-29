@@ -91,6 +91,21 @@
                                 </div>
                             </div>
 
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label small fw-semibold">Guard Shift Rotation</label>
+                                    <select class="form-select form-select-sm" t-model="state.rotationPattern" t-on-change="(e) => this.onRotationPatternChange(e.target.value)">
+                                        <option value="2_2_2">2 Day / 2 Night / 2 Off</option>
+                                        <option value="4_2">4 Days On / 2 Days Off</option>
+                                        <option value="6_1">6 Days On / 1 Day Off</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-semibold">Relief Coverage Multiplier</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm text-primary fw-semibold" t-model="state.reliefFactor" t-on-input="() => this.calculate()"/>
+                                </div>
+                            </div>
+
                             <h6 class="fw-bold text-slate-900 mt-4 mb-3" style="font-size: 14px;">
                                 <i class="fa fa-money text-success me-2"/>2. Financial Rates (ZMW)
                             </h6>

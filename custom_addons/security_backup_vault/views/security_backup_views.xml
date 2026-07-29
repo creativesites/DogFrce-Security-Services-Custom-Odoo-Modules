@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tree View -->
+    <record id="view_security_backup_record_tree" model="ir.ui.view">
+        <field name="name">security.backup.record.tree</field>
+        <field name="model">security.backup.record</field>
+        <field name="arch" type="xml">
+            <list string="Backup Vault &amp; Snapshots" decoration-success="state=='completed'" decoration-danger="state=='failed'" decoration-muted="state=='purged'">
+                <field name="name"/>
+                <field name="created_date"/>
+                <field name="backup_type"/>
+                <field name="retention_tier"/>
+                <field name="database_name"/>
+                <field name="file_size_formatted"/>
+                <field name="offsite_synced" widget="boolean_toggle"/>
+                <field name="verified" widget="boolean_toggle"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_security_backup_record_form" model="ir.ui.view">
+        <field name="name">security.backup.record.form</field>
+        <field name="model">security.backup.record</field>
+        <field name="arch" type="xml">
+            <form string="Backup Snapshot">
+                <header>
+                    <button name="action_verify_offsite_sync" string="Sync Offsite (Cloudflare R2)" type="object" class="btn-primary" invisible="offsite_synced or state != 'completed'"/>
+                    <button name="action_trigger_restore_test" string="Test Integrity" type="object" class="btn-secondary" invisible="state != 'completed'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,completed,failed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Snapshot Identifiers">
+                            <field name="database_name"/>
+                            <field name="backup_type"/>
+                            <field name="retention_tier"/>
+                            <field name="created_date"/>
+                        </group>
+                        <group string="Storage &amp; Integrity">
+                            <field name="file_size_formatted"/>
+                            <field name="checksum_sha256"/>
+                            <field name="offsite_synced"/>
+                            <field name="offsite_synced_date" invisible="not offsite_synced"/>
+                            <field name="verified"/>
+                            <field name="restore_tested_date" invisible="not verified"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="File Paths &amp; Offsite Details">
+                            <group>
+                                <field name="db_snapshot_path"/>
+                                <field name="filestore_snapshot_path"/>
+                                <field name="offsite_url"/>
+                            </group>
+                        </page>
+                        <page string="Execution &amp; Error Log" invisible="not error_log">
+                            <field name="error_log" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_security_backup_record_search" model="ir.ui.view">
+        <field name="name">security.backup.record.search</field>
+        <field name="model">security.backup.record</field>
+        <field name="arch" type="xml">
+            <search string="Search Backup Vault">
+                <field name="name"/>
+                <field name="database_name"/>
+                <filter string="Full Backups" name="filter_full" domain="[('backup_type', '=', 'full')]"/>
+                <filter string="Pre-Deploy Snapshots" name="filter_pre_deploy" domain="[('backup_type', '=', 'pre_deploy')]"/>
+                <filter string="Offsite Synced" name="filter_offsite" domain="[('offsite_synced', '=', True)]"/>
+                <filter string="Verified Integrities" name="filter_verified" domain="[('verified', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Type" name="group_type" context="{'group_by':'backup_type'}"/>
+                    <filter string="Retention Tier" name="group_tier" context="{'group_by':'retention_tier'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_security_backup_record" model="ir.actions.act_window">
+        <field name="name">Backup Vault &amp; Snapshots</field>
+        <field name="res_model">security.backup.record</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_backup_record_search"/>
+    </record>
+
+    <!-- Menu Items -->
+    <menuitem id="menu_security_backup_root" name="Backup Vault" parent="security_base.menu_security_root" sequence="90"/>
+    <menuitem id="menu_security_backup_records" name="Snapshots &amp; Audit Log" parent="menu_security_backup_root" action="action_security_backup_record" sequence="10"/>
+    <menuitem id="menu_security_backup_restore" name="Restore Snapshot" parent="menu_security_backup_root" action="action_security_backup_restore_wizard" sequence="20"/>
+
+</odoo>

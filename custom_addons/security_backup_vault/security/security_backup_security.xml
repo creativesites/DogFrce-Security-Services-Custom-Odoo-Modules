@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="module_category_security_backup" model="ir.module.category">
+            <field name="name">Backup Vault Administration</field>
+            <field name="description">Access management for DeployGuard Backup Vault &amp; Restores</field>
+            <field name="sequence">50</field>
+        </record>
+
+        <record id="group_security_backup_admin" model="res.groups">
+            <field name="name">Backup Administrator</field>
+            <field name="category_id" ref="module_category_security_backup"/>
+            <field name="users" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+        </record>
+    </data>
+</odoo>
