@@ -5,12 +5,14 @@ import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 
 /**
- * WeeklyCheckIn — Ops-manager weekly review dashboard.
+ * WeeklyCheckIn — Ops-manager weekly review dashboard & operations check-in.
  *
- * Shows a summary of the current Mon–Sun week:
- *   - Slot fill rate, critical gaps, AWOL today, missing check-ins
- *   - Alert panel for unread awol_alert / roster_gap notifications
- *   - "Confirm Week" button → creates/confirms a security.roster.week record
+ * Fully integrates Weekly Reviews (security.roster.week):
+ *   - Mon–Sun week offset navigation (Previous, Today, Next)
+ *   - Real-time slot fill rate, critical gaps, AWOL, missing check-ins
+ *   - Weekly Review Manager: Notes input, Mark Reviewed, Confirm Week, Reset to Draft
+ *   - Historical Weekly Reviews Log & Snapshot Table
+ *   - Alert panel for active operational notifications
  */
 class WeeklyCheckIn extends Component {
     static props = { "*": true };
@@ -19,13 +21,17 @@ class WeeklyCheckIn extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.action = useService("action");
 
         this.state = useState({
             loading: true,
+            saving: false,
             confirming: false,
+            weekOffset: 0,
             weekStart: null,
             weekEnd: null,
             weekLabel: "",
+            isCurrentWeek: true,
             stats: {
                 totalSlots: 0,
                 unassigned: 0,
@@ -37,25 +43,29 @@ class WeeklyCheckIn extends Component {
             alerts: [],
             weekRecord: null,
             weekState: "draft",
+            reviewNotes: "",
+            pastReviews: [],
         });
 
         onWillStart(async () => {
-            this._setWeekBounds();
+            this._setWeekBounds(0);
             await this.loadData();
         });
     }
 
     // ── Helpers ──────────────────────────────────────────────────────
 
-    _setWeekBounds() {
+    _setWeekBounds(offset = 0) {
         const today = new Date();
         const dayOfWeek = today.getDay(); // 0 = Sun … 6 = Sat
-        const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const diffToMon = (dayOfWeek === 0 ? -6 : 1 - dayOfWeek) + offset * 7;
         const monday = new Date(today);
         monday.setDate(today.getDate() + diffToMon);
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
 
+        this.state.weekOffset = offset;
+        this.state.isCurrentWeek = offset === 0;
         this.state.weekStart = this._fmtDate(monday);
         this.state.weekEnd = this._fmtDate(sunday);
         this.state.weekLabel =
@@ -72,6 +82,29 @@ class WeeklyCheckIn extends Component {
         );
     }
 
+    changeWeek(delta) {
+        const newOffset = delta === 0 ? 0 : this.state.weekOffset + delta;
+        this._setWeekBounds(newOffset);
+        this.loadData();
+    }
+
+    selectWeekRecord(weekStartStr) {
+        if (!weekStartStr) return;
+        const targetMon = new Date(weekStartStr + "T00:00:00");
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const currentMon = new Date(today);
+        currentMon.setDate(today.getDate() + diffToMon);
+        currentMon.setHours(0, 0, 0, 0);
+
+        const diffTime = targetMon.getTime() - currentMon.getTime();
+        const diffWeeks = Math.round(diffTime / (1000 * 3600 * 24 * 7));
+
+        this._setWeekBounds(diffWeeks);
+        this.loadData();
+    }
+
     // ── Data ─────────────────────────────────────────────────────────
 
     async loadData() {
@@ -80,7 +113,7 @@ class WeeklyCheckIn extends Component {
             const today = this._fmtDate(new Date());
             const { weekStart, weekEnd } = this.state;
 
-            const [slots, todayRecords, alerts, weekRecords] = await Promise.all([
+            const [slots, todayRecords, alerts, weekRecords, pastReviews] = await Promise.all([
                 this.orm.searchRead(
                     "security.roster.slot",
                     [
@@ -93,14 +126,17 @@ class WeeklyCheckIn extends Component {
                 ),
                 this.orm.searchRead(
                     "security.attendance.record",
-                    [["shift_date", "=", today]],
-                    ["id", "manual_presence", "check_in", "scheduled_start"],
-                    { limit: 1000 }
+                    [
+                        ["shift_date", ">=", weekStart],
+                        ["shift_date", "<=", weekEnd],
+                    ],
+                    ["id", "manual_presence", "check_in", "scheduled_start", "shift_date"],
+                    { limit: 2000 }
                 ),
                 this.orm.searchRead(
                     "security.notification",
                     [
-                        ["notification_type", "in", ["awol_alert", "roster_gap"]],
+                        ["notification_type", "in", ["awol_alert", "roster_gap", "override_audit"]],
                         ["state", "=", "unread"],
                     ],
                     ["id", "title", "body", "notification_type", "severity", "create_date"],
@@ -109,8 +145,14 @@ class WeeklyCheckIn extends Component {
                 this.orm.searchRead(
                     "security.roster.week",
                     [["week_start", "=", weekStart]],
-                    ["id", "state", "gap_count_snap", "reviewer_id"],
+                    ["id", "state", "gap_count_snap", "reviewer_id", "reviewed_at", "review_notes", "display_name"],
                     { limit: 1 }
+                ),
+                this.orm.searchRead(
+                    "security.roster.week",
+                    [],
+                    ["id", "week_start", "week_end", "state", "gap_count_snap", "reviewer_id", "reviewed_at", "review_notes", "display_name"],
+                    { order: "week_start desc", limit: 15 }
                 ),
             ]);
 
@@ -119,70 +161,133 @@ class WeeklyCheckIn extends Component {
             const unassigned = slots.filter((s) => !s.employee_id).length;
             const criticalGaps = slots.filter((s) => s.critical_gap && !s.employee_id).length;
 
-            // Today's attendance stats
+            // Attendance stats
             const now = Date.now();
             const FIFTEEN_MIN_MS = 15 * 60 * 1000;
             let awolToday = 0, missingCheckins = 0, presentToday = 0;
             for (const r of todayRecords) {
-                if (r.manual_presence === "awol") { awolToday++; continue; }
-                if (r.manual_presence === "present") presentToday++;
-                if (!r.check_in && r.manual_presence !== "absent") {
-                    if (r.scheduled_start) {
-                        const schedMs = new Date(r.scheduled_start.replace(" ", "T") + "Z").getTime();
-                        if (schedMs <= now - FIFTEEN_MIN_MS) missingCheckins++;
+                if (r.shift_date === today) {
+                    if (r.manual_presence === "awol") { awolToday++; continue; }
+                    if (r.manual_presence === "present") presentToday++;
+                    if (!r.check_in && r.manual_presence !== "absent") {
+                        if (r.scheduled_start) {
+                            const schedMs = new Date(r.scheduled_start.replace(" ", "T") + "Z").getTime();
+                            if (schedMs <= now - FIFTEEN_MIN_MS) missingCheckins++;
+                        }
                     }
                 }
             }
 
             this.state.stats = { totalSlots, unassigned, criticalGaps, awolToday, missingCheckins, presentToday };
             this.state.alerts = alerts;
+            this.state.pastReviews = pastReviews;
+
             if (weekRecords.length) {
-                this.state.weekRecord = weekRecords[0];
-                this.state.weekState = weekRecords[0].state;
+                const rec = weekRecords[0];
+                this.state.weekRecord = rec;
+                this.state.weekState = rec.state || "draft";
+                this.state.reviewNotes = rec.review_notes || "";
             } else {
                 this.state.weekRecord = null;
                 this.state.weekState = "draft";
+                this.state.reviewNotes = "";
             }
         } catch (err) {
             console.error("WeeklyCheckIn.loadData error:", err);
-            this.notification.add("Failed to load operational data.", { type: "danger" });
+            this.notification.add("Failed to load operational weekly review data.", { type: "danger" });
         } finally {
             this.state.loading = false;
         }
     }
 
-    // ── Actions ──────────────────────────────────────────────────────
+    // ── Weekly Review Actions ────────────────────────────────────────
+
+    async _ensureWeekRecord() {
+        if (this.state.weekRecord && this.state.weekRecord.id) {
+            return this.state.weekRecord.id;
+        }
+        const ids = await this.orm.create("security.roster.week", [{
+            week_start: this.state.weekStart,
+            gap_count_snap: this.state.stats.criticalGaps,
+            review_notes: this.state.reviewNotes,
+        }]);
+        const weekId = Array.isArray(ids) ? ids[0] : ids;
+        this.state.weekRecord = { id: weekId, state: "draft", review_notes: this.state.reviewNotes };
+        return weekId;
+    }
+
+    async saveNotes() {
+        this.state.saving = true;
+        try {
+            const weekId = await this._ensureWeekRecord();
+            await this.orm.write("security.roster.week", [weekId], {
+                review_notes: this.state.reviewNotes,
+            });
+            this.notification.add("Weekly review notes saved.", { type: "info" });
+            await this.loadData();
+        } catch (err) {
+            this.notification.add("Could not save notes: " + (err.message || String(err)), { type: "danger" });
+        } finally {
+            this.state.saving = false;
+        }
+    }
+
+    async markAsReviewed() {
+        this.state.saving = true;
+        try {
+            const weekId = await this._ensureWeekRecord();
+            await this.orm.call("security.roster.week", "action_review", [[weekId], this.state.reviewNotes]);
+            this.state.weekState = "reviewed";
+            this.notification.add("Week marked as Reviewed.", { type: "success" });
+            await this.loadData();
+        } catch (err) {
+            this.notification.add("Could not mark as reviewed: " + (err.message || String(err)), { type: "danger" });
+        } finally {
+            this.state.saving = false;
+        }
+    }
 
     async confirmWeek() {
         this.state.confirming = true;
         try {
-            let weekId;
-            if (this.state.weekRecord) {
-                weekId = this.state.weekRecord.id;
-            } else {
-                const ids = await this.orm.create("security.roster.week", [{
-                    week_start: this.state.weekStart,
-                    gap_count_snap: this.state.stats.criticalGaps,
-                }]);
-                weekId = ids[0] !== undefined ? ids[0] : ids;
-                this.state.weekRecord = { id: weekId };
-            }
-            await this.orm.call("security.roster.week", "action_confirm_week", [[weekId]]);
+            const weekId = await this._ensureWeekRecord();
+            await this.orm.call("security.roster.week", "action_confirm_week", [[weekId], this.state.reviewNotes]);
             this.state.weekState = "confirmed";
-            this.notification.add("Week confirmed successfully.", { type: "success" });
+            this.notification.add("Weekly Operations Review Confirmed!", { type: "success" });
+            await this.loadData();
         } catch (err) {
-            this.notification.add(
-                "Could not confirm week: " + (err.message || String(err)),
-                { type: "danger" }
-            );
+            this.notification.add("Could not confirm week: " + (err.message || String(err)), { type: "danger" });
         } finally {
             this.state.confirming = false;
+        }
+    }
+
+    async resetToDraft() {
+        if (!this.state.weekRecord) return;
+        this.state.saving = true;
+        try {
+            await this.orm.call("security.roster.week", "action_reset_to_draft", [[this.state.weekRecord.id]]);
+            this.state.weekState = "draft";
+            this.notification.add("Week review reset to Draft.", { type: "warning" });
+            await this.loadData();
+        } catch (err) {
+            this.notification.add("Could not reset week: " + (err.message || String(err)), { type: "danger" });
+        } finally {
+            this.state.saving = false;
         }
     }
 
     async dismissAlert(alertId) {
         await this.orm.call("security.notification", "action_dismiss", [[alertId]]);
         this.state.alerts = this.state.alerts.filter((a) => a.id !== alertId);
+    }
+
+    openRosterBoard() {
+        this.action.doAction("security_shift_planner.action_roster_board");
+    }
+
+    openRosteringHub() {
+        this.action.doAction("security_shift_planner.action_rostering_hub");
     }
 
     // ── Computed getters ─────────────────────────────────────────────

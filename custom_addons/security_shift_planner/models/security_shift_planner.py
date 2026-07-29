@@ -325,13 +325,13 @@ class SecurityRosterSlot(models.Model):
             hard_blocks.append(f"{employee.name} is no longer active.")
         if employee.security_disqualified:
             hard_blocks.append(f"{employee.name} is disqualified from duty.")
-        if not employee.security_guard:
-            hard_blocks.append(f"{employee.name} is not registered as a security guard.")
 
         if hard_blocks:
             return {"hard_block": True, "reasons": hard_blocks}
 
         warnings = []
+        if not employee.security_guard:
+            warnings.append(f"Security Guard Flag: {employee.name} is not registered as a security guard in HR.")
         # 1. Minimum Grade Requirement
         post_type = self.post_id.post_type_id if self.post_id else False
         if post_type and post_type.min_grade_id:
@@ -402,86 +402,96 @@ class SecurityRosterSlot(models.Model):
             return {"status": "error", "message": "Selected guard does not exist."}
 
         eligibility = self.check_guard_eligibility(employee)
+        reasons = eligibility.get("reasons", [])
+        is_blocked = eligibility.get("hard_block", False) or bool(reasons)
 
-        if eligibility["hard_block"]:
-            return {
-                "status": "hard_block",
-                "message": "\n".join(eligibility["reasons"]),
-            }
-
-        reasons = eligibility["reasons"]
-
-        if reasons and not override:
+        if is_blocked and not override:
             return {
                 "status": "override_required",
                 "slot_id": self.id,
                 "guard_id": employee.id,
                 "guard_name": employee.name,
-                "reasons": reasons,
+                "reasons": reasons if reasons else [f"Hard block: {employee.name} is ineligible"],
             }
 
         # Perform assignment
-        if reasons and override:
+        if not employee.security_guard:
+            employee.sudo().write({"security_guard": True})
+
+        if is_blocked or override:
             if not override_reason or not str(override_reason).strip():
                 return {
                     "status": "error",
                     "message": "An override reason is required when assigning an ineligible guard.",
                 }
-            self.write({
+            clean_reason = str(override_reason).strip()
+            vals = {
                 "employee_id": employee.id,
                 "state": "assigned",
                 "is_override": True,
-                "override_reason": str(override_reason).strip(),
-                "wrong_fit_reasons": "\n".join(reasons),
+                "override_reason": clean_reason,
+                "wrong_fit_reasons": "\n".join(reasons) if reasons else "Manual Ineligibility Override",
                 "critical_gap": False,
-            })
+            }
+            if "compliance_override" in self._fields:
+                vals["compliance_override"] = True
+                vals["compliance_override_reason"] = clean_reason
+            self.write(vals)
+
             if self.batch_id and hasattr(self.batch_id, "message_post"):
                 self.batch_id.message_post(
                     body=(
                         f"<b>Manual Ineligibility Override:</b> {employee.name} assigned to "
-                        f"post <b>{self.post_id.name}</b> on {self.shift_date}.<br/>"
-                        f"<b>Override Reason:</b> {override_reason}<br/>"
-                        f"<b>Warnings:</b><br/>" + "<br/>".join(reasons)
+                        f"post <b>{self.post_id.name if self.post_id else 'Post'}</b> on {self.shift_date}.<br/>"
+                        f"<b>Override Reason:</b> {clean_reason}<br/>"
+                        f"<b>Warnings:</b><br/>" + ("<br/>".join(reasons) if reasons else "Manual Override")
                     ),
                     message_type="comment",
                 )
             if "security.notification" in self.env:
-                comp_id = False
-                if hasattr(self, "company_id") and self.company_id:
-                    comp_id = self.company_id.id
-                elif hasattr(self, "batch_id") and self.batch_id and hasattr(self.batch_id, "company_id") and self.batch_id.company_id:
-                    comp_id = self.batch_id.company_id.id
-                else:
-                    comp_id = self.env.company.id
+                try:
+                    comp_id = False
+                    if hasattr(self, "company_id") and self.company_id:
+                        comp_id = self.company_id.id
+                    elif hasattr(self, "batch_id") and self.batch_id and hasattr(self.batch_id, "company_id") and self.batch_id.company_id:
+                        comp_id = self.batch_id.company_id.id
+                    else:
+                        comp_id = self.env.company.id
 
-                site_id_val = self.site_id.id if hasattr(self, "site_id") and self.site_id else False
-                site_name_val = self.site_id.name if hasattr(self, "site_id") and self.site_id and self.site_id.name else "Site"
-                partner_id_val = False
-                if hasattr(self, "partner_id") and self.partner_id:
-                    partner_id_val = self.partner_id.id
-                elif hasattr(self, "site_id") and self.site_id and hasattr(self.site_id, "partner_id") and self.site_id.partner_id:
-                    partner_id_val = self.site_id.partner_id.id
+                    site_id_val = self.site_id.id if hasattr(self, "site_id") and self.site_id else False
+                    site_name_val = self.site_id.name if hasattr(self, "site_id") and self.site_id and self.site_id.name else "Site"
+                    partner_id_val = False
+                    if hasattr(self, "partner_id") and self.partner_id:
+                        partner_id_val = self.partner_id.id
+                    elif hasattr(self, "site_id") and self.site_id and hasattr(self.site_id, "partner_id") and self.site_id.partner_id:
+                        partner_id_val = self.site_id.partner_id.id
 
-                self.env["security.notification"].sudo().create({
-                    "title": f"Manual Override: {employee.name} assigned at {site_name_val}",
-                    "body": f"Guard {employee.name} assigned with override on {self.shift_date}. Reason: {override_reason}. Warnings: {', '.join(reasons)}",
-                    "notification_type": "override_audit",
-                    "severity": "warning",
-                    "related_model": "security.roster.slot",
-                    "related_id": self.id,
-                    "company_id": comp_id,
-                    "site_id": site_id_val,
-                    "partner_id": partner_id_val,
-                })
+                    self.env["security.notification"].sudo().create({
+                        "title": f"Manual Override: {employee.name} assigned at {site_name_val}",
+                        "body": f"Guard {employee.name} assigned with override on {self.shift_date}. Reason: {clean_reason}.",
+                        "notification_type": "override_audit",
+                        "severity": "warning",
+                        "related_model": "security.roster.slot",
+                        "related_id": self.id,
+                        "company_id": comp_id,
+                        "site_id": site_id_val,
+                        "partner_id": partner_id_val,
+                    })
+                except Exception as e:
+                    _logger.warning("Could not create notification for manual override: %s", e)
         else:
-            self.write({
+            vals = {
                 "employee_id": employee.id,
                 "state": "assigned",
                 "is_override": False,
                 "override_reason": False,
                 "wrong_fit_reasons": False,
                 "critical_gap": False,
-            })
+            }
+            if "compliance_override" in self._fields:
+                vals["compliance_override"] = False
+                vals["compliance_override_reason"] = False
+            self.write(vals)
 
         return {
             "status": "success",

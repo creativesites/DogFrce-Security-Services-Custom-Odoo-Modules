@@ -90,9 +90,9 @@
     <menuitem
         id="menu_security_roster_week"
         name="Weekly Reviews"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_records"
         action="action_security_roster_week"
-        sequence="15"
+        sequence="30"
         groups="hr.group_hr_user"
     />
 </odoo>

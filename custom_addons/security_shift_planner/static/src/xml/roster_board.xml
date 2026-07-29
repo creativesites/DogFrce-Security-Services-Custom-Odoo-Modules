@@ -224,6 +224,40 @@
             </div>
         </div>
 
+        <!-- Smart Prescriptive Recommendations Strip -->
+        <div t-if="state.batchId and state.smartRecommendations and state.smartRecommendations.length" class="px-4 py-2 bg-light border-bottom">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="fw-bold text-dark" style="font-size:13px;">
+                    <i class="fa fa-magic me-2" style="color:#8b5cf6;"/>Smart Prescriptive Actions
+                    <span class="badge bg-primary rounded-pill ms-2" t-esc="state.smartRecommendations.length"/>
+                </div>
+                <button class="btn btn-sm btn-link p-0 text-decoration-none" t-on-click="generateSmartRecommendations">
+                    <i class="fa fa-refresh me-1"/>Re-run AI Scan
+                </button>
+            </div>
+            <div class="d-flex gap-2 overflow-x-auto pb-1">
+                <t t-foreach="state.smartRecommendations" t-as="rec" t-key="rec.id">
+                    <div class="bg-white border rounded p-2 shadow-sm d-flex flex-column justify-content-between" style="min-width:260px; max-width:320px;">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <span class="badge bg-primary text-white" style="font-size:10px;" t-esc="rec.impact_display"/>
+                                <t t-if="rec.financial_saving &gt; 0">
+                                    <span class="badge bg-success text-white" style="font-size:10px;">Saves ZMW <t t-esc="rec.financial_saving"/></span>
+                                </t>
+                            </div>
+                            <div class="fw-bold text-dark mt-1" style="font-size:12px;" t-esc="rec.name"/>
+                            <div class="text-muted small mt-1" style="font-size:11px; line-height:1.2;" t-esc="rec.description"/>
+                        </div>
+                        <div class="mt-2 pt-1 border-top text-end">
+                            <button class="btn btn-sm btn-primary py-0 px-2" style="font-size:11px;" t-on-click="() => this.applyRecommendation(rec.id)">
+                                <i class="fa fa-check me-1"/>Apply Action
+                            </button>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </div>
+
         <!-- Grid + Guard Pool wrapper -->
         <div class="rb-workspace d-flex">
 
@@ -765,7 +799,7 @@
          ═══════════════════════════════════════════════════════════ -->
     <t t-if="state.overrideDialog.visible">
         <div style="position:fixed; inset:0; z-index:10001; background:rgba(15,23,42,.75); display:flex; align-items:center; justify-content:center;"
-             t-on-click.self="closeOverrideModal">
+             t-on-click.self="() => this.closeOverrideModal()">
             <div style="background:#0f172a; border:1px solid #334155; border-radius:14px; padding:28px; width:480px; max-width:92vw; box-shadow:0 24px 64px rgba(0,0,0,.5); color:#f8fafc;">
 
                 <!-- Header -->
@@ -780,7 +814,7 @@
                         </div>
                     </div>
                     <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; padding:4px;"
-                            t-on-click="closeOverrideModal">
+                            t-on-click="() => this.closeOverrideModal()">
                         &#x2715;
                     </button>
                 </div>
@@ -814,9 +848,9 @@
 
                 <!-- Footer buttons -->
                 <div class="d-flex gap-2 justify-content-end mt-4">
-                    <button class="rb-btn rb-btn-ghost" t-on-click="closeOverrideModal">Cancel</button>
+                    <button class="rb-btn rb-btn-ghost" t-on-click="() => this.closeOverrideModal()">Cancel</button>
                     <button class="rb-btn rb-btn-warning"
-                            t-on-click="confirmOverrideAssign"
+                            t-on-click="() => this.confirmOverrideAssign()"
                             t-att-disabled="state.overrideDialog.submitting">
                         <i t-att-class="state.overrideDialog.submitting ? 'fa fa-spinner fa-spin me-1' : 'fa fa-check me-1'"/>
                         Assign with Override (WRONG FIT)

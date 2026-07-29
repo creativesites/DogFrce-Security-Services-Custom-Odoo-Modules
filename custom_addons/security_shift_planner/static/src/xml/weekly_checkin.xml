@@ -7,33 +7,30 @@
             <div class="wc-header">
                 <div class="wc-header-left">
                     <h2 class="wc-title">Weekly Operations Check-in</h2>
-                    <span class="wc-week-range" t-esc="state.weekLabel"/>
+                    <div class="wc-nav-group ms-3">
+                        <button class="rb-btn rb-btn-ghost rb-btn-sm" t-on-click="() => this.changeWeek(-1)" title="Previous Week">&#171; Prev</button>
+                        <button t-att-class="'rb-btn rb-btn-sm ' + (state.isCurrentWeek ? 'rb-btn-primary' : 'rb-btn-ghost')" t-on-click="() => this.changeWeek(0)">Today / Current</button>
+                        <button class="rb-btn rb-btn-ghost rb-btn-sm" t-on-click="() => this.changeWeek(1)" title="Next Week">Next &#187;</button>
+                        <span class="wc-week-range ms-2" t-esc="state.weekLabel"/>
+                    </div>
                 </div>
                 <div class="wc-header-right">
-                    <t t-if="state.weekState !== 'confirmed'">
-                        <button class="rb-btn rb-btn-primary"
-                                t-on-click="confirmWeek"
-                                t-att-disabled="state.confirming or state.loading">
-                            <t t-if="state.confirming">Confirming…</t>
-                            <t t-else="">Confirm Week</t>
-                        </button>
-                    </t>
-                    <t t-else="">
-                        <span class="wc-confirmed-badge">&#10003; Week Confirmed</span>
-                    </t>
-                    <button class="rb-btn rb-btn-ghost ms-2"
-                            t-on-click="loadData"
-                            t-att-disabled="state.loading"
-                            title="Refresh">&#8635; Refresh</button>
+                    <button class="rb-btn rb-btn-ghost rb-btn-sm me-2" t-on-click="openRosterBoard" title="Open Interactive Roster Board">
+                        <i class="fa fa-th-large me-1"/> Roster Board
+                    </button>
+                    <button class="rb-btn rb-btn-ghost rb-btn-sm me-2" t-on-click="openRosteringHub" title="Open Rostering Hub">
+                        <i class="fa fa-sliders me-1"/> Rostering Hub
+                    </button>
+                    <button class="rb-btn rb-btn-ghost rb-btn-sm" t-on-click="loadData" t-att-disabled="state.loading" title="Refresh Data">&#8635; Refresh</button>
                 </div>
             </div>
 
             <!-- Loading state -->
             <div t-if="state.loading" class="wc-loading-msg">
-                Loading operational data…
+                Loading operational weekly review data…
             </div>
 
-            <div t-else="">
+            <div t-else="" class="wc-content">
 
                 <!-- Stats strip -->
                 <div class="wc-stats-strip">
@@ -68,34 +65,185 @@
                     </div>
                 </div>
 
-                <!-- Alert panel -->
-                <div t-if="hasAlerts" class="wc-alerts">
-                    <div class="wc-alerts-hdr">
-                        <span class="wc-alerts-title">
-                            <t t-if="hasCriticalAlerts">&#9888; </t>Active Alerts
-                        </span>
-                        <span class="wc-alerts-count" t-esc="state.alerts.length"/>
-                    </div>
-                    <div class="wc-alert-list">
-                        <div t-foreach="state.alerts" t-as="alert" t-key="alert.id"
-                             t-att-class="'wc-alert wc-alert--' + alert.severity">
-                            <div class="wc-alert-icon">
-                                <t t-if="alert.severity === 'critical'">&#9888;</t>
-                                <t t-elif="alert.severity === 'warning'">&#9432;</t>
-                                <t t-else="">&#8226;</t>
+                <!-- Main Grid: Review Manager & Alerts -->
+                <div class="wc-grid">
+
+                    <!-- Weekly Review Manager Panel -->
+                    <div class="wc-card wc-review-card">
+                        <div class="wc-card-hdr">
+                            <div class="wc-card-title">
+                                <i class="fa fa-clipboard-check me-2"/>
+                                Weekly Operations Review Snapshot
                             </div>
-                            <div class="wc-alert-body">
-                                <div class="wc-alert-title" t-esc="alert.title"/>
-                                <div class="wc-alert-text" t-esc="alert.body"/>
+                            <div class="wc-status-pill-wrap">
+                                <span t-if="state.weekState === 'confirmed'" class="wc-badge wc-badge--confirmed">&#10003; Confirmed</span>
+                                <span t-elif="state.weekState === 'reviewed'" class="wc-badge wc-badge--reviewed">&#9733; Reviewed</span>
+                                <span t-else="" class="wc-badge wc-badge--draft">&#9675; Draft</span>
                             </div>
-                            <button class="wc-dismiss-btn"
-                                    t-on-click="() => this.dismissAlert(alert.id)"
-                                    title="Dismiss">&#10005;</button>
+                        </div>
+
+                        <div class="wc-card-body">
+                            <!-- Reviewer Audit Banner -->
+                            <div t-if="state.weekRecord and state.weekRecord.reviewer_id" class="wc-audit-info mb-3">
+                                <div><strong>Reviewed by:</strong> <t t-esc="state.weekRecord.reviewer_id[1]"/></div>
+                                <div><strong>Reviewed at:</strong> <t t-esc="state.weekRecord.reviewed_at"/></div>
+                                <div t-if="state.weekRecord.gap_count_snap"><strong>Gaps Snapshot:</strong> <t t-esc="state.weekRecord.gap_count_snap"/> critical gaps recorded</div>
+                            </div>
+
+                            <!-- Review Notes Textarea -->
+                            <div class="wc-form-group mb-3">
+                                <label class="wc-form-label mb-1">Operational Handover &amp; Review Notes</label>
+                                <textarea class="wc-textarea"
+                                          t-model="state.reviewNotes"
+                                          rows="4"
+                                          placeholder="Enter guard shift notes, critical incidents, handover details, or supervisor observations for this week..."/>
+                            </div>
+
+                            <!-- Review Action Buttons -->
+                            <div class="wc-review-actions">
+                                <button class="rb-btn rb-btn-ghost me-2"
+                                        t-on-click="saveNotes"
+                                        t-att-disabled="state.saving or state.loading">
+                                    <i class="fa fa-save me-1"/> Save Notes
+                                </button>
+
+                                <t t-if="state.weekState === 'draft'">
+                                    <button class="rb-btn rb-btn-secondary me-2"
+                                            t-on-click="markAsReviewed"
+                                            t-att-disabled="state.saving or state.loading">
+                                        Mark as Reviewed
+                                    </button>
+                                    <button class="rb-btn rb-btn-primary"
+                                            t-on-click="confirmWeek"
+                                            t-att-disabled="state.confirming or state.loading">
+                                        <t t-if="state.confirming">Confirming…</t>
+                                        <t t-else="">Confirm Week</t>
+                                    </button>
+                                </t>
+
+                                <t t-elif="state.weekState === 'reviewed'">
+                                    <button class="rb-btn rb-btn-primary me-2"
+                                            t-on-click="confirmWeek"
+                                            t-att-disabled="state.confirming or state.loading">
+                                        Confirm Week
+                                    </button>
+                                    <button class="rb-btn rb-btn-ghost text-muted"
+                                            t-on-click="resetToDraft"
+                                            t-att-disabled="state.saving or state.loading">
+                                        Re-open / Reset to Draft
+                                    </button>
+                                </t>
+
+                                <t t-else="">
+                                    <span class="text-success me-3 fw-bold">&#10003; Week Review Locked</span>
+                                    <button class="rb-btn rb-btn-ghost text-muted"
+                                            t-on-click="resetToDraft"
+                                            t-att-disabled="state.saving or state.loading"
+                                            title="Re-open week for modifications">
+                                        Re-open Review
+                                    </button>
+                                </t>
+                            </div>
                         </div>
                     </div>
+
+                    <!-- Alert panel -->
+                    <div class="wc-card wc-alerts-card">
+                        <div t-if="hasAlerts" class="wc-alerts">
+                            <div class="wc-alerts-hdr">
+                                <span class="wc-alerts-title">
+                                    <t t-if="hasCriticalAlerts">&#9888; </t>Active Operational Alerts
+                                </span>
+                                <span class="wc-alerts-count" t-esc="state.alerts.length"/>
+                            </div>
+                            <div class="wc-alert-list">
+                                <div t-foreach="state.alerts" t-as="alert" t-key="alert.id"
+                                     t-att-class="'wc-alert wc-alert--' + alert.severity">
+                                    <div class="wc-alert-icon">
+                                        <t t-if="alert.severity === 'critical'">&#9888;</t>
+                                        <t t-elif="alert.severity === 'warning'">&#9432;</t>
+                                        <t t-else="">&#8226;</t>
+                                    </div>
+                                    <div class="wc-alert-body">
+                                        <div class="wc-alert-title" t-esc="alert.title"/>
+                                        <div class="wc-alert-text" t-esc="alert.body"/>
+                                    </div>
+                                    <button class="wc-dismiss-btn"
+                                            t-on-click="() => this.dismissAlert(alert.id)"
+                                            title="Dismiss">&#10005;</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-else="" class="wc-no-alerts">
+                            &#10003; No active alerts — operations clear for this week.
+                        </div>
+                    </div>
+
                 </div>
-                <div t-else="" class="wc-no-alerts">
-                    &#10003; No active alerts — operations are clear.
+
+                <!-- Historical Weekly Reviews Table -->
+                <div class="wc-card wc-history-card mt-4">
+                    <div class="wc-card-hdr">
+                        <div class="wc-card-title">
+                            <i class="fa fa-history me-2"/>
+                            Historical Weekly Reviews Log
+                        </div>
+                    </div>
+                    <div class="wc-card-body p-0">
+                        <div t-if="state.pastReviews.length === 0" class="p-3 text-muted text-center">
+                            No historical weekly review records found. Use the controls above to review and confirm weeks.
+                        </div>
+                        <table t-else="" class="wc-history-table">
+                            <thead>
+                                <tr>
+                                    <th>Week Range</th>
+                                    <th>Status</th>
+                                    <th>Critical Gaps Snap</th>
+                                    <th>Reviewer</th>
+                                    <th>Reviewed At</th>
+                                    <th>Notes</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="state.pastReviews" t-as="rev" t-key="rev.id"
+                                    t-att-class="rev.week_start === state.weekStart ? 'wc-row-active' : ''">
+                                    <td class="fw-bold">
+                                        <t t-esc="rev.display_name"/>
+                                    </td>
+                                    <td>
+                                        <span t-if="rev.state === 'confirmed'" class="wc-badge wc-badge--confirmed">Confirmed</span>
+                                        <span t-elif="rev.state === 'reviewed'" class="wc-badge wc-badge--reviewed">Reviewed</span>
+                                        <span t-else="" class="wc-badge wc-badge--draft">Draft</span>
+                                    </td>
+                                    <td>
+                                        <span t-att-class="rev.gap_count_snap ? 'text-danger fw-bold' : 'text-success'">
+                                            <t t-esc="rev.gap_count_snap || 0"/>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <t t-if="rev.reviewer_id" t-esc="rev.reviewer_id[1]"/>
+                                        <span t-else="" class="text-muted">—</span>
+                                    </td>
+                                    <td>
+                                        <t t-if="rev.reviewed_at" t-esc="rev.reviewed_at"/>
+                                        <span t-else="" class="text-muted">—</span>
+                                    </td>
+                                    <td class="wc-notes-cell">
+                                        <span t-if="rev.review_notes" t-esc="rev.review_notes" t-att-title="rev.review_notes"/>
+                                        <span t-else="" class="text-muted">—</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="rb-btn rb-btn-ghost rb-btn-sm"
+                                                t-on-click="() => this.selectWeekRecord(rev.week_start)"
+                                                title="View/Load this week">
+                                            Select Week &#8594;
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>

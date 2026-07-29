@@ -59,6 +59,7 @@ class RosterBoard extends Component {
             allGuards: [],
             guardSearchTerm: "",
             guardTab: "suggested", // "suggested" or "all"
+            smartRecommendations: [],
 
             stats: {
                 total: 0,
@@ -134,6 +135,9 @@ class RosterBoard extends Component {
             this.state.isMobile = window.innerWidth < 768;
         };
         window.addEventListener("resize", handleResize);
+
+        this.closeOverrideModal = this.closeOverrideModal.bind(this);
+        this.confirmOverrideAssign = this.confirmOverrideAssign.bind(this);
 
         onWillStart(async () => {
             await Promise.all([this.loadCompanyCycle(), this.loadBatches(), this.loadAllSites(), this.loadAllGuards()]);
@@ -275,7 +279,51 @@ class RosterBoard extends Component {
         this.state.posts = Object.values(postMap);
 
         this._updateStats();
+        await this.loadSmartRecommendations();
         this.state.loading = false;
+    }
+
+    async loadSmartRecommendations() {
+        try {
+            const domain = [["state", "=", "pending"]];
+            if (this.state.batchId) {
+                domain.push(["source_slot_id.batch_id", "=", this.state.batchId]);
+            }
+            const recs = await this.orm.searchRead(
+                "security.smart.recommendation",
+                domain,
+                ["id", "name", "action_type", "impact_category", "impact_display", "impact_numeric_value", "impact_unit", "financial_saving", "description", "guard_a_id", "guard_b_id", "state"],
+                { order: "financial_saving desc, id desc", limit: 10 }
+            );
+            this.state.smartRecommendations = recs;
+        } catch {
+            this.state.smartRecommendations = [];
+        }
+    }
+
+    async generateSmartRecommendations() {
+        this.state.loading = true;
+        try {
+            await this.orm.call("security.smart.recommendation", "generate_smart_recommendations", [], {
+                batch_id: this.state.batchId,
+            });
+            await this.loadSmartRecommendations();
+            this.notification.add("Smart Prescriptive Action Scan Completed!", { type: "success" });
+        } catch (e) {
+            this.notification.add("Error generating smart recommendations.", { type: "danger" });
+        } finally {
+            this.state.loading = false;
+        }
+    }
+
+    async applyRecommendation(recId) {
+        try {
+            await this.orm.call("security.smart.recommendation", "action_apply", [[recId]]);
+            this.notification.add("Smart Action Applied Successfully!", { type: "success" });
+            await this.loadBoard();
+        } catch (e) {
+            this.notification.add(e.message || "Failed to apply recommendation.", { type: "danger" });
+        }
     }
 
     _updateStats() {
@@ -909,16 +957,21 @@ class RosterBoard extends Component {
         }
         dlg.submitting = true;
         dlg.error = "";
-        const ok = await this.manualAssignGuard(
-            dlg.slot,
-            dlg.guardId,
-            dlg.guardName,
-            true,
-            dlg.reasonInput.trim()
-        );
-        dlg.submitting = false;
-        if (ok) {
-            this.closeOverrideModal();
+        try {
+            const ok = await this.manualAssignGuard(
+                dlg.slot,
+                dlg.guardId,
+                dlg.guardName,
+                true,
+                dlg.reasonInput.trim()
+            );
+            if (ok) {
+                this.closeOverrideModal();
+            }
+        } catch (e) {
+            dlg.error = e.message || String(e);
+        } finally {
+            dlg.submitting = false;
         }
     }
 

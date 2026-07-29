@@ -43,7 +43,7 @@
         name="Weekly Check-in"
         parent="security_operations.menu_security_roster"
         action="action_weekly_checkin"
-        sequence="10"
+        sequence="3"
         groups="hr.group_hr_user"
     />
 </odoo>

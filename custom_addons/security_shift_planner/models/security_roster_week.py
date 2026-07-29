@@ -47,20 +47,28 @@ class SecurityRosterWeek(models.Model):
             else:
                 rec.display_name = "New Week Review"
 
-    def action_review(self):
+    def action_review(self, notes=False):
         for rec in self:
+            if notes is not False:
+                rec.review_notes = notes
             rec.reviewer_id = self.env.user
             rec.reviewed_at = fields.Datetime.now()
             rec.state = "reviewed"
 
-    def action_confirm_week(self):
+    def action_confirm_week(self, notes=False):
         for rec in self:
-            if rec.state == "draft":
+            if notes is not False:
+                rec.review_notes = notes
+            if rec.state in ("draft", "reviewed"):
                 rec.reviewer_id = self.env.user
                 rec.reviewed_at = fields.Datetime.now()
             rec.state = "confirmed"
             if rec.batch_id and hasattr(rec.batch_id, "critical_gap_count"):
                 rec.gap_count_snap = rec.batch_id.critical_gap_count
+
+    def action_save_notes(self, notes):
+        for rec in self:
+            rec.review_notes = notes
 
     def action_reset_to_draft(self):
         for rec in self:
