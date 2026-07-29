@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_security_demand_plan_list" model="ir.ui.view">
+        <field name="name">security.demand.plan.list</field>
+        <field name="model">security.demand.plan</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'converted'" decoration-info="state == 'approved'">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_type"/>
+                <field name="start_date"/>
+                <field name="posts_count"/>
+                <field name="needed_guards" sum="Total Guards"/>
+                <field name="needed_supervisors" sum="Total Supervisors"/>
+                <field name="needed_vehicles" sum="Total Vehicles"/>
+                <field name="monthly_bill_revenue" widget="monetary" sum="Total Revenue"/>
+                <field name="monthly_gross_profit" widget="monetary" sum="Total Profit"/>
+                <field name="gross_margin_pct" widget="percentage"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_security_demand_plan_search" model="ir.ui.view">
+        <field name="name">security.demand.plan.search</field>
+        <field name="model">security.demand.plan</field>
+        <field name="arch" type="xml">
+            <search string="Search Demand Plans">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_type"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_approved" string="Approved" domain="[('state', '=', 'approved')]"/>
+                <filter name="filter_converted" string="Converted" domain="[('state', '=', 'converted')]"/>
+                <separator/>
+                <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_site_type" string="Site Sector" context="{'group_by': 'site_type'}"/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_security_demand_plan_form" model="ir.ui.view">
+        <field name="name">security.demand.plan.form</field>
+        <field name="model">security.demand.plan</field>
+        <field name="arch" type="xml">
+            <form string="Executive Demand Planning &amp; Contract Estimator">
+                <header>
+                    <button name="action_calculate"
+                            string="Calculate Plan"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state == 'converted'"/>
+                    <button name="action_approve"
+                            string="Executive Approve"
+                            type="object"
+                            class="btn-success"
+                            invisible="state in ['approved', 'converted']"/>
+                    <button name="action_convert_to_contract"
+                            string="Convert to Active Contract &amp; Roster"
+                            type="object"
+                            class="btn-warning"
+                            confirm="Convert this demand plan into an active Client Contract, Site, and Rate Card?"
+                            invisible="state == 'converted'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,estimated,approved,converted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Kansanshi Mine Expansion Contract Sizing"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Contract &amp; Client Overview">
+                            <field name="partner_id" placeholder="Select Client..."/>
+                            <field name="site_name" placeholder="Facility Name..."/>
+                            <field name="site_type"/>
+                            <field name="start_date"/>
+                        </group>
+                        <group string="Operational Post Parameters">
+                            <field name="posts_count"/>
+                            <field name="shift_duration"/>
+                            <field name="operating_schedule"/>
+                            <field name="rotation_pattern"/>
+                            <field name="relief_factor"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Resource &amp; Asset Sizing" name="sizing">
+                            <group>
+                                <group string="Headcount Allocation">
+                                    <field name="needed_guards" readonly="1" class="fw-bold fs-4 text-primary"/>
+                                    <field name="needed_supervisors" readonly="1" class="fw-bold fs-4 text-info"/>
+                                </group>
+                                <group string="Equipment &amp; Asset Requirements">
+                                    <field name="needed_vehicles" readonly="1"/>
+                                    <field name="needed_radios" readonly="1"/>
+                                    <field name="needed_torches" readonly="1"/>
+                                    <field name="needed_bodycams" readonly="1"/>
+                                    <field name="needed_uniform_kits" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Financial Projections &amp; Rates" name="financials">
+                            <group>
+                                <group string="Cost &amp; Bill Rates">
+                                    <field name="bill_rate_per_post_hour"/>
+                                    <field name="guard_monthly_pay"/>
+                                    <field name="supervisor_monthly_pay"/>
+                                    <field name="vehicle_monthly_cost"/>
+                                </group>
+                                <group string="Monthly Executive P&amp;L Estimate">
+                                    <field name="total_monthly_post_hours" readonly="1"/>
+                                    <field name="monthly_bill_revenue" readonly="1" class="fw-bold text-success"/>
+                                    <field name="monthly_payroll_cost" readonly="1" class="text-danger"/>
+                                    <field name="monthly_equipment_cost" readonly="1" class="text-danger"/>
+                                    <field name="monthly_gross_profit" readonly="1" class="fw-bold fs-4 text-success"/>
+                                    <field name="gross_margin_pct" readonly="1" widget="percentage" class="fw-bold fs-5 text-primary"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <page string="Contract Conversion Log" name="conversion" invisible="not converted_contract_id">
+                            <group>
+                                <group string="Converted Records">
+                                    <field name="converted_contract_id" readonly="1"/>
+                                    <field name="converted_site_id" readonly="1"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_security_demand_plan" model="ir.actions.act_window">
+        <field name="name">Demand Planning &amp; Contract Sizing</field>
+        <field name="res_model">security.demand.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontract_smiling_face">
+                Create an Executive Demand Plan &amp; Contract Sizing Estimate!
+            </p>
+            <p>
+                Specify contract parameters (e.g. 24 Guards, 12h shifts, 24/7 coverage) to instantly calculate required headcount, supervisors, patrol vehicles, two-way radios, torches, monthly payroll, and gross margin profit.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_security_demand_plan"
+              name="Demand Planning &amp; Sizing"
+              parent="security_operations.menu_security_operations_root"
+              action="action_security_demand_plan"
+              sequence="25"/>
+
+</odoo>

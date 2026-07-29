@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="security_tour.TourSystray" owl="1">
-        <div class="o_tour_systray_item dropdown" title="Take a DeployGuard Tour">
-            <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" role="button" t-on-click="toggleDropdown">
+        <div class="o_tour_systray_item dropdown" title="Take a DeployGuard Tour" t-ref="root" style="position: relative;">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-1" href="#" role="button" t-on-click="(ev) => this.toggleDropdown(ev)">
                 <i class="fa fa-compass o_tour_systray_icon text-primary"/>
                 <span class="d-none d-md-inline fw-semibold small">Product Tours</span>
             </a>
-            <div t-if="state.open" class="dropdown-menu dropdown-menu-end show o_tour_dropdown_menu p-2 shadow-lg border-0 mt-2">
-                <div class="px-2 py-1 mb-1 border-bottom d-flex align-items-center justify-content-between">
+            <div t-if="state.open" class="dropdown-menu dropdown-menu-end show o_tour_dropdown_menu p-2 shadow-lg border-0">
+                <div class="px-2 py-2 mb-1 border-bottom d-flex align-items-center justify-content-between bg-light rounded-top">
                     <span class="fw-bold small text-dark"><i class="fa fa-map-signs text-primary me-1"/>DeployGuard Tours</span>
-                    <span class="badge bg-primary rounded-pill">Interactive</span>
+                    <span class="badge bg-primary rounded-pill" style="font-size: 10px;">Interactive</span>
                 </div>
                 <t t-foreach="state.tours" t-as="tour" t-key="tour.id">
                     <a class="dropdown-item rounded p-2 d-flex align-items-start gap-2 mb-1" href="#" t-on-click="() => this.launchTour(tour.technical_name)">

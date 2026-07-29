@@ -1,6 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- Message Log — Kanban View (Modern Chat Thread Cards) -->
+    <record id="view_security_whatsapp_message_log_kanban" model="ir.ui.view">
+        <field name="name">security.whatsapp.message.log.kanban</field>
+        <field name="model">security.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="parsed_intent" class="o_kanban_mobile" create="0">
+                <field name="id"/>
+                <field name="sender_phone"/>
+                <field name="sender_name"/>
+                <field name="employee_id"/>
+                <field name="direction"/>
+                <field name="parsed_intent"/>
+                <field name="execution_status"/>
+                <field name="raw_body"/>
+                <field name="reply_body"/>
+                <field name="timestamp"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_global_click p-3 mb-2 rounded-3 shadow-sm border bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge rounded-pill bg-primary text-white font-weight-bold" t-if="record.direction.raw_value == 'inbound'">
+                                        <i class="fa fa-arrow-down me-1"/> INBOUND
+                                    </span>
+                                    <span class="badge rounded-pill bg-success text-white font-weight-bold" t-if="record.direction.raw_value == 'outbound'">
+                                        <i class="fa fa-arrow-up me-1"/> OUTBOUND
+                                    </span>
+                                    <strong class="text-dark">
+                                        <field name="sender_name" default_focus="1"/>
+                                    </strong>
+                                </div>
+                                <small class="text-muted">
+                                    <field name="timestamp"/>
+                                </small>
+                            </div>
+                            
+                            <div class="text-muted small mb-2">
+                                <i class="fa fa-phone text-secondary me-1"/>
+                                <field name="sender_phone"/>
+                                <t t-if="record.employee_id.raw_value">
+                                    | <i class="fa fa-user-shield text-info me-1"/> <field name="employee_id"/>
+                                </t>
+                            </div>
+
+                            <div class="p-2 rounded mb-2 bg-light text-dark font-italic border-start border-3 border-info">
+                                "<field name="raw_body"/>"
+                            </div>
+
+                            <t t-if="record.reply_body.raw_value">
+                                <div class="p-2 rounded mb-2 bg-success-light text-success font-monospace small border-start border-3 border-success">
+                                    <strong>Reply:</strong> <field name="reply_body"/>
+                                </div>
+                            </t>
+
+                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                                <div>
+                                    <span class="badge bg-secondary text-uppercase px-2 py-1">
+                                        <field name="parsed_intent"/>
+                                    </span>
+                                    <span class="badge bg-danger ms-1" t-if="record.execution_status.raw_value == 'unauthorized'">
+                                        UNAUTHORIZED
+                                    </span>
+                                    <span class="badge bg-warning ms-1" t-if="record.execution_status.raw_value == 'ignored'">
+                                        IGNORED
+                                    </span>
+                                </div>
+                                <button name="action_open_reply_wizard"
+                                        type="object"
+                                        class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
+                                    <i class="fa fa-paper-plane"/> Reply
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
     <!-- Message Log — List View -->
     <record id="view_security_whatsapp_message_log_tree" model="ir.ui.view">
         <field name="name">security.whatsapp.message.log.list</field>
@@ -11,16 +90,22 @@
                 <field name="sender_phone"/>
                 <field name="sender_name"/>
                 <field name="employee_id"/>
+                <field name="site_id"/>
                 <field name="direction" widget="badge"
                        decoration-info="direction == 'inbound'"
                        decoration-success="direction == 'outbound'"/>
+                <field name="message_type" widget="badge"/>
                 <field name="parsed_intent"/>
                 <field name="execution_status" widget="badge"
                        decoration-success="execution_status == 'success'"
                        decoration-warning="execution_status == 'ignored'"
                        decoration-danger="execution_status in ('unauthorized', 'error')"/>
-                <field name="is_authorized" widget="boolean_toggle"/>
                 <field name="raw_body"/>
+                <button name="action_open_reply_wizard"
+                        string="Reply via WhatsApp"
+                        type="object"
+                        icon="fa-paper-plane"
+                        class="btn-sm btn-success"/>
             </list>
         </field>
     </record>
@@ -31,7 +116,16 @@
         <field name="model">security.whatsapp.message.log</field>
         <field name="arch" type="xml">
             <form string="WhatsApp Message Record" create="0">
+                <header>
+                    <button name="action_open_reply_wizard"
+                            string="Reply via WhatsApp"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-paper-plane"/>
+                </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                    </div>
                     <group>
                         <group string="Message Context">
                             <field name="timestamp" readonly="1"/>
@@ -39,12 +133,16 @@
                             <field name="sender_name" readonly="1"/>
                             <field name="employee_id" readonly="1"/>
                             <field name="partner_id" readonly="1"/>
+                            <field name="site_id" readonly="1"/>
                             <field name="direction" readonly="1"/>
+                            <field name="message_type" readonly="1"/>
                         </group>
                         <group string="AI Processing &amp; Execution">
+                            <field name="conversation_id" readonly="1"/>
                             <field name="parsed_intent" readonly="1"/>
                             <field name="execution_status" readonly="1"/>
                             <field name="is_authorized" readonly="1"/>
+                            <field name="media_url" widget="url" readonly="1"/>
                         </group>
                     </group>
                     <group string="Payload &amp; Response Transcript">
@@ -53,6 +151,31 @@
                     </group>
                 </sheet>
             </form>
+        </field>
+    </record>
+
+    <!-- Message Log — Pivot View (Analytics) -->
+    <record id="view_security_whatsapp_message_log_pivot" model="ir.ui.view">
+        <field name="name">security.whatsapp.message.log.pivot</field>
+        <field name="model">security.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <pivot string="WhatsApp Traffic Analytics">
+                <field name="parsed_intent" type="row"/>
+                <field name="direction" type="col"/>
+                <field name="execution_status" type="col"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Message Log — Graph View -->
+    <record id="view_security_whatsapp_message_log_graph" model="ir.ui.view">
+        <field name="name">security.whatsapp.message.log.graph</field>
+        <field name="model">security.whatsapp.message.log</field>
+        <field name="arch" type="xml">
+            <graph string="WhatsApp Activity Breakdown" type="bar">
+                <field name="parsed_intent" type="row"/>
+                <field name="direction" type="col"/>
+            </graph>
         </field>
     </record>
 
@@ -65,16 +188,20 @@
                 <field name="sender_phone"/>
                 <field name="sender_name"/>
                 <field name="employee_id"/>
+                <field name="site_id"/>
                 <field name="raw_body"/>
                 <field name="parsed_intent"/>
                 <filter string="Inbound Messages" name="filter_inbound" domain="[('direction', '=', 'inbound')]"/>
                 <filter string="Outbound Replies" name="filter_outbound" domain="[('direction', '=', 'outbound')]"/>
                 <separator/>
-                <filter string="Ignored / Unrelated" name="filter_ignored" domain="[('execution_status', '=', 'ignored')]"/>
+                <filter string="Attendance &amp; Lateness" name="filter_attendance" domain="[('parsed_intent', 'in', ['site_attendance', 'lateness', 'bulk_site_attendance'])]"/>
+                <filter string="AWOL &amp; Missing" name="filter_awol" domain="[('parsed_intent', '=', 'awol')]"/>
+                <filter string="Incidents" name="filter_incidents" domain="[('parsed_intent', '=', 'incident_report')]"/>
                 <filter string="Unauthorized Attempts" name="filter_unauthorized" domain="[('execution_status', '=', 'unauthorized')]"/>
                 <separator/>
-                <filter string="By Sender Phone" name="group_sender" context="{'group_by': 'sender_phone'}"/>
+                <filter string="By Conversation / Phone" name="group_conversation" context="{'group_by': 'conversation_id'}"/>
                 <filter string="By Matched Employee" name="group_employee" context="{'group_by': 'employee_id'}"/>
+                <filter string="By Client Site" name="group_site" context="{'group_by': 'site_id'}"/>
                 <filter string="By Direction" name="group_direction" context="{'group_by': 'direction'}"/>
                 <filter string="By Intent" name="group_intent" context="{'group_by': 'parsed_intent'}"/>
                 <filter string="By Status" name="group_status" context="{'group_by': 'execution_status'}"/>
@@ -86,7 +213,7 @@
     <record id="action_security_whatsapp_message_log" model="ir.actions.act_window">
         <field name="name">WhatsApp Message History &amp; Audit Log</field>
         <field name="res_model">security.whatsapp.message.log</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">kanban,list,pivot,graph,form</field>
         <field name="search_view_id" ref="view_security_whatsapp_message_log_search"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -97,12 +224,5 @@
             </p>
         </field>
     </record>
-
-    <!-- Menu Item for Message History -->
-    <menuitem id="menu_security_whatsapp_message_log"
-              name="WhatsApp Conversation Audit"
-              parent="security_ai_engine.menu_security_ai_engine_root"
-              action="action_security_whatsapp_message_log"
-              sequence="20"/>
 
 </odoo>

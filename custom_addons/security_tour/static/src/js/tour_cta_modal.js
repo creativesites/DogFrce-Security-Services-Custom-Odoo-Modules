@@ -18,6 +18,9 @@ export class TourCtaModal extends Component {
             submitting: false,
             submitted: false,
         });
+
+        this.submitLead = this.submitLead.bind(this);
+        this.close = this.close.bind(this);
     }
 
     async submitLead() {
@@ -28,7 +31,6 @@ export class TourCtaModal extends Component {
 
         this.state.submitting = true;
         try {
-            // Save lead inquiry notification
             await this.orm.create("security.notification", [{
                 title: `Demo Tour Trial Request: ${this.state.name}`,
                 body: `Prospect ${this.state.name} requested a trial setup. Phone: ${this.state.phone}`,

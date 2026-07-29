@@ -11,6 +11,7 @@
         "views/security_whatsapp_whitelist_views.xml",
         "views/security_whatsapp_config_views.xml",
         "views/security_whatsapp_message_log_views.xml",
+        "views/security_whatsapp_reply_wizard_views.xml",
         "views/menu_views.xml",
     ],
     "assets": {

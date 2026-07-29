@@ -262,4 +262,25 @@
         sequence="90"
         groups="hr.group_hr_user"
     />
+
+    <record id="view_security_payroll_period_form_l10n_na" model="ir.ui.view">
+        <field name="name">security.payroll.period.form.l10n.na</field>
+        <field name="model">security.payroll.period</field>
+        <field name="inherit_id" ref="security_payroll_core.view_security_payroll_period_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/field[@name='state']" position="before">
+                <button name="%(security_l10n_na.action_report_security_paye_submission)d"
+                        type="action"
+                        string="NamRA PAYE Report"
+                        class="btn-secondary"
+                        invisible="payslip_count == 0"/>
+                <button name="%(security_l10n_na.action_report_security_ssc_submission)d"
+                        type="action"
+                        string="SSC Report"
+                        class="btn-secondary"
+                        invisible="payslip_count == 0"/>
+            </xpath>
+        </field>
+    </record>
 </odoo>
+

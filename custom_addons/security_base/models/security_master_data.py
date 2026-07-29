@@ -121,7 +121,7 @@ class SecurityEmployeeCertification(models.Model):
         string="Expired",
     )
     days_until_expiry = fields.Integer(
-        compute="_compute_is_expired",
+        compute="_compute_days_until_expiry",
         store=False,
         string="Days Until Expiry",
     )
@@ -131,12 +131,18 @@ class SecurityEmployeeCertification(models.Model):
         today = date.today()
         for cert in self:
             if cert.expiry_date:
-                delta = (cert.expiry_date - today).days
-                cert.days_until_expiry = delta
-                cert.is_expired = delta < 0
+                cert.is_expired = cert.expiry_date < today
+            else:
+                cert.is_expired = False
+
+    @api.depends("expiry_date")
+    def _compute_days_until_expiry(self):
+        today = date.today()
+        for cert in self:
+            if cert.expiry_date:
+                cert.days_until_expiry = (cert.expiry_date - today).days
             else:
                 cert.days_until_expiry = 9999
-                cert.is_expired = False
 
     @api.constrains("issue_date", "expiry_date")
     def _check_dates(self):

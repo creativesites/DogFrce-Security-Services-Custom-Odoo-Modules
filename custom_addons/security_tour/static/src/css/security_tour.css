@@ -1,139 +1,211 @@
 /* ==========================================================================
-   DeployGuard Security Tour Engine — Modern CSS Tokens & Zuri Mascot Theme
+   DeployGuard Security Tour Engine — Spotlight Cutout & Design Tokens
    ========================================================================== */
 
-/* Target Element Highlight Pulse Aura */
-.o_tour_highlight_pulse {
-    position: relative !important;
-    z-index: 1050 !important;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 20px rgba(59, 130, 246, 0.4) !important;
-    border-radius: 8px !important;
-    animation: o_tour_pulse 2s infinite ease-in-out !important;
+/* Fullscreen Dimmed Backdrop (Fallback when no target is active) */
+.dg-tour-spotlight-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    background: rgba(15, 23, 42, 0.72);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    pointer-events: auto;
+    transition: opacity 0.3s ease;
 }
 
-@keyframes o_tour_pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7), 0 0 10px rgba(59, 130, 246, 0.3);
+/* Spotlight Cutout Hole with Spread Shadow Mask Overlay */
+.dg-tour-spotlight-cutout {
+    position: fixed;
+    z-index: 99992;
+    background: transparent;
+    border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72),
+                0 0 0 3px #3b82f6,
+                0 0 25px rgba(59, 130, 246, 0.9),
+                0 0 50px rgba(59, 130, 246, 0.4);
+    pointer-events: none;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: dg_cutout_pulse 2s infinite ease-in-out;
+}
+
+@keyframes dg_cutout_pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 0 3px #3b82f6, 0 0 20px rgba(59, 130, 246, 0.7);
     }
-    70% {
-        box-shadow: 0 0 0 12px rgba(59, 130, 246, 0), 0 0 25px rgba(59, 130, 246, 0.6);
-    }
-    100% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0), 0 0 10px rgba(59, 130, 246, 0.3);
+    50% {
+        box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72), 0 0 0 5px #60a5fa, 0 0 35px rgba(59, 130, 246, 1);
     }
 }
 
-/* Custom Tour Popover Card */
+/* Floating Tour Popover Card */
 .dg-tour-popover {
-    max-width: 380px !important;
-    border-radius: 16px !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
-    background: rgba(15, 23, 42, 0.94) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    color: #f8fafc !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.2) !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    font-family: inherit !important;
+    max-width: 400px;
+    width: 380px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: linear-gradient(165deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.96) 100%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: #f8fafc;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.3);
+    padding: 0;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    transition: all 0.3s ease-in-out;
+    z-index: 100000;
 }
 
+/* Animated Progress Bar Track */
+.dg-tour-progress-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.dg-tour-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 50%, #fbbf24 100%);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Header */
 .dg-tour-header {
-    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%) !important;
-    padding: 12px 16px !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .dg-tour-mascot-box {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .dg-tour-mascot-img {
-    width: 36px !important;
-    height: 36px !important;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)) !important;
+    width: 42px;
+    height: 42px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+    animation: dg_mascot_float 3s ease-in-out infinite;
+}
+
+@keyframes dg_mascot_float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
 }
 
 .dg-tour-title-text {
-    font-size: 14px !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    line-height: 1.2 !important;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.25;
+    letter-spacing: -0.2px;
 }
 
 .dg-tour-subtitle {
-    font-size: 10px !important;
-    color: #93c5fd !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    font-size: 11px;
+    color: #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-weight: 600;
+    margin-top: 2px;
 }
 
 .dg-tour-body {
-    padding: 16px !important;
-    font-size: 13px !important;
-    line-height: 1.5 !important;
-    color: #e2e8f0 !important;
+    padding: 18px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #e2e8f0;
 }
 
 .dg-tour-footer {
-    padding: 12px 16px !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    padding: 14px 18px;
+    background: rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .dg-tour-progress {
-    font-size: 11px !important;
-    color: #94a3b8 !important;
-    font-weight: 600 !important;
+    font-size: 12px;
+    color: #94a3b8;
+    font-weight: 600;
 }
 
 .dg-tour-actions {
-    display: flex !important;
-    gap: 8px !important;
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
 
 .dg-tour-btn {
-    border-radius: 8px !important;
-    padding: 6px 14px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    cursor: pointer !important;
-    transition: all 0.2s ease !important;
-    border: none !important;
+    border-radius: 9px;
+    padding: 7px 15px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .dg-tour-btn-skip {
-    background: transparent !important;
-    color: #94a3b8 !important;
+    background: transparent;
+    color: #94a3b8;
 }
 .dg-tour-btn-skip:hover {
-    color: #f1f5f9 !important;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.dg-tour-btn-prev {
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.dg-tour-btn-prev:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
 }
 
 .dg-tour-btn-next {
-    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
-    color: #ffffff !important;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4) !important;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 .dg-tour-btn-next:hover {
-    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+    background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 576px) {
+    .dg-tour-popover {
+        width: calc(100vw - 32px) !important;
+        max-width: none !important;
+        bottom: 16px !important;
+        right: 16px !important;
+        left: 16px !important;
+    }
 }
 
 /* Systray Icon Launcher */
 .o_tour_systray_item {
+    position: relative !important;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 10px;
+    padding: 0 12px;
     height: 100%;
     color: #64748b;
     transition: color 0.2s ease;
@@ -143,12 +215,23 @@
 }
 
 .o_tour_systray_icon {
-    font-size: 16px;
+    font-size: 17px;
 }
 
+/* Systray Dropdown Menu Positioning & Scroll Fix */
 .o_tour_dropdown_menu {
-    min-width: 280px;
-    padding: 8px;
-    border-radius: 12px;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    left: auto !important;
+    margin-top: 8px !important;
+    min-width: 330px !important;
+    max-width: 380px !important;
+    max-height: calc(100vh - 80px) !important;
+    overflow-y: auto !important;
+    padding: 10px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22) !important;
+    background: #ffffff !important;
+    z-index: 1050 !important;
 }

@@ -3,6 +3,18 @@ from odoo.exceptions import ValidationError
 from datetime import date
 
 
+class SecurityRosterSlotResourceEquipment(models.Model):
+    _inherit = "security.roster.slot.resource"
+
+    equipment_ids = fields.Many2many(
+        "security.equipment.item",
+        "slot_resource_equipment_rel",
+        "resource_id",
+        "equipment_id",
+        string="Assigned Equipment Units",
+    )
+
+
 class SecurityEquipmentCategory(models.Model):
     _name = "security.equipment.category"
     _description = "Security Equipment Category"
@@ -401,11 +413,6 @@ class SecurityEquipmentDamage(models.Model):
     approved_by_id = fields.Many2one(
         "res.users",
         readonly=True,
-    )
-    payslip_id = fields.Many2one(
-        "security.payslip",
-        readonly=True,
-        ondelete="set null",
     )
 
     @api.constrains("cost_repair_replace", "deduction_amount", "deduction_repayment_months")

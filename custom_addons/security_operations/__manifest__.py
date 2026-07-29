@@ -14,6 +14,7 @@
         "views/security_operations_views.xml",
         "views/security_client_contract_views.xml",
         "views/security_guard_availability_views.xml",
+        "views/security_demand_plan_views.xml",
         "views/ops_dashboard_actions.xml",
     ],
     "assets": {

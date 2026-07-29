@@ -4,6 +4,19 @@ from datetime import date, datetime
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# ROSTER SLOT RESOURCE EXTENSION (FLEET)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SecurityRosterSlotResourceFleet(models.Model):
+    _inherit = "security.roster.slot.resource"
+
+    vehicle_id = fields.Many2one(
+        "security.vehicle",
+        string="Assigned Patrol Vehicle",
+    )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # VEHICLE MASTER REGISTER
 # ─────────────────────────────────────────────────────────────────────────────
 

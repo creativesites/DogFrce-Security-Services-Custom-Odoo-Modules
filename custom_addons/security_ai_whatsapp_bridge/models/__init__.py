@@ -4,3 +4,4 @@ from . import security_whatsapp_config
 from . import security_whatsapp_message_log
 from . import whatsapp_whitelist
 from . import whatsapp_dashboard
+from . import security_whatsapp_reply_wizard

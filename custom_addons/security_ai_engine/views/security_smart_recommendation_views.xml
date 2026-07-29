@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- List View -->
+    <record id="view_security_smart_recommendation_list" model="ir.ui.view">
+        <field name="name">security.smart.recommendation.list</field>
+        <field name="model">security.smart.recommendation</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'applied'" decoration-muted="state == 'dismissed'">
+                <field name="name"/>
+                <field name="impact_display" class="fw-bold"/>
+                <field name="action_type"/>
+                <field name="impact_category"/>
+                <field name="financial_saving" widget="monetary" sum="Total Savings"/>
+                <field name="guard_a_id"/>
+                <field name="guard_b_id"/>
+                <field name="state" widget="badge"/>
+                <button name="action_apply"
+                        string="Apply Action"
+                        type="object"
+                        class="btn-primary btn-sm"
+                        invisible="state != 'pending'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_security_smart_recommendation_search" model="ir.ui.view">
+        <field name="name">security.smart.recommendation.search</field>
+        <field name="model">security.smart.recommendation</field>
+        <field name="arch" type="xml">
+            <search string="Search Smart Recommendations">
+                <field name="name"/>
+                <field name="impact_display"/>
+                <filter name="filter_pending" string="Pending" domain="[('state', '=', 'pending')]"/>
+                <filter name="filter_applied" string="Applied" domain="[('state', '=', 'applied')]"/>
+                <separator/>
+                <filter name="group_category" string="Impact Category" context="{'group_by': 'impact_category'}"/>
+                <filter name="group_type" string="Action Type" context="{'group_by': 'action_type'}"/>
+                <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_security_smart_recommendation_form" model="ir.ui.view">
+        <field name="name">security.smart.recommendation.form</field>
+        <field name="model">security.smart.recommendation</field>
+        <field name="arch" type="xml">
+            <form string="Smart Prescriptive Recommendation">
+                <header>
+                    <button name="action_apply"
+                            string="Apply Action Now"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'pending'"/>
+                    <button name="action_dismiss"
+                            string="Dismiss"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'pending'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="pending,applied,dismissed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Action Headline..."/>
+                        </h1>
+                        <h2 class="text-success">
+                            <field name="impact_display"/>
+                        </h2>
+                    </div>
+
+                    <group>
+                        <group string="Impact &amp; Action Type">
+                            <field name="action_type"/>
+                            <field name="impact_category"/>
+                            <field name="financial_saving" widget="monetary"/>
+                        </group>
+                        <group string="Target Entities">
+                            <field name="guard_a_id"/>
+                            <field name="guard_b_id"/>
+                            <field name="vehicle_id"/>
+                        </group>
+                    </group>
+
+                    <group string="AI Operational Rationale">
+                        <field name="description" placeholder="Operational rationale..."/>
+                    </group>
+
+                    <group string="Slot &amp; Location Details">
+                        <group>
+                            <field name="source_slot_id"/>
+                            <field name="target_slot_id"/>
+                        </group>
+                        <group>
+                            <field name="source_site_id"/>
+                            <field name="target_site_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_security_smart_recommendation" model="ir.actions.act_window">
+        <field name="name">Smart Recommendations &amp; Prescriptive Actions</field>
+        <field name="res_model">security.smart.recommendation</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontract_smiling_face">
+                No active Smart Action Recommendations!
+            </p>
+            <p>
+                DeployGuard continuously scans roster shifts, workloads, and fleet logistics to prescribe high-impact operational optimizations.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item -->
+    <menuitem id="menu_security_smart_recommendation"
+              name="Smart Actions"
+              parent="security_operations.menu_security_operations_root"
+              action="action_security_smart_recommendation"
+              sequence="28"/>
+
+</odoo>

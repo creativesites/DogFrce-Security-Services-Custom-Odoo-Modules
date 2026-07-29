@@ -157,3 +157,14 @@ class SecurityEquipmentPayrollBridge(models.AbstractModel):
                 "severity": "medium",
                 "description": alert_msg,
             })
+
+
+class SecurityEquipmentDamage(models.Model):
+    _inherit = "security.equipment.damage"
+
+    payslip_id = fields.Many2one(
+        "security.payslip",
+        readonly=True,
+        ondelete="set null",
+    )
+

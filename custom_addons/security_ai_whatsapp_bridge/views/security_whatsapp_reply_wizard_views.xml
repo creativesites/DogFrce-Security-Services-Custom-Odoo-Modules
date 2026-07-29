@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Reply Wizard — Form View -->
+    <record id="view_security_whatsapp_reply_wizard_form" model="ir.ui.view">
+        <field name="name">security.whatsapp.reply.wizard.form</field>
+        <field name="model">security.whatsapp.reply.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Compose WhatsApp Dispatch Message">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="sender_name" readonly="1" class="text-primary"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Recipient Identity">
+                            <field name="recipient_phone"/>
+                            <field name="employee_id" readonly="1"/>
+                        </group>
+                        <group string="Template &amp; Quick Dispatch">
+                            <field name="template_type" widget="radio"/>
+                        </group>
+                    </group>
+                    <group string="WhatsApp Message Content">
+                        <field name="message_body" placeholder="Type your message or select a template above..." rows="6"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_send_whatsapp_message"
+                            string="Send WhatsApp Message"
+                            type="object"
+                            class="btn-primary"
+                            icon="fa-paper-plane"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Reply Wizard — Action -->
+    <record id="action_security_whatsapp_reply_wizard" model="ir.actions.act_window">
+        <field name="name">Compose WhatsApp Message</field>
+        <field name="res_model">security.whatsapp.reply.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

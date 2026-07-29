@@ -24,13 +24,13 @@ class SecurityRosterSlot(models.Model):
         help="The system user who authorized the bypass of compliance matching rules.",
     )
 
-    @api.constrains("employee_id", "post_id", "shift_requirement_id")
+    @api.constrains("employee_id", "post_id", "shift_requirement_id", "is_override", "compliance_override")
     def _check_guard_eligibility(self):
         """
         Extends roster eligibility constraints. If compliance override is checked and justified,
         it registers an unalterable audit-trail log inside the event bus and skips the constraints block.
         """
-        overridden_slots = self.filtered(lambda s: s.compliance_override)
+        overridden_slots = self.filtered(lambda s: s.compliance_override or s.is_override)
         standard_slots = self - overridden_slots
 
         # 1. Standard slots undergo default Odoo eligibility constraints
@@ -39,7 +39,8 @@ class SecurityRosterSlot(models.Model):
 
         # 2. Process overridden slots: enforce mandatory justification and register security audit trail
         for slot in overridden_slots:
-            if not slot.compliance_override_reason:
+            reason = (slot.compliance_override_reason or slot.override_reason or "").strip()
+            if not reason:
                 raise ValidationError(_(
                     "Compliance Override requested for Guard '%s' on Shift Date '%s' at Post '%s' "
                     "but no Override Justification was specified! Bypassing compliance requires a justification."
@@ -47,13 +48,13 @@ class SecurityRosterSlot(models.Model):
 
             # Register a permanent compliance audit-trail log on the Central Intelligence Bus
             payload = {
-                "roster_slot": slot.name,
-                "guard": slot.employee_id.name,
+                "roster_slot": slot.name or "",
+                "guard": slot.employee_id.name if slot.employee_id else "",
                 "site": slot.site_id.name if slot.site_id else _("Unknown Site"),
                 "post": slot.post_id.name if slot.post_id else _("Unknown Post"),
                 "shift_date": str(slot.shift_date),
-                "authorized_by": slot.compliance_override_user_id.name or slot.env.user.name,
-                "justification": slot.compliance_override_reason,
+                "authorized_by": slot.compliance_override_user_id.name if slot.compliance_override_user_id else slot.env.user.name,
+                "justification": reason,
             }
 
             self.env["security.event.log"].register_event(

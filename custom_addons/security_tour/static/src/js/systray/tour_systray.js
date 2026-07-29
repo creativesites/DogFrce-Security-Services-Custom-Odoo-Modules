@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart } from "@odoo/owl";
+import { Component, useState, onWillStart, useRef, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -9,12 +9,28 @@ class TourSystrayMenu extends Component {
     static props = {};
 
     setup() {
+        this.rootRef = useRef("root");
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.tourService = useService("tour_service");
         this.state = useState({
             open: false,
             tours: [],
+        });
+
+        // Close dropdown when clicking outside
+        this.onOutsideClick = (ev) => {
+            if (this.state.open && this.rootRef.el && !this.rootRef.el.contains(ev.target)) {
+                this.state.open = false;
+            }
+        };
+
+        onMounted(() => {
+            document.addEventListener("click", this.onOutsideClick, true);
+        });
+
+        onWillUnmount(() => {
+            document.removeEventListener("click", this.onOutsideClick, true);
         });
 
         onWillStart(async () => {
@@ -31,7 +47,10 @@ class TourSystrayMenu extends Component {
         }
     }
 
-    toggleDropdown() {
+    toggleDropdown(ev) {
+        if (ev) {
+            ev.stopPropagation();
+        }
         this.state.open = !this.state.open;
         if (this.state.open) {
             this.loadTours();

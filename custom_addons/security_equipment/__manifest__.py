@@ -11,7 +11,7 @@
         - Automatic Odoo payslip deductions for lost or damaged equipment.
     """,
     "author": "Google DeepMind team working on Advanced Agentic Coding",
-    "depends": ["security_base", "security_payroll_core", "security_operations"],
+    "depends": ["security_base", "security_operations"],
     "data": [
         "security/ir.model.access.csv",
         "data/ir_sequence_data.xml",

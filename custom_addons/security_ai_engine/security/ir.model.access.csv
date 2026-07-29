@@ -7,3 +7,4 @@ access_security_ai_cache_manager,security.ai.cache manager,model_security_ai_cac
 access_security_ai_cache_user,security.ai.cache user,model_security_ai_cache,base.group_user,1,0,0,0
 access_security_ai_chat_session_user,security.ai.chat.session user,model_security_ai_chat_session,base.group_user,1,1,1,1
 access_security_ai_chat_message_user,security.ai.chat.message user,model_security_ai_chat_message,base.group_user,1,1,1,1
+access_security_smart_recommendation_user,security.smart.recommendation user,model_security_smart_recommendation,base.group_user,1,1,1,1

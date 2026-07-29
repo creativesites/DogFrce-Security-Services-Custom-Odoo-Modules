@@ -17,6 +17,7 @@
         "security_leave",
         "security_documents",
         "security_payroll_core",
+        "security_fleet",
         "web",
     ],
     "data": [
@@ -24,6 +25,7 @@
         "views/security_ai_config_views.xml",
         "views/security_ai_client_actions.xml",
         "views/security_ai_chat_views.xml",
+        "views/security_smart_recommendation_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

@@ -136,13 +136,13 @@ class SecurityWhatsAppBridge(models.AbstractModel):
 
         partner = None
         if not emp:
-            partners = self.env["res.partner"].sudo().search([
-                "|",
-                ("mobile", "!=", False),
-                ("phone", "!=", False)
-            ])
+            partner_domain = [("phone", "!=", False)]
+            if "mobile" in self.env["res.partner"]._fields:
+                partner_domain = ["|", ("mobile", "!=", False), ("phone", "!=", False)]
+            partners = self.env["res.partner"].sudo().search(partner_domain)
             for p in partners:
-                p_digits = re.sub(r"[^\d]", "", (p.mobile or p.phone or ""))
+                p_mobile = getattr(p, "mobile", False) or ""
+                p_digits = re.sub(r"[^\d]", "", (p_mobile or p.phone or ""))
                 if search_suffix and search_suffix in p_digits:
                     partner = p
                     break
@@ -223,20 +223,22 @@ class SecurityWhatsAppBridge(models.AbstractModel):
     @api.model
     def _log_message(self, sender, body, direction="inbound", intent="", status="success", is_auth=True, sender_name=None, employee_id=False, partner_id=False):
         try:
-            self.env["security.whatsapp.message.log"].sudo().create({
-                "sender_phone": sender,
-                "sender_name": sender_name,
-                "employee_id": employee_id,
-                "partner_id": partner_id,
-                "direction": direction,
-                "raw_body": body,
-                "parsed_intent": intent,
-                "execution_status": status,
-                "is_authorized": is_auth,
-                "timestamp": fields.Datetime.now(),
-            })
+            with self.env.cr.savepoint():
+                self.env["security.whatsapp.message.log"].sudo().create({
+                    "sender_phone": sender,
+                    "sender_name": sender_name,
+                    "employee_id": employee_id,
+                    "partner_id": partner_id,
+                    "direction": direction,
+                    "message_type": "text",
+                    "raw_body": body,
+                    "parsed_intent": intent,
+                    "execution_status": status,
+                    "is_authorized": is_auth,
+                    "timestamp": fields.Datetime.now(),
+                })
         except Exception as e:
-            _logger.error("WhatsApp Bridge | Failed to log message to audit history: %s", str(e))
+            _logger.error("WhatsApp Bridge | Failed to log message to audit history: %s", str(e), exc_info=True)
 
     # ──────────────────────────────────────────────────────────────────────────
     # BUSINESS LOGIC: GUARD QUERY HANDLER

@@ -48,10 +48,11 @@
 
     <menuitem
         id="menu_security_roster_generate_wizard"
-        name="Generate Roster"
-        parent="security_operations.menu_security_roster"
+        name="Generate Roster (Legacy)"
+        parent="security_operations.menu_security_roster_records"
         action="action_security_roster_generate_wizard"
-        sequence="3"
+        sequence="99"
+        active="False"
         groups="hr.group_hr_user"
     />
 </odoo>

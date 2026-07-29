@@ -42,4 +42,5 @@ class SecurityWhatsAppWhitelist(models.Model):
             if not self.name or self.name == "New Contact":
                 self.name = self.partner_id.name
             if not self.phone_number:
-                self.phone_number = self.partner_id.mobile or self.partner_id.phone or ""
+                p_mobile = getattr(self.partner_id, "mobile", False) or ""
+                self.phone_number = p_mobile or self.partner_id.phone or ""

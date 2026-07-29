@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     
+    <record id="view_security_roster_slot_form_equipment" model="ir.ui.view">
+        <field name="name">security.roster.slot.form.equipment</field>
+        <field name="model">security.roster.slot</field>
+        <field name="inherit_id" ref="security_operations.view_security_roster_slot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='resource_requirement_ids']/list/field[@name='is_fulfilled']" position="after">
+                <field name="equipment_ids" widget="many2many_tags"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="view_security_equipment_category_tree" model="ir.ui.view">
         <field name="name">security.equipment.category.tree</field>
         <field name="model">security.equipment.category</field>
@@ -387,7 +398,6 @@
                             <field name="deduction_amount"/>
                             <field name="deduction_repayment_months"/>
                             <field name="approved_by_id"/>
-                            <field name="payslip_id" invisible="state != 'deducted'"/>
                         </group>
                     </group>
                     <notebook>

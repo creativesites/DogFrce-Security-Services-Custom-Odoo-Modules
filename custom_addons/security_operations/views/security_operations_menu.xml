@@ -18,6 +18,22 @@
         groups="hr.group_hr_user"
     />
 
+    <menuitem
+        id="menu_security_roster_records"
+        name="Roster Records"
+        parent="security_operations.menu_security_roster"
+        sequence="50"
+        groups="hr.group_hr_user"
+    />
+
+    <menuitem
+        id="menu_security_roster_config"
+        name="Configuration &amp; Requirements"
+        parent="security_operations.menu_security_roster"
+        sequence="60"
+        groups="hr.group_hr_user"
+    />
+
     <!-- ─── Workforce ─── -->
     <menuitem
         id="menu_security_workforce"

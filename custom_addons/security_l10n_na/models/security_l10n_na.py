@@ -2,16 +2,7 @@ from odoo import api, fields, models
 
 
 class SecurityPayrollRuleSet(models.Model):
-    _name = "security.payroll.rule.set"
-    _description = "Security Payroll Rule Set"
-    _order = "country_code, effective_from desc, id desc"
-
-    name = fields.Char(required=True)
-    country_code = fields.Char(required=True, default="NA")
-    currency_id = fields.Many2one("res.currency", required=True)
-    effective_from = fields.Date(required=True)
-    effective_to = fields.Date()
-    active = fields.Boolean(default=True)
+    _inherit = "security.payroll.rule.set"
 
     employee_ssc_rate = fields.Float(
         string="Employee SSC Rate",

@@ -81,7 +81,7 @@
     <menuitem
         id="menu_security_post_type"
         name="Post Types"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_post_type"
         sequence="10"
     />
@@ -158,7 +158,7 @@
     <menuitem
         id="menu_security_shift_template"
         name="Shift Templates"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_shift_template"
         sequence="20"
     />
@@ -316,7 +316,7 @@
     <menuitem
         id="menu_security_client_site"
         name="Client Sites"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_client_site"
         sequence="25"
     />
@@ -420,6 +420,17 @@
                                 </list>
                             </field>
                         </page>
+                        <page string="Resource Requirements">
+                            <field name="resource_requirement_ids">
+                                <list editable="bottom">
+                                    <field name="resource_category"/>
+                                    <field name="name"/>
+                                    <field name="qty_required"/>
+                                    <field name="is_mandatory" widget="boolean_toggle"/>
+                                    <field name="notes"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Notes">
                             <field name="note" placeholder="Specific instructions for this post..."/>
                         </page>
@@ -447,7 +458,7 @@
     <menuitem
         id="menu_security_post"
         name="Security Posts"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_post"
         sequence="30"
     />
@@ -542,7 +553,7 @@
     <menuitem
         id="menu_security_shift_requirement"
         name="Shift Requirements"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_shift_requirement"
         sequence="35"
     />
@@ -608,7 +619,7 @@
     <menuitem
         id="menu_security_site_requirement"
         name="Site Requirements"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_site_requirement"
         sequence="40"
     />
@@ -669,7 +680,7 @@
     <menuitem
         id="menu_security_guard_exclusion"
         name="Guard Exclusions"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_config"
         action="action_security_guard_exclusion"
         sequence="45"
     />
@@ -820,10 +831,10 @@
 
     <menuitem
         id="menu_security_roster_batch"
-        name="Monthly Roster Batches"
-        parent="security_operations.menu_security_roster"
+        name="Roster Batches"
+        parent="security_operations.menu_security_roster_records"
         action="action_security_roster_batch"
-        sequence="48"
+        sequence="10"
     />
 
     <!-- ======================= -->
@@ -882,15 +893,34 @@
                             <field name="shift_template_id"/>
                             <field name="slot_number"/>
                             <field name="employee_id" placeholder="Assign Guard..."/>
+                            <field name="readiness_score" widget="progressbar"/>
+                            <field name="readiness_state" widget="badge" decoration-success="readiness_state == 'ready'" decoration-warning="readiness_state == 'partial'" decoration-danger="readiness_state == 'critical'"/>
+                            <field name="readiness_summary" readonly="1"/>
                             <field name="overtime_planned" widget="boolean_toggle"/>
                             <field name="high_value_shift" readonly="1"/>
                             <field name="fairness_warning" readonly="1"/>
                         </group>
                     </group>
-                    <group>
-                        <field name="override_reason" placeholder="If validation is bypassed, explain why..."/>
-                        <field name="note"/>
-                    </group>
+                    <notebook>
+                        <page string="Resource Allocations">
+                            <field name="resource_requirement_ids">
+                                <list editable="bottom">
+                                    <field name="resource_category"/>
+                                    <field name="name"/>
+                                    <field name="qty_required"/>
+                                    <field name="qty_allocated" readonly="1"/>
+                                    <field name="is_mandatory" widget="boolean_toggle"/>
+                                    <field name="is_fulfilled" widget="boolean_toggle" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Override &amp; Notes">
+                            <group>
+                                <field name="override_reason" placeholder="If validation is bypassed, explain why..."/>
+                                <field name="note"/>
+                            </group>
+                        </page>
+                    </notebook>
                 </sheet>
             </form>
         </field>
@@ -914,10 +944,12 @@
     <menuitem
         id="menu_security_roster_slot"
         name="Roster Slots"
-        parent="security_operations.menu_security_roster"
+        parent="security_operations.menu_security_roster_records"
         action="action_security_roster_slot"
-        sequence="50"
+        sequence="20"
     />
+
+
 
     <!-- ======================= -->
     <!-- SITE MANAGEMENT HUB     -->

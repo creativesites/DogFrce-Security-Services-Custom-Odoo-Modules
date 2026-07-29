@@ -55,7 +55,8 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Menu Under Help / Settings -->
+    <!-- Product Tour Menus (Disabled per user request) -->
+    <!--
     <menuitem id="menu_security_tour_root"
               name="Product Tours"
               parent="security_help.menu_help_root"
@@ -66,4 +67,5 @@
               parent="menu_security_tour_root"
               action="action_security_tour_definition"
               sequence="10"/>
+    -->
 </odoo>

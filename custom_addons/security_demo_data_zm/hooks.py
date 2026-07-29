@@ -14,6 +14,8 @@ class DemoBuilderZM:
     def run(self):
         # Establish currency context
         zmw = self.env.ref("base.ZMW", raise_if_not_found=False) or self.env.company.currency_id
+        if zmw and not zmw.active:
+            zmw.write({"active": True})
         
         # 1. Update main company details to Sentinel Security Zambia Ltd
         self._update_company_details()
@@ -97,6 +99,8 @@ class DemoBuilderZM:
         
         # Try to change currency to ZMW, but gracefully catch UserError if journal items already exist
         if zmw_currency:
+            if not zmw_currency.active:
+                zmw_currency.write({"active": True})
             try:
                 company.write({"currency_id": zmw_currency.id})
             except Exception as e:

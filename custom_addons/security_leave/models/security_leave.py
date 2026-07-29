@@ -364,9 +364,11 @@ class SecurityRosterSlot(models.Model):
                 limit=1,
             )
 
-    @api.constrains("employee_id", "shift_date", "leave_request_id")
+    @api.constrains("employee_id", "shift_date", "leave_request_id", "is_override")
     def _check_approved_leave_conflict(self):
         for slot in self:
+            if slot.is_override or getattr(slot, "compliance_override", False):
+                continue
             if slot.employee_id and slot.leave_request_id:
                 raise ValidationError(
                     "A guard with approved leave cannot be assigned to a roster slot on that date."

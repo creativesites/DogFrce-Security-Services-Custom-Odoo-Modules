@@ -321,6 +321,11 @@ class SecurityPost(models.Model):
         "post_id",
         string="Shift Requirements",
     )
+    resource_requirement_ids = fields.One2many(
+        "security.post.resource.requirement",
+        "post_id",
+        string="Resource Requirements",
+    )
     note = fields.Text()
 
     @api.onchange("site_id")
@@ -1079,7 +1084,148 @@ class SecurityRosterSlot(models.Model):
         compute="_compute_fairness_warning",
         store=True,
     )
+    resource_requirement_ids = fields.One2many(
+        "security.roster.slot.resource",
+        "slot_id",
+        string="Resource Requirements",
+    )
+    readiness_score = fields.Float(
+        string="Readiness Score (%)",
+        compute="_compute_readiness",
+        store=True,
+        default=0.0,
+    )
+    readiness_state = fields.Selection(
+        [
+            ("ready", "100% Operational"),
+            ("partial", "Partial Readiness"),
+            ("critical", "Critical Gap"),
+        ],
+        string="Readiness State",
+        compute="_compute_readiness",
+        store=True,
+        default="critical",
+    )
+    readiness_summary = fields.Char(
+        string="Readiness Summary",
+        compute="_compute_readiness",
+        store=True,
+    )
     note = fields.Text()
+
+    @api.depends(
+        "employee_id",
+        "resource_requirement_ids",
+        "resource_requirement_ids.is_fulfilled",
+        "resource_requirement_ids.is_mandatory",
+        "resource_requirement_ids.qty_allocated",
+        "resource_requirement_ids.qty_required",
+    )
+    def _compute_readiness(self):
+        for slot in self:
+            reqs = slot.resource_requirement_ids
+            if not reqs:
+                if slot.employee_id:
+                    slot.readiness_score = 100.0
+                    slot.readiness_state = "ready"
+                    slot.readiness_summary = "100% Operational (Guard Assigned)"
+                else:
+                    slot.readiness_score = 0.0
+                    slot.readiness_state = "critical"
+                    slot.readiness_summary = "Missing: Security Guard"
+                continue
+
+            total_reqs = len(reqs)
+            fulfilled_total = len(reqs.filtered(lambda r: r.is_fulfilled))
+            mandatory_reqs = reqs.filtered(lambda r: r.is_mandatory)
+            total_mandatory = len(mandatory_reqs)
+            fulfilled_mandatory = len(mandatory_reqs.filtered(lambda r: r.is_fulfilled))
+
+            score = round((fulfilled_total / total_reqs) * 100.0, 1) if total_reqs > 0 else 100.0
+            slot.readiness_score = score
+
+            unfulfilled_mandatory = [r.name for r in mandatory_reqs if not r.is_fulfilled]
+            unfulfilled_optional = [r.name for r in reqs.filtered(lambda r: not r.is_mandatory) if not r.is_fulfilled]
+
+            if total_mandatory > 0 and fulfilled_mandatory < total_mandatory:
+                slot.readiness_state = "critical"
+                slot.readiness_summary = f"Missing: {', '.join(unfulfilled_mandatory)}"
+            elif unfulfilled_optional:
+                slot.readiness_state = "partial"
+                slot.readiness_summary = f"Missing Optional: {', '.join(unfulfilled_optional)}"
+            else:
+                slot.readiness_state = "ready"
+                slot.readiness_summary = "100% Fully Operational"
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        slots = super().create(vals_list)
+        for slot in slots:
+            if slot.post_id and slot.post_id.resource_requirement_ids and not slot.resource_requirement_ids:
+                resource_vals = []
+                for req in slot.post_id.resource_requirement_ids:
+                    resource_vals.append({
+                        "slot_id": slot.id,
+                        "resource_category": req.resource_category,
+                        "name": req.name,
+                        "qty_required": req.qty_required,
+                        "is_mandatory": req.is_mandatory,
+                    })
+                if resource_vals:
+                    self.env["security.roster.slot.resource"].create(resource_vals)
+        slots.action_auto_allocate_resources()
+        return slots
+
+    def action_auto_allocate_resources(self):
+        """
+        Auto-allocate available vehicles and equipment to unfulfilled slot resource requirements.
+        Prevents double-booking same vehicle or equipment unit on the same shift date.
+        """
+        for slot in self:
+            if not slot.resource_requirement_ids:
+                continue
+
+            shift_date = slot.shift_date
+            assigned_vehicles = []
+            if "security.vehicle" in self.env and hasattr(self.env["security.roster.slot.resource"], "vehicle_id"):
+                assigned_vehicles = self.env["security.roster.slot.resource"].search([
+                    ("slot_id.shift_date", "=", shift_date),
+                    ("slot_id.id", "!=", slot.id),
+                    ("vehicle_id", "!=", False),
+                ]).mapped("vehicle_id.id")
+
+            assigned_equipment = []
+            if "security.equipment" in self.env and hasattr(self.env["security.roster.slot.resource"], "equipment_ids"):
+                assigned_equipment = self.env["security.roster.slot.resource"].search([
+                    ("slot_id.shift_date", "=", shift_date),
+                    ("slot_id.id", "!=", slot.id),
+                    ("equipment_ids", "!=", False),
+                ]).mapped("equipment_ids.id")
+
+            for req in slot.resource_requirement_ids:
+                if req.is_fulfilled:
+                    continue
+
+                if req.resource_category == "vehicle" and hasattr(req, "vehicle_id") and not req.vehicle_id and "security.vehicle" in self.env:
+                    avail_vehicle = self.env["security.vehicle"].search([
+                        ("id", "not in", assigned_vehicles),
+                        ("active", "=", True),
+                    ], limit=1)
+                    if avail_vehicle:
+                        req.vehicle_id = avail_vehicle.id
+                        assigned_vehicles.append(avail_vehicle.id)
+
+                elif req.resource_category not in ["guard", "supervisor"] and hasattr(req, "equipment_ids") and "security.equipment" in self.env:
+                    avail_equip = self.env["security.equipment"].search([
+                        ("id", "not in", assigned_equipment),
+                        ("active", "=", True),
+                    ], limit=1)
+                    if avail_equip:
+                        req.equipment_ids = [(4, avail_equip.id)]
+                        assigned_equipment.append(avail_equip.id)
+
+            slot._compute_readiness()
+        return True
 
     @api.onchange("shift_requirement_id")
     def _onchange_shift_requirement_id(self):
@@ -1125,13 +1271,15 @@ class SecurityRosterSlot(models.Model):
             employee = slot.employee_id.name or "Unassigned"
             slot.name = f"{date} - {post} - {employee}"
 
-    @api.constrains("employee_id", "post_id", "shift_requirement_id")
+    @api.constrains("employee_id", "post_id", "shift_requirement_id", "is_override")
     def _check_guard_eligibility(self):
         for slot in self:
             employee = slot.employee_id
             post_type = slot.post_id.post_type_id
             requirement = slot.shift_requirement_id
             if not employee or not post_type:
+                continue
+            if slot.is_override or getattr(slot, "compliance_override", False):
                 continue
             if employee.security_disqualified:
                 raise ValidationError(

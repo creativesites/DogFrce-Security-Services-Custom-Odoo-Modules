@@ -5,13 +5,23 @@ from odoo.exceptions import ValidationError
 
 
 class SecurityPayrollRuleSet(models.Model):
-    _inherit = "security.payroll.rule.set"
+    _name = "security.payroll.rule.set"
+    _description = "Security Payroll Rule Set"
+    _order = "country_code, effective_from desc, id desc"
+
+    name = fields.Char(required=True)
+    country_code = fields.Char(required=True, default="ZM")
+    currency_id = fields.Many2one("res.currency", required=True)
+    effective_from = fields.Date(required=True, default=fields.Date.today)
+    effective_to = fields.Date()
+    active = fields.Boolean(default=True)
 
     template_id = fields.Many2one(
         "security.payslip.template",
         string="Payslip Template",
         help="Visual template for payslips generated under this rule set.",
     )
+
 
 
 class SecurityPayrollPeriod(models.Model):
