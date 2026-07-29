@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_shift_planner.ResourceInspectorModal" owl="1">
+    <div class="modal d-block" tabindex="-1" style="background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 1060;">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-slate-800" style="background: #ffffff;">
+                
+                <!-- Modal Header -->
+                <div class="modal-header border-bottom px-4 py-3 bg-slate-900 text-white d-flex align-items-center justify-content-between" style="background: #0f172a;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">
+                            <i class="fa fa-cubes fa-lg"/>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" style="font-size: 16px; color: #f8fafc;">
+                                Shift Operational Readiness Inspector
+                            </h5>
+                            <div class="text-slate-400" style="font-size: 12px; color: #94a3b8;">
+                                <span t-esc="props.slot.shift_date"/> • <span t-esc="props.slot.post_name || 'Site Post'"/>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" t-on-click="props.closeModal"/>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto;">
+                    
+                    <!-- Slot Summary Strip -->
+                    <div class="p-3 mb-4 rounded-3 d-flex align-items-center justify-content-between border" style="background: #f8fafc; border-color: #e2e8f0 !important;">
+                        <div>
+                            <div class="text-uppercase fw-semibold" style="font-size: 10px; color: #64748b; letter-spacing: 0.5px;">Readiness Score</div>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <span class="fw-bold" style="font-size: 20px;" t-esc="(props.slot.readiness_score || 0) + '%'"/>
+                                <t t-if="props.slot.readiness_state === 'ready'">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">🟢 100% Operational</span>
+                                </t>
+                                <t t-elif="props.slot.readiness_state === 'partial'">
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">🟡 Partial Readiness</span>
+                                </t>
+                                <t t-else="">
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">🔴 Critical Gap</span>
+                                </t>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-uppercase fw-semibold" style="font-size: 10px; color: #64748b; letter-spacing: 0.5px;">Assigned Guard</div>
+                            <div class="fw-bold text-slate-900 mt-1" style="font-size: 14px;" t-esc="props.slot.employee_name || 'Unassigned Guard'"/>
+                        </div>
+                    </div>
+
+                    <!-- Resource Allocation Matrix -->
+                    <h6 class="fw-bold text-slate-900 mb-3" style="font-size: 14px;">
+                        Required Operational Asset Checklist
+                    </h6>
+
+                    <t t-if="state.loading">
+                        <div class="text-center py-5 text-slate-500">
+                            <i class="fa fa-spinner fa-spin fa-2x mb-2" style="color: #3b82f6;"/>
+                            <div>Inspecting shift resources...</div>
+                        </div>
+                    </t>
+
+                    <t t-elif="state.resources.length === 0">
+                        <div class="alert alert-info border-0 rounded-3 text-center py-4">
+                            <i class="fa fa-info-circle fa-2x mb-2" style="color: #3b82f6;"/>
+                            <div class="fw-semibold">No resource requirements configured for this post.</div>
+                            <div class="small opacity-75 mt-1">Guard assignment determines readiness for standard posts.</div>
+                        </div>
+                    </t>
+
+                    <t t-else="">
+                        <div class="d-flex flex-column gap-3">
+                            <t t-foreach="state.resources" t-as="res" t-key="res.id">
+                                <div t-att-class="'p-3 rounded-3 border d-flex align-items-center justify-content-between ' + (res.is_fulfilled ? 'bg-success-subtle border-success-subtle' : (res.is_mandatory ? 'bg-danger-subtle border-danger-subtle' : 'bg-warning-subtle border-warning-subtle'))">
+                                    
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div t-att-class="'rounded-circle p-2 d-flex align-items-center justify-content-center ' + (res.is_fulfilled ? 'bg-success text-white' : 'bg-slate-200 text-slate-700')" style="width: 38px; height: 38px;">
+                                            <i t-att-class="'fa ' + getCategoryIcon(res.resource_category)"/>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-slate-900" style="font-size: 14px;">
+                                                <t t-esc="res.name"/>
+                                                <t t-if="res.is_mandatory">
+                                                    <span class="badge bg-danger ms-2" style="font-size: 9px;">MANDATORY</span>
+                                                </t>
+                                                <t t-else="">
+                                                    <span class="badge bg-secondary ms-2" style="font-size: 9px;">OPTIONAL</span>
+                                                </t>
+                                            </div>
+                                            <div class="small text-slate-600 mt-1">
+                                                Category: <span class="text-capitalize fw-semibold" t-esc="res.resource_category"/> • 
+                                                Qty Needed: <span class="fw-bold" t-esc="res.qty_required"/> • 
+                                                Allocated: <span t-att-class="'fw-bold ' + (res.is_fulfilled ? 'text-success' : 'text-danger')" t-esc="res.qty_allocated"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Quick Allocator Controls -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <t t-if="res.resource_category === 'vehicle'">
+                                            <select class="form-select form-select-sm border-slate-300"
+                                                    t-on-change="(ev) => this.allocateVehicle(res.id, ev.target.value)"
+                                                    style="min-width: 180px;">
+                                                <option value="">-- Assign Patrol Vehicle --</option>
+                                                <t t-foreach="state.availableVehicles" t-as="v" t-key="v.id">
+                                                    <option t-att-value="v.id" t-att-selected="res.vehicle_id &amp;&amp; res.vehicle_id[0] === v.id">
+                                                        <t t-esc="v.name"/> (<t t-esc="v.license_plate"/>)
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </t>
+
+                                        <t t-elif="res.resource_category !== 'guard' &amp;&amp; res.resource_category !== 'supervisor'">
+                                            <select class="form-select form-select-sm border-slate-300"
+                                                    t-on-change="(ev) => this.allocateEquipment(res.id, ev.target.value)"
+                                                    style="min-width: 180px;">
+                                                <option value="">+ Add Equipment Unit</option>
+                                                <t t-foreach="state.availableEquipment" t-as="eq" t-key="eq.id">
+                                                    <option t-att-value="eq.id">
+                                                        <t t-esc="eq.name"/> (<t t-esc="eq.serial_number || 'S/N'"/>)
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </t>
+
+                                        <t t-if="res.is_fulfilled">
+                                            <span class="badge bg-success text-white px-2 py-1" style="font-size: 11px;">
+                                                <i class="fa fa-check me-1"/>Fulfilled
+                                            </span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge bg-danger text-white px-2 py-1" style="font-size: 11px;">
+                                                <i class="fa fa-times me-1"/>Missing
+                                            </span>
+                                        </t>
+                                    </div>
+
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer border-top px-4 py-3 bg-slate-50 d-flex align-items-center justify-content-between" style="background: #f8fafc;">
+                    <span class="small text-slate-500">
+                        <i class="fa fa-shield-alt text-primary me-1"/>
+                        DeployGuard Operational Control Platform
+                    </span>
+                    <button type="button" class="btn btn-secondary px-4 py-2 fw-semibold" t-on-click="props.closeModal">
+                        Close Inspector
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</t>
+
+</templates>

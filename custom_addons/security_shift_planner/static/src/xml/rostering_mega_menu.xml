@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shift_planner.RosteringMegaMenu" owl="1">
+  <div class="rmm-overlay" t-on-keydown="onKeyDown" tabindex="0">
+    <!-- Header -->
+    <div class="rmm-header">
+      <div class="rmm-brand">
+        <div class="rmm-brand-icon"><i class="fa fa-th-large"/></div>
+        <div>
+          <h2 class="rmm-title">DeployGuard Rostering Command Center</h2>
+          <div class="rmm-subtitle">Executive Mega Menu &amp; Quick Action Launcher</div>
+        </div>
+      </div>
+
+      <!-- Search Input -->
+      <div class="rmm-search-box">
+        <i class="fa fa-search rmm-search-icon"/>
+        <input type="text"
+               class="rmm-search-input"
+               placeholder="Search rostering tools, features, rules..."
+               t-model="state.searchQuery"/>
+      </div>
+
+      <button class="rmm-close-btn" t-on-click="close" title="Close Mega Menu (Esc)">
+        <i class="fa fa-times"/>
+      </button>
+    </div>
+
+    <!-- 4-Column Mega Grid -->
+    <div class="rmm-grid">
+
+      <!-- Column 1: Core Workspaces -->
+      <div class="rmm-col" t-if="isGroupVisible('workspaces')">
+        <div class="rmm-col-header">
+          <div class="rmm-col-icon blue"><i class="fa fa-laptop"/></div>
+          <span class="rmm-col-title">Core Workspaces</span>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_shift_planner.action_rostering_hub')">
+          <div class="rmm-card-icon text-info"><i class="fa fa-calendar-check-o"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Rostering Hub
+              <span class="rmm-badge rmm-badge-primary">PRIMARY</span>
+            </div>
+            <div class="rmm-card-desc">Interactive weekly/monthly schedule grid with real-time gap counters &amp; guard search.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_shift_planner.action_roster_board')">
+          <div class="rmm-card-icon text-primary"><i class="fa fa-columns"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Roster Board
+              <span class="rmm-badge rmm-badge-success">KANBAN</span>
+            </div>
+            <div class="rmm-card-desc">Visual drag-and-drop matrix view for rapid shift reassignments.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_shift_planner.action_weekly_checkin')">
+          <div class="rmm-card-icon text-success"><i class="fa fa-check-square-o"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Weekly Check-in
+              <span class="rmm-badge rmm-badge-warning">OPS</span>
+            </div>
+            <div class="rmm-card-desc">Supervisor weekly shift sign-off, operations review, and readiness portal.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: AI & Demand Planning -->
+      <div class="rmm-col" t-if="isGroupVisible('planning')">
+        <div class="rmm-col-header">
+          <div class="rmm-col-icon purple"><i class="fa fa-magic"/></div>
+          <span class="rmm-col-title">AI &amp; Demand Planning</span>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_demand_plan')">
+          <div class="rmm-card-icon text-warning"><i class="fa fa-line-chart"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Demand Planning
+              <span class="rmm-badge rmm-badge-primary">EXEC</span>
+            </div>
+            <div class="rmm-card-desc">Contract sizing estimator: Headcount, supervisors, assets, payroll &amp; profit model.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_ai_engine.action_security_smart_recommendation')">
+          <div class="rmm-card-icon text-purple"><i class="fa fa-lightbulb-o"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Smart Recommendations
+              <span class="rmm-badge rmm-badge-ai">AI PRESCRIPTIVE</span>
+            </div>
+            <div class="rmm-card-desc">Automated actions: Overtime reduction, fairness rebalancing, fleet optimization.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 3: Roster Records & Batches -->
+      <div class="rmm-col" t-if="isGroupVisible('records')">
+        <div class="rmm-col-header">
+          <div class="rmm-col-icon emerald"><i class="fa fa-folder-open-o"/></div>
+          <span class="rmm-col-title">Records &amp; Batches</span>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_roster_week')">
+          <div class="rmm-card-icon text-emerald"><i class="fa fa-calendar"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Weekly Roster Batches
+            </div>
+            <div class="rmm-card-desc">Published schedule batches, submission status, and client approvals.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_roster_slot')">
+          <div class="rmm-card-icon text-cyan"><i class="fa fa-list"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              All Roster Slots
+            </div>
+            <div class="rmm-card-desc">Granular table view of all individual shift slots, guards, and critical gaps.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_roster_generate_wizard')">
+          <div class="rmm-card-icon text-teal"><i class="fa fa-cogs"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Auto-Roster Wizard
+            </div>
+            <div class="rmm-card-desc">Bulk auto-generation wizard for recurring multi-week site schedules.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 4: Rules & Configuration -->
+      <div class="rmm-col" t-if="isGroupVisible('config')">
+        <div class="rmm-col-header">
+          <div class="rmm-col-icon amber"><i class="fa fa-sliders"/></div>
+          <span class="rmm-col-title">Rules &amp; Configuration</span>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_site_post_requirement')">
+          <div class="rmm-card-icon text-amber"><i class="fa fa-map-marker"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Site Post Requirements
+            </div>
+            <div class="rmm-card-desc">Define required guard headcount, grades, and shift requirements per site post.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_shift_type')">
+          <div class="rmm-card-icon text-orange"><i class="fa fa-clock-o"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Shift Types &amp; Hours
+            </div>
+            <div class="rmm-card-desc">Day/Night shift definitions, start/end hours, and break allowances.</div>
+          </div>
+        </div>
+
+        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_guard_exclusion')">
+          <div class="rmm-card-icon text-danger"><i class="fa fa-ban"/></div>
+          <div class="rmm-card-content">
+            <div class="rmm-card-title">
+              Guard Exclusions
+            </div>
+            <div class="rmm-card-desc">Client blacklists, site disqualifications, and location restriction rules.</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Footer Stats & Shortcuts -->
+    <div class="rmm-footer">
+      <div class="rmm-stats">
+        <div class="rmm-stat-item">
+          <i class="fa fa-shield text-info"/>
+          <span>System Status: <strong class="rmm-stat-val text-success">OPERATIONAL</strong></span>
+        </div>
+        <div class="rmm-stat-item">
+          <i class="fa fa-bolt text-warning"/>
+          <span>DeployGuard AI: <strong class="rmm-stat-val">ACTIVE</strong></span>
+        </div>
+      </div>
+
+      <div class="rmm-shortcut-hint">
+        Press <span class="rmm-kbd">Esc</span> to close or <span class="rmm-kbd">Alt + M</span> to open anywhere in Rostering.
+      </div>
+    </div>
+  </div>
+</t>
+</templates>

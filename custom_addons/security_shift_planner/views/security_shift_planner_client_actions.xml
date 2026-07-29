@@ -1,6 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Rostering Hub — primary rostering workspace (sequence 1 = first in menu) -->
+    <!-- Rostering Mega Menu — Executive Command Center (sequence 0 = top of menu) -->
+    <record id="action_rostering_mega_menu" model="ir.actions.client">
+        <field name="name">⚡ Rostering Mega Menu</field>
+        <field name="tag">security_shift_planner.rostering_mega_menu</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_rostering_mega_menu"
+        name="⚡ Mega Menu"
+        parent="security_operations.menu_security_roster"
+        action="action_rostering_mega_menu"
+        sequence="0"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- Rostering Hub — primary rostering workspace (sequence 1 = second in menu) -->
     <record id="action_rostering_hub" model="ir.actions.client">
         <field name="name">Rostering Hub</field>
         <field name="tag">security_shift_planner.rostering_hub</field>

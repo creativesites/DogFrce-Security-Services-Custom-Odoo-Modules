@@ -4,6 +4,7 @@ import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { RosterGrid } from "./roster_grid";
+import { RosteringMegaMenu } from "./rostering_mega_menu";
 
 /**
  * RosterBoard — Tier-3 OWL client action.
@@ -19,7 +20,7 @@ import { RosterGrid } from "./roster_grid";
  * a display_notification dict (on error) or null (on success).
  */
 class RosterBoard extends Component {
-    static components = { RosterGrid };
+    static components = { RosterGrid, RosteringMegaMenu };
     static props = { "*": true };
     static template = "security_shift_planner.RosterBoard";
 
@@ -32,6 +33,7 @@ class RosterBoard extends Component {
             loading: false,
             autoFilling: false,
             autoAssigning: false,
+            showMegaMenu: false,
             isMobile: window.innerWidth < 768,
             showBatchesDrawer: false,
             batchesFilter: "all",
@@ -138,10 +140,20 @@ class RosterBoard extends Component {
 
         this.closeOverrideModal = this.closeOverrideModal.bind(this);
         this.confirmOverrideAssign = this.confirmOverrideAssign.bind(this);
+        this.openMegaMenu = this.openMegaMenu.bind(this);
+        this.closeMegaMenu = this.closeMegaMenu.bind(this);
 
         onWillStart(async () => {
             await Promise.all([this.loadCompanyCycle(), this.loadBatches(), this.loadAllSites(), this.loadAllGuards()]);
         });
+    }
+
+    openMegaMenu() {
+        this.state.showMegaMenu = true;
+    }
+
+    closeMegaMenu() {
+        this.state.showMegaMenu = false;
     }
 
     async loadAllGuards() {
@@ -224,6 +236,7 @@ class RosterBoard extends Component {
                 "id", "shift_date", "site_id", "post_id", "post_type_id",
                 "shift_template_id", "employee_id", "state", "suggestion_count",
                 "fairness_warning", "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
+                "readiness_score", "readiness_state", "readiness_summary",
             ]
         );
 

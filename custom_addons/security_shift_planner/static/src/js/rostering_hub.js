@@ -4,30 +4,27 @@ import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { RosterGrid } from "@security_shift_planner/js/roster_grid";
+import { RosteringMegaMenu } from "@security_shift_planner/js/rostering_mega_menu";
+import { ResourceInspectorModal } from "@security_shift_planner/js/resource_inspector_modal";
+import { DemandPlanningModal } from "@security_shift_planner/js/demand_planning_modal";
 
 /**
  * RosteringHub — Single-page rostering workspace.
- *
- * Three views accessible via tab nav (desktop) / bottom nav (mobile):
- *   dashboard  — coverage stats, today's shifts, alerts, quick actions
- *   roster     — full monthly grid (desktop) / day-by-day card list (mobile)
- *   setup      — batch creation, slot generation, workflow (submit/approve/confirm)
- *
- * Guard assignment opens a right-panel drawer on desktop and a bottom-sheet on mobile.
- * Batch creation uses an inline modal — no navigation away from the page.
  */
 class RosteringHub extends Component {
-    static components = { RosterGrid };
+    static components = { RosterGrid, RosteringMegaMenu, ResourceInspectorModal, DemandPlanningModal };
     static props = { "*": true };
     static template = "security_shift_planner.RosteringHub";
 
     setup() {
         this.orm          = useService("orm");
         this.notification = useService("notification");
+        this.action       = useService("action");
 
         this.state = useState({
             // ── navigation
             view: "dashboard",          // "dashboard" | "roster" | "setup"
+            showMegaMenu: false,
 
             // ── loading flags
             loading:       false,
@@ -50,6 +47,8 @@ class RosteringHub extends Component {
 
             // ── guard assignment panel
             selectedSlot:      null,
+            inspectorSlot:     null,
+            showDemandPlanning: false,
             panelOpen:         false,
             suggestions:       [],
             suggestionsLoaded: false,
@@ -106,6 +105,12 @@ class RosteringHub extends Component {
 
         this.closeOverrideModal = this.closeOverrideModal.bind(this);
         this.confirmOverrideAssign = this.confirmOverrideAssign.bind(this);
+        this.openMegaMenu = this.openMegaMenu.bind(this);
+        this.closeMegaMenu = this.closeMegaMenu.bind(this);
+        this.openResourceInspector = this.openResourceInspector.bind(this);
+        this.closeResourceInspector = this.closeResourceInspector.bind(this);
+        this.openDemandPlanning = this.openDemandPlanning.bind(this);
+        this.closeDemandPlanning = this.closeDemandPlanning.bind(this);
 
         onWillStart(async () => {
             await this.loadCompanyCycle();
@@ -113,6 +118,30 @@ class RosteringHub extends Component {
             await this.loadBatches();
             await this.loadAllGuards();
         });
+    }
+
+    openMegaMenu() {
+        this.state.showMegaMenu = true;
+    }
+
+    closeMegaMenu() {
+        this.state.showMegaMenu = false;
+    }
+
+    openResourceInspector(slot) {
+        this.state.inspectorSlot = slot;
+    }
+
+    closeResourceInspector() {
+        this.state.inspectorSlot = null;
+    }
+
+    openDemandPlanning() {
+        this.state.showDemandPlanning = true;
+    }
+
+    closeDemandPlanning() {
+        this.state.showDemandPlanning = false;
     }
 
     async loadAllGuards() {
@@ -258,7 +287,8 @@ class RosteringHub extends Component {
             [["batch_id", "=", this.state.batchId]],
             ["id", "shift_date", "site_id", "post_id", "shift_template_id",
              "employee_id", "state", "suggestion_count", "fairness_warning",
-             "critical_gap", "is_override", "override_reason", "wrong_fit_reasons"]
+             "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
+             "readiness_score", "readiness_state", "readiness_summary"]
         );
 
         const tplIds = [...new Set(rawSlots.map(s => s.shift_template_id?.[0]).filter(Boolean))];

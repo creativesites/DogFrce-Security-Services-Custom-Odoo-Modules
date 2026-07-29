@@ -9,17 +9,30 @@
 
 <div class="o_roster_board rb-shell">
 
+    <!-- Mega Menu Overlay -->
+    <t t-if="state.showMegaMenu">
+        <RosteringMegaMenu closeModal="closeMegaMenu"/>
+    </t>
+
     <!-- ═══════════════════════════════════════════════════════════
          LEFT SIDEBAR — Navigation, Batch Selector, Stats
          ═══════════════════════════════════════════════════════════ -->
     <div class="rb-nav-sidebar d-flex flex-column">
 
         <!-- Logo / Brand -->
-        <div class="rb-brand px-4 py-3 border-bottom" style="border-color:#2d5490 !important;">
-            <div class="fw-bold" style="font-size:15px; color:#fff; letter-spacing:.3px;">
-                <i class="fa fa-shield me-2" style="color:#60a5fa;"/>DogForce
+        <div class="rb-brand px-3 py-3 border-bottom d-flex align-items-center justify-content-between" style="border-color:#2d5490 !important;">
+            <div>
+                <div class="fw-bold" style="font-size:15px; color:#fff; letter-spacing:.3px;">
+                    <i class="fa fa-shield me-2" style="color:#60a5fa;"/>DogForce
+                </div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Roster Board</div>
             </div>
-            <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Roster Board</div>
+            <button class="btn btn-sm btn-outline-info px-2 py-1"
+                    t-on-click="openMegaMenu"
+                    title="Open Rostering Mega Menu">
+                <i class="fa fa-th-large me-1"/>
+                <small class="fw-bold">Menu</small>
+            </button>
         </div>
 
         <!-- Batch Selector -->

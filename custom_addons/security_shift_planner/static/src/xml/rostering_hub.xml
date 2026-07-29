@@ -9,6 +9,11 @@
      ═══════════════════════════════════════════════════════════════════════════ -->
 <div class="rh-shell">
 
+  <!-- Resource Readiness Inspector Modal -->
+  <t t-if="state.inspectorSlot">
+    <ResourceInspectorModal slot="state.inspectorSlot" closeModal="closeResourceInspector" onResourceUpdated="() => this.loadSlotsOnly()"/>
+  </t>
+
   <!-- ───────────────────────────────────────────────────────────────────────
        CREATE BATCH MODAL
        ─────────────────────────────────────────────────────────────────────── -->
@@ -53,13 +58,35 @@
   </t>
 
   <!-- ───────────────────────────────────────────────────────────────────────
+       ROSTERING MEGA MENU OVERLAY
+       ─────────────────────────────────────────────────────────────────────── -->
+  <t t-if="state.showMegaMenu">
+    <RosteringMegaMenu closeModal="closeMegaMenu"/>
+  </t>
+
+  <!-- ───────────────────────────────────────────────────────────────────────
+       DEMAND PLANNING ESTIMATOR MODAL
+       ─────────────────────────────────────────────────────────────────────── -->
+  <t t-if="state.showDemandPlanning">
+    <DemandPlanningModal closeModal="closeDemandPlanning"/>
+  </t>
+
+  <!-- ───────────────────────────────────────────────────────────────────────
        LEFT SIDEBAR  (hidden on mobile — shown md+)
        ─────────────────────────────────────────────────────────────────────── -->
   <aside class="rh-sidebar">
     <!-- Brand -->
-    <div class="rh-brand">
-      <div class="rh-brand-logo"><i class="fa fa-shield rh-brand-icon"/>DogForce</div>
-      <div class="rh-brand-sub">Rostering Hub</div>
+    <div class="rh-brand d-flex align-items-center justify-content-between">
+      <div>
+        <div class="rh-brand-logo"><i class="fa fa-shield rh-brand-icon"/>DogForce</div>
+        <div class="rh-brand-sub">Rostering Hub</div>
+      </div>
+      <button class="rh-btn rh-btn-ghost px-2 py-1 text-info"
+              t-on-click="openMegaMenu"
+              title="Open Rostering Mega Menu">
+        <i class="fa fa-th-large me-1"/>
+        <small class="fw-bold">Menu</small>
+      </button>
     </div>
 
     <!-- Batch selector -->
@@ -174,6 +201,12 @@
       </div>
 
       <div class="rh-topbar-actions">
+        <button class="rh-btn rh-btn-ghost rh-btn-sm"
+                t-on-click="openDemandPlanning"
+                title="Executive Demand Planning &amp; Sizing Estimator">
+          <i class="fa fa-calculator text-purple me-1" style="color:#8b5cf6;"/>
+          <span class="d-none d-sm-inline fw-semibold">Demand Sizing</span>
+        </button>
         <button class="rh-btn rh-btn-ghost rh-btn-sm"
                 t-on-click="openCreateModal">
           <i class="fa fa-plus me-1"/>

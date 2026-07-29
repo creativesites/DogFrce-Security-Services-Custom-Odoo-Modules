@@ -1,0 +1,279 @@
+/* Rostering Mega Menu — Glassmorphism Styling */
+.rmm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 36px;
+    overflow-y: auto;
+    color: #f8fafc;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    animation: rmmFadeIn 0.2s ease-out;
+}
+
+@keyframes rmmFadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.rmm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 24px;
+}
+
+.rmm-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rmm-brand-icon {
+    font-size: 28px;
+    color: #38bdf8;
+    background: linear-gradient(135deg, #0284c7, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.rmm-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+    margin: 0;
+}
+
+.rmm-subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.rmm-search-box {
+    position: relative;
+    width: 380px;
+    max-width: 100%;
+}
+
+.rmm-search-input {
+    width: 100%;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+    padding: 10px 16px 10px 40px;
+    color: #f8fafc;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.rmm-search-input:focus {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    background: rgba(30, 41, 59, 1);
+}
+
+.rmm-search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 15px;
+}
+
+.rmm-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.rmm-close-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.rmm-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    flex: 1;
+}
+
+@media (max-width: 1200px) {
+    .rmm-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .rmm-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.rmm-col {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rmm-col-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 4px;
+}
+
+.rmm-col-icon {
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rmm-col-icon.blue { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+.rmm-col-icon.purple { background: rgba(192, 132, 252, 0.15); color: #c084fc; }
+.rmm-col-icon.emerald { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+.rmm-col-icon.amber { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+
+.rmm-col-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f1f5f9;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rmm-card {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.rmm-card:hover {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(56, 189, 248, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.rmm-card-icon {
+    font-size: 20px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.rmm-card-content {
+    flex: 1;
+}
+
+.rmm-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f8fafc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rmm-card-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.rmm-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.rmm-badge-primary { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+.rmm-badge-success { background: rgba(52, 211, 153, 0.2); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+.rmm-badge-warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+.rmm-badge-ai { background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(236, 72, 153, 0.3)); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.4); }
+
+.rmm-footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.rmm-stats {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.rmm-stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+
+.rmm-stat-val {
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.rmm-shortcut-hint {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.rmm-kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 11px;
+    color: #e2e8f0;
+}

@@ -79,7 +79,18 @@
                                                         </div>
                                                         <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.is_override ? '#b45309' : (slot.conflict ? '#991b1b' : '#15803d')) + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
                                                              t-esc="slot.employee_name"/>
-                                                        <div t-if="slot.shift_label" style="font-size:9px; color:#16a34a; margin-top:1px;" t-esc="slot.shift_label"/>
+                                                        <div class="d-flex align-items-center justify-content-between mt-1">
+                                                            <div t-if="slot.shift_label" style="font-size:9px; color:#16a34a;" t-esc="slot.shift_label"/>
+                                                            <t t-if="slot.readiness_state">
+                                                                <span t-att-class="'badge px-1 py-0 style-readiness-' + slot.readiness_state"
+                                                                      t-att-style="'font-size:8px; font-weight:700; border-radius:2px; ' + (slot.readiness_state === 'ready' ? 'background:#dcfce7; color:#15803d;' : (slot.readiness_state === 'partial' ? 'background:#fef3c7; color:#b45309;' : 'background:#fee2e2; color:#b91c1c;'))"
+                                                                      t-att-title="slot.readiness_summary || 'Operational Readiness'">
+                                                                    <t t-if="slot.readiness_state === 'ready'">🟢 100%</t>
+                                                                    <t t-elif="slot.readiness_state === 'partial'">🟡 <t t-esc="slot.readiness_score"/>%</t>
+                                                                    <t t-else="">🔴 Gap</t>
+                                                                </span>
+                                                            </t>
+                                                        </div>
                                                     </div>
                                                 </t>
 
