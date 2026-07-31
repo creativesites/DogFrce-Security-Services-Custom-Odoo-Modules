@@ -15,8 +15,8 @@ class SecurityNotification(models.Model):
     title = fields.Char(required=True)
     body = fields.Text()
     company_id = fields.Many2one("res.company", string="Company", default=lambda self: self.env.company, required=True, index=True)
-    site_id = fields.Many2one("security.client.site", string="Site", index=True)
-    partner_id = fields.Many2one("res.partner", string="Client Partner", index=True)
+    site_id = fields.Many2one("security.client.site", string="Site", index=True, domain="[('partner_id', '=', partner_id)]")
+    partner_id = fields.Many2one("res.partner", string="Client Partner", index=True, domain="[('is_company', '=', True)]")
     notification_type = fields.Selection([
         ("document_expiry", "Document Expiry"),
         ("cert_expiry", "Certification Expiry"),

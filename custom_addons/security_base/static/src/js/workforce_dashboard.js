@@ -14,6 +14,7 @@ export class WorkforceDashboard extends Component {
         this.orm          = useService("orm");
         this.action       = useService("action");
         this.notification = useService("notification");
+        this.companyService = useService("company");
 
         this.state = useState({
             loading: true,
@@ -52,6 +53,10 @@ export class WorkforceDashboard extends Component {
 
     closeMegaMenu() {
         this.state.showMegaMenu = false;
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     async loadDashboardData() {

@@ -633,9 +633,9 @@
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <group>
                         <group>
-                            <field name="site_id"/>
+                            <field name="site_id" domain="[('partner_id', '=', partner_id)]" context="{'default_partner_id': partner_id}"/>
                             <field name="partner_id" readonly="1"/>
-                            <field name="post_id"/>
+                            <field name="post_id" domain="[('site_id', '=', site_id)]" context="{'default_site_id': site_id}"/>
                             <field name="post_type_id" readonly="1"/>
                             <field name="shift_template_id"/>
                         </group>

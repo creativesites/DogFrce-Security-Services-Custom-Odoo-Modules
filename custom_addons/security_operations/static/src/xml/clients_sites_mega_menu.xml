@@ -8,7 +8,7 @@
       <div class="rmm-header">
         <div class="rmm-brand">
           <div class="rmm-brand-badge">
-            <i class="fa fa-building me-2"/>DogForce Clients &amp; Sites
+            <i class="fa fa-building me-2"/><t t-esc="companyName"/> Clients &amp; Sites
           </div>
           <div>
             <h2 class="rmm-title">Clients &amp; Sites Command Center</h2>

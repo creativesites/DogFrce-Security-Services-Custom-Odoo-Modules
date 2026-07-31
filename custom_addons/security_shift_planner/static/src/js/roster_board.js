@@ -26,8 +26,9 @@ class RosterBoard extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.actionService = useService("action");
         this.notification = useService("notification");
-        this.action = useService("action");
+        this.companyService = useService("company");
 
         this.state = useState({
             loading: false,
@@ -191,6 +192,10 @@ class RosterBoard extends Component {
         } catch {
             // fallback defaults (21st to 20th)
         }
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     async loadBatches() {

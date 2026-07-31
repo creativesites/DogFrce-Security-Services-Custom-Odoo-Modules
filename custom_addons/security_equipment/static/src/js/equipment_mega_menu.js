@@ -11,6 +11,7 @@ export class EquipmentMegaMenu extends Component {
     setup() {
         this.action = useService("action");
         this.notification = useService("notification");
+        this.companyService = useService("company");
         this.state = useState({
             activeTab: "launchpad", // 'launchpad' | 'catalog' | 'maintenance' | 'custody' | 'guidance'
             searchQuery: "",
@@ -25,6 +26,10 @@ export class EquipmentMegaMenu extends Component {
         onWillUnmount(() => {
             window.removeEventListener("keydown", this.onGlobalKeyDown);
         });
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     onGlobalKeyDown(ev) {

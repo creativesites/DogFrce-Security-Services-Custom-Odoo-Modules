@@ -12,7 +12,7 @@
         <!-- Brand Header -->
         <div class="od-brand px-4 py-3">
             <div class="fw-bold" style="font-size:15px; color:#ffffff; letter-spacing:.3px;">
-                <i class="fa fa-dashboard me-2" style="color:#38bdf8;"/>DogForce Operations
+                <i class="fa fa-dashboard me-2" style="color:#38bdf8;"/><t t-esc="companyName"/> Operations
             </div>
             <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Shift &amp; Incident Control</div>
         </div>

@@ -11,6 +11,7 @@ class OpsDashboard extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
+        this.companyService = useService("company");
 
         const now = new Date();
         const pad = n => String(n).padStart(2, "0");
@@ -30,6 +31,10 @@ class OpsDashboard extends Component {
         });
 
         onWillStart(() => this.loadData());
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     async loadData() {

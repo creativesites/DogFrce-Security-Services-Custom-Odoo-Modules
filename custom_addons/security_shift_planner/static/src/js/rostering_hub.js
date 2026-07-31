@@ -18,8 +18,9 @@ class RosteringHub extends Component {
 
     setup() {
         this.orm          = useService("orm");
-        this.notification = useService("notification");
         this.action       = useService("action");
+        this.notification = useService("notification");
+        this.companyService = useService("company");
 
         this.state = useState({
             // ── navigation
@@ -118,6 +119,10 @@ class RosteringHub extends Component {
             await this.loadBatches();
             await this.loadAllGuards();
         });
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     openMegaMenu() {

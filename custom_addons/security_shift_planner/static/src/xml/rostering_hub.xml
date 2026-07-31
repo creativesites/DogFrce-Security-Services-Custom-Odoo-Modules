@@ -78,7 +78,7 @@
     <!-- Brand -->
     <div class="rh-brand d-flex align-items-center justify-content-between">
       <div>
-        <div class="rh-brand-logo"><i class="fa fa-shield rh-brand-icon"/>DogForce</div>
+        <div class="rh-brand-logo"><i class="fa fa-shield rh-brand-icon"/><t t-esc="companyName"/></div>
         <div class="rh-brand-sub">Rostering Hub</div>
       </div>
       <button class="rh-btn rh-btn-ghost px-2 py-1 text-info"

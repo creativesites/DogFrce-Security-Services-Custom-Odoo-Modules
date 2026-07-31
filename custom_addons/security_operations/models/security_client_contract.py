@@ -8,7 +8,12 @@ class SecurityClientContract(models.Model):
     _order = "date_start desc"
 
     name = fields.Char(required=True, string="Contract Reference")
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
+    partner_id = fields.Many2one(
+        "res.partner",
+        required=True,
+        string="Client",
+        domain="[('is_company', '=', True)]",
+    )
     site_id = fields.Many2one(
         "security.client.site",
         string="Site",

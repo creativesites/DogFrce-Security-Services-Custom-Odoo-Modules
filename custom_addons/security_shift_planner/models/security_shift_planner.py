@@ -250,12 +250,24 @@ class SecurityRosterBatch(models.Model):
                     score, _breakdown = slot._score_guard(slot, employee)
                     scored.append((score, employee))
                 scored.sort(key=lambda x: x[0], reverse=True)
-                _best_score, best_employee = scored[0]
-                slot.employee_id = best_employee.id
-                slot.state = "assigned"
-                slot.critical_gap = False
-                assigned_today.setdefault(date_key, set()).add(best_employee.id)
-                filled += 1
+
+                assigned_flag = False
+                for _best_score, best_employee in scored:
+                    try:
+                        slot.employee_id = best_employee.id
+                        slot.state = "assigned"
+                        slot.critical_gap = False
+                        assigned_today.setdefault(date_key, set()).add(best_employee.id)
+                        filled += 1
+                        assigned_flag = True
+                        break
+                    except Exception as err:
+                        slot.employee_id = False
+                        continue
+
+                if not assigned_flag:
+                    slot.critical_gap = True
+                    gaps += 1
             if gaps and "security.notification" in self.env:
                 manager_group = self.env.ref(
                     "security_base.group_security_manager", raise_if_not_found=False
@@ -531,8 +543,8 @@ class SecurityRosterSlot(models.Model):
                 score, breakdown = self._score_guard(slot, employee)
                 suggestions.append((score, employee, breakdown))
 
-            # Exclude guards who scored zero — they have no positive signal
-            suggestions = [(s, e, b) for s, e, b in suggestions if s > 0]
+            # Include all eligible guards with score >= 0
+            suggestions = [(s, e, b) for s, e, b in suggestions if s >= 0]
             suggestions.sort(key=lambda x: x[0], reverse=True)
 
             suggestion_vals = []
@@ -547,55 +559,75 @@ class SecurityRosterSlot(models.Model):
             if suggestion_vals:
                 self.env["security.slot.suggestion"].create(suggestion_vals)
 
-    # Minimum score a suggestion must reach for auto-assignment (amber threshold)
-    AUTO_ASSIGN_MIN_SCORE = 50.0
-
     def action_auto_assign_all(self):
         """
-        Auto-assign the top-ranked eligible guard to every unassigned slot in self.
-
-        Only assigns when the top suggestion scores >= AUTO_ASSIGN_MIN_SCORE so that
-        very low-quality matches are left for manual review. Returns a summary
-        notification that can be displayed directly by the JS caller.
+        Auto-assign eligible guards to all unassigned slots in self using greedy scoring.
+        Tracks intra-run assignments to prevent double-booking across slots in the run.
         """
-        assigned = 0
+        filled = 0
         no_candidates = 0
-        below_threshold = 0
+        assigned_today = {}
 
-        for slot in self:
-            if slot.state == "cancelled" or slot.employee_id:
-                continue
+        def _difficulty(s):
+            d = 0
+            if getattr(s, "high_value_shift", False):
+                d += 50
+            if s.post_id and s.post_id.post_type_id and s.post_id.post_type_id.min_grade_id:
+                d += s.post_id.post_type_id.min_grade_id.sequence * 10
+            return d
 
-            slot.action_suggest_guards()
-
-            top = self.env["security.slot.suggestion"].search(
-                [("slot_id", "=", slot.id)],
-                order="rank",
-                limit=1,
+        unassigned = self.filtered(lambda s: not s.employee_id and s.state != "cancelled")
+        unassigned = unassigned.sorted(
+            key=lambda s: (
+                -_difficulty(s),
+                str(s.shift_date) if s.shift_date else "",
+                s.shift_template_id.start_hour if s.shift_template_id else 0,
             )
+        )
 
-            if not top:
+        for slot in unassigned:
+            slot.action_suggest_guards()
+            eligible = slot._get_eligible_guards(slot)
+            if not eligible:
                 no_candidates += 1
+                slot.critical_gap = True
                 continue
 
-            if top.score < self.AUTO_ASSIGN_MIN_SCORE:
-                below_threshold += 1
-                continue
-
-            reason = top._check_assignment_eligibility(slot, top.employee_id)
-            if reason:
+            date_key = str(slot.shift_date)
+            run_assigned = assigned_today.get(date_key, set())
+            eligible = [(emp, sc) for emp, sc in eligible if emp.id not in run_assigned]
+            if not eligible:
                 no_candidates += 1
+                slot.critical_gap = True
                 continue
 
-            slot.employee_id = top.employee_id
-            slot.state = "assigned"
-            assigned += 1
+            scored = []
+            for employee, _ in eligible:
+                score, _breakdown = slot._score_guard(slot, employee)
+                scored.append((score, employee))
+            scored.sort(key=lambda x: x[0], reverse=True)
 
-        parts = [f"{assigned} slot(s) auto-assigned"]
+            assigned_flag = False
+            for _best_score, best_employee in scored:
+                try:
+                    slot.employee_id = best_employee.id
+                    slot.state = "assigned"
+                    slot.critical_gap = False
+                    assigned_today.setdefault(date_key, set()).add(best_employee.id)
+                    filled += 1
+                    assigned_flag = True
+                    break
+                except Exception as err:
+                    slot.employee_id = False
+                    continue
+
+            if not assigned_flag:
+                no_candidates += 1
+                slot.critical_gap = True
+
+        parts = [f"{filled} slot(s) auto-assigned"]
         if no_candidates:
-            parts.append(f"{no_candidates} had no eligible candidates")
-        if below_threshold:
-            parts.append(f"{below_threshold} skipped (best score below {int(self.AUTO_ASSIGN_MIN_SCORE)} pts — review manually)")
+            parts.append(f"{no_candidates} slot(s) had no eligible candidates")
 
         return {
             "type": "ir.actions.client",
@@ -603,7 +635,7 @@ class SecurityRosterSlot(models.Model):
             "params": {
                 "title": "Auto-Assignment Complete",
                 "message": ". ".join(parts) + ".",
-                "type": "success" if assigned > 0 else "warning",
+                "type": "success" if filled > 0 else "warning",
                 "sticky": False,
             },
         }
@@ -713,6 +745,20 @@ class SecurityRosterSlot(models.Model):
                 expired = employee.get_expired_certification_ids()
                 if required_certs & expired:
                     continue
+
+            # Languages requirement check
+            req_languages = set(post_type.required_language_ids.ids) if post_type and post_type.required_language_ids else set()
+            if requirement and requirement.required_language_ids:
+                req_languages |= set(requirement.required_language_ids.ids)
+            if req_languages and (req_languages - set(employee.security_language_ids.ids)):
+                continue
+
+            # Attributes requirement check
+            req_attributes = set(post_type.required_attribute_ids.ids) if post_type and post_type.required_attribute_ids else set()
+            if requirement and requirement.required_attribute_ids:
+                req_attributes |= set(requirement.required_attribute_ids.ids)
+            if req_attributes and (req_attributes - set(employee.security_attribute_ids.ids)):
+                continue
 
             # Fatigue check — minimum rest hours between shifts
             if slot.shift_date and min_rest_hours > 0:

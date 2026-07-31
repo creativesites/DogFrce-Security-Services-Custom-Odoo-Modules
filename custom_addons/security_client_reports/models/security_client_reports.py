@@ -12,8 +12,8 @@ class SecurityClientServiceReport(models.Model):
     _order = "date_from desc, partner_id"
 
     name = fields.Char(compute="_compute_name", store=True)
-    partner_id = fields.Many2one("res.partner", required=True, string="Client")
-    site_id = fields.Many2one("security.client.site", string="Client Site")
+    partner_id = fields.Many2one("res.partner", required=True, string="Client", domain="[('is_company', '=', True)]")
+    site_id = fields.Many2one("security.client.site", string="Client Site", domain="[('partner_id', '=', partner_id)]")
     date_from = fields.Date(required=True)
     date_to = fields.Date(required=True)
     prepared_by_id = fields.Many2one(

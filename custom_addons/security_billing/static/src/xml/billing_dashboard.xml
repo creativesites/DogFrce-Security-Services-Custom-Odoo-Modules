@@ -22,7 +22,7 @@
                 </div>
                 <div class="bcc-header-text">
                     <h2>Billing Command Center</h2>
-                    <span>DogForce Security Billing &amp; Financial Operations • <strong class="text-dark"><t t-esc="d.month_label"/></strong></span>
+                    <span><t t-esc="companyName"/> Billing &amp; Financial Operations • <strong class="text-dark"><t t-esc="d.month_label"/></strong></span>
                 </div>
             </div>
 

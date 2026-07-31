@@ -16,6 +16,7 @@ class SecurityDemandPlan(models.Model):
     partner_id = fields.Many2one(
         "res.partner",
         string="Client",
+        domain="[('is_company', '=', True)]",
         help="Target or existing client for this contract estimate.",
     )
     site_name = fields.Char(

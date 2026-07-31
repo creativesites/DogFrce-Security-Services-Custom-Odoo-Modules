@@ -8,7 +8,7 @@
       <div class="rmm-header">
         <div class="rmm-brand">
           <div class="rmm-brand-badge">
-            <i class="fa fa-car me-2"/>DogForce Fleet &amp; Patrol Transport
+            <i class="fa fa-car me-2"/><t t-esc="companyName"/> Fleet &amp; Patrol Transport
           </div>
           <div>
             <h2 class="rmm-title">Fleet &amp; Transport Command Center</h2>

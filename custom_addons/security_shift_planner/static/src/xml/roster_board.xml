@@ -23,7 +23,7 @@
         <div class="rb-brand px-3 py-3 border-bottom d-flex align-items-center justify-content-between" style="border-color:#2d5490 !important;">
             <div>
                 <div class="fw-bold" style="font-size:15px; color:#fff; letter-spacing:.3px;">
-                    <i class="fa fa-shield me-2" style="color:#60a5fa;"/>DogForce
+                    <i class="fa fa-shield me-2" style="color:#60a5fa;"/><t t-esc="companyName"/>
                 </div>
                 <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Roster Board</div>
             </div>

@@ -8,7 +8,7 @@
       <div class="dgcc-header">
         <div class="dgcc-brand">
           <div class="dgcc-brand-badge">
-            <i class="fa fa-shield me-2"/>DogForce OS
+            <i class="fa fa-shield me-2"/><t t-esc="companyName"/> OS
           </div>
           <div>
             <h2 class="dgcc-title">Command Center &amp; OS Launcher</h2>
@@ -360,7 +360,7 @@
              TAB 5: OS USER MANUAL &amp; GUIDE
              ═════════════════════════════════════════════════════════════════ -->
         <div class="dgcc-tab-content" t-if="state.activeTab === 'guide'">
-          <div class="dgcc-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce OS User Manual &amp; Role Reference</div>
+          <div class="dgcc-section-label"><i class="fa fa-book me-2 text-primary"/><t t-esc="companyName"/> Manual &amp; Role Reference</div>
 
           <div class="dgcc-guide-grid">
             <div class="dgcc-guide-card">
@@ -376,9 +376,9 @@
             <div class="dgcc-guide-card">
               <div class="dgcc-guide-num">2</div>
               <div class="dgcc-guide-body">
-                <div class="dgcc-guide-title"><i class="fa fa-calendar me-2 text-info"/>Automated Shift Scheduling</div>
+                <div class="dgcc-guide-title"><i class="fa fa-calendar me-2 text-success"/>Rostering &amp; Auto-Scheduling</div>
                 <div class="dgcc-guide-text">
-                  Generate unassigned slots from site requirements in <strong>Rostering Hub</strong>, then click any cell to consult AI-ranked guard suggestions.
+                  Create monthly roster batches or generate shifts from client requirements. Use the 150-pt scoring engine to auto-fill top-ranked guards.
                 </div>
               </div>
             </div>
@@ -386,9 +386,9 @@
             <div class="dgcc-guide-card">
               <div class="dgcc-guide-num">3</div>
               <div class="dgcc-guide-body">
-                <div class="dgcc-guide-title"><i class="fa fa-map-marker me-2 text-success"/>Field Verification &amp; WhatsApp Alerts</div>
+                <div class="dgcc-guide-title"><i class="fa fa-check-square-o me-2 text-warning"/>Attendance &amp; AWOL Control</div>
                 <div class="dgcc-guide-text">
-                  Field supervisors sign off shifts via <strong>Weekly Check-in</strong>. Guards receive automated shift prompts and check-in via <strong>WhatsApp Bridge</strong>.
+                  Log daily shift check-ins, record AWOL incidents, and issue disciplinary strikes. Attendance data directly feeds payroll calculations.
                 </div>
               </div>
             </div>
@@ -406,7 +406,7 @@
 
           <!-- Shortcuts &amp; Rules Cheatsheet -->
           <div class="dgcc-cheatsheet-box">
-            <div class="dgcc-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>DogForce OS Shortcuts &amp; Rules</div>
+            <div class="dgcc-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/><t t-esc="companyName"/> Shortcuts &amp; Rules</div>
             <div class="dgcc-cheatsheet-grid">
               <div class="dgcc-cs-item"><span class="dgcc-kbd">Esc</span> Dismiss Launcher</div>
               <div class="dgcc-cs-item"><span class="dgcc-kbd">Alt + H</span> Open Home Command Center</div>
@@ -424,7 +424,7 @@
       <!-- Footer Section -->
       <div class="dgcc-footer">
         <div class="dgcc-footer-status">
-          <span class="dgcc-status-pill green"><i class="fa fa-check-circle me-1"/>DogForce OS Active</span>
+          <span class="dgcc-status-pill green"><i class="fa fa-check-circle me-1"/><t t-esc="companyName"/> Active</span>
           <span class="dgcc-status-pill blue"><i class="fa fa-shield me-1"/>Odoo 19 Enterprise Suite</span>
         </div>
         <div class="dgcc-footer-tip">

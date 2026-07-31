@@ -11,6 +11,7 @@ class BillingCommandCenter extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
+        this.companyService = useService("company");
 
         this.state = useState({
             loading: true,
@@ -22,6 +23,10 @@ class BillingCommandCenter extends Component {
         });
 
         onWillStart(() => this._load());
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     async _load() {

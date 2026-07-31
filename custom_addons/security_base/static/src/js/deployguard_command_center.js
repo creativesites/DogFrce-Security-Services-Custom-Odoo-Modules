@@ -12,6 +12,7 @@ export class DogForceMainCommandCenter extends Component {
         this.action = useService("action");
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.companyService = useService("company");
 
         this.state = useState({
             activeTab: "launchpad", // 'launchpad' | 'live_ops' | 'rostering' | 'financials' | 'guide'
@@ -47,6 +48,10 @@ export class DogForceMainCommandCenter extends Component {
         onWillUnmount(() => {
             window.removeEventListener("keydown", this.onGlobalKeyDown);
         });
+    }
+
+    get companyName() {
+        return this.companyService?.currentCompany?.name || "Company";
     }
 
     _todayStr() {
