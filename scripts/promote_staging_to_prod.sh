@@ -56,11 +56,13 @@ echo "✅ Exclusion safeguard check passed. Target module suite is valid for Nam
 # Step 1: Execute Pre-Deploy Snapshot
 echo "📸 Step 1/6: Taking mandatory pre-deploy production snapshot..."
 docker exec -i "${PROD_CONTAINER}" odoo shell --no-http -c /etc/odoo/odoo.conf -d "${PROD_DB}" <<'EOF'
-env['security.backup.manager'].sudo().run_pre_deploy_snapshot()
-env.cr.commit()
+if 'security.backup.manager' in env:
+    env['security.backup.manager'].sudo().run_pre_deploy_snapshot()
+    env.cr.commit()
+    print("✅ Pre-deploy snapshot completed.")
+else:
+    print("ℹ️ Backup Vault module not installed yet; skipping pre-deploy snapshot.")
 EOF
-
-echo "✅ Pre-deploy snapshot completed."
 
 # Step 2: Stop Production Odoo Container
 echo "🛑 Step 2/6: Pausing production Odoo container..."
