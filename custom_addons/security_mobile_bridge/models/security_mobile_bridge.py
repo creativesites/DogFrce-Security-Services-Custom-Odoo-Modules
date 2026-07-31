@@ -17,7 +17,7 @@ class SecurityMobileBridge(models.AbstractModel):
     @api.model
     def _handle_bus_event(self, event_name, source_model, source_id, payload):
         """
-        Listens to the DeployGuard Central Intelligence Bus and converts critical business
+        Listens to the DogForce Central Intelligence Bus and converts critical business
         exceptions (AWOLs, vehicle breakdowns, compliance bypasses) directly into mobile push notifications.
         """
         _logger.info("Mobile Bridge | Processing event: %s", event_name)

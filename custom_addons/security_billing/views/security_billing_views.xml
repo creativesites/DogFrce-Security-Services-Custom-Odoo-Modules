@@ -97,6 +97,11 @@
         <field name="model">security.billing.plan</field>
         <field name="arch" type="xml">
             <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="billing_mode"/>
+                <field name="vat_rate"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card">
@@ -254,6 +259,12 @@
         <field name="model">security.billing.invoice</field>
         <field name="arch" type="xml">
             <kanban>
+                <field name="id"/>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="invoice_date"/>
+                <field name="total_amount"/>
+                <field name="state"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card">

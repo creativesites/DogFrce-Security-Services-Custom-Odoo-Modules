@@ -18,7 +18,7 @@ FEATURE_TIERS = {
 
 class SecurityLicense(models.Model):
     _name = 'security.license'
-    _description = 'DeployGuard License'
+    _description = 'DogForce License'
     _rec_name = 'license_key'
     _order = 'create_date desc'
 
@@ -194,7 +194,7 @@ class SecurityLicense(models.Model):
 
     def _post_trial_warning_message(self, days_remaining):
         body = _(
-            'Your DeployGuard OS trial expires in <strong>%(days)s day(s)</strong>. '
+            'Your DogForce OS trial expires in <strong>%(days)s day(s)</strong>. '
             'Visit your billing portal to activate a subscription and keep your data.',
             days=days_remaining,
         )

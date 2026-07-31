@@ -2,13 +2,13 @@
 <odoo>
         <!-- Category -->
         <record id="module_category_licensing" model="ir.module.category">
-            <field name="name">DeployGuard Licensing</field>
+            <field name="name">DogForce Licensing</field>
             <field name="sequence">100</field>
         </record>
 
         <!-- Privilege (Odoo 19 intermediate layer) -->
         <record id="privilege_security_licensing" model="res.groups.privilege">
-            <field name="name">DeployGuard Licensing</field>
+            <field name="name">DogForce Licensing</field>
             <field name="category_id" ref="module_category_licensing"/>
         </record>
 

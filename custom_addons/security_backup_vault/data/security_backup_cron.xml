@@ -4,7 +4,7 @@
 
         <!-- Sequence for Backup Reference -->
         <record id="seq_security_backup_record" model="ir.sequence">
-            <field name="name">DeployGuard Backup Reference Sequence</field>
+            <field name="name">DogForce Backup Reference Sequence</field>
             <field name="code">security.backup.record</field>
             <field name="prefix">BK/</field>
             <field name="padding">5</field>
@@ -44,7 +44,7 @@
             <field name="active" eval="True"/>
         </record>
 
-        <!-- Cron 4: Hourly Disk Space & Health Check -->
+        <!-- Cron 4: Hourly Disk Space &amp; Health Check -->
         <record id="cron_disk_space_check" model="ir.cron">
             <field name="name">Backup Vault: Hourly Server Free Disk Space Monitor</field>
             <field name="model_id" ref="model_security_backup_manager"/>

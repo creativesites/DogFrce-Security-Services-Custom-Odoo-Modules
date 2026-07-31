@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
     <t t-name="security_payroll_core.PayslipDesigner" owl="1">
         <div class="o_payslip_designer o_content d-flex h-100 w-100 overflow-hidden bg-light">
-            <!-- LEFT PANEL: Settings & Drag-and-Drop (sidebar) -->
+            <!-- LEFT PANEL: Settings &amp; Drag-and-Drop (sidebar) -->
             <div class="pcc-designer-sidebar d-flex flex-column h-100 shadow-lg" style="width: 390px; min-width: 390px; background: #ffffff; border-right: 1px solid #e2e8f0; z-index: 10;">
                 <div class="p-3 border-bottom d-flex align-items-center justify-content-between" style="background: #0f172a; color: #ffffff;">
                     <h5 class="m-0 fw-bold text-white" style="color: #ffffff !important;"><i class="fa fa-paint-brush me-2 text-success"/> Payslip Designer</h5>
@@ -137,7 +137,7 @@
                         </div>
                     </div>
 
-                    <!-- Block Builder (Drag & Drop) -->
+                    <!-- Block Builder (Drag &amp; Drop) -->
                     <div class="mb-4">
                         <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="fa fa-th-list text-success me-1"/> Layout Builder</h6>
                         <p class="small text-muted mb-3">Drag to reorder sections. Use the handle on the left.</p>

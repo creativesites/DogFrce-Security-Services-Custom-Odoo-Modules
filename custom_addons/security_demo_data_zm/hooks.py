@@ -1097,7 +1097,7 @@ class DemoBuilderZM:
                 b_xmlid,
                 "security.billing.plan",
                 {
-                    "name": f"{client_name} DeployGuard Contract",
+                    "name": f"{client_name} DogForce Contract",
                     "partner_id": self.ref(client_xmlid).id,
                     "currency_id": zmw.id,
                     "billing_mode": "shift",
@@ -1169,7 +1169,7 @@ class DemoBuilderZM:
             if not invoice.line_ids:
                 self.env["security.billing.invoice.line"].create({
                     "invoice_id": invoice.id,
-                    "name": f"DeployGuard Guarding & Electronic Security Patrol services - ZMW",
+                    "name": f"DogForce Guarding & Electronic Security Patrol services - ZMW",
                     "quantity": 1.0,
                     "unit_price": amount,
                     "service_date_from": inv_date,

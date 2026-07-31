@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="crm.crm_lead_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//sheet/group" position="after">
-                <group name="security_ops_intelligence" string="DeployGuard Operational Intelligence">
+                <group name="security_ops_intelligence" string="DogForce Operational Intelligence">
                     <group string="Account SLA Health Metrics">
                         <field name="opportunity_health" widget="priority" readonly="1"/>
                         <field name="renewal_probability" readonly="1"/>

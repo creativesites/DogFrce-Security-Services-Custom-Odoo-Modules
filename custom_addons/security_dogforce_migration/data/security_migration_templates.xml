@@ -38,7 +38,7 @@
         <field name="datas">bmFtZSx3b3JrX2VtYWlsLG1vYmlsZV9waG9uZSxncmFkZV9jb2RlLHNzY19udW1iZXIsdGF4X251bWJlcixiYW5rX25hbWUsYmFua19hY2NvdW50X251bWJlcgpKb2huIERvZSxqb2huQGRvZ2ZvcmNlLm5hLCsyNjQ4MTEyMzQ1NjcsRzEsU1NDLTAwMSxUQVgtMDAxLEJhbmsgV2luZGhvZWssMjEwMDAwMDEyMw==</field>
     </record>
 
-    <!-- Template: Clients & Sites
+    <!-- Template: Clients &amp; Sites
          Plaintext (before encoding):
            client_name,client_email,site_name,site_code,site_location
            Windhoek Mall,info@dogforce.na,Main Entrance,WMALL-01,Windhoek City Centre

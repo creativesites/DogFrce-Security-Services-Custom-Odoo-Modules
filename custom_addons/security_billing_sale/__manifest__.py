@@ -1,6 +1,6 @@
 {
     "name": "Security Billing Sales Integration",
-    "summary": "Tightly integrates DeployGuard security billing plans with standard Odoo Sales Orders.",
+    "summary": "Tightly integrates DogForce security billing plans with standard Odoo Sales Orders.",
     "version": "19.0.1.0.0",
     "category": "Security/Sales",
     "author": "Winston Zulu",

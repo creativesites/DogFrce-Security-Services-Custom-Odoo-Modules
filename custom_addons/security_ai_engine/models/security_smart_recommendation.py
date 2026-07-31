@@ -4,7 +4,7 @@ from odoo.exceptions import ValidationError
 
 class SecuritySmartRecommendation(models.Model):
     _name = "security.smart.recommendation"
-    _description = "DeployGuard Smart Prescriptive Action Recommendation"
+    _description = "DogForce Smart Prescriptive Action Recommendation"
     _order = "financial_saving desc, create_date desc"
 
     name = fields.Char(

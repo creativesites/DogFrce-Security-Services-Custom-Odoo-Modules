@@ -8,17 +8,17 @@ registry.category("web_tour.tours").add("deployguard_prospect_demo_tour", {
     steps: () => [
         {
             trigger: "body",
-            content: "Welcome to DeployGuard! Let's see how it eliminates ghost guards and automates your payroll in about 3 minutes.",
+            content: "Welcome to DogForce! Let's see how it eliminates ghost guards and automates your payroll in about 3 minutes.",
             position: "bottom",
         },
         {
             trigger: ".o_roster_auto_fill_btn, .rh-topbar-actions button.rh-btn-success, button:contains('Auto-Assign')",
-            content: "Rostering Hub — Click 'Auto-Assign' and DeployGuard fills every empty shift with the best available guard in seconds. Zero spreadsheets.",
+            content: "Rostering Hub — Click 'Auto-Assign' and DogForce fills every empty shift with the best available guard in seconds. Zero spreadsheets.",
             position: "bottom",
         },
         {
             trigger: ".o_menu_entry_whatsapp, .o_whatsapp_simulator_card, a:contains('WhatsApp')",
-            content: "Your supervisors don't need an app. They just text WhatsApp commands like 'STATUS' or 'AWOL John' – DeployGuard updates live.",
+            content: "Your supervisors don't need an app. They just text WhatsApp commands like 'STATUS' or 'AWOL John' – DogForce updates live.",
             position: "right",
         },
         {

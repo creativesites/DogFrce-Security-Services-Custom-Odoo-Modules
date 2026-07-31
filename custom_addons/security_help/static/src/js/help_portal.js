@@ -157,7 +157,7 @@ HelpPortal.flows = [
                 title: "Create Client Site",
                 role: "Operations Manager / Director",
                 ui_action: "Go to Operations > Client Sites and click 'New'.",
-                beginner: "The foundation of DeployGuard is the Client Site. Enter the physical site name, coordinates, risk level, and general contact details. Geolocation coordinates (latitude/longitude) are critical because they enable the geofenced mobile check-ins and WhatsApp validation.",
+                beginner: "The foundation of DogForce is the Client Site. Enter the physical site name, coordinates, risk level, and general contact details. Geolocation coordinates (latitude/longitude) are critical because they enable the geofenced mobile check-ins and WhatsApp validation.",
                 model: "security.client.site",
                 states: "contract_status ('active', 'draft', 'expired'), risk_level ('low', 'medium', 'high', 'critical')",
                 logic: "Calculates live security coverage based on today's scheduled roster slots. Non-stored search methods (_search_contract_status, _search_risk_level) resolve ORM search desync constraints when grouping and filtering client sites."

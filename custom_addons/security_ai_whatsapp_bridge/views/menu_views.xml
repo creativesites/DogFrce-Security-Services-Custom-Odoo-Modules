@@ -53,7 +53,7 @@
               action="action_security_whatsapp_whitelist"
               sequence="10"/>
 
-    <!-- Sub-menu 4.2: Settings & Gateway -->
+    <!-- Sub-menu 4.2: Settings &amp; Gateway -->
     <menuitem id="menu_security_whatsapp_settings_item"
               name="Bridge Settings &amp; Gateway"
               parent="menu_security_whatsapp_config_parent"

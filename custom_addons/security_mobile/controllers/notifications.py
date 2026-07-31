@@ -118,7 +118,7 @@ class NotificationController(http.Controller):
 
         send_expo_push(
             [employee.security_mobile_device_token],
-            "DeployGuard",
+            "DogForce",
             "Push notifications are working!",
             {"type": "test"},
         )

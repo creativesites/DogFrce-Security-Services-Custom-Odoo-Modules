@@ -148,7 +148,7 @@
                 <div class="modal-footer border-top px-4 py-3 bg-slate-50 d-flex align-items-center justify-content-between" style="background: #f8fafc;">
                     <span class="small text-slate-500">
                         <i class="fa fa-shield-alt text-primary me-1"/>
-                        DeployGuard Operational Control Platform
+                        DogForce Operational Control Platform
                     </span>
                     <button type="button" class="btn btn-secondary px-4 py-2 fw-semibold" t-on-click="props.closeModal">
                         Close Inspector

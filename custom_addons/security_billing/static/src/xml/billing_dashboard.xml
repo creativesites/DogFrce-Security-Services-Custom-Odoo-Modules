@@ -272,7 +272,7 @@
                     </div>
                 </t>
 
-                <!-- TAB 2: AR AGING & COLLECTIONS -->
+                <!-- TAB 2: AR AGING &amp; COLLECTIONS -->
                 <t t-if="state.activeTab === 'aging'">
                     <div class="row g-3 mb-4">
                         <div class="col-6 col-lg-3">

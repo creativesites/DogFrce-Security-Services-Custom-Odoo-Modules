@@ -4,8 +4,8 @@ import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odo
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 
-export class DeployGuardMainCommandCenter extends Component {
-    static template = "security_base.DeployGuardMainCommandCenter";
+export class DogForceMainCommandCenter extends Component {
+    static template = "security_base.DogForceMainCommandCenter";
     static props = { "*": true };
 
     setup() {
@@ -117,7 +117,7 @@ export class DeployGuardMainCommandCenter extends Component {
                 hasItems,
             };
         } catch (err) {
-            console.warn("DeployGuard Command Center metric load notice:", err);
+            console.warn("DogForce Command Center metric load notice:", err);
         } finally {
             this.state.loading = false;
         }
@@ -167,4 +167,4 @@ export class DeployGuardMainCommandCenter extends Component {
     }
 }
 
-registry.category("actions").add("deployguard.main_command_center", DeployGuardMainCommandCenter);
+registry.category("actions").add("deployguard.main_command_center", DogForceMainCommandCenter);

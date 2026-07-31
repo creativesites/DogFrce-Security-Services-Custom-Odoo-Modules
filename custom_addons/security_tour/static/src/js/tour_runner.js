@@ -47,20 +47,20 @@ export const TOUR_DEFINITIONS = {
         isProspect: true,
         steps: [
             {
-                title: "Welcome to DeployGuard",
-                content: "DeployGuard eliminates ghost guards, prevents double-booking, and automates your security payroll natively. Let's explore the core platform in 3 minutes!",
+                title: "Welcome to DogForce",
+                content: "DogForce eliminates ghost guards, prevents double-booking, and automates your security payroll natively. Let's explore the core platform in 3 minutes!",
                 actionXmlId: null,
                 targetSelector: null,
             },
             {
                 title: "Rostering Hub — Auto-fill Magic",
-                content: "Click 'Auto-Assign' and DeployGuard's AI engine fills every empty shift with the best available guard in seconds based on grade, proximity, and rest rules.",
+                content: "Click 'Auto-Assign' and DogForce's AI engine fills every empty shift with the best available guard in seconds based on grade, proximity, and rest rules.",
                 actionXmlId: "security_shift_planner.action_rostering_hub",
                 targetSelector: ".rh-btn-success, .rh-topbar-actions, .rh-topbar, .rh-shell, .o_content",
             },
             {
                 title: "WhatsApp Field Command",
-                content: "Supervisors don't need a heavy mobile app. They simply send a WhatsApp message like 'STATUS' or 'AWOL John' – and DeployGuard updates attendance instantly.",
+                content: "Supervisors don't need a heavy mobile app. They simply send a WhatsApp message like 'STATUS' or 'AWOL John' – and DogForce updates attendance instantly.",
                 actionXmlId: "security_ai_whatsapp_bridge.action_whatsapp_dashboard_client",
                 targetSelector: ".o_whatsapp_simulator_card, .ws-shell, .o_content",
             },
@@ -102,7 +102,7 @@ export const TOUR_DEFINITIONS = {
             },
             {
                 title: "AWOL Standby Replacements",
-                content: "If a guard fails to show, tap 'AWOL'. DeployGuard immediately calculates the nearest eligible standby guard.",
+                content: "If a guard fails to show, tap 'AWOL'. DogForce immediately calculates the nearest eligible standby guard.",
                 actionXmlId: "security_attendance.action_attendance_posting_console",
                 targetSelector: ".ps-btn-awol, button:contains('AWOL'), .ps-grid, .o_content",
             },
@@ -126,7 +126,7 @@ export const TOUR_DEFINITIONS = {
             },
             {
                 title: "AI Auto-Assignment",
-                content: "Click 'Auto-Assign' to let DeployGuard assign eligible guards based on reliability, rest hours, and grade requirements.",
+                content: "Click 'Auto-Assign' to let DogForce assign eligible guards based on reliability, rest hours, and grade requirements.",
                 actionXmlId: "security_shift_planner.action_roster_board",
                 targetSelector: ".rb-btn-auto, button:contains('Auto-Assign'), .rb-shell, .o_content",
             },
@@ -144,7 +144,7 @@ export const TOUR_DEFINITIONS = {
             },
             {
                 title: "AI Anomaly Detection",
-                content: "DeployGuard's AI automatically flags cost spikes, unbilled shifts, and overtime anomalies before payroll runs.",
+                content: "DogForce's AI automatically flags cost spikes, unbilled shifts, and overtime anomalies before payroll runs.",
                 actionXmlId: "security_reporting.action_security_executive_dashboard",
                 targetSelector: ".ed-anomaly-panel, .ed-shell, .o_content",
             },
@@ -183,7 +183,7 @@ export class TourRunnerOverlay extends Component {
     async startTour(technicalName) {
         const def = TOUR_DEFINITIONS[technicalName];
         if (!def) {
-            console.warn(`[DeployGuard Tour] Unknown tour identifier: ${technicalName}`);
+            console.warn(`[DogForce Tour] Unknown tour identifier: ${technicalName}`);
             return;
         }
 
@@ -307,6 +307,6 @@ export class TourRunnerOverlay extends Component {
     }
 }
 
-registry.category("main_components").add("DeployGuardTourRunner", {
+registry.category("main_components").add("DogForceTourRunner", {
     Component: TourRunnerOverlay,
 });

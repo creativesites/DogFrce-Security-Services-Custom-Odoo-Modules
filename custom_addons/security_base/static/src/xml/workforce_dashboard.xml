@@ -16,7 +16,7 @@
                     <i class="fa fa-users fa-lg"/>
                 </div>
                 <div>
-                    <h4 class="fw-bold mb-0 text-white fs-5">DeployGuard Workforce Management Dashboard</h4>
+                    <h4 class="fw-bold mb-0 text-white fs-5">DogForce Workforce Management Dashboard</h4>
                     <div class="text-slate-400 small" style="font-size: 12px; color: #94a3b8;">
                         Central Guard Directory, Compliance Vetting, Disciplinary Intelligence &amp; HR Ops
                     </div>
@@ -195,7 +195,7 @@
             </t>
 
             <!-- ═══════════════════════════════════════════════════════════════
-                 TAB 2: COMPLIANCE & EXPIRATIONS
+                 TAB 2: COMPLIANCE &amp; EXPIRATIONS
                  ═══════════════════════════════════════════════════════════════ -->
             <t t-if="state.activeTab === 'compliance'">
                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
@@ -242,7 +242,7 @@
             </t>
 
             <!-- ═══════════════════════════════════════════════════════════════
-                 TAB 3: DISCIPLINE & INCIDENTS
+                 TAB 3: DISCIPLINE &amp; INCIDENTS
                  ═══════════════════════════════════════════════════════════════ -->
             <t t-if="state.activeTab === 'discipline'">
                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
@@ -289,7 +289,7 @@
             </t>
 
             <!-- ═══════════════════════════════════════════════════════════════
-                 TAB 4: LEAVE & REST REQUESTS
+                 TAB 4: LEAVE &amp; REST REQUESTS
                  ═══════════════════════════════════════════════════════════════ -->
             <t t-if="state.activeTab === 'leave'">
                 <div class="card border-0 shadow-sm rounded-3 overflow-hidden">

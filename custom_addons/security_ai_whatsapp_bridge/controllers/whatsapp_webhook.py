@@ -31,7 +31,7 @@ class WhatsAppWebhookController(http.Controller):
             _logger.warning("WhatsApp Webhook | Received empty Body from sender [%s]", sender)
             return {
                 "status": "error",
-                "reply": "DeployGuard AI: Empty message body received. Please type 'help' for instructions.",
+                "reply": "DogForce AI: Empty message body received. Please type 'help' for instructions.",
             }
 
         bridge_model = request.env["security.whatsapp.bridge"].sudo()

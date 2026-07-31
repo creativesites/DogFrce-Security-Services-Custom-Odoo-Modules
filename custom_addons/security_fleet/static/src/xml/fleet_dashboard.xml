@@ -5,7 +5,7 @@
 <div class="o_fleet_dashboard fd-shell">
 
     <!-- ═══════════════════════════════════════════════════════════
-         LEFT SIDEBAR — Control & Navigation Panel
+         LEFT SIDEBAR — Control &amp; Navigation Panel
          ═══════════════════════════════════════════════════════════ -->
     <div class="fd-nav-sidebar d-flex flex-column">
 
@@ -106,7 +106,7 @@
             </div>
         </div>
 
-        <!-- Controls Strip (Search & Tabs) -->
+        <!-- Controls Strip (Search &amp; Tabs) -->
         <div class="px-4 py-3 bg-white border-bottom d-flex align-items-center justify-content-between gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-3">
                 <!-- Search Input -->

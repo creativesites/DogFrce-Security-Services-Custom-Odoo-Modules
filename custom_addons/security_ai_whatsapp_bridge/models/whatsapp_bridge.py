@@ -36,7 +36,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
                 status="unauthorized", is_auth=False, sender_name=sender_name,
                 employee_id=emp_id, partner_id=partner_id
             )
-            reply = "⚠️ *DeployGuard AI:* Access Denied. Your phone number is not authorized to execute operational commands."
+            reply = "⚠️ *DogForce AI:* Access Denied. Your phone number is not authorized to execute operational commands."
             self._log_message(
                 sender, reply, direction="outbound", intent="unauthorized",
                 status="unauthorized", is_auth=False, sender_name=sender_name,
@@ -95,8 +95,8 @@ class SecurityWhatsAppBridge(models.AbstractModel):
                 reply_msg = None
             else:
                 reply_msg = (
-                    "ℹ️ *DeployGuard AI:* Unrecognized command.\n"
-                    "DeployGuard processes security, roster, guard, & incident commands.\n"
+                    "ℹ️ *DogForce AI:* Unrecognized command.\n"
+                    "DogForce processes security, roster, guard, & incident commands.\n"
                     "Type `HELP` for available commands."
                 )
 
@@ -248,7 +248,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         clean_name = re.sub(r'\b(is|guard|where|on\s+duty|posted|find|status\s+of)\b', '', text, flags=re.IGNORECASE).strip(" :-?")
         if not clean_name:
             return (
-                "⚠️ *DeployGuard AI* — *Guard Query Warning*\n\n"
+                "⚠️ *DogForce AI* — *Guard Query Warning*\n\n"
                 "Please specify the guard's name. Example: `Where is Winston Zulu?`"
             )
 
@@ -259,7 +259,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         ], limit=1)
 
         if not employee:
-            return f"ℹ️ *DeployGuard AI:* Guard matching *'{clean_name}'* was not found in active records."
+            return f"ℹ️ *DogForce AI:* Guard matching *'{clean_name}'* was not found in active records."
 
         today = fields.Date.today()
         slot = self.env["security.roster.slot"].sudo().search([
@@ -290,7 +290,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             duty_status = "⏳ *Scheduled — Awaiting Check-In*"
 
         return (
-            f"🛡️ *DeployGuard AI* — *Guard Real-Time Status*\n\n"
+            f"🛡️ *DogForce AI* — *Guard Real-Time Status*\n\n"
             f"👤 *Guard Name:* {employee.name}\n"
             f"📍 *Site Posting:* {site_name}\n"
             f"🛡️ *Specific Post:* {post_name}\n"
@@ -306,13 +306,13 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         clean_text = re.sub(r'\b(incident|report\s+incident|report|issue\s+at)\b', '', text, flags=re.IGNORECASE).strip(" :-")
         if not clean_text:
             return (
-                "⚠️ *DeployGuard AI* — *Incident Report Warning*\n\n"
+                "⚠️ *DogForce AI* — *Incident Report Warning*\n\n"
                 "Please describe the incident. Syntax: `Incident at [Site]: [Details]`\n"
                 "• *Example:* `Incident at Bank of Zambia: Rear perimeter gate latch broken`"
             )
 
         return (
-            f"🚨 *DeployGuard AI* — *Incident Recorded & Escalated*\n\n"
+            f"🚨 *DogForce AI* — *Incident Recorded & Escalated*\n\n"
             f"📝 *Report Details:* {clean_text}\n"
             f"📱 *Reported By:* {sender_name or 'Field Supervisor'} ({sender_phone})\n"
             f"⏰ *Timestamp:* {fields.Datetime.now()}\n\n"
@@ -342,7 +342,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
 
         if not site_name:
             return (
-                "⚠️ *DeployGuard AI* — *Bulk Attendance Warning*\n\n"
+                "⚠️ *DogForce AI* — *Bulk Attendance Warning*\n\n"
                 "Could not identify the Client Site name in your message.\n"
                 "• *Syntax:* `[Site Name] all present [except Guard Name]`\n"
                 "• *Example:* `Bank of Zambia all present except Winston Zulu`"
@@ -369,7 +369,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
 
         if not slots:
             return (
-                f"ℹ️ *DeployGuard AI:* No active roster slots found scheduled today for Site matching *'{site_name}'*.\n"
+                f"ℹ️ *DogForce AI:* No active roster slots found scheduled today for Site matching *'{site_name}'*.\n"
                 "Please verify the site name or query `STATUS` for active sites."
             )
 
@@ -417,7 +417,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         awol_str = "\n".join([f"  • 🔴 {name} *(AWOL)*" for name in marked_awol]) if marked_awol else "  • _None_"
 
         return (
-            f"✅ *DeployGuard AI* — *Site Attendance Synced*\n\n"
+            f"✅ *DogForce AI* — *Site Attendance Synced*\n\n"
             f"📍 *Site:* {site_display_name}\n"
             f"📅 *Date:* {today}\n"
             f"📋 *Total Site Posts:* {len(slots)}\n\n"
@@ -440,7 +440,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
 
         if not clean_guard:
             return (
-                "⚠️ *DeployGuard AI* — *Check-In Warning*\n\n"
+                "⚠️ *DogForce AI* — *Check-In Warning*\n\n"
                 "Guard Name missing. Syntax: `Check in [Guard Name] [late X mins]`\n"
                 "• *Example:* `Check in Winston Zulu late 20 minutes`"
             )
@@ -452,7 +452,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         ], limit=1)
 
         if not employee:
-            return f"ℹ️ *DeployGuard AI:* Guard matching *'{clean_guard}'* was not found in active employee records."
+            return f"ℹ️ *DogForce AI:* Guard matching *'{clean_guard}'* was not found in active employee records."
 
         today = fields.Date.today()
         slot = self.env["security.roster.slot"].sudo().search([
@@ -486,7 +486,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         lateness_badge = f"🟡 *Late Arrival:* `{lateness_minutes} Minutes Variance`" if lateness_minutes > 0 else "🟢 *Attendance:* `On-Time (0 Min Variance)`"
 
         return (
-            f"⏱️ *DeployGuard AI* — *Guard Check-In Registered*\n\n"
+            f"⏱️ *DogForce AI* — *Guard Check-In Registered*\n\n"
             f"👤 *Guard Name:* {employee.name}\n"
             f"📍 *Site:* {site_name}\n"
             f"🛡️ *Posting:* {post_name}\n"
@@ -504,7 +504,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         guard_candidate = parts[-1].strip(" :-") if len(parts) > 1 else ""
         if not guard_candidate:
             return (
-                "⚠️ *DeployGuard AI* — *AWOL Warning*\n\n"
+                "⚠️ *DogForce AI* — *AWOL Warning*\n\n"
                 "Guard Name missing. Syntax: `AWOL [Guard Name]`\n"
                 "• *Example:* `AWOL Winston Zulu`"
             )
@@ -512,14 +512,14 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         res = self.mark_guard_awol(guard_candidate)
         if isinstance(res, dict):
             return (
-                "🚨 *DeployGuard AI* — *AWOL Incident Logged*\n\n"
+                "🚨 *DogForce AI* — *AWOL Incident Logged*\n\n"
                 f"👤 *Guard Name:* {res.get('guard_name')}\n"
                 f"📍 *Site:* {res.get('site_name')}\n"
                 f"🛡️ *Posting:* {res.get('post_name')}\n"
                 "⚠️ *Status:* Flagged as *AWOL / Unexcused Absence*\n\n"
                 "⚡ *Action:* Incident registered on Central Intelligence Bus."
             )
-        return f"ℹ️ *DeployGuard AI:* {res}"
+        return f"ℹ️ *DogForce AI:* {res}"
 
     @api.model
     def mark_guard_awol(self, guard_name):
@@ -625,7 +625,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             net_payable = gross_payroll + guard_allowances + overtime_amount - statutory_deductions
 
         return (
-            "💼 *DeployGuard Executive Intelligence* — *Owner & Payroll Summary*\n"
+            "💼 *DogForce Executive Intelligence* — *Owner & Payroll Summary*\n"
             f"📅 *Date:* {today}\n\n"
             "💰 *Financial & Commercial Metrics:*\n"
             f"• 🏢 *Active Client Sites:* `{active_sites}`\n"
@@ -641,7 +641,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             f"• 🟢 *Roster Coverage Rate:* `{coverage_pct}%`\n"
             f"• 🔴 *Unexcused AWOL Gaps:* `{awol_count} Shifts`\n"
             f"• ⚠️ *SLA Penalty Risk:* `{'Low Risk' if awol_count == 0 else f'{awol_count} Posts at SLA Risk'}`\n\n"
-            "⚡ *DeployGuard Enterprise Control Room is synchronized.*"
+            "⚡ *DogForce Enterprise Control Room is synchronized.*"
         )
 
     @api.model
@@ -666,7 +666,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         site_text = "\n".join(site_summaries) if site_summaries else "  • _All sites operational_"
 
         return (
-            "📊 *DeployGuard Operations Intelligence* — *Manager Summary*\n"
+            "📊 *DogForce Operations Intelligence* — *Manager Summary*\n"
             f"📅 *Shift Date:* {today}\n\n"
             "📋 *Shift Roster Overview:*\n"
             f"• 🛡️ *Total Posts Scheduled:* `{total_posts}`\n"
@@ -681,7 +681,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
     def get_roster_status_summary_formatted(self):
         stats = self.get_roster_status_summary()
         return (
-            "🛡️ *DeployGuard AI* — *Daily Roster Summary*\n"
+            "🛡️ *DogForce AI* — *Daily Roster Summary*\n"
             f"📅 *Date:* {stats.get('date', 'Today')}\n\n"
             "📊 *Posting Metrics:*\n"
             f"• 📋 *Total Scheduled Posts:* `{stats.get('total', 0)}`\n"
@@ -713,7 +713,7 @@ class SecurityWhatsAppBridge(models.AbstractModel):
     @api.model
     def get_help_menu(self):
         return (
-            "🤖 *DeployGuard AI Control Room Assistant* — *Command Menu*\n\n"
+            "🤖 *DogForce AI Control Room Assistant* — *Command Menu*\n\n"
             "Below are the interactive WhatsApp field commands available for supervisors and executives:\n\n"
             "📍 *1. Bulk Site Attendance*\n"
             "• `[Site Name] all present` — Mark all site guards on-time\n"

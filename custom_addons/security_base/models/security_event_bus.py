@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 
 class SecurityEventLog(models.Model):
     _name = "security.event.log"
-    _description = "DeployGuard Intelligence Bus Event Log"
+    _description = "DogForce Intelligence Bus Event Log"
     _order = "create_date desc, id desc"
 
     name = fields.Char(
@@ -46,7 +46,7 @@ class SecurityEventLog(models.Model):
     @api.model
     def register_event(self, name, source_model, source_id, event_data=None, payload=None, **kwargs):
         """
-        Primary API to broadcast an operational event into the DeployGuard Intelligence Bus.
+        Primary API to broadcast an operational event into the DogForce Intelligence Bus.
         Creates an audit event log and immediately dispatches it to registered loops.
         Accepts both event_data and payload for robust cross-module compatibility.
         """

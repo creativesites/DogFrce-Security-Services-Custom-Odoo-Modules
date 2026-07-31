@@ -36,7 +36,7 @@
 
     <!-- ============================================================ -->
     <!-- Extend employee form — Zambian Statutory Registration tab     -->
-    <!-- Added inside the existing "Payroll & Banking" page           -->
+    <!-- Added inside the existing "Payroll &amp; Banking" page           -->
     <!-- ============================================================ -->
     <record id="view_hr_employee_form_zm_payroll" model="ir.ui.view">
         <field name="name">hr.employee.form.zm.payroll</field>

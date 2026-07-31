@@ -32,29 +32,29 @@ class SecurityWhatsAppReplyWizard(models.TransientModel):
         guard_name = self.sender_name or (self.employee_id.name if self.employee_id else "Officer")
         if self.template_type == "ack_incident":
             self.message_body = (
-                f"🚨 *DeployGuard Control Room Dispatch*\n\n"
+                f"🚨 *DogForce Control Room Dispatch*\n\n"
                 f"Dear {guard_name}, your incident report has been received and logged in Central Intelligence.\n"
                 f"A supervisor/patrol unit has been alerted."
             )
         elif self.template_type == "confirm_attendance":
             self.message_body = (
-                f"✅ *DeployGuard Control Room*\n\n"
+                f"✅ *DogForce Control Room*\n\n"
                 f"Attendance confirmed for {guard_name}. Your shift posting is active and synchronized with payroll."
             )
         elif self.template_type == "request_location":
             self.message_body = (
-                f"📍 *DeployGuard Control Room Check*\n\n"
+                f"📍 *DogForce Control Room Check*\n\n"
                 f"Attention {guard_name}: Please send your current post status or share your live GPS location."
             )
         elif self.template_type == "awol_warning":
             self.message_body = (
-                f"⚠️ *DeployGuard Control Room Alert*\n\n"
+                f"⚠️ *DogForce Control Room Alert*\n\n"
                 f"Officer {guard_name}: You have been flagged for unexcused absence (AWOL) on today's roster.\n"
                 f"Reply immediately or contact your field supervisor."
             )
         elif self.template_type == "shift_reminder":
             self.message_body = (
-                f"⏱️ *DeployGuard Shift Reminder*\n\n"
+                f"⏱️ *DogForce Shift Reminder*\n\n"
                 f"Attention {guard_name}: Your scheduled shift is starting shortly. Please report to your assigned post and send your check-in command."
             )
 

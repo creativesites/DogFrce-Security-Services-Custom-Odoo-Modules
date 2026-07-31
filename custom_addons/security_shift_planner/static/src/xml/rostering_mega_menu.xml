@@ -8,7 +8,7 @@
       <div class="rmm-header">
         <div class="rmm-brand">
           <div class="rmm-brand-badge">
-            <i class="fa fa-shield me-2"/>DeployGuard
+            <i class="fa fa-shield me-2"/>DogForce
           </div>
           <div>
             <h2 class="rmm-title">Rostering Command Center</h2>
@@ -140,7 +140,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 2: AI & DEMAND PLANNING
+             TAB 2: AI &amp; DEMAND PLANNING
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'ai_planning'">
           <div class="rmm-section-label"><i class="fa fa-lightbulb-o me-2 text-warning"/>AI Prescriptive Engine &amp; Commercial Demand Sizing</div>
@@ -198,7 +198,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 3: SCHEDULES & RECORDS
+             TAB 3: SCHEDULES &amp; RECORDS
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'records'">
           <div class="rmm-section-label"><i class="fa fa-folder-open-o me-2 text-info"/>Published Batches, Roster Slots &amp; Guard Records</div>
@@ -256,7 +256,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 4: RULES & SETUP
+             TAB 4: RULES &amp; SETUP
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'rules'">
           <div class="rmm-section-label"><i class="fa fa-sliders me-2 text-indigo"/>Site Configuration, Post Requirements &amp; Exclusions</div>
@@ -326,10 +326,10 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 5: EXTRA GUIDANCE & MANUALS (NEW!)
+             TAB 5: EXTRA GUIDANCE &amp; MANUALS (NEW!)
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
-          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Rostering User Guide &amp; Best Practices</div>
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce Rostering User Guide &amp; Best Practices</div>
           
           <div class="rmm-guide-grid">
             <!-- Step 1 -->
@@ -349,7 +349,7 @@
               <div class="rmm-guide-body">
                 <div class="rmm-guide-title"><i class="fa fa-cogs me-2 text-info"/>Generating Shift Slots</div>
                 <div class="rmm-guide-text">
-                  Click <strong>Generate Slots</strong> on a draft batch. DeployGuard reads your active <em>Site Post Requirements</em> and <em>Shift Templates</em> to create exact unassigned shift slots for every date in the cycle.
+                  Click <strong>Generate Slots</strong> on a draft batch. DogForce reads your active <em>Site Post Requirements</em> and <em>Shift Templates</em> to create exact unassigned shift slots for every date in the cycle.
                 </div>
               </div>
             </div>
@@ -371,7 +371,7 @@
               <div class="rmm-guide-body">
                 <div class="rmm-guide-title"><i class="fa fa-exclamation-triangle me-2 text-warning"/>Overriding Warnings &amp; Audit Logs</div>
                 <div class="rmm-guide-text">
-                  If assigning a guard causes an ineligibility warning (e.g. rest hour conflict), DeployGuard prompts for an <strong>Override Reason</strong>. Every override is logged for audit compliance with a <em>WRONG FIT</em> tag.
+                  If assigning a guard causes an ineligibility warning (e.g. rest hour conflict), DogForce prompts for an <strong>Override Reason</strong>. Every override is logged for audit compliance with a <em>WRONG FIT</em> tag.
                 </div>
               </div>
             </div>
@@ -388,9 +388,9 @@
             </div>
           </div>
 
-          <!-- Shortcuts & Rules Cheatsheet -->
+          <!-- Shortcuts &amp; Rules Cheatsheet -->
           <div class="rmm-cheatsheet-box">
-            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>DeployGuard Rostering Shortcuts &amp; Rules</div>
+            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>DogForce Rostering Shortcuts &amp; Rules</div>
             <div class="rmm-cheatsheet-grid">
               <div class="rmm-cs-item"><span class="rmm-kbd">Esc</span> Close Command Center</div>
               <div class="rmm-cs-item"><span class="rmm-kbd">Alt + M</span> Open Command Center from Rostering</div>
@@ -409,7 +409,7 @@
       <div class="rmm-footer">
         <div class="rmm-footer-status">
           <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>System Operational</span>
-          <span class="rmm-status-pill blue"><i class="fa fa-shield me-1"/>DeployGuard AI 19.0 Active</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-shield me-1"/>DogForce AI 19.0 Active</span>
         </div>
         <div class="rmm-footer-tip">
           Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace

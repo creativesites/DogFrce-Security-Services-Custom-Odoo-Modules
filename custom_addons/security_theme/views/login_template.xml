@@ -41,9 +41,9 @@
             <script>document.body.classList.add('dg_login_branded');</script>
             <div class="dg_login_header text-center mb-3">
                 <img src="/security_theme/static/src/img/deployguard-w.png"
-                     alt="DeployGuard"
+                     alt="DogForce"
                      style="max-height:56px; width:auto;"/>
-                <div class="dg_platform_name fw-bold mt-2" style="font-size:1.15rem; letter-spacing:.03em;">DeployGuard Security Platform</div>
+                <div class="dg_platform_name fw-bold mt-2" style="font-size:1.15rem; letter-spacing:.03em;">DogForce Security Platform</div>
                 <div class="dg_platform_tagline text-muted small" style="color:#fff !important; opacity:0.7;">Professional Security Management Suite</div>
                 <div class="dg_login_highlights">
                     <span><i class="fa fa-shield"/> Guard Operations</span>

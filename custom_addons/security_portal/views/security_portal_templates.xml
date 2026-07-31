@@ -4,7 +4,7 @@
     <template id="portal_my_home_security" name="Show Security Dashboard" inherit_id="portal.portal_my_home" priority="30">
         <xpath expr="//div[hasclass('o_portal_docs')]" position="inside">
             <t t_call="portal.portal_docs_entry">
-                <t t_set="title">DeployGuard Security Operations</t>
+                <t t_set="title">DogForce Security Operations</t>
                 <t t_set="url">/my/security-dashboard</t>
                 <t t_set="placeholder_count">Live</t>
             </t>
@@ -12,7 +12,7 @@
     </template>
 
     <!-- Detailed Premium Portal Client Dashboard Template -->
-    <template id="security_portal_dashboard" name="DeployGuard Security Dashboard">
+    <template id="security_portal_dashboard" name="DogForce Security Dashboard">
         <t t_call="portal.portal_layout">
             <t t_set="breadcrumbs_searchbar" t_value="True"/>
             
@@ -102,7 +102,7 @@
                         <h1 class="display-6 font-weight-bold mb-1" style="letter-spacing: -0.5px;">
                             Welcome, <span class="text-gradient-cyan"><t t_esc="partner.name"/></span>
                         </h1>
-                        <p class="text-muted mb-0">DeployGuard Operational Command Center | Real-time SLA Integrity Portal</p>
+                        <p class="text-muted mb-0">DogForce Operational Command Center | Real-time SLA Integrity Portal</p>
                     </div>
                     <div class="col-md-4 text-md-right mt-3 mt-md-0">
                         <span class="badge badge-pill py-2 px-3" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; font-size: 13px;">
@@ -162,7 +162,7 @@
                     </div>
                 </div>
 
-                <!-- Main Grid & Interactive Forms -->
+                <!-- Main Grid &amp; Interactive Forms -->
                 <div class="row">
                     <!-- Left Column: Active Deployment Grid -->
                     <div class="col-lg-8 mb-4">
@@ -223,7 +223,7 @@
                         </div>
                     </div>
 
-                    <!-- Right Column: Interactive Site Feedback & Ratings -->
+                    <!-- Right Column: Interactive Site Feedback &amp; Ratings -->
                     <div class="col-lg-4 mb-4">
                         <div class="card glass-card p-4">
                             <h3 class="h5 font-weight-bold mb-2"><i class="fa fa-star mr-2 text-warning"></i> Operational Feedback</h3>

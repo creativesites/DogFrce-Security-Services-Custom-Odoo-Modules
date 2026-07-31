@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_fleet.FleetMegaMenu" owl="1">
+  <div class="rmm-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="rmm-container">
+
+      <!-- Header -->
+      <div class="rmm-header">
+        <div class="rmm-brand">
+          <div class="rmm-brand-badge">
+            <i class="fa fa-car me-2"/>DogForce Fleet &amp; Patrol Transport
+          </div>
+          <div>
+            <h2 class="rmm-title">Fleet &amp; Transport Command Center</h2>
+            <div class="rmm-subtitle">Patrol Vehicles, Response Escorts, Fuel Logs, Odometer &amp; Fleet Operations</div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="rmm-search-box">
+          <i class="fa fa-search rmm-search-icon"/>
+          <input type="text"
+                 class="rmm-search-input"
+                 placeholder="Search patrol vehicles, fuel logs, drivers, service records, or dispatch (e.g., 'Patrol', 'Fuel', 'Driver')..."
+                 t-model="state.searchQuery"/>
+        </div>
+
+        <button class="rmm-close-btn" t-on-click="() => this.close()" title="Close Command Center (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="rmm-tabs-bar">
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'launchpad' ? 'active' : '')"
+                t-on-click="() => this.setTab('launchpad')">
+          <i class="fa fa-rocket me-2"/>Quick Launchpad
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'fleet_directory' ? 'active' : '')"
+                t-on-click="() => this.setTab('fleet_directory')">
+          <i class="fa fa-car me-2"/>Patrol Fleet Directory
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'fuel_mileage' ? 'active' : '')"
+                t-on-click="() => this.setTab('fuel_mileage')">
+          <i class="fa fa-tachometer me-2"/>Fuel &amp; Mileage
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'maintenance' ? 'active' : '')"
+                t-on-click="() => this.setTab('maintenance')">
+          <i class="fa fa-wrench me-2"/>Maintenance &amp; Service
+        </button>
+        <button t-att-class="'rmm-tab-btn rmm-tab-guidance ' + (state.activeTab === 'guidance' ? 'active' : '')"
+                t-on-click="() => this.setTab('guidance')">
+          <i class="fa fa-book me-2"/>Fleet Policy &amp; Guidance
+        </button>
+      </div>
+
+      <!-- Main Body Content -->
+      <div class="rmm-body">
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 1: QUICK LAUNCHPAD
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'launchpad'">
+          <div class="rmm-section-label"><i class="fa fa-star me-2 text-primary"/>Core Patrol Fleet Workspaces &amp; Dispatch Matrix</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Patrol Vehicles Directory', 'Master list of patrol vehicles', ['fleet', 'vehicles', 'patrol', 'car'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-car"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Patrol Vehicles Directory</span>
+                  <span class="rmm-pill pill-primary">Primary</span>
+                </div>
+                <div class="rmm-card-desc">Master list of active patrol cars, response trucks, escorts, and assigned response drivers.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Fleet Operations Dashboard', 'Live patrol fleet dashboard', ['dashboard', 'fleet', 'ops'])"
+                 t-on-click="() => this.openAction('security_fleet.action_fleet_dashboard')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-tachometer"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Fleet Dashboard</span>
+                  <span class="rmm-pill pill-success">Live Ops</span>
+                </div>
+                <div class="rmm-card-desc">Real-time vehicle availability, active patrol routes, fuel burn rates, and maintenance alerts.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Fuel Log &amp; Receipts', 'Vehicle refueling records and receipts', ['fuel', 'log', 'gas', 'diesel'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle_fuel_log')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-tint"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Fuel Refueling Log</span>
+                  <span class="rmm-pill pill-warning">Fuel</span>
+                </div>
+                <div class="rmm-card-desc">Log liters filled, fuel costs, station receipts, driver signatures, and km/l efficiency.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Vehicle Maintenance &amp; Repairs', 'Service orders and mechanical repairs', ['service', 'repair', 'maintenance'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle_service_log')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-wrench"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Vehicle Maintenance Log</span>
+                  <span class="rmm-pill pill-rose">Service</span>
+                </div>
+                <div class="rmm-card-desc">Track mechanical service orders, oil changes, tire replacements, and vendor repair costs.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 2: PATROL FLEET DIRECTORY
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'fleet_directory'">
+          <div class="rmm-section-label"><i class="fa fa-car me-2 text-primary"/>Active Vehicles, Escorts, Response Bikes &amp; Drivers</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('All Patrol Vehicles', 'Complete fleet directory', ['vehicles', 'cars', 'trucks'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-car"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Patrol Vehicles Directory</span>
+                  <span class="rmm-pill pill-primary">Fleet</span>
+                </div>
+                <div class="rmm-card-desc">Complete directory with registration numbers, model year, assigned site route, and status.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Vehicle Models', 'Vehicle makes and models catalog', ['models', 'makes', 'types'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle')">
+              <div class="rmm-card-icon icon-teal"><i class="fa fa-list"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Vehicle Models</span>
+                  <span class="rmm-pill pill-info">Catalog</span>
+                </div>
+                <div class="rmm-card-desc">Configure vehicle makes and models (e.g. Toyota Hilux, Isuzu D-Max, Land Cruiser).</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 3: FUEL &amp; MILEAGE
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'fuel_mileage'">
+          <div class="rmm-section-label"><i class="fa fa-tachometer me-2 text-warning"/>Fuel Refueling Log, Odometer Mileage &amp; Efficiency</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Fuel Refueling Log', 'Fuel logs and costs', ['fuel', 'gas', 'diesel'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle_fuel_log')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-tint"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Fuel Refueling Log</span>
+                  <span class="rmm-pill pill-warning">Fuel</span>
+                </div>
+                <div class="rmm-card-desc">Track refueling receipts, diesel liters filled, station costs, and km/liter performance.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Odometer Mileage Logs', 'Daily vehicle odometer readings', ['odometer', 'mileage', 'km'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle_fuel_log')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-tachometer"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Odometer &amp; Mileage Log</span>
+                  <span class="rmm-pill pill-success">Mileage</span>
+                </div>
+                <div class="rmm-card-desc">Daily kilometer readings, shift distance traveled, and scheduled service intervals.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 4: MAINTENANCE &amp; SERVICE
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'maintenance'">
+          <div class="rmm-section-label"><i class="fa fa-wrench me-2 text-rose"/>Vehicle Service Orders, Repairs &amp; Inspection Logs</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Vehicle Maintenance &amp; Repairs', 'Service orders and repairs', ['service', 'repairs', 'maintenance'])"
+                 t-on-click="() => this.openAction('security_fleet.action_security_vehicle_service_log')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-wrench"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Vehicle Maintenance Log</span>
+                  <span class="rmm-pill pill-rose">Service</span>
+                </div>
+                <div class="rmm-card-desc">Service work orders, mechanic inspections, brake/tire replacements, and repair costs.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 5: FLEET POLICY &amp; GUIDANCE
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce Patrol Fleet SOP &amp; Driver Guidelines</div>
+          
+          <div class="rmm-guide-grid">
+            <!-- Step 1 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">1</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-check-square-o me-2 text-primary"/>Pre-Shift Vehicle Inspection</div>
+                <div class="rmm-guide-text">
+                  Patrol drivers must complete a pre-shift inspection check (*tire pressure, oil level, lights, radio, emergency beacon*) and log starting odometer kilometers before departing on route.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">2</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-tint me-2 text-warning"/>Fuel Refueling SOP</div>
+                <div class="rmm-guide-text">
+                  All vehicle refuelings must be recorded in the <strong>Fuel Refueling Log</strong> immediately with station receipt photo, exact liters, and current odometer reading to prevent fuel theft.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">3</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-wrench me-2 text-danger"/>Scheduled Service Intervals</div>
+                <div class="rmm-guide-text">
+                  Patrol vehicles are flagged for mechanical service every 5,000 km or 3 months. Vehicles exceeding service thresholds are marked <strong>In Service</strong> and removed from active route dispatch.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shortcuts &amp; Rules Cheatsheet -->
+          <div class="rmm-cheatsheet-box">
+            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Patrol Fleet Navigation Shortcuts</div>
+            <div class="rmm-cheatsheet-grid">
+              <div class="rmm-cs-item"><span class="rmm-kbd">Esc</span> Close Command Center</div>
+              <div class="rmm-cs-item"><span class="rmm-kbd">Alt + F</span> Open Fleet &amp; Transport Command Center</div>
+              <div class="rmm-cs-item"><i class="fa fa-check-circle text-success me-1"/> Mandatory Driver License Verification: Active PSV / Patrol License</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="rmm-footer">
+        <div class="rmm-footer-status">
+          <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Fleet Dispatch Active</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-car me-1"/>DogForce Fleet 19.0</span>
+        </div>
+        <div class="rmm-footer-tip">
+          Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace
+        </div>
+      </div>
+
+    </div>
+  </div>
+</t>
+</templates>

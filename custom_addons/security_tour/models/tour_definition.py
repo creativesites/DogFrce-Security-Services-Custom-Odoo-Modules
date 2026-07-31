@@ -3,7 +3,7 @@ from odoo import models, fields, api
 
 class SecurityTourDefinition(models.Model):
     _name = 'security.tour.definition'
-    _description = 'DeployGuard Product Tour Definition'
+    _description = 'DogForce Product Tour Definition'
     _order = 'sequence, id'
 
     name = fields.Char(string="Tour Name", required=True)

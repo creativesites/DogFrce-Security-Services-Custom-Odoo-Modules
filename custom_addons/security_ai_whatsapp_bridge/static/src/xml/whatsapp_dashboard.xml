@@ -4,7 +4,7 @@
     <!-- Dashboard OWL Template -->
     <t t-name="security_whatsapp.Dashboard">
         <div class="dg-wa-container">
-            <!-- Header & Action Bar -->
+            <!-- Header &amp; Action Bar -->
             <div class="dg-wa-header">
                 <div class="dg-wa-header-title">
                     <i class="fa fa-whatsapp" style="font-size: 1.8rem; color: #25d366;"/>

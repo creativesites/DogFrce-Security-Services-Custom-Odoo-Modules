@@ -51,7 +51,7 @@
             </select>
         </div>
 
-        <!-- New Roster & Manage Batches buttons -->
+        <!-- New Roster &amp; Manage Batches buttons -->
         <div class="px-3 pb-2 d-flex flex-column gap-1">
             <button class="rb-btn"
                     style="width:100%; font-size:12px; background:#1d4ed8; color:#fff; border-radius:7px;"
@@ -875,7 +875,7 @@
     </t>
 
     <!-- ═══════════════════════════════════════════════════════════
-         MONTHLY ROSTER BATCHES MANAGER (MODAL & MOBILE BOTTOM SHEET)
+         MONTHLY ROSTER BATCHES MANAGER (MODAL &amp; MOBILE BOTTOM SHEET)
          ═══════════════════════════════════════════════════════════ -->
     <t t-if="state.showBatchesDrawer">
         <div class="rb-modal-overlay" t-on-click="closeBatchesManager">
@@ -907,7 +907,7 @@
                     </div>
                 </div>
 
-                <!-- Search & Status Filter Bar -->
+                <!-- Search &amp; Status Filter Bar -->
                 <div class="px-4 pt-3 pb-2 border-bottom border-dark d-flex flex-column flex-md-row gap-2 align-items-md-center justify-content-between"
                      style="background:#0f172a;">
                     <!-- Filter Pills -->
@@ -1064,7 +1064,7 @@
                         </div>
                     </div>
 
-                    <!-- Client & Site -->
+                    <!-- Client &amp; Site -->
                     <div class="row g-2 mb-3">
                         <div class="col-12 col-md-6">
                             <label class="rb-form-label">Client <span class="text-danger">*</span></label>
@@ -1093,7 +1093,7 @@
                         </div>
                     </div>
 
-                    <!-- Target Month & Year -->
+                    <!-- Target Month &amp; Year -->
                     <div class="row g-2 mb-3">
                         <div class="col-6">
                             <label class="rb-form-label">Target Month</label>
@@ -1145,7 +1145,7 @@
                         </label>
                     </div>
 
-                    <!-- Live Validation & Preview Banner -->
+                    <!-- Live Validation &amp; Preview Banner -->
                     <div t-if="state.createDialog.validation" class="mb-3">
                         <div t-if="state.createDialog.validation.valid"
                              class="p-3 rounded border border-secondary"

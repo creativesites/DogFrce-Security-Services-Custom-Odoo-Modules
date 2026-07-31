@@ -230,6 +230,16 @@
         <field name="model">security.client.site</field>
         <field name="arch" type="xml">
             <kanban class="o_kanban_mobile">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="site_type"/>
+                <field name="partner_id"/>
+                <field name="contract_status"/>
+                <field name="risk_level"/>
+                <field name="site_coverage_today"/>
+                <field name="post_count"/>
+                <field name="supervisor_id"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card oe_kanban_global_click p-3 shadow-sm rounded border">
@@ -422,7 +432,7 @@
         </field>
     </record>
 
-    <!-- Client Action for Clients & Sites Mega Menu -->
+    <!-- Client Action for Clients &amp; Sites Mega Menu -->
     <record id="action_clients_sites_mega_menu" model="ir.actions.client">
         <field name="name">Clients &amp; Sites Command Center</field>
         <field name="tag">security_operations.clients_sites_mega_menu</field>
@@ -492,6 +502,11 @@
         <field name="model">security.post</field>
         <field name="arch" type="xml">
             <kanban default_group_by="site_id">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="post_type_id"/>
+                <field name="required_guard_count"/>
+                <field name="site_id"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card">

@@ -1,6 +1,6 @@
 {
     "name": "Security Billing CRM Integration",
-    "summary": "Tightly integrates DeployGuard security billing plans with standard Odoo CRM leads and opportunities.",
+    "summary": "Tightly integrates DogForce security billing plans with standard Odoo CRM leads and opportunities.",
     "version": "19.0.1.0.0",
     "category": "Security/CRM",
     "author": "Winston Zulu",

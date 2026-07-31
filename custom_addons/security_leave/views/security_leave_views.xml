@@ -211,6 +211,13 @@
         <field name="model">security.leave.request</field>
         <field name="arch" type="xml">
             <kanban default_group_by="state" quick_create="false">
+                <field name="id"/>
+                <field name="employee_id"/>
+                <field name="leave_type_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="requested_days"/>
+                <field name="state"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card">

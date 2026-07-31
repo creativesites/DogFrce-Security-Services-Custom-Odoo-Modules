@@ -15,9 +15,9 @@
         <field name="target">fullscreen</field>
     </record>
 
-    <!-- Client Action for Main DeployGuard OS Home Command Center -->
+    <!-- Client Action for Main DogForce OS Home Command Center -->
     <record id="action_deployguard_main_command_center" model="ir.actions.client">
-        <field name="name">DeployGuard OS Home</field>
+        <field name="name">DogForce OS Home</field>
         <field name="tag">deployguard.main_command_center</field>
         <field name="target">fullscreen</field>
     </record>

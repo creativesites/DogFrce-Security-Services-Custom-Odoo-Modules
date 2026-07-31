@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Add Odoo Invoice View Action Button & Auto-Reconcile Button on custom security.billing.invoice form -->
+    <!-- Add Odoo Invoice View Action Button &amp; Auto-Reconcile Button on custom security.billing.invoice form -->
     <record id="view_security_billing_invoice_form_inherit_account" model="ir.ui.view">
         <field name="name">security.billing.invoice.form.inherit.account</field>
         <field name="model">security.billing.invoice</field>

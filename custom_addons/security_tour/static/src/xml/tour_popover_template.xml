@@ -7,7 +7,7 @@
                     <img class="dg-tour-mascot-img" src="/security_tour/static/src/img/zuri_mascot.svg" alt="Zuri Mascot"/>
                     <div>
                         <div class="dg-tour-title-text"><t t-esc="title || 'Zuri Guide'"/></div>
-                        <div class="dg-tour-subtitle">DeployGuard Tour</div>
+                        <div class="dg-tour-subtitle">DogForce Tour</div>
                     </div>
                 </div>
             </div>

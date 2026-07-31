@@ -103,14 +103,14 @@ class SecurityWhatsAppConfig(models.Model):
                             </svg>
                         </div>
                         <div style="font-size: 18px; color: #15803d; font-weight: 700; text-align: center; margin-bottom: 6px;">WhatsApp Linked &amp; Active</div>
-                        <div style="font-size: 13px; color: #166534; font-weight: 500; text-align: center; line-height: 1.5;">DeployGuard AI Bridge is live.<br/>Send <b>STATUS</b> or <b>AWOL [Name]</b> from your phone.</div>
+                        <div style="font-size: 13px; color: #166534; font-weight: 500; text-align: center; line-height: 1.5;">DogForce AI Bridge is live.<br/>Send <b>STATUS</b> or <b>AWOL [Name]</b> from your phone.</div>
                     </div>
                 """
             else:
                 rec.qr_code_image = """
                     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); width: 320px; margin: 20px auto;">
                         <img src="/web/whatsapp/qr?t=%s" style="width: 270px; height: 270px; border-radius: 12px; margin-bottom: 16px; object-fit: contain;" alt="WhatsApp Link QR Code"/>
-                        <div style="font-size: 14px; color: #1e293b; font-weight: 600; text-align: center; margin-bottom: 4px;">Link DeployGuard</div>
+                        <div style="font-size: 14px; color: #1e293b; font-weight: 600; text-align: center; margin-bottom: 4px;">Link DogForce</div>
                         <div style="font-size: 12px; color: #64748b; font-weight: 400; text-align: center; line-height: 1.4;">Scan this QR with your phone's WhatsApp: Settings &gt; Linked Devices</div>
                     </div>
                 """ % fields.Datetime.now().timestamp()

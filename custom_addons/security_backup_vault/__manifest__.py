@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'DeployGuard Backup Vault & Offsite Sync',
+    'name': 'DogForce Backup Vault & Offsite Sync',
     'version': '19.0.1.0.0',
     'summary': 'Automated WAL point-in-time recovery, filestore snapshotting, Cloudflare R2 encrypted offsite backups, and disk alerts.',
     'description': """
-        DeployGuard Enterprise Backup Vault & Offsite Sync Module.
+        DogForce Enterprise Backup Vault & Offsite Sync Module.
         Features:
         - Continuous WAL point-in-time archiving logging.
         - Matched Database + Filestore nightly tarball snapshots with SHA-256 verification.

@@ -83,7 +83,7 @@ with registry.cursor() as cr:
     print(f"Created {job_count} new job positions.")
 
     # 3. CONTACTS (res.partner) & CLIENT SITES (security.client.site)
-    print("\n--- 3. Migrating Contacts (res.partner) & DeployGuard Client Sites ---")
+    print("\n--- 3. Migrating Contacts (res.partner) & DogForce Client Sites ---")
     _, partner_rows = get_rows("Contact (res.partner).xlsx")
     partner_count = 0
     site_count = 0
@@ -113,7 +113,7 @@ with registry.cursor() as cr:
             partner = env['res.partner'].create(vals)
             partner_count += 1
         
-        # Auto-create DeployGuard Client Site for Company Partners
+        # Auto-create DogForce Client Site for Company Partners
         site = env['security.client.site'].search([('name', '=', name)], limit=1)
         if not site:
             site_vals = {
@@ -125,10 +125,10 @@ with registry.cursor() as cr:
             env['security.client.site'].create(site_vals)
             site_count += 1
 
-    print(f"Created/Updated {partner_count} partners and created {site_count} DeployGuard client sites.")
+    print(f"Created/Updated {partner_count} partners and created {site_count} DogForce client sites.")
 
     # 4. EMPLOYEES (hr.employee) & DEPLOYGUARD GUARDS
-    print("\n--- 4. Migrating Employees (hr.employee) & DeployGuard Security Guards ---")
+    print("\n--- 4. Migrating Employees (hr.employee) & DogForce Security Guards ---")
     _, emp_rows = get_rows("Employee (hr.employee).xlsx")
     emp_count = 0
     for r in emp_rows:
@@ -190,7 +190,7 @@ with registry.cursor() as cr:
     print(f"Created {prod_count} new product templates.")
 
     # 6. SALES ORDERS (sale.order) ↔ DEPLOYGUARD BILLING PLANS & INVOICES ↔ ODOO INVOICES
-    print("\n--- 6. Migrating Sales Orders & Syncing with DeployGuard Billing Plans & Invoices ---")
+    print("\n--- 6. Migrating Sales Orders & Syncing with DogForce Billing Plans & Invoices ---")
     _, so_rows = get_rows("Sales Order (sale.order).xlsx")
     so_count = 0
     plan_count = 0
@@ -220,7 +220,7 @@ with registry.cursor() as cr:
         if not site:
             site = env['security.client.site'].create({'name': cust_name, 'partner_id': partner.id, 'code': f"SITE-{partner.id:04d}"})
 
-        # Create/sync DeployGuard Billing Plan
+        # Create/sync DogForce Billing Plan
         plan = env['security.billing.plan'].search([('partner_id', '=', partner.id)], limit=1)
         if not plan:
             plan = env['security.billing.plan'].create({
@@ -231,7 +231,7 @@ with registry.cursor() as cr:
             })
             plan_count += 1
 
-        # Create/sync DeployGuard Billing Invoice & Native Odoo Invoice
+        # Create/sync DogForce Billing Invoice & Native Odoo Invoice
         inv_ref = f"DG-INV-{site.id:04d}-{so_count+1:03d}"
         dg_inv = env['security.billing.invoice'].search([('name', '=', inv_ref)], limit=1)
         if not dg_inv:
@@ -263,7 +263,7 @@ with registry.cursor() as cr:
 
         so_count += 1
 
-    print(f"Synced {so_count} Sales Orders → {plan_count} Billing Plans, {inv_count} DeployGuard Invoices, & Native Odoo Invoices.")
+    print(f"Synced {so_count} Sales Orders → {plan_count} Billing Plans, {inv_count} DogForce Invoices, & Native Odoo Invoices.")
 
     # 7. ATTENDANCE (hr.attendance)
     print("\n--- 7. Migrating Attendance Records ---")

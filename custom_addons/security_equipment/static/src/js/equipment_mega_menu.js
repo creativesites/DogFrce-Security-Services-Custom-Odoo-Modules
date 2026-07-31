@@ -38,7 +38,7 @@ export class EquipmentMegaMenu extends Component {
             this.props.closeModal();
         } else {
             try {
-                this.action.doAction("security_equipment.action_security_equipment", { clearBreadcrumbs: true });
+                this.action.doAction("security_equipment.action_security_equipment_item", { clearBreadcrumbs: true });
             } catch (e) {
                 console.error("Failed to navigate to Equipment on close:", e);
             }

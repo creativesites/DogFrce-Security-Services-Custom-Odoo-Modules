@@ -8,7 +8,7 @@ _logger = logging.getLogger(__name__)
 
 class SecurityBackupRestoreWizard(models.TransientModel):
     _name = 'security.backup.restore.wizard'
-    _description = 'DeployGuard Backup Restore Wizard'
+    _description = 'DogForce Backup Restore Wizard'
 
     backup_record_id = fields.Many2one(
         'security.backup.record',

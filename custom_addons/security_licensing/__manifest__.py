@@ -1,7 +1,7 @@
 {
-    'name': 'DeployGuard Licensing',
+    'name': 'DogForce Licensing',
     'version': '19.0.1.0.0',
-    'summary': 'License enforcement and entitlement management for DeployGuard OS',
+    'summary': 'License enforcement and entitlement management for DogForce OS',
     'category': 'Administration',
     'author': 'DogForce Security Services',
     'license': 'OPL-1',

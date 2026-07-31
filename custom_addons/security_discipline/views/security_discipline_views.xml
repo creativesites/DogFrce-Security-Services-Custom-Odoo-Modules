@@ -127,6 +127,13 @@
         <field name="model">security.incident</field>
         <field name="arch" type="xml">
             <kanban default_group_by="state" quick_create="false">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="incident_type_id"/>
+                <field name="incident_date"/>
+                <field name="deduction_amount"/>
+                <field name="state"/>
                 <templates>
                     <t t-name="card">
                         <div class="oe_kanban_card">

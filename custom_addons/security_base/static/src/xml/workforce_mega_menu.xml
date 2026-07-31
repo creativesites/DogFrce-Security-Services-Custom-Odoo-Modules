@@ -8,7 +8,7 @@
       <div class="rmm-header">
         <div class="rmm-brand">
           <div class="rmm-brand-badge">
-            <i class="fa fa-users me-2"/>DeployGuard Workforce
+            <i class="fa fa-users me-2"/>DogForce Workforce
           </div>
           <div>
             <h2 class="rmm-title">Workforce Command Center</h2>
@@ -116,7 +116,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 2: COMPLIANCE & VETTING
+             TAB 2: COMPLIANCE &amp; VETTING
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'compliance'">
           <div class="rmm-section-label"><i class="fa fa-shield me-2 text-warning"/>License Expirations, Vetting Checks &amp; Mandatory Certifications</div>
@@ -162,7 +162,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 3: DISCIPLINE & CONDUCT
+             TAB 3: DISCIPLINE &amp; CONDUCT
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'discipline'">
           <div class="rmm-section-label"><i class="fa fa-gavel me-2 text-danger"/>Incident Reports, Disciplinary Hearings &amp; AWOL Tracking</div>
@@ -208,7 +208,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 4: LEAVE, LOANS & PAYROLL
+             TAB 4: LEAVE, LOANS &amp; PAYROLL
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'payroll_leave'">
           <div class="rmm-section-label"><i class="fa fa-sun-o me-2 text-success"/>Guard Leave Requests, Salary Advance Loans &amp; Payslips</div>
@@ -254,10 +254,10 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 5: HR POLICY & GUIDANCE
+             TAB 5: HR POLICY &amp; GUIDANCE
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
-          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Workforce Management SOP &amp; Policy Guidelines</div>
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce Workforce Management SOP &amp; Policy Guidelines</div>
           
           <div class="rmm-guide-grid">
             <!-- Step 1 -->
@@ -277,7 +277,7 @@
               <div class="rmm-guide-body">
                 <div class="rmm-guide-title"><i class="fa fa-shield me-2 text-warning"/>License Expiration Monitoring</div>
                 <div class="rmm-guide-text">
-                  DeployGuard automatically scans document expiration dates daily. Documents expiring within 30 days are highlighted on the <strong>Workforce Dashboard</strong> to trigger timely renewals before guards are blocked from rostering.
+                  DogForce automatically scans document expiration dates daily. Documents expiring within 30 days are highlighted on the <strong>Workforce Dashboard</strong> to trigger timely renewals before guards are blocked from rostering.
                 </div>
               </div>
             </div>
@@ -305,7 +305,7 @@
             </div>
           </div>
 
-          <!-- Shortcuts & Rules Cheatsheet -->
+          <!-- Shortcuts &amp; Rules Cheatsheet -->
           <div class="rmm-cheatsheet-box">
             <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Workforce Keyboard Shortcuts &amp; Guidelines</div>
             <div class="rmm-cheatsheet-grid">
@@ -324,7 +324,7 @@
       <div class="rmm-footer">
         <div class="rmm-footer-status">
           <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Workforce Bus Active</span>
-          <span class="rmm-status-pill blue"><i class="fa fa-users me-1"/>DeployGuard HR 19.0</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-users me-1"/>DogForce HR 19.0</span>
         </div>
         <div class="rmm-footer-tip">
           Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace

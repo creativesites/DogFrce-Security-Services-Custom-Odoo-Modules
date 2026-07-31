@@ -22,7 +22,7 @@ registry.category("web_tour.tours").add("deployguard_supervisor_tour", {
         },
         {
             trigger: ".o_tour_posting_awol_btn, button:contains('AWOL')",
-            content: "If a guard doesn't show up, tap AWOL. DeployGuard immediately suggests an eligible standby replacement.",
+            content: "If a guard doesn't show up, tap AWOL. DogForce immediately suggests an eligible standby replacement.",
             position: "left",
         },
     ]

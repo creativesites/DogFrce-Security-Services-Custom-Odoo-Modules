@@ -8,7 +8,7 @@
       <div class="rmm-header">
         <div class="rmm-brand">
           <div class="rmm-brand-badge">
-            <i class="fa fa-wrench me-2"/>DeployGuard Equipment &amp; Assets
+            <i class="fa fa-wrench me-2"/>DogForce Equipment &amp; Assets
           </div>
           <div>
             <h2 class="rmm-title">Equipment &amp; Assets Command Center</h2>
@@ -65,7 +65,7 @@
           <div class="rmm-card-grid">
 
             <div class="rmm-card" t-if="matchesSearch('All Equipment Inventory', 'Master equipment and firearms register', ['equipment', 'inventory', 'assets'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment')">
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_item')">
               <div class="rmm-card-icon icon-blue"><i class="fa fa-cubes"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
@@ -89,19 +89,19 @@
             </div>
 
             <div class="rmm-card" t-if="matchesSearch('Rapid Issue and Return Wizard', 'Quick equipment issuance dialog', ['wizard', 'issue', 'return'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_issuance_wizard')">
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_allocation')">
               <div class="rmm-card-icon icon-rose"><i class="fa fa-exchange"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
-                  <span class="rmm-card-title">Rapid Issue &amp; Return Wizard</span>
-                  <span class="rmm-pill pill-rose">Wizard</span>
+                  <span class="rmm-card-title">Guard Equipment Allocations</span>
+                  <span class="rmm-pill pill-rose">Allocations</span>
                 </div>
                 <div class="rmm-card-desc">Fast dialog for issuing two-way radios, firearms, or bodycams to guards starting a shift.</div>
               </div>
             </div>
 
             <div class="rmm-card" t-if="matchesSearch('Active Equipment Custody', 'Guard equipment assignments log', ['custody', 'assignments', 'issued'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_assignment')">
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_allocation')">
               <div class="rmm-card-icon icon-purple"><i class="fa fa-hand-paper-o"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
@@ -122,8 +122,8 @@
           <div class="rmm-section-label"><i class="fa fa-cube me-2 text-success"/>Firearms, Two-Way Radios, Bodycams &amp; PPE Kits</div>
           <div class="rmm-card-grid">
 
-            <div class="rmm-card" t-if="matchesSearch('Firearms & Ammunition Register', 'Armory and firearm serial numbers', ['firearm', 'ammo', 'armory', 'gun'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment')">
+            <div class="rmm-card" t-if="matchesSearch('Firearms &amp; Ammunition Register', 'Armory and firearm serial numbers', ['firearm', 'ammo', 'armory', 'gun'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_item')">
               <div class="rmm-card-icon icon-rose"><i class="fa fa-crosshairs"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
@@ -134,8 +134,8 @@
               </div>
             </div>
 
-            <div class="rmm-card" t-if="matchesSearch('Two-Way Radios & Bodycams', 'Communication and recording assets', ['radio', 'bodycam', 'comms'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment')">
+            <div class="rmm-card" t-if="matchesSearch('Two-Way Radios &amp; Bodycams', 'Communication and recording assets', ['radio', 'bodycam', 'comms'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_item')">
               <div class="rmm-card-icon icon-blue"><i class="fa fa-bullhorn"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
@@ -150,14 +150,14 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 3: SERVICE & INSPECTION
+             TAB 3: SERVICE &amp; INSPECTION
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'maintenance'">
           <div class="rmm-section-label"><i class="fa fa-wrench me-2 text-warning"/>Equipment Maintenance Logs, Inspections &amp; Low Stock Alerts</div>
           <div class="rmm-card-grid">
 
-            <div class="rmm-card" t-if="matchesSearch('Service & Repair Log', 'Equipment maintenance and repairs', ['service', 'repair', 'maintenance'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_maintenance')">
+            <div class="rmm-card" t-if="matchesSearch('Service &amp; Repair Log', 'Equipment maintenance and repairs', ['service', 'repair', 'maintenance'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_damage')">
               <div class="rmm-card-icon icon-amber"><i class="fa fa-wrench"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
@@ -179,7 +179,7 @@
           <div class="rmm-card-grid">
 
             <div class="rmm-card" t-if="matchesSearch('Guard Custody Register', 'Active equipment custody assignments', ['custody', 'issuance', 'guard'])"
-                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_assignment')">
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_allocation')">
               <div class="rmm-card-icon icon-purple"><i class="fa fa-hand-paper-o"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
@@ -194,10 +194,10 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 5: ASSET POLICY & GUIDANCE
+             TAB 5: ASSET POLICY &amp; GUIDANCE
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
-          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Asset Management Guidelines &amp; Armory SOP</div>
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce Asset Management Guidelines &amp; Armory SOP</div>
           
           <div class="rmm-guide-grid">
             <!-- Step 1 -->
@@ -234,7 +234,7 @@
             </div>
           </div>
 
-          <!-- Shortcuts & Rules Cheatsheet -->
+          <!-- Shortcuts &amp; Rules Cheatsheet -->
           <div class="rmm-cheatsheet-box">
             <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Equipment &amp; Asset Navigation Shortcuts</div>
             <div class="rmm-cheatsheet-grid">
@@ -252,7 +252,7 @@
       <div class="rmm-footer">
         <div class="rmm-footer-status">
           <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Armory Bus Active</span>
-          <span class="rmm-status-pill blue"><i class="fa fa-wrench me-1"/>DeployGuard Assets 19.0</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-wrench me-1"/>DogForce Assets 19.0</span>
         </div>
         <div class="rmm-footer-tip">
           Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace

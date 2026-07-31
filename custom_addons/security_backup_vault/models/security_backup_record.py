@@ -4,7 +4,7 @@ from odoo import api, fields, models, _
 
 class SecurityBackupRecord(models.Model):
     _name = 'security.backup.record'
-    _description = 'DeployGuard Backup Record & Audit Log'
+    _description = 'DogForce Backup Record & Audit Log'
     _order = 'created_date desc, id desc'
 
     name = fields.Char(

@@ -3,7 +3,7 @@
     <data noupdate="1">
         <record id="module_category_security_backup" model="ir.module.category">
             <field name="name">Backup Vault Administration</field>
-            <field name="description">Access management for DeployGuard Backup Vault &amp; Restores</field>
+            <field name="description">Access management for DogForce Backup Vault &amp; Restores</field>
             <field name="sequence">50</field>
         </record>
     </data>

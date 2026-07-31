@@ -23,7 +23,9 @@
         "web.assets_backend": [
             "security_fleet/static/src/css/fleet_dashboard.css",
             "security_fleet/static/src/js/fleet_dashboard.js",
+            "security_fleet/static/src/js/fleet_mega_menu.js",
             "security_fleet/static/src/xml/fleet_dashboard.xml",
+            "security_fleet/static/src/xml/fleet_mega_menu.xml",
         ],
     },
     "installable": True,

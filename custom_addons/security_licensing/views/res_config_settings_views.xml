@@ -6,7 +6,7 @@
             <field name="inherit_id" ref="base.res_config_settings_view_form"/>
             <field name="arch" type="xml">
                 <xpath expr="//form" position="inside">
-                    <app string="DeployGuard License" name="security_licensing"
+                    <app string="DogForce License" name="security_licensing"
                          groups="security_licensing.group_license_admin">
                         <block title="License Activation">
                             <setting string="License Key"

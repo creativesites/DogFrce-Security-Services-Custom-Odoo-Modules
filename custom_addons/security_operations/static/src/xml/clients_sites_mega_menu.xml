@@ -8,7 +8,7 @@
       <div class="rmm-header">
         <div class="rmm-brand">
           <div class="rmm-brand-badge">
-            <i class="fa fa-building me-2"/>DeployGuard Clients &amp; Sites
+            <i class="fa fa-building me-2"/>DogForce Clients &amp; Sites
           </div>
           <div>
             <h2 class="rmm-title">Clients &amp; Sites Command Center</h2>
@@ -116,7 +116,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 2: CLIENTS & CONTRACTS
+             TAB 2: CLIENTS &amp; CONTRACTS
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'clients_contracts'">
           <div class="rmm-section-label"><i class="fa fa-handshake-o me-2 text-success"/>Client Accounts, Service Contracts &amp; Rate Cards</div>
@@ -162,7 +162,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 3: LOCATIONS, GEOFENCE & POSTS
+             TAB 3: LOCATIONS, GEOFENCE &amp; POSTS
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'locations_posts'">
           <div class="rmm-section-label"><i class="fa fa-map-marker me-2 text-info"/>Site Guard Posts, Shift Requirements &amp; Geofencing</div>
@@ -208,13 +208,13 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 4: RISK & EXCLUSIONS
+             TAB 4: RISK &amp; EXCLUSIONS
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'risk_exclusions'">
           <div class="rmm-section-label"><i class="fa fa-exclamation-triangle me-2 text-danger"/>Site Risk Levels, Contract Warnings &amp; Guard Blacklists</div>
           <div class="rmm-card-grid">
 
-            <div class="rmm-card" t-if="matchesSearch('Guard Exclusions & Blacklists', 'Client blacklists and disqualifications', ['exclusion', 'blacklist', 'ban'])"
+            <div class="rmm-card" t-if="matchesSearch('Guard Exclusions &amp; Blacklists', 'Client blacklists and disqualifications', ['exclusion', 'blacklist', 'ban'])"
                  t-on-click="() => this.openAction('security_operations.action_security_guard_exclusion')">
               <div class="rmm-card-icon icon-rose"><i class="fa fa-ban"/></div>
               <div class="rmm-card-content">
@@ -230,10 +230,10 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 5: CLIENT SOP & GUIDANCE
+             TAB 5: CLIENT SOP &amp; GUIDANCE
              ═════════════════════════════════════════════════════════════════ -->
         <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
-          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Client &amp; Site Management Guidelines</div>
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce Client &amp; Site Management Guidelines</div>
           
           <div class="rmm-guide-grid">
             <!-- Step 1 -->
@@ -264,13 +264,13 @@
               <div class="rmm-guide-body">
                 <div class="rmm-guide-title"><i class="fa fa-ban me-2 text-danger"/>Client Blacklists &amp; Exclusions</div>
                 <div class="rmm-guide-text">
-                  If a client requests a specific guard be removed from their site, register a <strong>Guard Exclusion</strong> record. DeployGuard automatically blocks the guard from being assigned to that site during rostering.
+                  If a client requests a specific guard be removed from their site, register a <strong>Guard Exclusion</strong> record. DogForce automatically blocks the guard from being assigned to that site during rostering.
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Shortcuts & Rules Cheatsheet -->
+          <!-- Shortcuts &amp; Rules Cheatsheet -->
           <div class="rmm-cheatsheet-box">
             <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Client &amp; Site Navigation Shortcuts</div>
             <div class="rmm-cheatsheet-grid">
@@ -288,7 +288,7 @@
       <div class="rmm-footer">
         <div class="rmm-footer-status">
           <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Site Matrix Operational</span>
-          <span class="rmm-status-pill blue"><i class="fa fa-building me-1"/>DeployGuard Sites 19.0</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-building me-1"/>DogForce Sites 19.0</span>
         </div>
         <div class="rmm-footer-tip">
           Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace

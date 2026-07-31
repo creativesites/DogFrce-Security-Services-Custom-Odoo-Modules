@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'DeployGuard Security Services Suite',
+    'name': 'DogForce Security Services Suite',
     'version': '19.0.1.0.0',
-    'summary': 'All-in-One installer for the complete DeployGuard Security Services Suite & Zambian Localization',
+    'summary': 'All-in-One installer for the complete DogForce Security Services Suite & Zambian Localization',
     'description': """
-        DeployGuard Security Services Custom Odoo Modules Meta-Module.
+        DogForce Security Services Custom Odoo Modules Meta-Module.
         Installing this module will automatically install all related custom modules in the system:
         - Security Base & Master Data
         - Security Operations (Sites, Posts, Guard Roster, Operations CRM)
@@ -15,7 +15,7 @@
         - Security Clients, Billing, Invoicing & ZRA Compliance
         - Security AI Engine & WhatsApp Bridge
         - Security Client Reports & Reporting
-        - DeployGuard Licensing & Onboarding
+        - DogForce Licensing & Onboarding
         - Zambian Demo Data Seed (Sentinel Security Zambia Ltd)
     """,
     'category': 'Security Services',

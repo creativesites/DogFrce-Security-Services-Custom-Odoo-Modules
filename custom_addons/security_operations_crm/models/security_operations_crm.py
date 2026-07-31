@@ -162,7 +162,7 @@ class SecurityOperationsCrmBridge(models.AbstractModel):
     @api.model
     def _handle_bus_event(self, event_name, source_model, source_id, payload):
         """
-        Receives operational notifications from the central DeployGuard Intelligence Bus
+        Receives operational notifications from the central DogForce Intelligence Bus
         and instantly recalculates CRM opportunities matching the client record.
         """
         _logger.info("CRM Bridge | Processing operational event: %s", event_name)

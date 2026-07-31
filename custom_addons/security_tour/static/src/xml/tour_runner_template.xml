@@ -21,7 +21,7 @@
                         <img class="dg-tour-mascot-img" src="/security_tour/static/src/img/zuri_mascot.svg" alt="Zuri Mascot"/>
                         <div>
                             <div class="dg-tour-title-text"><t t-esc="currentStep.title || 'Zuri Guide'"/></div>
-                            <div class="dg-tour-subtitle"><t t-esc="state.tourName || 'DeployGuard Tour'"/></div>
+                            <div class="dg-tour-subtitle"><t t-esc="state.tourName || 'DogForce Tour'"/></div>
                         </div>
                     </div>
                     <button class="btn-close btn-close-white ms-auto" style="font-size: 10px;" t-on-click="() => this.closeTour()"/>

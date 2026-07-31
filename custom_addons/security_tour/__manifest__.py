@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 {
-    'name': 'DeployGuard Product Tours & Onboarding Engine',
+    'name': 'DogForce Product Tours & Onboarding Engine',
     'version': '19.0.1.0.0',
     'category': 'Security Services/Onboarding',
     'summary': 'Interactive Product Tours, Prospect Demo Guides, and Role-Based Staff Onboarding Engine',
     'description': """
-        DeployGuard Interactive Product Tours Module (security_tour).
+        DogForce Interactive Product Tours Module (security_tour).
         
         Features:
         - 3-Minute Prospect Demo Tour ("Silent Salesperson" for cold prospects)

@@ -84,7 +84,7 @@
         </xpath>
     </template>
 
-    <!-- ── 3d/e/f. Financial summary & Net pay in Totals ──────── -->
+    <!-- ── 3d/e/f. Financial summary &amp; Net pay in Totals ──────── -->
     <template id="report_security_zm_payslip_totals" inherit_id="security_payroll_core.report_payslip_totals">
         <xpath expr="//div[span[@t-field='doc.total_earnings']]" position="replace">
             <div class="col-5 text-end fw-bold text-success">

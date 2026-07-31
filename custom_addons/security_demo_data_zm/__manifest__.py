@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    "name": "DeployGuard Zambia Demo Environment",
+    "name": "DogForce Zambia Demo Environment",
     "summary": "Full Zambia operational demo data, vehicles, equipment, attendance, and payroll rules for Sentinel Security Zambia Ltd",
     "version": "19.0.1.0.0",
     "category": "Security/Demo",

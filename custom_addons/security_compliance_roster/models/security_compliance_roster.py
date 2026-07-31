@@ -67,7 +67,7 @@ class SecurityEmployeeDocument(models.Model):
     def action_cron_expiry_warnings(self):
         """
         Extends the standard daily cron run to forward expiring document warnings
-        directly to the DeployGuard central intelligence bus.
+        directly to the DogForce central intelligence bus.
         """
         super(SecurityEmployeeDocument, self).action_cron_expiry_warnings()
 

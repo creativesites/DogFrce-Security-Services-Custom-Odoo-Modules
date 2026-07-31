@@ -4,7 +4,7 @@
         <field name="name">security.tour.definition.tree</field>
         <field name="model">security.tour.definition</field>
         <field name="arch" type="xml">
-            <list string="DeployGuard Product Tours">
+            <list string="DogForce Product Tours">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="technical_name"/>

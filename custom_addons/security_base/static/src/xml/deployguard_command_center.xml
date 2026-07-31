@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-<t t-name="security_base.DeployGuardMainCommandCenter" owl="1">
+<t t-name="security_base.DogForceMainCommandCenter" owl="1">
   <div class="dgcc-overlay" t-on-click.self="() => this.close()" tabindex="0">
     <div class="dgcc-container">
 
@@ -8,7 +8,7 @@
       <div class="dgcc-header">
         <div class="dgcc-brand">
           <div class="dgcc-brand-badge">
-            <i class="fa fa-shield me-2"/>DeployGuard OS
+            <i class="fa fa-shield me-2"/>DogForce OS
           </div>
           <div>
             <h2 class="dgcc-title">Command Center &amp; OS Launcher</h2>
@@ -54,7 +54,7 @@
         </button>
       </div>
 
-      <!-- LAYER 1: ATTENTION STRIP (Quiet & Collapsed when zero items) -->
+      <!-- LAYER 1: ATTENTION STRIP (Quiet &amp; Collapsed when zero items) -->
       <div class="dgcc-attention-strip" t-if="state.attentionStrip.hasItems">
         <div class="dgcc-as-label">
           <i class="fa fa-exclamation-triangle text-amber me-2"/>Attention Ticker:
@@ -139,7 +139,7 @@
               <span class="dgcc-tile-tag tag-purple">Guard Directory</span>
             </div>
 
-            <!-- Tile 4: Clients & Contracts -->
+            <!-- Tile 4: Clients &amp; Contracts -->
             <div class="dgcc-tile tile-clients"
                  t-if="matchesSearch('Clients &amp; Contracts', 'Client master, service agreements, sites &amp; posts', ['client', 'contract', 'sites', 'posts', 'rates'])"
                  t-on-click="() => this.openAction('security_operations.action_security_client_contract')">
@@ -281,7 +281,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 3: ROSTERING & DEMAND
+             TAB 3: ROSTERING &amp; DEMAND
              ═════════════════════════════════════════════════════════════════ -->
         <div class="dgcc-tab-content" t-if="state.activeTab === 'rostering'">
           <div class="dgcc-section-label"><i class="fa fa-calendar-check-o me-2 text-blue"/>Rostering Engine, AI Planner &amp; Sizing Estimator</div>
@@ -323,7 +323,7 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 4: FINANCIALS & BILLING
+             TAB 4: FINANCIALS &amp; BILLING
              ═════════════════════════════════════════════════════════════════ -->
         <div class="dgcc-tab-content" t-if="state.activeTab === 'financials'">
           <div class="dgcc-section-label"><i class="fa fa-file-text-o me-2 text-rose"/>Payroll Cycles, Invoicing &amp; Statutory Deductions</div>
@@ -357,10 +357,10 @@
         </div>
 
         <!-- ═════════════════════════════════════════════════════════════════
-             TAB 5: OS USER MANUAL & GUIDE
+             TAB 5: OS USER MANUAL &amp; GUIDE
              ═════════════════════════════════════════════════════════════════ -->
         <div class="dgcc-tab-content" t-if="state.activeTab === 'guide'">
-          <div class="dgcc-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard OS User Manual &amp; Role Reference</div>
+          <div class="dgcc-section-label"><i class="fa fa-book me-2 text-primary"/>DogForce OS User Manual &amp; Role Reference</div>
 
           <div class="dgcc-guide-grid">
             <div class="dgcc-guide-card">
@@ -404,9 +404,9 @@
             </div>
           </div>
 
-          <!-- Shortcuts & Rules Cheatsheet -->
+          <!-- Shortcuts &amp; Rules Cheatsheet -->
           <div class="dgcc-cheatsheet-box">
-            <div class="dgcc-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>DeployGuard OS Shortcuts &amp; Rules</div>
+            <div class="dgcc-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>DogForce OS Shortcuts &amp; Rules</div>
             <div class="dgcc-cheatsheet-grid">
               <div class="dgcc-cs-item"><span class="dgcc-kbd">Esc</span> Dismiss Launcher</div>
               <div class="dgcc-cs-item"><span class="dgcc-kbd">Alt + H</span> Open Home Command Center</div>
@@ -424,7 +424,7 @@
       <!-- Footer Section -->
       <div class="dgcc-footer">
         <div class="dgcc-footer-status">
-          <span class="dgcc-status-pill green"><i class="fa fa-check-circle me-1"/>DeployGuard OS Active</span>
+          <span class="dgcc-status-pill green"><i class="fa fa-check-circle me-1"/>DogForce OS Active</span>
           <span class="dgcc-status-pill blue"><i class="fa fa-shield me-1"/>Odoo 19 Enterprise Suite</span>
         </div>
         <div class="dgcc-footer-tip">

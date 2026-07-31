@@ -13,7 +13,7 @@
             <title>Sign In — DogForce Security Operations Suite</title>
             <link rel="icon" type="image/png" href="/web/static/img/favicon.ico"/>
             
-            <!-- Google Font & Font Awesome -->
+            <!-- Google Font &amp; Font Awesome -->
             <link rel="preconnect" href="https://fonts.googleapis.com"/>
             <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
             <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap"/>
@@ -550,7 +550,7 @@
         <body>
         <div class="dg-root">
 
-            <!-- ══ LEFT PANEL: Showcase & Demo Portal ══ -->
+            <!-- ══ LEFT PANEL: Showcase &amp; Demo Portal ══ -->
             <div class="dg-left">
                 <div class="dg-grid-bg"></div>
                 <div class="dg-left-inner">

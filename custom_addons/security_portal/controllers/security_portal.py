@@ -81,7 +81,7 @@ class SecurityPortalController(http.Controller):
         if site.partner_id.id != partner.id and site.partner_id.parent_id.id != partner.id:
             return request.redirect("/my/security-dashboard")
 
-        # Broadcast the feedback event on the DeployGuard Central Intelligence Bus
+        # Broadcast the feedback event on the DogForce Central Intelligence Bus
         payload = {
             "site_id": site.id,
             "rating": rating,

@@ -28,7 +28,7 @@
                             </div>
                         </div>
 
-                        <!-- Allocation & Employee Details Table -->
+                        <!-- Allocation &amp; Employee Details Table -->
                         <h5 class="fw-bold mb-3 text-uppercase" style="font-size: 14px; letter-spacing: 0.5px; color: #555;">Handover Recipient Info</h5>
                         <table class="table table-bordered mb-4" style="border-color: #ddd;">
                             <tbody>

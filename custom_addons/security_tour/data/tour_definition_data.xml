@@ -3,7 +3,7 @@
     <data noupdate="1">
         <!-- 1. Prospect Demo Tour -->
         <record id="tour_prospect_demo" model="security.tour.definition">
-            <field name="name">DeployGuard 3-Minute Prospect Tour</field>
+            <field name="name">DogForce 3-Minute Prospect Tour</field>
             <field name="technical_name">deployguard_prospect_demo_tour</field>
             <field name="sequence">1</field>
             <field name="category">prospect</field>

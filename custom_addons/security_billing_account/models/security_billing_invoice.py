@@ -128,14 +128,14 @@ class SecurityBillingInvoice(models.Model):
                 # In Odoo, paid amount = amount_total - amount_residual
                 odoo_paid = move.amount_total - move.amount_residual
                 
-                # In DeployGuard, total posted payments
+                # In DogForce, total posted payments
                 custom_paid = sum(
                     inv.payment_ids.filtered(lambda p: p.state == "posted").mapped("amount")
                 )
 
                 if abs(odoo_paid - custom_paid) > 0.01:
                     if odoo_paid > custom_paid:
-                        # Odoo is ahead. Synchronize payments from Odoo -> DeployGuard
+                        # Odoo is ahead. Synchronize payments from Odoo -> DogForce
                         diff = odoo_paid - custom_paid
                         self.env["security.client.payment"].with_context(
                             skip_odoo_payment_sync=True,
@@ -150,7 +150,7 @@ class SecurityBillingInvoice(models.Model):
                         })
                         inv._compute_payment_status()
                     else:
-                        # DeployGuard is ahead. Synchronize payments from DeployGuard -> Odoo
+                        # DogForce is ahead. Synchronize payments from DogForce -> Odoo
                         diff = custom_paid - odoo_paid
                         journal = self.env["account.journal"].search([
                             ("type", "in", ("bank", "cash")),

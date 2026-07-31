@@ -288,7 +288,7 @@ class SecurityAIEngine(models.AbstractModel):
         sender_info = f"Sender: {sender_name or 'Field Supervisor'} ({sender_phone or 'WhatsApp'})"
 
         system_prompt = (
-            "You are DeployGuard AI, the central operational intelligence assistant for Dogforce Security Services.\n"
+            "You are DogForce AI, the central operational intelligence assistant for Dogforce Security Services.\n"
             "Your role is to assist security field supervisors, managers, and executives over WhatsApp.\n"
             "Formatting Guidelines:\n"
             "- Use WhatsApp markdown formatting (*bold*, _italic_, `code`, emojis).\n"

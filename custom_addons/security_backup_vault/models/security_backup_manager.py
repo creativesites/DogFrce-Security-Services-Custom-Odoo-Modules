@@ -13,7 +13,7 @@ _logger = logging.getLogger(__name__)
 
 class SecurityBackupManager(models.AbstractModel):
     _name = 'security.backup.manager'
-    _description = 'DeployGuard Backup Manager Engine'
+    _description = 'DogForce Backup Manager Engine'
 
     @api.model
     def run_nightly_full_backup(self, db_name=None, backup_type='full'):
@@ -113,7 +113,7 @@ class SecurityBackupManager(models.AbstractModel):
                 'state': 'failed',
                 'error_log': err_msg,
             })
-            self._send_whatsapp_alert(f"🚨 *DeployGuard Alert — Backup Failure*\nDatabase: `{db_name}`\nError: {str(e)}")
+            self._send_whatsapp_alert(f"🚨 *DogForce Alert — Backup Failure*\nDatabase: `{db_name}`\nError: {str(e)}")
             return record
 
     @api.model
@@ -237,7 +237,7 @@ class SecurityBackupManager(models.AbstractModel):
 
             if free_pct < threshold_pct:
                 alert_msg = (
-                    "⚠️ *DeployGuard Alert — Low Disk Space Warning*\n\n"
+                    "⚠️ *DogForce Alert — Low Disk Space Warning*\n\n"
                     f"• *Server Free Disk:* `{free_pct:.1f}%`\n"
                     f"• *Configured Threshold:* `{threshold_pct:.1f}%`\n"
                     f"• *Total Capacity:* `{stat.total / (1024**3):.1f} GB`\n"

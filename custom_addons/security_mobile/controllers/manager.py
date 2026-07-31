@@ -374,7 +374,7 @@ class ManagerController(http.Controller):
         employee_id = body.get("employee_id")
         if not employee_id:
             return _json_err("employee_id is required.")
-        note_text = body.get("note") or "Performance review initiated via DeployGuard."
+        note_text = body.get("note") or "Performance review initiated via DogForce."
         employee = request.env["hr.employee"].sudo().browse(int(employee_id))
         if not employee.exists():
             return _json_err(f"Employee {employee_id} not found.", status=404)

@@ -33,7 +33,7 @@
                     </div>
                 </div>
 
-                <!-- Controls & Filters -->
+                <!-- Controls &amp; Filters -->
                 <div class="d-flex gap-2 align-items-center flex-wrap">
                     <!-- Site selector -->
                     <select class="ag-select-site"

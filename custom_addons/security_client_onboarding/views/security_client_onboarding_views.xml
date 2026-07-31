@@ -164,7 +164,7 @@
         <field name="context">{'default_run_on_open': True}</field>
     </record>
 
-    <!-- Menu items (Operations > Roster section & Clients & Sites section) -->
+    <!-- Menu items (Operations > Roster section &amp; Clients &amp; Sites section) -->
 
     <record id="action_security_client_partner" model="ir.actions.act_window">
         <field name="name">Client Companies</field>
