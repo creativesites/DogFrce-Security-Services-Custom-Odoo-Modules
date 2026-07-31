@@ -11,7 +11,6 @@ export class DeployGuardMainCommandCenter extends Component {
     setup() {
         this.action = useService("action");
         this.orm = useService("orm");
-        this.user = useService("user");
         this.notification = useService("notification");
 
         this.state = useState({
@@ -66,13 +65,13 @@ export class DeployGuardMainCommandCenter extends Component {
         const in7Days = this._daysFromTodayStr(7);
 
         try {
-            // Check roles
+            // Check roles via ORM
             const [isOwner, isManager, isSupervisor, isHR, isFinance] = await Promise.all([
-                this.user.hasGroup("security_base.group_security_owner").catch(() => false),
-                this.user.hasGroup("security_base.group_security_manager").catch(() => false),
-                this.user.hasGroup("security_base.group_security_supervisor").catch(() => false),
-                this.user.hasGroup("hr.group_hr_user").catch(() => false),
-                this.user.hasGroup("account.group_account_invoice").catch(() => false),
+                this.orm.call("res.users", "has_group", ["security_base.group_security_owner"]).catch(() => false),
+                this.orm.call("res.users", "has_group", ["security_base.group_security_manager"]).catch(() => false),
+                this.orm.call("res.users", "has_group", ["security_base.group_security_supervisor"]).catch(() => false),
+                this.orm.call("res.users", "has_group", ["hr.group_hr_user"]).catch(() => false),
+                this.orm.call("res.users", "has_group", ["account.group_account_invoice"]).catch(() => false),
             ]);
 
             this.state.userRoles = { isOwner, isManager, isSupervisor, isHR, isFinance };
