@@ -18,61 +18,59 @@
                 <field name="reply_body"/>
                 <field name="timestamp"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click p-3 mb-2 rounded-3 shadow-sm border bg-white">
-                            <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge rounded-pill bg-primary text-white font-weight-bold" t-if="record.direction.raw_value == 'inbound'">
-                                        <i class="fa fa-arrow-down me-1"/> INBOUND
-                                    </span>
-                                    <span class="badge rounded-pill bg-success text-white font-weight-bold" t-if="record.direction.raw_value == 'outbound'">
-                                        <i class="fa fa-arrow-up me-1"/> OUTBOUND
-                                    </span>
-                                    <strong class="text-dark">
-                                        <field name="sender_name" default_focus="1"/>
-                                    </strong>
-                                </div>
-                                <small class="text-muted">
-                                    <field name="timestamp"/>
-                                </small>
+                    <t t-name="card" class="p-3 mb-2 rounded-3 shadow-sm border bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-1 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge rounded-pill bg-primary text-white font-weight-bold" t-if="record.direction.raw_value == 'inbound'">
+                                    <i class="fa fa-arrow-down me-1"/> INBOUND
+                                </span>
+                                <span class="badge rounded-pill bg-success text-white font-weight-bold" t-if="record.direction.raw_value == 'outbound'">
+                                    <i class="fa fa-arrow-up me-1"/> OUTBOUND
+                                </span>
+                                <strong class="text-dark">
+                                    <field name="sender_name" default_focus="1"/>
+                                </strong>
                             </div>
-                            
-                            <div class="text-muted small mb-2">
-                                <i class="fa fa-phone text-secondary me-1"/>
-                                <field name="sender_phone"/>
-                                <t t-if="record.employee_id.raw_value">
-                                    | <i class="fa fa-user-shield text-info me-1"/> <field name="employee_id"/>
-                                </t>
-                            </div>
-
-                            <div class="p-2 rounded mb-2 bg-light text-dark font-italic border-start border-3 border-info">
-                                "<field name="raw_body"/>"
-                            </div>
-
-                            <t t-if="record.reply_body.raw_value">
-                                <div class="p-2 rounded mb-2 bg-success-light text-success font-monospace small border-start border-3 border-success">
-                                    <strong>Reply:</strong> <field name="reply_body"/>
-                                </div>
+                            <small class="text-muted">
+                                <field name="timestamp"/>
+                            </small>
+                        </div>
+                        
+                        <div class="text-muted small mb-2">
+                            <i class="fa fa-phone text-secondary me-1"/>
+                            <field name="sender_phone"/>
+                            <t t-if="record.employee_id.raw_value">
+                                | <i class="fa fa-user-shield text-info me-1"/> <field name="employee_id"/>
                             </t>
+                        </div>
 
-                            <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                                <div>
-                                    <span class="badge bg-secondary text-uppercase px-2 py-1">
-                                        <field name="parsed_intent"/>
-                                    </span>
-                                    <span class="badge bg-danger ms-1" t-if="record.execution_status.raw_value == 'unauthorized'">
-                                        UNAUTHORIZED
-                                    </span>
-                                    <span class="badge bg-warning ms-1" t-if="record.execution_status.raw_value == 'ignored'">
-                                        IGNORED
-                                    </span>
-                                </div>
-                                <button name="action_open_reply_wizard"
-                                        type="object"
-                                        class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
-                                    <i class="fa fa-paper-plane"/> Reply
-                                </button>
+                        <div class="p-2 rounded mb-2 bg-light text-dark font-italic border-start border-3 border-info">
+                            "<field name="raw_body"/>"
+                        </div>
+
+                        <t t-if="record.reply_body.raw_value">
+                            <div class="p-2 rounded mb-2 bg-success-light text-success font-monospace small border-start border-3 border-success">
+                                <strong>Reply:</strong> <field name="reply_body"/>
                             </div>
+                        </t>
+
+                        <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                            <div>
+                                <span class="badge bg-secondary text-uppercase px-2 py-1">
+                                    <field name="parsed_intent"/>
+                                </span>
+                                <span class="badge bg-danger ms-1" t-if="record.execution_status.raw_value == 'unauthorized'">
+                                    UNAUTHORIZED
+                                </span>
+                                <span class="badge bg-warning ms-1" t-if="record.execution_status.raw_value == 'ignored'">
+                                    IGNORED
+                                </span>
+                            </div>
+                            <button name="action_open_reply_wizard"
+                                    type="object"
+                                    class="btn btn-sm btn-outline-success d-flex align-items-center gap-1">
+                                <i class="fa fa-paper-plane"/> Reply
+                            </button>
                         </div>
                     </t>
                 </templates>

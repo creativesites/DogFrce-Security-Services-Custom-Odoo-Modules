@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 import { WorkforceMegaMenu } from "@security_base/js/workforce_mega_menu";
 
 export class WorkforceDashboard extends Component {
@@ -14,7 +15,6 @@ export class WorkforceDashboard extends Component {
         this.orm          = useService("orm");
         this.action       = useService("action");
         this.notification = useService("notification");
-        this.companyService = useService("company");
 
         this.state = useState({
             loading: true,
@@ -56,7 +56,7 @@ export class WorkforceDashboard extends Component {
     }
 
     get companyName() {
-        return this.companyService?.currentCompany?.name || "Company";
+        return user.activeCompany?.name || "DogForce Security";
     }
 
     async loadDashboardData() {

@@ -1,0 +1,312 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DOGFORCE ENTERPRISE APP LAUNCHER OVERLAY STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dfal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99999;
+    background: rgba(2, 6, 23, 0.76);
+    backdrop-filter: blur(28px) saturate(135%);
+    -webkit-backdrop-filter: blur(20px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: clamp(16px, 4vw, 52px) 24px;
+    overflow-y: auto;
+    animation: dfalFadeIn 0.2s ease-out;
+}
+
+@keyframes dfalFadeIn {
+    from { opacity: 0; transform: scale(0.98); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.dfal-container {
+    width: 100%;
+    max-width: 1200px;
+    background: linear-gradient(145deg, rgba(20, 31, 54, .98), rgba(10, 18, 34, .98));
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: 24px;
+    box-shadow: 0 32px 80px -20px rgba(0, 0, 0, 0.8), inset 0 1px rgba(255,255,255,.06);
+    color: #f8fafc;
+    padding: 28px clamp(20px, 3vw, 38px);
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+}
+
+/* Header */
+.dfal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 22px;
+}
+
+.dfal-brand-mark {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    border-radius: 13px;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(37, 99, 235, .32);
+}
+
+.dfal-brand { display: flex; align-items: center; gap: 12px; min-width: 220px; }
+.dfal-brand-name {
+    font-size: 15px;
+    font-weight: 750;
+    color: #f8fafc;
+    line-height: 1.2;
+    letter-spacing: -.01em;
+}
+
+.dfal-subtitle {
+    margin-top: 3px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* Search Box */
+.dfal-search-box {
+    position: relative;
+    flex: 1;
+    max-width: 500px;
+}
+
+.dfal-search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 15px;
+}
+
+.dfal-search-input {
+    width: 100%;
+    padding: 12px 16px 12px 44px;
+    background: rgba(15, 23, 42, 0.68);
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    color: #f8fafc;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.dfal-search-input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    background: rgba(15, 23, 42, .96);
+}
+
+.dfal-close-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dfal-close-btn:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Section Label */
+.dfal-section-label {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+}
+
+/* Command Centers Grid */
+.dfal-cc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.dfal-cc-card {
+    background: rgba(30, 41, 59, 0.52);
+    border: 1px solid rgba(148, 163, 184, 0.13);
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #f8fafc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.dfal-cc-card:hover {
+    transform: translateY(-3px);
+    background: rgba(51, 65, 85, 0.82);
+    border-color: rgba(96, 165, 250, 0.48);
+    box-shadow: 0 14px 26px -10px rgba(0, 0, 0, 0.52);
+}
+
+.dfal-cc-icon {
+    font-size: 18px;
+}
+
+.cc-blue .dfal-cc-icon { color: #60a5fa; }
+.cc-purple .dfal-cc-icon { color: #c084fc; }
+.cc-emerald .dfal-cc-icon { color: #34d399; }
+.cc-teal .dfal-cc-icon { color: #2dd4bf; }
+.cc-amber .dfal-cc-icon { color: #fbbf24; }
+.cc-rose .dfal-cc-icon { color: #fb7185; }
+
+.dfal-cc-title {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
+.dfal-cc-badge {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* App Grid */
+.dfal-app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+    gap: 14px;
+}
+
+.dfal-app-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, .55), rgba(15, 23, 42, .55));
+    border: 1px solid rgba(148, 163, 184, .12);
+    border-radius: 18px;
+    padding: 18px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dfal-app-card:hover {
+    transform: translateY(-4px);
+    background: linear-gradient(145deg, rgba(51, 65, 85, .88), rgba(30, 41, 59, .84));
+    border-color: rgba(96, 165, 250, 0.55);
+    box-shadow: 0 16px 30px -12px rgba(0, 0, 0, .65);
+}
+
+.dfal-app-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.3);
+}
+
+.bg-gradient-blue { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+.bg-gradient-purple { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+.bg-gradient-emerald { background: linear-gradient(135deg, #059669, #047857); }
+.bg-gradient-amber { background: linear-gradient(135deg, #d97706, #b45309); }
+.bg-gradient-rose { background: linear-gradient(135deg, #e11d48, #be123c); }
+.bg-gradient-teal { background: linear-gradient(135deg, #0d9488, #0f766e); }
+.bg-gradient-slate { background: linear-gradient(135deg, #475569, #334155); }
+.bg-gradient-indigo { background: linear-gradient(135deg, #4f46e5, #4338ca); }
+.bg-gradient-primary { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+
+.dfal-app-fa-icon {
+    font-size: 22px;
+    color: #ffffff;
+}
+
+.dfal-app-img-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.dfal-app-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* Footer */
+.dfal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 16px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dfal-footer-status {
+    display: flex;
+    gap: 8px;
+}
+
+.dfal-status-pill {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dfal-status-pill.green {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.dfal-status-pill.blue {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.dfal-kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: monospace;
+    font-size: 10px;
+    color: #cbd5e1;
+}
+
+@media (max-width: 760px) {
+    .dfal-header { flex-wrap: wrap; gap: 14px; }
+    .dfal-search-box { order: 3; flex-basis: 100%; max-width: none; }
+    .dfal-close-btn { margin-left: auto; }
+    .dfal-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
+}

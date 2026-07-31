@@ -1,5 +1,6 @@
 import re
 import logging
+import requests
 from datetime import datetime, timedelta
 from odoo import api, fields, models, _
 
@@ -9,6 +10,30 @@ _logger = logging.getLogger(__name__)
 class SecurityWhatsAppBridge(models.AbstractModel):
     _name = "security.whatsapp.bridge"
     _description = "Conversational WhatsApp and Field Roster Bridge Model"
+
+    @api.model
+    def _send_whatsapp_reply(self, recipient_phone, message_text):
+        """Send a human-dispatched message through the internal Baileys service."""
+        recipient = (recipient_phone or "").strip()
+        text = (message_text or "").strip()
+        if not recipient or not text:
+            return {"success": False, "error": "Recipient and message text are required."}
+
+        config = self.env["ir.config_parameter"].sudo()
+        service_url = config.get_param("security_whatsapp.service_url", "http://whatsapp-bridge:3000")
+        try:
+            response = requests.post(
+                f"{service_url.rstrip('/')}/send",
+                json={"recipient": recipient, "text": text},
+                timeout=10,
+            )
+            payload = response.json() if response.content else {}
+            if response.ok and payload.get("success"):
+                return {"success": True}
+            return {"success": False, "error": payload.get("error", "WhatsApp service could not send the message.")}
+        except requests.RequestException as error:
+            _logger.warning("WhatsApp Bridge | Manual dispatch failed: %s", error)
+            return {"success": False, "error": "Unable to reach the WhatsApp service."}
 
     @api.model
     def process_incoming_message(self, body, sender):

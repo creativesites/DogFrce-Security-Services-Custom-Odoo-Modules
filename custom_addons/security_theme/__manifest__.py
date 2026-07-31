@@ -15,7 +15,11 @@
     'assets': {
         'web.assets_backend': [
             'security_theme/static/src/css/themes.css',
+            'security_theme/static/src/css/app_launcher.css',
             'security_theme/static/src/js/theme_loader.js',
+            'security_theme/static/src/js/dogforce_app_launcher.js',
+            'security_theme/static/src/js/navbar_patch.js',
+            'security_theme/static/src/xml/dogforce_app_launcher.xml',
         ],
         'web.assets_frontend': [
             'security_theme/static/src/css/themes.css',

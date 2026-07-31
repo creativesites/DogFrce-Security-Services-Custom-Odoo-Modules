@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { user } from "@web/core/user";
 
 class OpsDashboard extends Component {
     static template = "security_operations.OpsDashboard";
@@ -11,7 +12,6 @@ class OpsDashboard extends Component {
         this.orm = useService("orm");
         this.actionService = useService("action");
         this.notification = useService("notification");
-        this.companyService = useService("company");
 
         const now = new Date();
         const pad = n => String(n).padStart(2, "0");
@@ -34,7 +34,7 @@ class OpsDashboard extends Component {
     }
 
     get companyName() {
-        return this.companyService?.currentCompany?.name || "Company";
+        return user.activeCompany?.name || "DogForce Security";
     }
 
     async loadData() {

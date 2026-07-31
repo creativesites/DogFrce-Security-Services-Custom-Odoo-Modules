@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     DOGFORCE ENTERPRISE APP LAUNCHER OVERLAY
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<t t-name="security_theme.DogForceAppLauncher" owl="1">
+  <div class="dfal-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="dfal-container">
+
+      <!-- Top Header -->
+      <div class="dfal-header">
+        <div class="dfal-brand">
+          <div class="dfal-brand-mark"><i class="fa fa-shield"/></div>
+          <div>
+            <div class="dfal-brand-name"><t t-esc="companyName"/></div>
+            <div class="dfal-subtitle">Your operational workspace</div>
+          </div>
+        </div>
+
+        <!-- Search Input -->
+        <div class="dfal-search-box">
+          <i class="fa fa-search dfal-search-icon"/>
+          <input type="text"
+                 class="dfal-search-input"
+                 placeholder="Search apps, command centers, or modules..."
+                 t-model="state.searchQuery"
+                 t-ref="autofocus"/>
+        </div>
+
+        <button class="dfal-close-btn" t-on-click="() => this.close()" title="Dismiss Launcher (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Quick Command Centers Banner -->
+      <div class="dfal-command-centers-section">
+        <div class="dfal-section-label">
+          <i class="fa fa-bolt me-2 text-warning"/>Priority workspaces
+        </div>
+        <div class="dfal-cc-grid">
+          <button class="dfal-cc-card cc-blue" t-on-click="() => this.openClientAction('security_base.action_deployguard_main_command_center')">
+            <i class="fa fa-shield dfal-cc-icon"/>
+            <div class="dfal-cc-text">
+              <span class="dfal-cc-title">Home Command Center</span>
+              <span class="dfal-cc-badge">Alt + H</span>
+            </div>
+          </button>
+
+          <button class="dfal-cc-card cc-purple" t-on-click="() => this.openClientAction('security_shift_planner.action_rostering_hub')">
+            <i class="fa fa-calendar dfal-cc-icon"/>
+            <div class="dfal-cc-text">
+              <span class="dfal-cc-title">Rostering Hub</span>
+              <span class="dfal-cc-badge">Alt + R</span>
+            </div>
+          </button>
+
+          <button class="dfal-cc-card cc-emerald" t-on-click="() => this.openClientAction('security_base.action_workforce_dashboard')">
+            <i class="fa fa-users dfal-cc-icon"/>
+            <div class="dfal-cc-text">
+              <span class="dfal-cc-title">Workforce Hub</span>
+              <span class="dfal-cc-badge">Alt + W</span>
+            </div>
+          </button>
+
+          <button class="dfal-cc-card cc-teal" t-on-click="() => this.openClientAction('security_operations.action_clients_sites_mega_menu')">
+            <i class="fa fa-building dfal-cc-icon"/>
+            <div class="dfal-cc-text">
+              <span class="dfal-cc-title">Clients &amp; Sites</span>
+              <span class="dfal-cc-badge">Alt + C</span>
+            </div>
+          </button>
+
+          <button class="dfal-cc-card cc-amber" t-on-click="() => this.openClientAction('security_equipment.action_equipment_mega_menu')">
+            <i class="fa fa-wrench dfal-cc-icon"/>
+            <div class="dfal-cc-text">
+              <span class="dfal-cc-title">Equipment &amp; Assets</span>
+              <span class="dfal-cc-badge">Alt + E</span>
+            </div>
+          </button>
+
+          <button class="dfal-cc-card cc-rose" t-on-click="() => this.openClientAction('security_fleet.action_fleet_mega_menu')">
+            <i class="fa fa-car dfal-cc-icon"/>
+            <div class="dfal-cc-text">
+              <span class="dfal-cc-title">Fleet &amp; Transport</span>
+              <span class="dfal-cc-badge">Alt + F</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- App Grid Section -->
+      <div class="dfal-body">
+        <div class="dfal-section-label">
+          <i class="fa fa-th-large me-2 text-primary"/>All applications
+        </div>
+
+        <div class="dfal-app-grid">
+          <t t-foreach="apps" t-as="app" t-key="app.id">
+            <t t-set="iconInfo" t-value="this.getAppIconClass(app)"/>
+            <div class="dfal-app-card" t-on-click="() => this.selectApp(app)">
+              <div t-attf-class="dfal-app-icon-box #{iconInfo.bg}">
+                <img t-if="app.webIconData" t-att-src="app.webIconData" class="dfal-app-img-icon"/>
+                <i t-else="" t-attf-class="fa #{iconInfo.icon} dfal-app-fa-icon"/>
+              </div>
+              <div class="dfal-app-name"><t t-esc="app.name"/></div>
+            </div>
+          </t>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="dfal-footer">
+        <div class="dfal-footer-status">
+          <span class="dfal-status-pill green"><i class="fa fa-check-circle me-1"/><t t-esc="companyName"/> Active</span>
+          <span class="dfal-status-pill blue"><i class="fa fa-shield me-1"/>Secure workspace</span>
+        </div>
+        <div class="dfal-footer-tip">
+          Click outside or press <span class="dfal-kbd">Esc</span> to dismiss
+        </div>
+      </div>
+
+    </div>
+  </div>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     OVERRIDE WEB NAVBAR APPS MENU BUTTON
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
+  <xpath expr="//Dropdown" position="replace">
+    <button class="btn border-0 text-white dfal-apps-toggler px-2 py-1 me-2"
+            t-on-click="() => this.toggleDogForceAppLauncher()"
+            title="Open workspace">
+      <i class="oi oi-apps fs-4" style="color: #60a5fa;"/>
+    </button>
+  </xpath>
+</t>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     MOUNT APP LAUNCHER IN WEB NAVBAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<t t-inherit="web.NavBar" t-inherit-mode="extension">
+  <xpath expr="//*[hasclass('o_main_navbar')]" position="inside">
+    <t t-if="state.showDogForceAppLauncher">
+      <DogForceAppLauncher closeLauncher="() => this.closeDogForceAppLauncher()"/>
+    </t>
+  </xpath>
+</t>
+
+</templates>

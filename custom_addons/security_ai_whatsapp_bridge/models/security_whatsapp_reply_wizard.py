@@ -72,6 +72,8 @@ class SecurityWhatsAppReplyWizard(models.TransientModel):
         
         # Dispatch outbound message via backend Node service / Baileys bridge
         res = Bridge._send_whatsapp_reply(clean_phone, clean_text)
+        if not res.get("success"):
+            raise UserError(_("Message was not sent: %s") % res.get("error", _("Unknown WhatsApp service error.")))
         
         # Log outbound message in audit log
         self.env["security.whatsapp.message.log"].sudo().create({

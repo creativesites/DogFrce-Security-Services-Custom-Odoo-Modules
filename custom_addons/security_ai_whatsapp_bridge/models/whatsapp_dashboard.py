@@ -131,8 +131,14 @@ class SecurityWhatsAppDashboard(models.TransientModel):
         if not recipient_phone or not message_text or not message_text.strip():
             return {"success": False, "error": "Missing recipient phone or message text."}
         
-        Bridge = self.env["whatsapp.bridge"]
-        res = Bridge._send_whatsapp_reply(recipient_phone, message_text.strip())
+        Bridge = self.env["security.whatsapp.bridge"]
+        try:
+            res = Bridge._send_whatsapp_reply(recipient_phone, message_text.strip())
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
+        if isinstance(res, dict) and res.get("success") is False:
+            return {"success": False, "error": res.get("error", "WhatsApp service rejected the reply.")}
         
         # Log outbound message
         self.env["security.whatsapp.message.log"].create({

@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 import { RosterGrid } from "@security_shift_planner/js/roster_grid";
 import { RosteringMegaMenu } from "@security_shift_planner/js/rostering_mega_menu";
 import { ResourceInspectorModal } from "@security_shift_planner/js/resource_inspector_modal";
@@ -20,7 +21,6 @@ class RosteringHub extends Component {
         this.orm          = useService("orm");
         this.action       = useService("action");
         this.notification = useService("notification");
-        this.companyService = useService("company");
 
         this.state = useState({
             // ── navigation
@@ -122,7 +122,7 @@ class RosteringHub extends Component {
     }
 
     get companyName() {
-        return this.companyService?.currentCompany?.name || "Company";
+        return user.activeCompany?.name || "DogForce Security";
     }
 
     openMegaMenu() {

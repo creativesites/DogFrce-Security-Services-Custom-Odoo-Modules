@@ -3,6 +3,7 @@
 import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 
 export class ClientsSitesMegaMenu extends Component {
     static template = "security_operations.ClientsSitesMegaMenu";
@@ -11,7 +12,6 @@ export class ClientsSitesMegaMenu extends Component {
     setup() {
         this.action = useService("action");
         this.notification = useService("notification");
-        this.companyService = useService("company");
         this.state = useState({
             activeTab: "launchpad", // 'launchpad' | 'clients_contracts' | 'locations_posts' | 'risk_exclusions' | 'guidance'
             searchQuery: "",
@@ -29,7 +29,7 @@ export class ClientsSitesMegaMenu extends Component {
     }
 
     get companyName() {
-        return this.companyService?.currentCompany?.name || "Company";
+        return user.activeCompany?.name || "DogForce Security";
     }
 
     onGlobalKeyDown(ev) {

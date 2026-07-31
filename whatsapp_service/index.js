@@ -217,6 +217,30 @@ app.get('/status', (req, res) => {
     });
 });
 
+// Authenticated only by the internal Docker network. Odoo uses this endpoint
+// for deliberate, human-dispatched control-room replies.
+app.post('/send', async (req, res) => {
+    const recipient = String(req.body?.recipient || '').trim();
+    const text = String(req.body?.text || '').trim();
+    if (!recipient || !text) {
+        return res.status(400).json({ success: false, error: 'recipient and text are required' });
+    }
+    if (!sock || connectionStatus !== 'connected') {
+        return res.status(503).json({ success: false, error: 'WhatsApp is not connected' });
+    }
+    try {
+        const jid = recipient.includes('@') ? recipient : `${recipient.replace(/\D/g, '')}@s.whatsapp.net`;
+        await sock.sendPresenceUpdate('composing', jid);
+        await sock.sendMessage(jid, { text });
+        await sock.sendPresenceUpdate('paused', jid);
+        logger.info(`Manual control-room message sent to [${jid}]`);
+        return res.json({ success: true });
+    } catch (err) {
+        logger.error(`Manual control-room message failed for [${recipient}]:`, err.message);
+        return res.status(502).json({ success: false, error: err.message });
+    }
+});
+
 app.get('/qr', async (req, res) => {
     if (connectionStatus === 'connected') {
         res.type('image/svg+xml').send(`

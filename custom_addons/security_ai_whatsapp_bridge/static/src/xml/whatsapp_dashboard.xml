@@ -8,7 +8,10 @@
             <div class="dg-wa-header">
                 <div class="dg-wa-header-title">
                     <i class="fa fa-whatsapp" style="font-size: 1.8rem; color: #25d366;"/>
-                    <h1>WhatsApp Control Room Dashboard</h1>
+                    <div>
+                        <div class="dg-wa-eyebrow">Operations communications</div>
+                        <h1>WhatsApp Control Room</h1>
+                    </div>
                     <span t-att-class="'dg-wa-badge-status ' + (state.data.bridge_status === 'connected' ? 'dg-wa-status-connected' : 'dg-wa-status-disconnected')">
                         <i t-att-class="'fa ' + (state.data.bridge_status === 'connected' ? 'fa-check-circle' : 'fa-exclamation-circle')"/>
                         <t t-esc="state.data.bridge_status === 'connected' ? 'Bridge Connected' : 'Bridge Offline'"/>
@@ -17,6 +20,9 @@
                 <div class="dg-wa-actions-bar">
                     <button class="dg-wa-btn dg-wa-btn-secondary" t-on-click="refreshDashboard">
                         <i class="fa fa-refresh"/> Refresh Metrics
+                    </button>
+                    <button class="dg-wa-btn dg-wa-btn-primary" t-on-click="openWorkspace">
+                        <i class="fa fa-comments"/> Open conversations
                     </button>
                     <button class="dg-wa-btn dg-wa-btn-primary" t-on-click="openSettings">
                         <i class="fa fa-qrcode"/> QR Device Pairing
@@ -75,7 +81,7 @@
             <div class="dg-wa-main-grid">
                 <div class="dg-wa-panel">
                     <div class="dg-wa-panel-title">
-                        <span><i class="fa fa-bolt" style="color: #f59e0b;"/> Live Field Activity Stream</span>
+                        <span><i class="fa fa-bolt" style="color: #f59e0b;"/> Live field activity</span>
                         <button class="dg-wa-btn dg-wa-btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" t-on-click="openAuditLogs">
                             View All Logs →
                         </button>
@@ -119,12 +125,11 @@
                     <div class="dg-wa-panel-title">
                         <span><i class="fa fa-shield" style="color: #25d366;"/> Control Room Overview</span>
                     </div>
-                    <div style="line-height: 1.6; font-size: 0.875rem; color: #cbd5e1;">
-                        <p><strong>Whitelisted Senders:</strong> <t t-esc="state.data.allowed_numbers_count || 0"/> Authorized Senders</p>
-                        <p><strong>AI Engine Fallback:</strong> Enabled (Gemini 3.6 Flash)</p>
-                        <hr style="border-color: #334155; margin: 16px 0;"/>
-                        <p><strong>Quick Field Commands:</strong></p>
-                        <ul style="padding-left: 18px; font-size: 0.8rem; color: #94a3b8;">
+                    <div class="dg-wa-overview">
+                        <div class="dg-wa-overview-stat"><span>Authorized senders</span><strong><t t-esc="state.data.allowed_numbers_count || 0"/></strong></div>
+                        <div class="dg-wa-overview-stat"><span>AI routing</span><strong>Enabled</strong></div>
+                        <div class="dg-wa-command-heading">Common field commands</div>
+                        <ul class="dg-wa-command-list">
                             <li><code>Check in [Guard] late X mins</code></li>
                             <li><code>[Site] all present</code></li>
                             <li><code>Where is [Guard]?</code></li>
@@ -140,12 +145,23 @@
 
     <!-- Live Control Room Workspace OWL Template -->
     <t t-name="security_whatsapp.ChatWorkspace">
-        <div class="dg-wa-container" style="padding: 12px;">
+            <div class="dg-wa-container dg-wa-workspace">
+                <div class="dg-wa-workspace-header">
+                    <div>
+                        <div class="dg-wa-eyebrow">Live dispatcher</div>
+                        <h1>Conversations</h1>
+                    </div>
+                    <div class="dg-wa-filter-group">
+                        <button t-att-class="'dg-wa-filter ' + (state.filterType === 'all' ? 'active' : '')" t-on-click="() => this.setFilter('all')">All</button>
+                        <button t-att-class="'dg-wa-filter ' + (state.filterType === 'exceptions' ? 'active' : '')" t-on-click="() => this.setFilter('exceptions')">Exceptions</button>
+                        <button t-att-class="'dg-wa-filter ' + (state.filterType === 'supervisors' ? 'active' : '')" t-on-click="() => this.setFilter('supervisors')">Supervisors</button>
+                    </div>
+                </div>
             <div class="dg-wa-chat-layout">
                 <!-- Left Sidebar Thread List -->
                 <div class="dg-wa-chat-sidebar">
-                    <div style="padding: 16px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin: 0; font-size: 1rem; color: #ffffff;">Conversations</h3>
+                    <div class="dg-wa-thread-header">
+                        <h3>Inbox</h3>
                         <button class="dg-wa-btn dg-wa-btn-secondary" style="padding: 4px 8px;" t-on-click="loadThreads">
                             <i class="fa fa-refresh"/>
                         </button>
@@ -173,10 +189,10 @@
                 <!-- Right Main Chat Transcript -->
                 <div class="dg-wa-chat-main">
                     <t t-if="state.activeThread">
-                        <div style="padding: 14px 20px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center;">
+                        <div class="dg-wa-chat-thread-bar">
                             <div>
-                                <h3 style="margin: 0; font-size: 1.05rem; color: #ffffff;"><t t-esc="state.activeThread.sender_name"/></h3>
-                                <span style="font-size: 0.8rem; color: #25d366;"><t t-esc="state.activeThread.phone"/></span>
+                                <h3><t t-esc="state.activeThread.sender_name"/></h3>
+                                <span><t t-esc="state.activeThread.phone"/></span>
                             </div>
                         </div>
 

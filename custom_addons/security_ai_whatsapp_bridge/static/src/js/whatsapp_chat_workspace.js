@@ -16,6 +16,7 @@ export class WhatsAppChatWorkspace extends Component {
             activeThread: null,
             replyText: "",
             loading: true,
+            filterType: "all",
         });
 
         onWillStart(async () => {
@@ -26,7 +27,7 @@ export class WhatsAppChatWorkspace extends Component {
     async loadThreads() {
         try {
             this.state.loading = true;
-            const res = await this.orm.call("security.whatsapp.dashboard", "get_chat_workspace_threads", ["all"]);
+            const res = await this.orm.call("security.whatsapp.dashboard", "get_chat_workspace_threads", [this.state.filterType]);
             if (res && res.length) {
                 this.state.threads = res;
                 if (!this.state.activePhone) {
@@ -54,6 +55,15 @@ export class WhatsAppChatWorkspace extends Component {
         if (thread) {
             this.state.activeThread = thread;
         }
+    }
+
+    async setFilter(filterType) {
+        if (this.state.filterType === filterType) {
+            return;
+        }
+        this.state.filterType = filterType;
+        this.state.activePhone = null;
+        await this.loadThreads();
     }
 
     async sendReply() {

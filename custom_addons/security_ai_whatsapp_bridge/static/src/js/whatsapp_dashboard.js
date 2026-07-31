@@ -56,6 +56,10 @@ export class WhatsAppDashboard extends Component {
     openAuditLogs() {
         this.action.doAction("security_ai_whatsapp_bridge.action_security_whatsapp_message_log");
     }
+
+    openWorkspace() {
+        this.action.doAction("security_ai_whatsapp_bridge.action_whatsapp_chat_workspace_client");
+    }
 }
 
 registry.category("actions").add("security_whatsapp.Dashboard", WhatsAppDashboard);

@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart, onMounted, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 
 export class DogForceMainCommandCenter extends Component {
     static template = "security_base.DogForceMainCommandCenter";
@@ -12,7 +13,6 @@ export class DogForceMainCommandCenter extends Component {
         this.action = useService("action");
         this.orm = useService("orm");
         this.notification = useService("notification");
-        this.companyService = useService("company");
 
         this.state = useState({
             activeTab: "launchpad", // 'launchpad' | 'live_ops' | 'rostering' | 'financials' | 'guide'
@@ -51,7 +51,7 @@ export class DogForceMainCommandCenter extends Component {
     }
 
     get companyName() {
-        return this.companyService?.currentCompany?.name || "Company";
+        return user.activeCompany?.name || "DogForce Security";
     }
 
     _todayStr() {
