@@ -9,10 +9,10 @@
     "data": [
         "security/security_groups.xml",
         "security/ir.model.access.csv",
+        "views/security_base_client_actions.xml",
         "views/security_base_menu.xml",
         "views/security_base_views.xml",
         "views/hr_employee_views.xml",
-        "views/security_base_client_actions.xml",
     ],
     "assets": {
         "web.assets_backend": [
