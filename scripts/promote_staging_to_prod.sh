@@ -35,7 +35,7 @@ done
 
 # Step 0.5: Verify no excluded modules are installed in the production database
 echo "🔍 Checking database state for prohibited module installations..."
-EXCLUDED_CHECK=$(docker exec -i "${PROD_CONTAINER}" odoo shell -c /etc/odoo/odoo.conf -d "${PROD_DB}" <<'EOF'
+EXCLUDED_CHECK=$(docker exec -i "${PROD_CONTAINER}" odoo shell --no-http -c /etc/odoo/odoo.conf -d "${PROD_DB}" <<'EOF'
 excluded = ['security_l10n_zm', 'security_zra_invoice', 'security_demo_data_zm']
 installed_excluded = env['ir.module.module'].search([('name', 'in', excluded), ('state', '=', 'installed')])
 if installed_excluded:
@@ -55,7 +55,7 @@ echo "✅ Exclusion safeguard check passed. Target module suite is valid for Nam
 
 # Step 1: Execute Pre-Deploy Snapshot
 echo "📸 Step 1/6: Taking mandatory pre-deploy production snapshot..."
-docker exec -i "${PROD_CONTAINER}" odoo shell -c /etc/odoo/odoo.conf -d "${PROD_DB}" <<'EOF'
+docker exec -i "${PROD_CONTAINER}" odoo shell --no-http -c /etc/odoo/odoo.conf -d "${PROD_DB}" <<'EOF'
 env['security.backup.manager'].sudo().run_pre_deploy_snapshot()
 env.cr.commit()
 EOF
@@ -69,7 +69,7 @@ docker stop "${PROD_CONTAINER}"
 # Step 3: Run Module Upgrade
 echo "🔄 Step 3/6: Executing schema & module upgrade: -u ${MODULES_TO_UPGRADE}..."
 if docker run --rm \
-    --network deploy_default \
+    --network dogforce-prod_default \
     --volumes-from "${PROD_CONTAINER}" \
     -e HOST=db_prod \
     -e USER=odoo \
