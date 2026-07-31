@@ -82,7 +82,7 @@
                 <filter string="Pre-Deploy Snapshots" name="filter_pre_deploy" domain="[('backup_type', '=', 'pre_deploy')]"/>
                 <filter string="Offsite Synced" name="filter_offsite" domain="[('offsite_synced', '=', True)]"/>
                 <filter string="Verified Integrities" name="filter_verified" domain="[('verified', '=', True)]"/>
-                <group expand="0" string="Group By">
+                <group string="Group By">
                     <filter string="Type" name="group_type" context="{'group_by':'backup_type'}"/>
                     <filter string="Retention Tier" name="group_tier" context="{'group_by':'retention_tier'}"/>
                     <filter string="Status" name="group_state" context="{'group_by':'state'}"/>
