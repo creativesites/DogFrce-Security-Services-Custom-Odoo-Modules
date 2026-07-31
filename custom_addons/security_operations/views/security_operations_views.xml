@@ -205,8 +205,11 @@
                 <field name="site_type"/>
                 <field name="supervisor_id"/>
                 <field name="location"/>
+                <field name="company_id" groups="base.group_multi_company"/>
 
                 <filter name="filter_active" string="Active Sites" domain="[('active', '=', True)]"/>
+                <filter name="filter_production" string="Production Sites" domain="[('is_demo', '=', False)]"/>
+                <filter name="filter_demo" string="Demo / Test Sites" domain="[('is_demo', '=', True)]" groups="base.group_system"/>
                 <separator/>
                 <filter name="filter_critical_risk" string="Critical Risk (&lt;50% Coverage)" domain="[('risk_level', '=', 'critical')]"/>
                 <filter name="filter_high_risk" string="High Risk Sites" domain="[('risk_level', 'in', ('high', 'critical'))]"/>
@@ -343,8 +346,10 @@
                     <group>
                         <group string="Client &amp; Site Classification">
                             <field name="partner_id" placeholder="Select Client..." domain="[('is_company','=',True)]"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
                             <field name="site_type"/>
                             <field name="supervisor_id" placeholder="Assign Security Supervisor..."/>
+                            <field name="is_demo" groups="base.group_system"/>
                             <field name="active" invisible="1"/>
                         </group>
                         <group string="Live Operational Metrics">
@@ -421,7 +426,7 @@
         <field name="res_model">security.client.site</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="view_security_client_site_search"/>
-        <field name="context">{'search_default_group_partner': 1}</field>
+        <field name="context">{'search_default_group_partner': 1, 'search_default_filter_production': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Onboard your first Client Site!

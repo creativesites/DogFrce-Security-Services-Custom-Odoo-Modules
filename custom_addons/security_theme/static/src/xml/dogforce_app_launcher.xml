@@ -129,10 +129,10 @@
      ═══════════════════════════════════════════════════════════════════════════ -->
 <t t-inherit="web.NavBar.AppsMenu" t-inherit-mode="extension">
   <xpath expr="//Dropdown" position="replace">
-    <button class="btn border-0 text-white dfal-apps-toggler px-2 py-1 me-2"
+    <button class="dfal-apps-toggler"
             t-on-click="() => this.toggleDogForceAppLauncher()"
             title="Open workspace">
-      <i class="oi oi-apps fs-4" style="color: #60a5fa;"/>
+      <i class="oi oi-apps"/>
     </button>
   </xpath>
 </t>

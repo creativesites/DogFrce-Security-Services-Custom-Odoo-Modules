@@ -8,6 +8,7 @@
     "depends": ["security_base", "contacts"],
     "data": [
         "security/ir.model.access.csv",
+        "security/security_operations_security.xml",
         "data/security_operations_cron.xml",
         "views/security_operations_menu.xml",
         "views/security_roster_wizard_views.xml",

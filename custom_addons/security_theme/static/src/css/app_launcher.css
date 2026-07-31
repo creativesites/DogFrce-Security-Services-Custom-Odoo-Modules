@@ -304,6 +304,46 @@
     color: #cbd5e1;
 }
 
+/* Keep the launcher trigger optically level with the native navbar menus. */
+.o_main_navbar .dfal-apps-toggler {
+    align-items: center;
+    align-self: center;
+    appearance: none;
+    background: #173f73;
+    border: 1px solid #285c99;
+    border-radius: 8px;
+    color: #eff6ff;
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 12px;
+    font-weight: 650;
+    height: 30px;
+    line-height: 1;
+    margin: 0 10px 0 4px;
+    justify-content: center;
+    padding: 0;
+    position: relative;
+    top: 2px;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+    vertical-align: middle;
+    width: 34px;
+    box-shadow: 0 5px 12px rgba(3, 24, 56, .28);
+}
+
+.o_main_navbar .dfal-apps-toggler .oi {
+    color: #7dd3fc;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.o_main_navbar .dfal-apps-toggler:hover,
+.o_main_navbar .dfal-apps-toggler:focus-visible {
+    background: #1d4f8f;
+    border-color: #4b8dd1;
+    color: #ffffff;
+    outline: none;
+}
+
 @media (max-width: 760px) {
     .dfal-header { flex-wrap: wrap; gap: 14px; }
     .dfal-search-box { order: 3; flex-basis: 100%; max-width: none; }

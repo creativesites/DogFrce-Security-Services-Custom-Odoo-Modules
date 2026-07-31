@@ -44,9 +44,17 @@ class SecurityClientSite(models.Model):
     _name = "security.client.site"
     _description = "Security Client Site"
     _order = "partner_id, name"
+    _check_company_auto = True
 
     name = fields.Char(required=True)
     code = fields.Char()
+    company_id = fields.Many2one(
+        "res.company",
+        string="Company",
+        required=True,
+        default=lambda self: self.env.company,
+        index=True,
+    )
     partner_id = fields.Many2one("res.partner", required=True, string="Client", domain=[("is_company", "=", True)])
     location = fields.Char()
     supervisor_id = fields.Many2one(
@@ -105,6 +113,11 @@ class SecurityClientSite(models.Model):
     contact_phone = fields.Char("Site Contact Phone")
     contact_email = fields.Char("Site Contact Email")
     note = fields.Text("Operational Notes")
+    is_demo = fields.Boolean(
+        string="Demo / Test Site",
+        default=False,
+        help="Exclude this non-production site from the default Client Sites view.",
+    )
     
     # Geofence & Location Tracking
     gps_lat = fields.Float("Latitude", digits=(10, 6))
@@ -400,11 +413,18 @@ class SecurityClientSite(models.Model):
 
     def action_open_site_hub(self):
         self.ensure_one()
+        # The form controller normally saves before calling an object button.
+        # Flush explicitly as a final safeguard before replacing the form view.
+        self.flush_recordset()
         return {
             "type": "ir.actions.client",
             "tag": "security_operations.site_hub",
             "name": f"Site Hub — {self.name}",
-            "context": {"active_id": self.id, "active_model": "security.client.site"},
+            "context": {
+                "active_id": self.id,
+                "active_model": "security.client.site",
+                "site_hub_saved": True,
+            },
             "target": "current",
         }
 
@@ -1660,4 +1680,3 @@ class SecurityOperationsDashboard(models.AbstractModel):
             filled += 1
 
         return filled
-

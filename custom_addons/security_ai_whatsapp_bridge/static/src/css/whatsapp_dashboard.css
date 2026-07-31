@@ -67,6 +67,7 @@
 }
 
 .dg-wa-actions-bar {
+    align-items: center;
     display: flex;
     gap: 12px;
 }
@@ -105,6 +106,18 @@
     background: #f8fafc;
     border-color: #cbd5e1;
     color: #0f172a;
+}
+
+.dg-wa-btn-workspace {
+    background: #ffffff;
+    border: 1px solid #a7f3d0;
+    color: #047857;
+}
+
+.dg-wa-btn-workspace:hover {
+    background: #ecfdf5;
+    border-color: #34d399;
+    color: #065f46;
 }
 
 /* KPI Cards Grid */

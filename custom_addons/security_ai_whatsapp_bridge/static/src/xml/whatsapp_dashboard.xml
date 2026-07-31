@@ -21,7 +21,7 @@
                     <button class="dg-wa-btn dg-wa-btn-secondary" t-on-click="refreshDashboard">
                         <i class="fa fa-refresh"/> Refresh Metrics
                     </button>
-                    <button class="dg-wa-btn dg-wa-btn-primary" t-on-click="openWorkspace">
+                    <button class="dg-wa-btn dg-wa-btn-workspace" t-on-click="openWorkspace">
                         <i class="fa fa-comments"/> Open conversations
                     </button>
                     <button class="dg-wa-btn dg-wa-btn-primary" t-on-click="openSettings">

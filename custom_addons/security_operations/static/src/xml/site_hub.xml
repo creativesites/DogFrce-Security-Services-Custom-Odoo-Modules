@@ -13,6 +13,14 @@
         </t>
 
         <!-- No site selected -->
+        <t t-elif="state.error">
+            <div class="sh-no-site d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="fa fa-map-marker fa-3x mb-3"/>
+                <p class="fs-5"><t t-esc="state.error"/></p>
+            </div>
+        </t>
+
+        <!-- No site selected -->
         <t t-elif="!state.site">
             <div class="sh-no-site d-flex flex-column align-items-center justify-content-center py-5 text-muted">
                 <i class="fa fa-map-marker fa-3x mb-3"/>
@@ -34,8 +42,8 @@
                         </small>
                     </div>
                 </div>
-                <button class="btn btn-outline-secondary btn-sm" t-on-click="openSiteForm">
-                    <i class="fa fa-pencil me-1"/> Edit Site
+                <button class="btn btn-primary btn-sm" t-on-click="openSiteForm">
+                    <i class="fa fa-pencil me-1"/> Open Full Site Setup
                 </button>
             </div>
 
@@ -128,6 +136,8 @@
                                         <dd><t t-esc="state.site.supervisor_id ? state.site.supervisor_id[1] : '—'"/></dd>
                                         <dt class="small text-muted">Posts</dt>
                                         <dd><t t-esc="state.site.post_ids ? state.site.post_ids.length : 0"/> post positions</dd>
+                                        <dt class="small text-muted">Guard exclusions</dt>
+                                        <dd><t t-esc="state.site.exclusion_ids ? state.site.exclusion_ids.length : 0"/></dd>
                                     </dl>
                                 </div>
                             </div>
@@ -135,6 +145,10 @@
 
                         <!-- Quick links -->
                         <div class="col-12">
+                            <div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <span><i class="fa fa-check-circle me-2"/>Your site setup is saved. Contacts, geofencing, exclusions, and notes are available in Full Site Setup.</span>
+                                <button class="btn btn-outline-primary btn-sm" t-on-click="openSiteForm">Open Full Site Setup</button>
+                            </div>
                             <div class="d-flex gap-2 flex-wrap">
                                 <button class="btn btn-outline-primary btn-sm" t-on-click="() => this.setTab('calendar')">
                                     <i class="fa fa-calendar me-1"/> View Calendar

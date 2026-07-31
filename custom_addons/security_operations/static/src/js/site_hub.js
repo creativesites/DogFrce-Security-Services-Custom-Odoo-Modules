@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart, onWillUpdateProps } from "@odoo/owl";
+import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -29,6 +29,7 @@ class SiteHub extends Component {
             guards: [],
             requirements: [],
             gapsOnly: false,
+            error: null,
         });
 
         onWillStart(() => this._load());
@@ -100,32 +101,49 @@ class SiteHub extends Component {
     }
 
     async _load() {
-        if (!this.siteId) {
+        try {
+            if (!this.siteId) {
+                this.state.error = "No saved client site was supplied. Return to Client Sites and open the saved site first.";
+                return;
+            }
+
+            const [site] = await this.orm.read(
+                "security.client.site",
+                [this.siteId],
+                ["name", "partner_id", "location", "contact_name", "contact_phone",
+                 "contact_email", "gps_lat", "gps_lng", "geofence_radius", "note",
+                 "supervisor_id", "site_coverage_today", "site_coverage_month",
+                 "shift_requirement_ids", "post_ids", "exclusion_ids"],
+            );
+            if (!site) {
+                this.state.error = "This site could not be found or you no longer have permission to view it.";
+                return;
+            }
+            this.state.site = site;
+
+            await Promise.all([
+                this._loadCalendar(),
+                this._loadGuards(),
+                this._loadRequirements(),
+            ]);
+
+            // Auto-enable Gaps Only when today's coverage is critically low.
+            if (site.site_coverage_today < 50) {
+                this.state.gapsOnly = true;
+            }
+            if (this.props.action?.context?.site_hub_saved) {
+                this.notification.add("Site setup saved. Open Full Site Setup to review or edit every section.", {
+                    title: "Site Hub opened",
+                    type: "success",
+                });
+            }
+        } catch (error) {
+            console.error("Unable to load Site Hub", error);
+            this.state.error = "The Site Hub could not load this site. Your saved setup has not been discarded; return to Client Sites and open the record again.";
+            this.notification.add(this.state.error, { title: "Site Hub unavailable", type: "danger" });
+        } finally {
             this.state.loading = false;
-            return;
         }
-
-        const [site] = await this.orm.read(
-            "security.client.site",
-            [this.siteId],
-            ["name", "partner_id", "location", "supervisor_id",
-             "site_coverage_today", "site_coverage_month",
-             "shift_requirement_ids", "post_ids"],
-        );
-        this.state.site = site;
-
-        await Promise.all([
-            this._loadCalendar(),
-            this._loadGuards(),
-            this._loadRequirements(),
-        ]);
-
-        // Auto-enable Gaps Only when today's coverage is critically low.
-        if (site.site_coverage_today < 50) {
-            this.state.gapsOnly = true;
-        }
-
-        this.state.loading = false;
     }
 
     async _loadCalendar() {
