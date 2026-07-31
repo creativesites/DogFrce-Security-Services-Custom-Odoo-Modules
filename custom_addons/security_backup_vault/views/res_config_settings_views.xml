@@ -42,7 +42,7 @@
         <field name="name">Backup Vault Settings</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
-        <field name="target">inline</field>
+        <field name="target">current</field>
         <field name="context">{'module': 'security_backup_vault', 'bin_size': False}</field>
     </record>
 
