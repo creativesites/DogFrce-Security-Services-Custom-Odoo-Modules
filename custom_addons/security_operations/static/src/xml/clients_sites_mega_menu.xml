@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_operations.ClientsSitesMegaMenu" owl="1">
+  <div class="rmm-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="rmm-container">
+
+      <!-- Header -->
+      <div class="rmm-header">
+        <div class="rmm-brand">
+          <div class="rmm-brand-badge">
+            <i class="fa fa-building me-2"/>DeployGuard Clients &amp; Sites
+          </div>
+          <div>
+            <h2 class="rmm-title">Clients &amp; Sites Command Center</h2>
+            <div class="rmm-subtitle">Site Directory, Geofencing, Service Contracts &amp; Risk Intelligence</div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="rmm-search-box">
+          <i class="fa fa-search rmm-search-icon"/>
+          <input type="text"
+                 class="rmm-search-input"
+                 placeholder="Search sites, clients, contracts, geofences, or posts (e.g., 'Kansanshi', 'Contract', 'Gate')..."
+                 t-model="state.searchQuery"/>
+        </div>
+
+        <button class="rmm-close-btn" t-on-click="() => this.close()" title="Close Command Center (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="rmm-tabs-bar">
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'launchpad' ? 'active' : '')"
+                t-on-click="() => this.setTab('launchpad')">
+          <i class="fa fa-rocket me-2"/>Quick Launchpad
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'clients_contracts' ? 'active' : '')"
+                t-on-click="() => this.setTab('clients_contracts')">
+          <i class="fa fa-handshake-o me-2"/>Clients &amp; Contracts
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'locations_posts' ? 'active' : '')"
+                t-on-click="() => this.setTab('locations_posts')">
+          <i class="fa fa-map-marker me-2"/>Locations, Geofence &amp; Posts
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'risk_exclusions' ? 'active' : '')"
+                t-on-click="() => this.setTab('risk_exclusions')">
+          <i class="fa fa-exclamation-triangle me-2"/>Risk &amp; Exclusions
+        </button>
+        <button t-att-class="'rmm-tab-btn rmm-tab-guidance ' + (state.activeTab === 'guidance' ? 'active' : '')"
+                t-on-click="() => this.setTab('guidance')">
+          <i class="fa fa-book me-2"/>Client SOP &amp; Guidance
+        </button>
+      </div>
+
+      <!-- Main Body Content -->
+      <div class="rmm-body">
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 1: QUICK LAUNCHPAD
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'launchpad'">
+          <div class="rmm-section-label"><i class="fa fa-star me-2 text-primary"/>Core Site Workspaces &amp; Command Tools</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Client Sites Matrix', 'Interactive site health kanban directory', ['sites', 'kanban', 'matrix'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_client_site')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-building"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Client Sites Matrix</span>
+                  <span class="rmm-pill pill-primary">Kanban</span>
+                </div>
+                <div class="rmm-card-desc">Interactive site directory: coverage gauges, risk level pills, and active supervisor badges.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Interactive Site Hub', 'Single page site management center', ['site', 'hub', 'location'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_site_hub')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-laptop"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Interactive Site Hub</span>
+                  <span class="rmm-pill pill-success">Site Hub</span>
+                </div>
+                <div class="rmm-card-desc">Single-page site manager: live shift calendar, posts, equipment requirements, and guard roster.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('30-Sec Site Setup Wizard', '30 second automated site onboarding', ['setup', 'wizard', 'quick'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_site_setup_wizard')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-magic"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">30-Sec Site Onboarding</span>
+                  <span class="rmm-pill pill-rose">Wizard</span>
+                </div>
+                <div class="rmm-card-desc">Automated site onboarding wizard: creates gate posts, shift requirements, and equipment kits in seconds.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Client Contracts', 'Service agreements and contracts', ['contracts', 'client', 'agreements'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_client_contract')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-file-text-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Service Contracts</span>
+                  <span class="rmm-pill pill-purple">Contracts</span>
+                </div>
+                <div class="rmm-card-desc">Manage active client service agreements, expiration dates, rate cards, and billing terms.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 2: CLIENTS & CONTRACTS
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'clients_contracts'">
+          <div class="rmm-section-label"><i class="fa fa-handshake-o me-2 text-success"/>Client Accounts, Service Contracts &amp; Rate Cards</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Client Partners', 'Commercial client accounts', ['partner', 'client', 'customer'])"
+                 t-on-click="() => this.openAction('base.action_partner_form')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-address-book-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Client Partner Directory</span>
+                  <span class="rmm-pill pill-primary">Accounts</span>
+                </div>
+                <div class="rmm-card-desc">Directory of all client company accounts, billing addresses, and primary contacts.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Service Contracts', 'Active security service contracts', ['contracts', 'agreements', 'billing'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_client_contract')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-file-text-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Service Contracts</span>
+                  <span class="rmm-pill pill-purple">Contracts</span>
+                </div>
+                <div class="rmm-card-desc">Active security agreements, minimum guard commitments, and renewal tracking.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Billing Rate Cards', 'Post bill and pay rates', ['rate', 'billing', 'price'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_contract_rate')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-money"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Billing Rate Cards</span>
+                  <span class="rmm-pill pill-success">Rates</span>
+                </div>
+                <div class="rmm-card-desc">Hourly bill rates per post, guard pay rates, overtime multipliers, and holiday pricing.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 3: LOCATIONS, GEOFENCE & POSTS
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'locations_posts'">
+          <div class="rmm-section-label"><i class="fa fa-map-marker me-2 text-info"/>Site Guard Posts, Shift Requirements &amp; Geofencing</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Site Post Positions', 'Guard post locations', ['posts', 'positions', 'gate'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_post')">
+              <div class="rmm-card-icon icon-indigo"><i class="fa fa-map-marker"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Site Post Positions</span>
+                  <span class="rmm-pill pill-info">Posts</span>
+                </div>
+                <div class="rmm-card-desc">Define specific guard post locations (Main Gate, Control Room, Perimeter Patrol).</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Shift Requirements', 'Post shift requirements and hours', ['shift', 'requirements', 'timing'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_shift_requirement')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-clock-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Shift Requirements</span>
+                  <span class="rmm-pill pill-warning">Shifts</span>
+                </div>
+                <div class="rmm-card-desc">Configure required shift templates, guard counts, and billing multipliers per post.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Post Equipment Requirements', 'Mandatory radios and torches per post', ['equipment', 'requirements', 'radio'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_post_resource_requirement')">
+              <div class="rmm-card-icon icon-teal"><i class="fa fa-bullhorn"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Post Asset Requirements</span>
+                  <span class="rmm-pill pill-info">Assets</span>
+                </div>
+                <div class="rmm-card-desc">Define mandatory vehicles, two-way radios, flashlights, and bodycams per site post.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 4: RISK & EXCLUSIONS
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'risk_exclusions'">
+          <div class="rmm-section-label"><i class="fa fa-exclamation-triangle me-2 text-danger"/>Site Risk Levels, Contract Warnings &amp; Guard Blacklists</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Exclusions & Blacklists', 'Client blacklists and disqualifications', ['exclusion', 'blacklist', 'ban'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_guard_exclusion')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-ban"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Exclusions &amp; Blacklists</span>
+                  <span class="rmm-pill pill-rose">Blacklists</span>
+                </div>
+                <div class="rmm-card-desc">Manage client guard blacklists, site disqualifications, and location restriction rules.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 5: CLIENT SOP & GUIDANCE
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Client &amp; Site Management Guidelines</div>
+          
+          <div class="rmm-guide-grid">
+            <!-- Step 1 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">1</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-building me-2 text-primary"/>Onboarding a New Client Site</div>
+                <div class="rmm-guide-text">
+                  Use the <strong>30-Sec Site Setup Wizard</strong> to quickly create a site with default posts (*Gate, Patrol, CCTV*), assign supervisors, set shift durations, and auto-provision required two-way radios.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">2</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-map-marker me-2 text-info"/>Setting Up Geofences &amp; Coordinates</div>
+                <div class="rmm-guide-text">
+                  In the site form, navigate to <strong>Location, Contacts &amp; Geofencing</strong>. Enter exact GPS latitude/longitude and specify a clock-in geofence radius (10m - 5,000m) to enforce mobile attendance verification.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">3</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-ban me-2 text-danger"/>Client Blacklists &amp; Exclusions</div>
+                <div class="rmm-guide-text">
+                  If a client requests a specific guard be removed from their site, register a <strong>Guard Exclusion</strong> record. DeployGuard automatically blocks the guard from being assigned to that site during rostering.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shortcuts & Rules Cheatsheet -->
+          <div class="rmm-cheatsheet-box">
+            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Client &amp; Site Navigation Shortcuts</div>
+            <div class="rmm-cheatsheet-grid">
+              <div class="rmm-cs-item"><span class="rmm-kbd">Esc</span> Close Command Center</div>
+              <div class="rmm-cs-item"><span class="rmm-kbd">Alt + C</span> Open Clients &amp; Sites Command Center</div>
+              <div class="rmm-cs-item"><i class="fa fa-check-circle text-success me-1"/> Mandatory Geofence: Enforced for Mobile Clock-in</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="rmm-footer">
+        <div class="rmm-footer-status">
+          <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Site Matrix Operational</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-building me-1"/>DeployGuard Sites 19.0</span>
+        </div>
+        <div class="rmm-footer-tip">
+          Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace
+        </div>
+      </div>
+
+    </div>
+  </div>
+</t>
+</templates>

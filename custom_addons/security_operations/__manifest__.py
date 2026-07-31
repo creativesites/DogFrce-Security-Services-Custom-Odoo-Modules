@@ -26,6 +26,8 @@
             "security_operations/static/src/xml/site_hub.xml",
             "security_operations/static/src/js/ops_dashboard.js",
             "security_operations/static/src/js/site_hub.js",
+            "security_operations/static/src/js/clients_sites_mega_menu.js",
+            "security_operations/static/src/xml/clients_sites_mega_menu.xml",
         ],
     },
     "installable": True,

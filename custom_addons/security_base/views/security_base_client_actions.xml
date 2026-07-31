@@ -22,14 +22,6 @@
         <field name="target">fullscreen</field>
     </record>
 
-    <!-- Root Menu Item for DeployGuard OS Home Launcher -->
-    <menuitem id="menu_deployguard_home_root"
-              name="DeployGuard OS"
-              web_icon="security_base,static/description/icon.png"
-              action="action_deployguard_main_command_center"
-              sequence="0"
-              groups="base.group_user"/>
-
     <!-- Root Menu Item for Workforce Command Center -->
     <menuitem id="menu_security_workforce_root"
               name="Workforce"

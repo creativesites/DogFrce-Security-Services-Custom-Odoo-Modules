@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_equipment.EquipmentMegaMenu" owl="1">
+  <div class="rmm-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="rmm-container">
+
+      <!-- Header -->
+      <div class="rmm-header">
+        <div class="rmm-brand">
+          <div class="rmm-brand-badge">
+            <i class="fa fa-wrench me-2"/>DeployGuard Equipment &amp; Assets
+          </div>
+          <div>
+            <h2 class="rmm-title">Equipment &amp; Assets Command Center</h2>
+            <div class="rmm-subtitle">Firearms, Radios, Bodycams, Guard Custody &amp; Inventory Management</div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="rmm-search-box">
+          <i class="fa fa-search rmm-search-icon"/>
+          <input type="text"
+                 class="rmm-search-input"
+                 placeholder="Search equipment, firearms, radios, bodycams, custody, or service logs (e.g., 'Firearm', 'Radio', 'Issuance')..."
+                 t-model="state.searchQuery"/>
+        </div>
+
+        <button class="rmm-close-btn" t-on-click="() => this.close()" title="Close Command Center (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="rmm-tabs-bar">
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'launchpad' ? 'active' : '')"
+                t-on-click="() => this.setTab('launchpad')">
+          <i class="fa fa-rocket me-2"/>Quick Launchpad
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'catalog' ? 'active' : '')"
+                t-on-click="() => this.setTab('catalog')">
+          <i class="fa fa-cube me-2"/>Equipment Catalog
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'maintenance' ? 'active' : '')"
+                t-on-click="() => this.setTab('maintenance')">
+          <i class="fa fa-wrench me-2"/>Service &amp; Inspection
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'custody' ? 'active' : '')"
+                t-on-click="() => this.setTab('custody')">
+          <i class="fa fa-hand-paper-o me-2"/>Guard Custody
+        </button>
+        <button t-att-class="'rmm-tab-btn rmm-tab-guidance ' + (state.activeTab === 'guidance' ? 'active' : '')"
+                t-on-click="() => this.setTab('guidance')">
+          <i class="fa fa-book me-2"/>Asset Policy &amp; Guidance
+        </button>
+      </div>
+
+      <!-- Main Body Content -->
+      <div class="rmm-body">
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 1: QUICK LAUNCHPAD
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'launchpad'">
+          <div class="rmm-section-label"><i class="fa fa-star me-2 text-primary"/>Core Asset Workspaces &amp; Equipment Matrix</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('All Equipment Inventory', 'Master equipment and firearms register', ['equipment', 'inventory', 'assets'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-cubes"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">All Equipment Inventory</span>
+                  <span class="rmm-pill pill-primary">Primary</span>
+                </div>
+                <div class="rmm-card-desc">Master list of serial numbers, status (Available, Issued, In Repair), and assigned guard custody.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Equipment Types Catalog', 'Equipment categories and threshold limits', ['types', 'categories', 'catalog'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_type')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-list-alt"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Equipment Categories</span>
+                  <span class="rmm-pill pill-success">Catalog</span>
+                </div>
+                <div class="rmm-card-desc">Define item types (Firearms, Radios, Flashlights, Uniform Kits) and minimum stock thresholds.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Rapid Issue and Return Wizard', 'Quick equipment issuance dialog', ['wizard', 'issue', 'return'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_issuance_wizard')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-exchange"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Rapid Issue &amp; Return Wizard</span>
+                  <span class="rmm-pill pill-rose">Wizard</span>
+                </div>
+                <div class="rmm-card-desc">Fast dialog for issuing two-way radios, firearms, or bodycams to guards starting a shift.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Active Equipment Custody', 'Guard equipment assignments log', ['custody', 'assignments', 'issued'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_assignment')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-hand-paper-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Custody Register</span>
+                  <span class="rmm-pill pill-purple">Custody</span>
+                </div>
+                <div class="rmm-card-desc">Track active equipment custody, issue dates, expected return times, and sign-off signatures.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 2: EQUIPMENT CATALOG
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'catalog'">
+          <div class="rmm-section-label"><i class="fa fa-cube me-2 text-success"/>Firearms, Two-Way Radios, Bodycams &amp; PPE Kits</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Firearms & Ammunition Register', 'Armory and firearm serial numbers', ['firearm', 'ammo', 'armory', 'gun'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-crosshairs"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Armory &amp; Firearms Register</span>
+                  <span class="rmm-pill pill-rose">Armory</span>
+                </div>
+                <div class="rmm-card-desc">Serial number tracking for licensed firearms, shotguns, handguns, and ammunition rounds.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Two-Way Radios & Bodycams', 'Communication and recording assets', ['radio', 'bodycam', 'comms'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-bullhorn"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Radios &amp; Body Cameras</span>
+                  <span class="rmm-pill pill-primary">Comms</span>
+                </div>
+                <div class="rmm-card-desc">VHF/UHF two-way patrol radios, repeater stations, and audio/video body cameras.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 3: SERVICE & INSPECTION
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'maintenance'">
+          <div class="rmm-section-label"><i class="fa fa-wrench me-2 text-warning"/>Equipment Maintenance Logs, Inspections &amp; Low Stock Alerts</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Service & Repair Log', 'Equipment maintenance and repairs', ['service', 'repair', 'maintenance'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_maintenance')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-wrench"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Service &amp; Repair Log</span>
+                  <span class="rmm-pill pill-warning">Service</span>
+                </div>
+                <div class="rmm-card-desc">Track equipment repair orders, vendor servicing, battery replacements, and calibration logs.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 4: GUARD CUSTODY
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'custody'">
+          <div class="rmm-section-label"><i class="fa fa-hand-paper-o me-2 text-purple"/>Guard Issuance Records, Overdue Items &amp; Payroll Deductions</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Custody Register', 'Active equipment custody assignments', ['custody', 'issuance', 'guard'])"
+                 t-on-click="() => this.openAction('security_equipment.action_security_equipment_assignment')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-hand-paper-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Custody Register</span>
+                  <span class="rmm-pill pill-purple">Custody</span>
+                </div>
+                <div class="rmm-card-desc">Detailed log of equipment issued to individual guards, shift checkout, and return condition.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 5: ASSET POLICY & GUIDANCE
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Asset Management Guidelines &amp; Armory SOP</div>
+          
+          <div class="rmm-guide-grid">
+            <!-- Step 1 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">1</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-exchange me-2 text-primary"/>Shift Equipment Checkout &amp; Return</div>
+                <div class="rmm-guide-text">
+                  Armory supervisors must use the <strong>Rapid Issue &amp; Return Wizard</strong> when issuing firearms, radios, or bodycams. Guards must verify item condition before signing the digital custody log.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">2</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-crosshairs me-2 text-danger"/>Firearm Armory Security</div>
+                <div class="rmm-guide-text">
+                  Firearms can only be issued to guards holding an active, unexpired <strong>Firearm Competency Certificate</strong>. All firearm handovers require dual-supervisor authorization.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">3</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-exclamation-triangle me-2 text-warning"/>Damaged or Lost Asset Reporting</div>
+                <div class="rmm-guide-text">
+                  If an item is damaged or lost, mark the custody record as <strong>Damaged/Lost</strong>. This automatically triggers an incident investigation and routes replacement cost deductions to monthly payroll.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shortcuts & Rules Cheatsheet -->
+          <div class="rmm-cheatsheet-box">
+            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Equipment &amp; Asset Navigation Shortcuts</div>
+            <div class="rmm-cheatsheet-grid">
+              <div class="rmm-cs-item"><span class="rmm-kbd">Esc</span> Close Command Center</div>
+              <div class="rmm-cs-item"><span class="rmm-kbd">Alt + E</span> Open Equipment &amp; Assets Command Center</div>
+              <div class="rmm-cs-item"><i class="fa fa-check-circle text-success me-1"/> Mandatory Armory Verification: Dual Supervisor Sign-off</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="rmm-footer">
+        <div class="rmm-footer-status">
+          <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Armory Bus Active</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-wrench me-1"/>DeployGuard Assets 19.0</span>
+        </div>
+        <div class="rmm-footer-tip">
+          Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace
+        </div>
+      </div>
+
+    </div>
+  </div>
+</t>
+</templates>

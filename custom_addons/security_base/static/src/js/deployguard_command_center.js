@@ -14,6 +14,7 @@ export class DeployGuardMainCommandCenter extends Component {
         this.notification = useService("notification");
 
         this.state = useState({
+            activeTab: "launchpad", // 'launchpad' | 'live_ops' | 'rostering' | 'financials' | 'guide'
             searchQuery: "",
             loading: true,
             userRoles: {
@@ -152,6 +153,10 @@ export class DeployGuardMainCommandCenter extends Component {
                 this.notification.add("Could not launch action: " + actionXmlId, { type: "warning" });
             }
         }
+    }
+
+    setTab(tabId) {
+        this.state.activeTab = tabId;
     }
 
     matchesSearch(title, desc, keywords = []) {
