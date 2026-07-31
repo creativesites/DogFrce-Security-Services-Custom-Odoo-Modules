@@ -4,7 +4,26 @@
         id="menu_security_root"
         name="Security"
         sequence="1"
-        groups="hr.group_hr_user"
+        groups="base.group_user"
+    />
+
+    <!-- Home Menu Category under Security -->
+    <menuitem
+        id="menu_security_home"
+        name="Home"
+        parent="menu_security_root"
+        action="action_deployguard_main_command_center"
+        sequence="0"
+        groups="base.group_user"
+    />
+
+    <menuitem
+        id="menu_security_home_command_center"
+        name="⚡ Home Command Center"
+        parent="menu_security_home"
+        action="action_deployguard_main_command_center"
+        sequence="0"
+        groups="base.group_user"
     />
 
     <menuitem
