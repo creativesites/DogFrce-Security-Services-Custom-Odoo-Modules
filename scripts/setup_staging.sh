@@ -21,6 +21,7 @@ docker compose -f deploy/docker-compose.staging.yml up -d
 
 # Step 2: Initialize Clean Staging Database
 echo "⚙️ Step 2/4: Initializing database ${STAGING_DB} (--without-demo=True)..."
+docker exec -e PGPASSWORD=DogForce_Staging_Db_2026_SecurePass! -i "${STAGING_CONTAINER}" psql -h db_staging -U odoo -d postgres -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = '${STAGING_DB}';" || true
 docker exec -e PGPASSWORD=DogForce_Staging_Db_2026_SecurePass! -i "${STAGING_CONTAINER}" dropdb -h db_staging -U odoo --if-exists "${STAGING_DB}" || true
 docker exec -i "${STAGING_CONTAINER}" odoo \
     -c /etc/odoo/odoo.conf \
