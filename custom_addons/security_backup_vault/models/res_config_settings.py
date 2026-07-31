@@ -23,12 +23,10 @@ class ResConfigSettings(models.TransientModel):
     r2_endpoint = fields.Char(
         string='Cloudflare R2 S3 Endpoint URL',
         config_parameter='security_backup.r2_endpoint',
-        placeholder='https://<account_id>.r2.cloudflarestorage.com',
     )
     r2_bucket = fields.Char(
         string='R2 Bucket Name',
         config_parameter='security_backup.r2_bucket',
-        placeholder='dogforce-production-backups',
     )
     r2_access_key = fields.Char(
         string='R2 Access Key ID',
