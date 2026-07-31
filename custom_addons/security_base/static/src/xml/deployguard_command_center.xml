@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_base.DeployGuardMainCommandCenter" owl="1">
+  <div class="dgcc-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="dgcc-container">
+
+      <!-- Header Section -->
+      <div class="dgcc-header">
+        <div class="dgcc-brand">
+          <div class="dgcc-brand-badge">
+            <i class="fa fa-shield me-2"/>DeployGuard OS
+          </div>
+          <div>
+            <h2 class="dgcc-title">Command Center &amp; OS Launcher</h2>
+            <div class="dgcc-subtitle">Unified Enterprise Security Operations System</div>
+          </div>
+        </div>
+
+        <!-- Global Search Bar -->
+        <div class="dgcc-search-box">
+          <i class="fa fa-search dgcc-search-icon"/>
+          <input type="text"
+                 class="dgcc-search-input"
+                 placeholder="Search anything (e.g., 'Roster', 'AWOL', 'Payroll', 'John Phiri')..."
+                 t-model="state.searchQuery"/>
+        </div>
+
+        <button class="dgcc-close-btn" t-on-click="() => this.close()" title="Dismiss (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Two-Layer Screen Structure -->
+
+      <!-- LAYER 1: ATTENTION STRIP (Quiet & Collapsed when zero items) -->
+      <div class="dgcc-attention-strip" t-if="state.attentionStrip.hasItems">
+        <div class="dgcc-as-label">
+          <i class="fa fa-exclamation-triangle text-amber me-2"/>Attention Ticker:
+        </div>
+        <div class="dgcc-as-items">
+
+          <span t-if="state.attentionStrip.unassignedSlotsCount &gt; 0"
+                class="dgcc-as-pill pill-danger"
+                t-on-click="() => this.openAction('security_operations.action_ops_dashboard')">
+            <i class="fa fa-calendar-times-o me-1"/><t t-esc="state.attentionStrip.unassignedSlotsCount"/> Critical Gaps
+          </span>
+
+          <span t-if="state.attentionStrip.awolCount &gt; 0"
+                class="dgcc-as-pill pill-danger"
+                t-on-click="() => this.openAction('security_attendance.action_security_attendance_record')">
+            <i class="fa fa-user-times me-1"/><t t-esc="state.attentionStrip.awolCount"/> AWOL Today
+          </span>
+
+          <span t-if="state.attentionStrip.expiringDocsCount &gt; 0"
+                class="dgcc-as-pill pill-warning"
+                t-on-click="() => this.openAction('security_base.action_workforce_dashboard')">
+            <i class="fa fa-certificate me-1"/><t t-esc="state.attentionStrip.expiringDocsCount"/> Certs Expiring (7d)
+          </span>
+
+          <span t-if="state.attentionStrip.pendingLeaveCount &gt; 0"
+                class="dgcc-as-pill pill-info"
+                t-on-click="() => this.openAction('security_leave.action_security_leave_request')">
+            <i class="fa fa-calendar-check-o me-1"/><t t-esc="state.attentionStrip.pendingLeaveCount"/> Pending Leave
+          </span>
+
+          <span t-if="state.attentionStrip.draftInvoicesCount &gt; 0"
+                class="dgcc-as-pill pill-primary"
+                t-on-click="() => this.openAction('security_billing.action_security_billing_invoice')">
+            <i class="fa fa-file-text-o me-1"/><t t-esc="state.attentionStrip.draftInvoicesCount"/> Draft Invoices
+          </span>
+
+        </div>
+      </div>
+
+      <!-- LAYER 2: TILE GRID (Primary Anchor Layer) -->
+      <div class="dgcc-body">
+        <div class="dgcc-tile-grid">
+
+          <!-- Tile 1: Command Centre -->
+          <div class="dgcc-tile tile-space"
+               t-if="matchesSearch('Command Centre Live Operations', 'Control room, live guard status, emergencies', ['command', 'ops', 'control', 'live', 'dashboard'])"
+               t-on-click="() => this.openAction('security_operations.action_ops_dashboard')">
+            <div class="dgcc-tile-icon icon-cyan"><i class="fa fa-space-shuttle"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Command Centre</div>
+              <div class="dgcc-tile-desc">Live control room, site coverage &amp; emergencies</div>
+            </div>
+            <span class="dgcc-tile-tag tag-cyan">Live Ops</span>
+          </div>
+
+          <!-- Tile 2: Rostering -->
+          <div class="dgcc-tile tile-roster"
+               t-if="matchesSearch('Rostering Shift Planner', 'Interactive grid, roster board, AI scheduling', ['roster', 'shift', 'board', 'kanban', 'schedule'])"
+               t-on-click="() => this.openAction('security_shift_planner.action_rostering_hub')">
+            <div class="dgcc-tile-icon icon-blue"><i class="fa fa-calendar-check-o"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Rostering</div>
+              <div class="dgcc-tile-desc">Rostering Hub, AI Planner &amp; Roster Board</div>
+            </div>
+            <span class="dgcc-tile-tag tag-blue">Core Engine</span>
+          </div>
+
+          <!-- Tile 3: Workforce -->
+          <div class="dgcc-tile tile-workforce"
+               t-if="matchesSearch('Workforce Guard Management', 'Guard directory, certs, reliability scores', ['workforce', 'guard', 'certs', 'employee', 'hr'])"
+               t-on-click="() => this.openAction('security_base.action_workforce_dashboard')">
+            <div class="dgcc-tile-icon icon-purple"><i class="fa fa-user-secret"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Workforce</div>
+              <div class="dgcc-tile-desc">Guard profiles, grades, certs &amp; reliability</div>
+            </div>
+            <span class="dgcc-tile-tag tag-purple">Guard Directory</span>
+          </div>
+
+          <!-- Tile 4: Clients & Contracts -->
+          <div class="dgcc-tile tile-clients"
+               t-if="matchesSearch('Clients &amp; Contracts', 'Client master, service agreements, sites &amp; posts', ['client', 'contract', 'sites', 'posts', 'rates'])"
+               t-on-click="() => this.openAction('security_operations.action_security_client_contract')">
+            <div class="dgcc-tile-icon icon-indigo"><i class="fa fa-building-o"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Clients &amp; Contracts</div>
+              <div class="dgcc-tile-desc">Contracts, site posts &amp; billing rate cards</div>
+            </div>
+            <span class="dgcc-tile-tag tag-indigo">Commercial</span>
+          </div>
+
+          <!-- Tile 5: Attendance -->
+          <div class="dgcc-tile tile-attendance"
+               t-if="matchesSearch('Attendance &amp; Check-ins', 'Posting sheets, AWOL, GPS handover', ['attendance', 'checkin', 'awol', 'posting', 'gps'])"
+               t-on-click="() => this.openAction('security_attendance.action_security_attendance_record')">
+            <div class="dgcc-tile-icon icon-emerald"><i class="fa fa-map-marker"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Attendance</div>
+              <div class="dgcc-tile-desc">Shift sign-ins, AWOL logs &amp; GPS handovers</div>
+            </div>
+            <span class="dgcc-tile-tag tag-emerald">Field Verify</span>
+          </div>
+
+          <!-- Tile 6: Payroll -->
+          <div class="dgcc-tile tile-payroll"
+               t-if="matchesSearch('Payroll &amp; Payslips', 'Run payroll, NAPSA, NHIMA, PAYE, overtime', ['payroll', 'payslips', 'napsa', 'nhima', 'paye', 'salary'])"
+               t-on-click="() => this.openAction('security_payroll_core.action_security_payslip')">
+            <div class="dgcc-tile-icon icon-amber"><i class="fa fa-money"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Payroll</div>
+              <div class="dgcc-tile-desc">Payslips, statutory deductions &amp; overtime</div>
+            </div>
+            <span class="dgcc-tile-tag tag-amber">Payroll Core</span>
+          </div>
+
+          <!-- Tile 7: Billing -->
+          <div class="dgcc-tile tile-billing"
+               t-if="matchesSearch('Billing &amp; Invoicing', 'Customer invoices, attendance verification, ZRA', ['billing', 'invoice', 'zra', 'payments', 'finance'])"
+               t-on-click="() => this.openAction('security_billing.action_security_billing_invoice')">
+            <div class="dgcc-tile-icon icon-rose"><i class="fa fa-file-text-o"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Billing</div>
+              <div class="dgcc-tile-desc">Client invoices, attendance audit &amp; ZRA</div>
+            </div>
+            <span class="dgcc-tile-tag tag-rose">Revenue</span>
+          </div>
+
+          <!-- Tile 8: Fleet -->
+          <div class="dgcc-tile tile-fleet"
+               t-if="matchesSearch('Fleet &amp; Patrol Vehicles', 'Patrol vehicles, fuel logs, service reminders', ['fleet', 'vehicle', 'fuel', 'service', 'patrol'])"
+               t-on-click="() => this.openAction('security_fleet.action_security_fleet_vehicle')">
+            <div class="dgcc-tile-icon icon-teal"><i class="fa fa-truck"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Fleet</div>
+              <div class="dgcc-tile-desc">Patrol vehicles, fuel logs &amp; SF-012 checks</div>
+            </div>
+            <span class="dgcc-tile-tag tag-teal">Vehicles</span>
+          </div>
+
+          <!-- Tile 9: Equipment -->
+          <div class="dgcc-tile tile-equipment"
+               t-if="matchesSearch('Equipment &amp; Firearms', 'Firearms, radios, uniforms, body cams', ['equipment', 'firearms', 'radios', 'uniforms', 'inventory'])"
+               t-on-click="() => this.openAction('security_equipment.action_security_equipment_item')">
+            <div class="dgcc-tile-icon icon-blue"><i class="fa fa-cube"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Equipment</div>
+              <div class="dgcc-tile-desc">Firearms, radios, body cams &amp; inventory</div>
+            </div>
+            <span class="dgcc-tile-tag tag-blue">Armory &amp; Gear</span>
+          </div>
+
+          <!-- Tile 10: Analytics -->
+          <div class="dgcc-tile tile-analytics"
+               t-if="matchesSearch('Analytics &amp; Executive Reporting', 'Operations analytics, workforce margins', ['analytics', 'reporting', 'executive', 'margins', 'kpi'])"
+               t-on-click="() => this.openAction('security_reporting.executive_dashboard')">
+            <div class="dgcc-tile-icon icon-purple"><i class="fa fa-bar-chart"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Analytics</div>
+              <div class="dgcc-tile-desc">Executive KPI dashboard, margins &amp; compliance</div>
+            </div>
+            <span class="dgcc-tile-tag tag-purple">Executive</span>
+          </div>
+
+          <!-- Tile 11: Administration -->
+          <div class="dgcc-tile tile-admin"
+               t-if="matchesSearch('Administration &amp; System Settings', 'Users, roles, whitelists, audit logs', ['admin', 'users', 'roles', 'settings', 'system'])"
+               t-on-click="() => this.openAction('base.action_res_users')">
+            <div class="dgcc-tile-icon icon-slate"><i class="fa fa-cogs"/></div>
+            <div class="dgcc-tile-content">
+              <div class="dgcc-tile-title">Administration</div>
+              <div class="dgcc-tile-desc">User roles, security groups &amp; audit trails</div>
+            </div>
+            <span class="dgcc-tile-tag tag-slate">System</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer Section -->
+      <div class="dgcc-footer">
+        <div class="dgcc-footer-status">
+          <span class="dgcc-status-pill green"><i class="fa fa-check-circle me-1"/>DeployGuard OS Active</span>
+          <span class="dgcc-status-pill blue"><i class="fa fa-shield me-1"/>Odoo 19 Enterprise Suite</span>
+        </div>
+        <div class="dgcc-footer-tip">
+          Press <span class="dgcc-kbd">Esc</span> to dismiss launcher | <span class="dgcc-kbd">Alt + H</span> for Home Command Center
+        </div>
+      </div>
+
+    </div>
+  </div>
+</t>
+</templates>

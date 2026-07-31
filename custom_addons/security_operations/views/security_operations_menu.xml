@@ -40,7 +40,23 @@
         name="Workforce"
         parent="security_base.menu_security_root"
         sequence="20"
-        groups="hr.group_hr_user"
+        groups="base.group_user"
+    />
+
+    <menuitem
+        id="menu_security_workforce_sec_dashboard"
+        name="⚡ Dashboard"
+        parent="security_operations.menu_security_workforce"
+        action="security_base.action_workforce_dashboard"
+        sequence="0"
+    />
+
+    <menuitem
+        id="menu_security_workforce_sec_mega"
+        name="⚡ Command Center"
+        parent="security_operations.menu_security_workforce"
+        action="security_base.action_workforce_mega_menu"
+        sequence="1"
     />
 
     <!-- ─── Payroll ─── -->

@@ -44,15 +44,20 @@ class SecurityEventLog(models.Model):
     error_message = fields.Text(string="Error Message")
 
     @api.model
-    def register_event(self, name, source_model, source_id, event_data=None):
+    def register_event(self, name, source_model, source_id, event_data=None, payload=None, **kwargs):
         """
         Primary API to broadcast an operational event into the DeployGuard Intelligence Bus.
         Creates an audit event log and immediately dispatches it to registered loops.
+        Accepts both event_data and payload for robust cross-module compatibility.
         """
+        data = event_data if event_data is not None else payload
+        if data is None and kwargs:
+            data = kwargs
+
         data_str = ""
-        if event_data:
+        if data:
             try:
-                data_str = json.dumps(event_data)
+                data_str = json.dumps(data)
             except Exception as e:
                 _logger.warning("Failed to serialize event_data for event %s: %s", name, e)
 

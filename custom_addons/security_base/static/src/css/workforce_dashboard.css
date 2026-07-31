@@ -1,0 +1,22 @@
+/* Workforce Dashboard Styles */
+
+.wd-container {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.wd-topbar {
+    border-bottom: 1px solid #1e293b;
+}
+
+.hover-shadow {
+    transition: all 0.2s ease-in-out;
+}
+
+.hover-shadow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.transition {
+    transition: all 0.2s ease;
+}

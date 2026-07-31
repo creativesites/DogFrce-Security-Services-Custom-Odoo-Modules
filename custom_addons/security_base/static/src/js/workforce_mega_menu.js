@@ -4,15 +4,15 @@ import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 
-export class RosteringMegaMenu extends Component {
-    static template = "security_shift_planner.RosteringMegaMenu";
+export class WorkforceMegaMenu extends Component {
+    static template = "security_base.WorkforceMegaMenu";
     static props = { "*": true };
 
     setup() {
         this.action = useService("action");
         this.notification = useService("notification");
         this.state = useState({
-            activeTab: "launchpad", // 'launchpad' | 'ai_planning' | 'records' | 'rules' | 'guidance'
+            activeTab: "launchpad", // 'launchpad' | 'compliance' | 'discipline' | 'payroll_leave' | 'guidance'
             searchQuery: "",
         });
 
@@ -38,16 +38,16 @@ export class RosteringMegaMenu extends Component {
             this.props.closeModal();
         } else {
             try {
-                this.action.doAction("security_shift_planner.action_rostering_hub", { clearBreadcrumbs: true });
+                this.action.doAction("security_base.action_workforce_dashboard", { clearBreadcrumbs: true });
             } catch (e) {
-                console.error("Failed to navigate to Rostering Hub on close:", e);
+                console.error("Failed to navigate to Workforce Dashboard on close:", e);
             }
         }
     }
 
     async openAction(actionXmlId) {
         try {
-            if (this.props.closeModal) {
+            if (this.props.closeModal && typeof this.props.closeModal === "function") {
                 this.props.closeModal();
             }
             await this.action.doAction(actionXmlId);
@@ -71,4 +71,4 @@ export class RosteringMegaMenu extends Component {
     }
 }
 
-registry.category("actions").add("security_shift_planner.rostering_mega_menu", RosteringMegaMenu);
+registry.category("actions").add("security_base.workforce_mega_menu", WorkforceMegaMenu);

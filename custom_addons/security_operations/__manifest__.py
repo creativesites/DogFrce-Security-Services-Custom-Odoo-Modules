@@ -11,6 +11,7 @@
         "data/security_operations_cron.xml",
         "views/security_operations_menu.xml",
         "views/security_roster_wizard_views.xml",
+        "views/security_site_setup_wizard_views.xml",
         "views/security_operations_views.xml",
         "views/security_client_contract_views.xml",
         "views/security_guard_availability_views.xml",

@@ -16,4 +16,5 @@ access_security_contract_rate_user,security.contract.rate user,model_security_co
 access_security_demand_plan_user,security.demand.plan user,model_security_demand_plan,hr.group_hr_user,1,1,1,1
 access_security_post_resource_requirement_user,security.post.resource.requirement user,model_security_post_resource_requirement,hr.group_hr_user,1,1,1,1
 access_security_roster_slot_resource_user,security.roster.slot.resource user,model_security_roster_slot_resource,hr.group_hr_user,1,1,1,1
+access_security_site_setup_wizard,security.site.setup.wizard,model_security_site_setup_wizard,hr.group_hr_user,1,1,1,1
 

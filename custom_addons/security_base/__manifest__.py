@@ -12,13 +12,22 @@
         "views/security_base_menu.xml",
         "views/security_base_views.xml",
         "views/hr_employee_views.xml",
+        "views/security_base_client_actions.xml",
     ],
     "assets": {
         "web.assets_backend": [
             # Design system — must load first (before all other module assets)
             "security_base/static/src/css/design_system.css",
+            "security_base/static/src/css/workforce_dashboard.css",
+            "security_base/static/src/css/deployguard_command_center.css",
             "security_base/static/src/js/reliability_gauge.js",
+            "security_base/static/src/js/workforce_mega_menu.js",
+            "security_base/static/src/js/workforce_dashboard.js",
+            "security_base/static/src/js/deployguard_command_center.js",
             "security_base/static/src/xml/reliability_gauge.xml",
+            "security_base/static/src/xml/workforce_mega_menu.xml",
+            "security_base/static/src/xml/workforce_dashboard.xml",
+            "security_base/static/src/xml/deployguard_command_center.xml",
         ],
     },
     "post_init_hook": "post_init_hook",

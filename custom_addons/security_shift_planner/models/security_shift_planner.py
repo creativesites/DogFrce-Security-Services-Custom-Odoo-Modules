@@ -401,6 +401,11 @@ class SecurityRosterSlot(models.Model):
         if not employee.exists():
             return {"status": "error", "message": "Selected guard does not exist."}
 
+        # Handle potential stringified or varying boolean types from frontend RPC serializers
+        if isinstance(override, str):
+            override = override.lower() in ("true", "1", "t", "y", "yes")
+        override = bool(override)
+
         eligibility = self.check_guard_eligibility(employee)
         reasons = eligibility.get("reasons", [])
         is_blocked = eligibility.get("hard_block", False) or bool(reasons)

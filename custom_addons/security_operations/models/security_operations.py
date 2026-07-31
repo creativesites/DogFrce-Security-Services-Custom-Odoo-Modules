@@ -65,35 +65,117 @@ class SecurityClientSite(models.Model):
         "site_id",
         string="Guard Exclusions",
     )
-    note = fields.Text()
-    site_coverage_today = fields.Float(
-        compute="_compute_site_coverage_today",
-        string="Today's Coverage (%)",
-    )
-    site_coverage_month = fields.Float(
-        compute="_compute_site_coverage_month",
-        string="Month-to-Date Coverage (%)",
+    site_type = fields.Selection(
+        [
+            ("mining", "Mining / Heavy Industrial"),
+            ("industrial", "Factory / Warehouse"),
+            ("commercial", "Commercial Office"),
+            ("residential", "Residential Estate"),
+            ("retail", "Retail / Mall"),
+            ("embassy", "Embassy / High Security"),
+            ("banking", "Banking / Financial"),
+            ("healthcare", "Healthcare / Hospital"),
+        ],
+        string="Site Sector",
+        default="commercial",
     )
     contract_status = fields.Selection(
         [
-            ("valid", "Contract Valid"),
+            ("none", "No Active Contract"),
+            ("valid", "Valid Contract"),
             ("expiring_soon", "Expiring Soon"),
             ("expired", "Expired"),
-            ("none", "No Contract"),
         ],
-        compute="_compute_contract_status",
         string="Contract Status",
+        compute="_compute_contract_status",
+        search="_search_contract_status",
     )
     risk_level = fields.Selection(
         [
             ("low", "Low Risk"),
             ("medium", "Medium Risk"),
             ("high", "High Risk"),
-            ("critical", "Critical"),
+            ("critical", "Critical Risk"),
         ],
-        compute="_compute_risk_level",
         string="Risk Level",
+        compute="_compute_risk_level",
+        search="_search_risk_level",
     )
+    contact_name = fields.Char("Primary Site Contact")
+    contact_phone = fields.Char("Site Contact Phone")
+    contact_email = fields.Char("Site Contact Email")
+    note = fields.Text("Operational Notes")
+    
+    # Geofence & Location Tracking
+    gps_lat = fields.Float("Latitude", digits=(10, 6))
+    gps_lng = fields.Float("Longitude", digits=(10, 6))
+    geofence_radius = fields.Float("Geofence Radius (m)", default=200.0, help="Allowed clock-in radius around site coordinates in meters.")
+
+    post_count = fields.Integer(compute="_compute_counts", string="Posts Count")
+    active_slot_count = fields.Integer(compute="_compute_counts", string="Today's Slots")
+
+    @api.depends("post_ids", "post_ids.active")
+    def _compute_counts(self):
+        today = fields.Date.today()
+        slot_model = self.env["security.roster.slot"]
+        for site in self:
+            site.post_count = len(site.post_ids.filtered("active"))
+            site.active_slot_count = slot_model.search_count([
+                ("site_id", "=", site.id),
+                ("shift_date", "=", today),
+                ("state", "!=", "cancelled"),
+            ])
+
+    @api.constrains("code", "partner_id")
+    def _check_unique_site_code(self):
+        for site in self:
+            if site.code and site.partner_id:
+                dup = self.search([
+                    ("id", "!=", site.id),
+                    ("partner_id", "=", site.partner_id.id),
+                    ("code", "=ilike", site.code.strip()),
+                ], limit=1)
+                if dup:
+                    raise ValidationError(_("Site code '%s' is already in use for client '%s'. Each site code must be unique per client.") % (site.code, site.partner_id.name))
+
+    @api.constrains("gps_lat", "gps_lng", "geofence_radius")
+    def _check_geofence_validity(self):
+        for site in self:
+            if site.gps_lat or site.gps_lng:
+                if not (-90.0 <= site.gps_lat <= 90.0):
+                    raise ValidationError(_("Latitude must be between -90.0 and 90.0 degrees."))
+                if not (-180.0 <= site.gps_lng <= 180.0):
+                    raise ValidationError(_("Longitude must be between -180.0 and 180.0 degrees."))
+            if site.geofence_radius < 10.0 or site.geofence_radius > 5000.0:
+                raise ValidationError(_("Geofence radius must be between 10 meters and 5,000 meters."))
+
+    @api.constrains("supervisor_id")
+    def _check_supervisor_validity(self):
+        for site in self:
+            if site.supervisor_id and not site.supervisor_id.active:
+                raise ValidationError(_("Assigned site supervisor '%s' is inactive. Please select an active security supervisor.") % site.supervisor_id.name)
+
+    def action_open_posts(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Site Post Positions — %s") % self.name,
+            "res_model": "security.post",
+            "domain": [("site_id", "=", self.id)],
+            "context": {"default_site_id": self.id, "default_partner_id": self.partner_id.id},
+            "view_mode": "list,form",
+        }
+
+    def action_open_slots(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Today's Roster Slots — %s") % self.name,
+            "res_model": "security.roster.slot",
+            "domain": [("site_id", "=", self.id), ("shift_date", "=", fields.Date.today())],
+            "context": {"default_site_id": self.id},
+            "view_mode": "list,form",
+        }
 
     def _compute_contract_status(self):
         today = fields.Date.today()
@@ -120,6 +202,22 @@ class SecurityClientSite(models.Model):
                 if past:
                     site.contract_status = "expired"
 
+    def _search_contract_status(self, operator, value):
+        if operator not in ("=", "!=", "in", "not in"):
+            raise ValueError("Unsupported operator %s" % operator)
+        all_sites = self.search([])
+        matching_ids = []
+        for site in all_sites:
+            if operator == "=" and site.contract_status == value:
+                matching_ids.append(site.id)
+            elif operator == "!=" and site.contract_status != value:
+                matching_ids.append(site.id)
+            elif operator == "in" and site.contract_status in value:
+                matching_ids.append(site.id)
+            elif operator == "not in" and site.contract_status not in value:
+                matching_ids.append(site.id)
+        return [("id", "in", matching_ids)]
+
     def _compute_risk_level(self):
         for site in self:
             today_cov = site.site_coverage_today
@@ -132,6 +230,22 @@ class SecurityClientSite(models.Model):
                 site.risk_level = "medium"
             else:
                 site.risk_level = "low"
+
+    def _search_risk_level(self, operator, value):
+        if operator not in ("=", "!=", "in", "not in"):
+            raise ValueError("Unsupported operator %s" % operator)
+        all_sites = self.search([])
+        matching_ids = []
+        for site in all_sites:
+            if operator == "=" and site.risk_level == value:
+                matching_ids.append(site.id)
+            elif operator == "!=" and site.risk_level != value:
+                matching_ids.append(site.id)
+            elif operator == "in" and site.risk_level in value:
+                matching_ids.append(site.id)
+            elif operator == "not in" and site.risk_level not in value:
+                matching_ids.append(site.id)
+        return [("id", "in", matching_ids)]
 
     def _compute_site_coverage_today(self):
         today = fields.Date.today()

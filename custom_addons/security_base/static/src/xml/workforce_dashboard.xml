@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_base.WorkforceDashboard" owl="1">
+    <div class="wd-container d-flex flex-column h-100 bg-slate-100 overflow-hidden">
+        
+        <!-- ── Workforce Mega Menu Overlay ── -->
+        <t t-if="state.showMegaMenu">
+            <WorkforceMegaMenu closeModal="closeMegaMenu"/>
+        </t>
+
+        <!-- ── Top Header Bar ── -->
+        <div class="wd-topbar d-flex align-items-center justify-content-between px-4 py-3 bg-slate-900 text-white shadow-sm" style="background: #0f172a;">
+            <div class="d-flex align-items-center gap-3">
+                <div class="wd-brand-icon rounded-3 p-2 bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #3b82f6 !important;">
+                    <i class="fa fa-users fa-lg"/>
+                </div>
+                <div>
+                    <h4 class="fw-bold mb-0 text-white fs-5">DeployGuard Workforce Management Dashboard</h4>
+                    <div class="text-slate-400 small" style="font-size: 12px; color: #94a3b8;">
+                        Central Guard Directory, Compliance Vetting, Disciplinary Intelligence &amp; HR Ops
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-outline-info text-info border-info fw-bold btn-sm d-flex align-items-center gap-2 px-3 py-2 rounded-3"
+                        t-on-click="openMegaMenu"
+                        title="Open Workforce Command Center (Alt + W)">
+                    <i class="fa fa-th-large"/>
+                    <span>⚡ Workforce Menu</span>
+                </button>
+                <button class="btn btn-primary fw-bold btn-sm d-flex align-items-center gap-2 px-3 py-2 rounded-3"
+                        t-on-click="() => this.openAction('hr.open_view_employee_list_my')">
+                    <i class="fa fa-user-plus"/>
+                    <span>Guard Directory</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── KPI Summary Cards Banner ── -->
+        <div class="px-4 py-3 bg-white border-bottom shadow-2fs">
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-3">
+                
+                <!-- KPI 1: Total Headcount -->
+                <div class="col">
+                    <div class="p-3 rounded-3 border bg-slate-50 d-flex flex-column justify-content-between h-100" style="background:#f8fafc;">
+                        <div class="d-flex justify-content-between align-items-center text-muted small fw-semibold">
+                            <span>Total Guards</span>
+                            <i class="fa fa-users text-primary"/>
+                        </div>
+                        <div class="fw-bold text-slate-900 fs-3 my-1" t-esc="state.stats.totalGuards"/>
+                        <div class="text-success small fw-semibold" style="font-size: 11px;">
+                            <i class="fa fa-check me-1"/>Active Personnel
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: On-Duty Today -->
+                <div class="col">
+                    <div class="p-3 rounded-3 border d-flex flex-column justify-content-between h-100" style="background:#f0fdf4; border-color:#bbf7d0 !important;">
+                        <div class="d-flex justify-content-between align-items-center text-success small fw-semibold">
+                            <span>On Duty Today</span>
+                            <i class="fa fa-calendar-check-o text-success"/>
+                        </div>
+                        <div class="fw-bold text-success fs-3 my-1" t-esc="state.stats.onDutyGuards"/>
+                        <div class="text-success small fw-semibold" style="font-size: 11px;">
+                            Deployed at Site Posts
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: On Leave / Rest -->
+                <div class="col">
+                    <div class="p-3 rounded-3 border d-flex flex-column justify-content-between h-100" style="background:#fefce8; border-color:#fef08a !important;">
+                        <div class="d-flex justify-content-between align-items-center text-warning small fw-semibold">
+                            <span>On Leave / Rest</span>
+                            <i class="fa fa-sun-o text-warning"/>
+                        </div>
+                        <div class="fw-bold text-warning fs-3 my-1" t-esc="state.stats.onLeaveGuards"/>
+                        <div class="text-muted small" style="font-size: 11px;">
+                            Approved Leave Requests
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: Compliance Risks -->
+                <div class="col">
+                    <div class="p-3 rounded-3 border d-flex flex-column justify-content-between h-100" style="background:#fef2f2; border-color:#fecaca !important;">
+                        <div class="d-flex justify-content-between align-items-center text-danger small fw-semibold">
+                            <span>Compliance Risks</span>
+                            <i class="fa fa-shield text-danger"/>
+                        </div>
+                        <div class="fw-bold text-danger fs-3 my-1" t-esc="state.stats.complianceRisks"/>
+                        <div class="text-danger small fw-semibold" style="font-size: 11px;">
+                            Expiring Licenses (&lt;30 days)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 5: Disciplinary Issues -->
+                <div class="col">
+                    <div class="p-3 rounded-3 border d-flex flex-column justify-content-between h-100" style="background:#faf5ff; border-color:#e9d5ff !important;">
+                        <div class="d-flex justify-content-between align-items-center text-purple small fw-semibold">
+                            <span>Discipline Warnings</span>
+                            <i class="fa fa-gavel text-purple" style="color:#8b5cf6;"/>
+                        </div>
+                        <div class="fw-bold fs-3 my-1" style="color:#7c3aed;" t-esc="state.stats.disciplinaryIssues"/>
+                        <div class="text-muted small" style="font-size: 11px;">
+                            Open Incidents / AWOLs
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI 6: Force Reliability -->
+                <div class="col">
+                    <div class="p-3 rounded-3 border d-flex flex-column justify-content-between h-100" style="background:#f0f9ff; border-color:#bae6fd !important;">
+                        <div class="d-flex justify-content-between align-items-center text-info small fw-semibold">
+                            <span>Reliability Score</span>
+                            <i class="fa fa-pie-chart text-info"/>
+                        </div>
+                        <div class="fw-bold text-info fs-3 my-1" t-esc="state.stats.avgReliability + '%'"/>
+                        <div class="text-info small fw-semibold" style="font-size: 11px;">
+                            Force Attendance Rating
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── Main Workspace Tabs Bar ── -->
+        <div class="px-4 pt-3 bg-white border-bottom d-flex gap-2">
+            <button t-att-class="'btn btn-sm fw-bold px-3 py-2 border-bottom-0 rounded-top-2 ' + (state.activeTab === 'directory' ? 'btn-primary' : 'btn-light text-slate-600')"
+                    t-on-click="() => this.setTab('directory')">
+                <i class="fa fa-users me-2"/>Guard Roster Directory
+            </button>
+            <button t-att-class="'btn btn-sm fw-bold px-3 py-2 border-bottom-0 rounded-top-2 ' + (state.activeTab === 'compliance' ? 'btn-primary' : 'btn-light text-slate-600')"
+                    t-on-click="() => this.setTab('compliance')">
+                <i class="fa fa-id-card me-2"/>Compliance &amp; Expirations
+                <span class="badge bg-danger text-white ms-1" t-esc="state.stats.complianceRisks"/>
+            </button>
+            <button t-att-class="'btn btn-sm fw-bold px-3 py-2 border-bottom-0 rounded-top-2 ' + (state.activeTab === 'discipline' ? 'btn-primary' : 'btn-light text-slate-600')"
+                    t-on-click="() => this.setTab('discipline')">
+                <i class="fa fa-gavel me-2"/>Incidents &amp; Discipline Log
+            </button>
+            <button t-att-class="'btn btn-sm fw-bold px-3 py-2 border-bottom-0 rounded-top-2 ' + (state.activeTab === 'leave' ? 'btn-primary' : 'btn-light text-slate-600')"
+                    t-on-click="() => this.setTab('leave')">
+                <i class="fa fa-calendar me-2"/>Leave &amp; Rest Requests
+            </button>
+        </div>
+
+        <!-- ── Tab Body Area ── -->
+        <div class="flex-grow-1 p-4 overflow-y-auto">
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 TAB 1: GUARD ROSTER DIRECTORY
+                 ═══════════════════════════════════════════════════════════════ -->
+            <t t-if="state.activeTab === 'directory'">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div class="input-group input-group-sm" style="max-width: 320px;">
+                        <span class="input-group-text bg-white"><i class="fa fa-search text-muted"/></span>
+                        <input type="text" class="form-control" placeholder="Search guard name, ID, phone..." t-model="state.guardSearchTerm"/>
+                    </div>
+                    <div class="text-muted small">
+                        Showing <strong t-esc="filteredGuards().length"/> active guards
+                    </div>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-3">
+                    <t t-foreach="filteredGuards()" t-as="g" t-key="g.id">
+                        <div class="col">
+                            <div class="card h-100 shadow-sm border-0 rounded-3 overflow-hidden hover-shadow transition"
+                                 style="cursor: pointer;"
+                                 t-on-click="() => this.openGuardForm(g.id)">
+                                <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="badge bg-dark font-monospace" t-esc="g.employee_code or 'GUARD'"/>
+                                            <span class="badge bg-success text-white">Active</span>
+                                        </div>
+                                        <h6 class="fw-bold text-slate-900 mb-1" t-esc="g.name"/>
+                                        <div class="text-muted small mb-2" t-esc="g.job_title or 'Security Guard'"/>
+                                    </div>
+
+                                    <div class="pt-2 border-top mt-2 d-flex align-items-center justify-content-between text-muted small">
+                                        <span><i class="fa fa-phone me-1"/> <t t-esc="g.work_phone or g.mobile_phone or 'No phone'"/></span>
+                                        <i class="fa fa-chevron-right text-primary"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 TAB 2: COMPLIANCE & EXPIRATIONS
+                 ═══════════════════════════════════════════════════════════════ -->
+            <t t-if="state.activeTab === 'compliance'">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                        <h6 class="fw-bold mb-0 text-slate-900">
+                            <i class="fa fa-shield text-danger me-2"/>Guard License &amp; Document Expiration Register
+                        </h6>
+                        <button class="btn btn-sm btn-outline-primary fw-bold" t-on-click="() => this.openAction('security_documents.action_security_employee_document')">
+                            View All Documents
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Guard Name</th>
+                                    <th>Document Type</th>
+                                    <th>Document Number</th>
+                                    <th>Expiry Date</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="state.expiringDocs.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            No compliance document warnings recorded. All guard licenses active.
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="state.expiringDocs" t-as="doc" t-key="doc.id">
+                                    <tr>
+                                        <td class="fw-bold" t-esc="doc.employee_id ? doc.employee_id[1] : 'Unknown'"/>
+                                        <td t-esc="doc.document_type_id ? doc.document_type_id[1] : 'License'"/>
+                                        <td class="font-monospace" t-esc="doc.document_number or 'N/A'"/>
+                                        <td class="fw-bold text-danger" t-esc="doc.expiry_date"/>
+                                        <td><span class="badge bg-warning text-dark">Expiring Soon</span></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </t>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 TAB 3: DISCIPLINE & INCIDENTS
+                 ═══════════════════════════════════════════════════════════════ -->
+            <t t-if="state.activeTab === 'discipline'">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                        <h6 class="fw-bold mb-0 text-slate-900">
+                            <i class="fa fa-gavel text-purple me-2" style="color:#8b5cf6;"/>Incident &amp; Disciplinary Warnings Log
+                        </h6>
+                        <button class="btn btn-sm btn-outline-primary fw-bold" t-on-click="() => this.openAction('security_discipline.action_security_guard_incident')">
+                            Open Disciplinary Register
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Incident Date</th>
+                                    <th>Guard</th>
+                                    <th>Severity</th>
+                                    <th>Description</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="state.incidents.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            No open disciplinary incidents recorded.
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="state.incidents" t-as="inc" t-key="inc.id">
+                                    <tr>
+                                        <td t-esc="inc.incident_date"/>
+                                        <td class="fw-bold" t-esc="inc.employee_id ? inc.employee_id[1] : 'Unknown'"/>
+                                        <td><span class="badge bg-danger" t-esc="inc.severity or 'Warning'"/></td>
+                                        <td t-esc="inc.description or 'No details'"/>
+                                        <td><span class="badge bg-secondary" t-esc="inc.state or 'Open'"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </t>
+
+            <!-- ═══════════════════════════════════════════════════════════════
+                 TAB 4: LEAVE & REST REQUESTS
+                 ═══════════════════════════════════════════════════════════════ -->
+            <t t-if="state.activeTab === 'leave'">
+                <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                    <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between">
+                        <h6 class="fw-bold mb-0 text-slate-900">
+                            <i class="fa fa-sun-o text-warning me-2"/>Guard Time Off &amp; Rest Day Requests
+                        </h6>
+                        <button class="btn btn-sm btn-outline-primary fw-bold" t-on-click="() => this.openAction('security_leave.action_security_leave_request')">
+                            Manage All Leaves
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Guard</th>
+                                    <th>Leave Type</th>
+                                    <th>Date From</th>
+                                    <th>Date To</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="state.leaveRequests.length === 0">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            No active leave requests.
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="state.leaveRequests" t-as="l" t-key="l.id">
+                                    <tr>
+                                        <td class="fw-bold" t-esc="l.employee_id ? l.employee_id[1] : 'Unknown'"/>
+                                        <td t-esc="l.leave_type or 'Annual'"/>
+                                        <td t-esc="l.date_from"/>
+                                        <td t-esc="l.date_to"/>
+                                        <td><span class="badge bg-success" t-esc="l.state or 'Approved'"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </t>
+
+        </div>
+
+    </div>
+</t>
+
+</templates>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Quick Site Setup Wizard Form View -->
+    <record id="view_security_site_setup_wizard_form" model="ir.ui.view">
+        <field name="name">security.site.setup.wizard.form</field>
+        <field name="model">security.site.setup.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Quick Client Site Setup Wizard">
+                <p class="text-muted mb-3">
+                    Configure a new Client Site, default gate posts, and operational requirements in one single step.
+                </p>
+                <group>
+                    <group string="1. Client &amp; Location Overview">
+                        <field name="partner_id" placeholder="Select Client..."/>
+                        <field name="site_name" placeholder="Facility Name e.g. North Gate Mine"/>
+                        <field name="code" placeholder="Auto-generated if left blank"/>
+                        <field name="site_type"/>
+                        <field name="location" placeholder="Physical Address / Coordinates"/>
+                        <field name="supervisor_id" placeholder="Assign Site Supervisor..."/>
+                    </group>
+                    <group string="2. Initial Post &amp; Shift Setup">
+                        <field name="main_gate_guards"/>
+                        <field name="patrol_guards"/>
+                        <field name="control_room_guards"/>
+                        <field name="shift_duration"/>
+                        <field name="is_24_7"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_create_site" string="Create Site &amp; Posts" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_security_site_setup_wizard" model="ir.actions.act_window">
+        <field name="name">Quick Site Setup Wizard</field>
+        <field name="res_model">security.site.setup.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

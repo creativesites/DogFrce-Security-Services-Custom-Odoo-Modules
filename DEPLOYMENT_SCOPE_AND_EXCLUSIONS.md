@@ -29,6 +29,7 @@ The following modules **MUST NOT** be installed or updated on `dogforce_prod` or
 | `security_l10n_zm` | Zambian statutory tax rules (NAPSA, NHIMA, PAYE). *Excluded: Namibia uses SSC and Namibian PAYE thresholds (`security_l10n_na`).* |
 | `security_zra_invoice` | Zambia Revenue Authority (ZRA) Smart Invoice fiscalization API. *Excluded: Not applicable to Namibian tax jurisdiction.* |
 | `security_demo_data_zm` | Demo seed data for Sentinel Security Zambia Ltd. *Excluded: Production database must remain clean and Namibian-focused.* |
+| `security_demo_zambia_site` | Alibaba Cloud Zambia Demo Suite Meta-Module. *Excluded: Intended exclusively for Alibaba Cloud Demo Server (`47.84.205.81`).* |
 
 ---
 

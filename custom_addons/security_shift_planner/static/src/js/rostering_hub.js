@@ -632,8 +632,7 @@ class RosteringHub extends Component {
             const res = await this.orm.call(
                 "security.roster.slot",
                 "action_manual_assign",
-                [[slot.id], guardId],
-                { override: override, override_reason: overrideReason }
+                [[slot.id], guardId, override, overrideReason]
             );
 
             if (res.status === "hard_block") {

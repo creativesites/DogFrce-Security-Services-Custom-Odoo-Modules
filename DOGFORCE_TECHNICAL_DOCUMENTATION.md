@@ -120,6 +120,7 @@ To maintain zero cross-jurisdiction data pollution, the module suite is partitio
 * `security_l10n_zm` *(Zambian Tax & Statutory Localization)*
 * `security_zra_invoice` *(Zambia Revenue Authority API)*
 * `security_demo_data_zm` *(Sentinel Security Zambia Demo Data)*
+* `security_demo_zambia_site` *(Alibaba Cloud Zambia Demo Suite Meta-Module)*
 
 ---
 

@@ -1,200 +1,421 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 <t t-name="security_shift_planner.RosteringMegaMenu" owl="1">
-  <div class="rmm-overlay" t-on-keydown="onKeyDown" tabindex="0">
-    <!-- Header -->
-    <div class="rmm-header">
-      <div class="rmm-brand">
-        <div class="rmm-brand-icon"><i class="fa fa-th-large"/></div>
-        <div>
-          <h2 class="rmm-title">DeployGuard Rostering Command Center</h2>
-          <div class="rmm-subtitle">Executive Mega Menu &amp; Quick Action Launcher</div>
+  <div class="rmm-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="rmm-container">
+
+      <!-- Header -->
+      <div class="rmm-header">
+        <div class="rmm-brand">
+          <div class="rmm-brand-badge">
+            <i class="fa fa-shield me-2"/>DeployGuard
+          </div>
+          <div>
+            <h2 class="rmm-title">Rostering Command Center</h2>
+            <div class="rmm-subtitle">Executive Navigation, AI Launcher &amp; Guidance Hub</div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="rmm-search-box">
+          <i class="fa fa-search rmm-search-icon"/>
+          <input type="text"
+                 class="rmm-search-input"
+                 placeholder="Search tools, rules, views, or guides (e.g., 'Roster Board', 'AI', 'Sites')..."
+                 t-model="state.searchQuery"/>
+        </div>
+
+        <button class="rmm-close-btn" t-on-click="() => this.close()" title="Close Command Center (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="rmm-tabs-bar">
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'launchpad' ? 'active' : '')"
+                t-on-click="() => this.setTab('launchpad')">
+          <i class="fa fa-rocket me-2"/>Quick Launchpad
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'ai_planning' ? 'active' : '')"
+                t-on-click="() => this.setTab('ai_planning')">
+          <i class="fa fa-magic me-2"/>AI &amp; Demand Planning
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'records' ? 'active' : '')"
+                t-on-click="() => this.setTab('records')">
+          <i class="fa fa-calendar-check-o me-2"/>Schedules &amp; Records
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'rules' ? 'active' : '')"
+                t-on-click="() => this.setTab('rules')">
+          <i class="fa fa-sliders me-2"/>Rules &amp; Setup
+        </button>
+        <button t-att-class="'rmm-tab-btn rmm-tab-guidance ' + (state.activeTab === 'guidance' ? 'active' : '')"
+                t-on-click="() => this.setTab('guidance')">
+          <i class="fa fa-book me-2"/>Extra Guidance &amp; Manuals
+        </button>
+      </div>
+
+      <!-- Main Body Content -->
+      <div class="rmm-body">
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 1: QUICK LAUNCHPAD
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'launchpad'">
+          <div class="rmm-section-label"><i class="fa fa-star me-2 text-primary"/>Core Operations &amp; Interactive Workspaces</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Rostering Hub', 'Interactive weekly schedule grid', ['hub', 'grid', 'roster'])"
+                 t-on-click="() => this.openAction('security_shift_planner.action_rostering_hub')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-calendar-check-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Rostering Hub</span>
+                  <span class="rmm-pill pill-primary">Primary</span>
+                </div>
+                <div class="rmm-card-desc">Interactive weekly &amp; monthly schedule grid with guard scoring and readiness meters.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Roster Board Kanban', 'Visual drag and drop matrix', ['board', 'kanban', 'matrix'])"
+                 t-on-click="() => this.openAction('security_shift_planner.action_roster_board')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-columns"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Roster Board</span>
+                  <span class="rmm-pill pill-success">Kanban</span>
+                </div>
+                <div class="rmm-card-desc">Visual drag-and-drop board for rapid guard reassignments and shift drag.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Weekly Check-in Portal', 'Supervisor shift signoff review', ['checkin', 'check-in', 'portal'])"
+                 t-on-click="() => this.openAction('security_shift_planner.action_weekly_checkin')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-check-square-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Weekly Check-in</span>
+                  <span class="rmm-pill pill-purple">Supervisor</span>
+                </div>
+                <div class="rmm-card-desc">Supervisor shift sign-off portal, operational review, and post readiness verification.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Operations Dashboard', 'Realtime guard tracking', ['ops', 'dashboard', 'live'])"
+                 t-on-click="() => this.openAction('security_operations.action_ops_dashboard')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-tachometer"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Operations Dashboard</span>
+                  <span class="rmm-pill pill-warning">Live Ops</span>
+                </div>
+                <div class="rmm-card-desc">Real-time shift coverage monitor, critical gaps counter, and field supervisor status.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Interactive Site Hub', 'Site level management center', ['site', 'hub', 'location'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_site_hub')">
+              <div class="rmm-card-icon icon-indigo"><i class="fa fa-building-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Interactive Site Hub</span>
+                  <span class="rmm-pill pill-info">Site Hub</span>
+                </div>
+                <div class="rmm-card-desc">Single-page site manager: posts, shift requirements, and live site guard allocations.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Quick Site Setup Wizard', '30 sec site onboarding', ['setup', 'wizard', 'quick'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_site_setup_wizard')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-magic"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">30-Sec Site Onboarding</span>
+                  <span class="rmm-pill pill-rose">Wizard</span>
+                </div>
+                <div class="rmm-card-desc">Rapid site creation wizard that generates posts, shift templates, and requirements.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 2: AI & DEMAND PLANNING
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'ai_planning'">
+          <div class="rmm-section-label"><i class="fa fa-lightbulb-o me-2 text-warning"/>AI Prescriptive Engine &amp; Commercial Demand Sizing</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Smart Recommendations', 'AI overtime and fairness rebalancing', ['ai', 'smart', 'recommendations'])"
+                 t-on-click="() => this.openAction('security_ai_engine.action_security_smart_recommendation')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-lightbulb-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Smart AI Recommendations</span>
+                  <span class="rmm-pill pill-purple">AI Prescriptive</span>
+                </div>
+                <div class="rmm-card-desc">Automated AI recommendations: overtime reduction, fatigue alerts, and guard swaps.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Demand Planning Estimator', 'Contract sizing estimator', ['demand', 'plan', 'profit', 'contract'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_demand_plan')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-line-chart"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Demand Planning Estimator</span>
+                  <span class="rmm-pill pill-success">Executive</span>
+                </div>
+                <div class="rmm-card-desc">Contract sizing calculator: headcount, supervisors, equipment cost &amp; gross margin.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('WhatsApp Dispatcher Portal', 'Live whatsapp messaging log', ['whatsapp', 'chat', 'dispatcher'])"
+                 t-on-click="() => this.openAction('security_ai_whatsapp_bridge.action_security_whatsapp_message_log')">
+              <div class="rmm-card-icon icon-teal"><i class="fa fa-whatsapp"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">WhatsApp Dispatcher Portal</span>
+                  <span class="rmm-pill pill-info">Live Chat</span>
+                </div>
+                <div class="rmm-card-desc">Dispatcher WhatsApp log: automated guard check-in prompts, shift alerts, and quick replies.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Auto-Roster Wizard', 'Bulk auto generation wizard', ['auto', 'generator', 'bulk'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_roster_generate_wizard')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-cogs"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Auto-Roster Generator</span>
+                  <span class="rmm-pill pill-primary">Automation</span>
+                </div>
+                <div class="rmm-card-desc">Bulk auto-generation wizard for multi-week recurring client site schedules.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 3: SCHEDULES & RECORDS
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'records'">
+          <div class="rmm-section-label"><i class="fa fa-folder-open-o me-2 text-info"/>Published Batches, Roster Slots &amp; Guard Records</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Weekly Roster Batches', 'Published schedule batches', ['batch', 'batches', 'week'])"
+                 t-on-click="() => this.openAction('security_shift_planner.action_security_roster_week')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-calendar"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Weekly Roster Batches</span>
+                  <span class="rmm-pill pill-primary">Batches</span>
+                </div>
+                <div class="rmm-card-desc">View and manage published roster batches, approval workflow, and client confirmations.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('All Roster Slots', 'Granular list of shift slots', ['slots', 'list', 'shift'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_roster_slot')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-list"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">All Roster Slots</span>
+                  <span class="rmm-pill pill-success">Records</span>
+                </div>
+                <div class="rmm-card-desc">Granular table view of all individual shift slots, assigned guards, and readiness scores.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Availability Register', 'Guard shift availability and timeoff', ['guard', 'availability', 'timeoff'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_guard_availability')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-user-times"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Availability Register</span>
+                  <span class="rmm-pill pill-warning">HR Ops</span>
+                </div>
+                <div class="rmm-card-desc">Track guard rest days, time-off requests, medical leave, and shift preferences.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Client Service Contracts', 'Client contracts and billing rates', ['contract', 'client', 'billing'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_client_contract')">
+              <div class="rmm-card-icon icon-indigo"><i class="fa fa-file-text-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Client Service Contracts</span>
+                  <span class="rmm-pill pill-info">Commercial</span>
+                </div>
+                <div class="rmm-card-desc">Active security service agreements, billing rate cards, and post commitments.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 4: RULES & SETUP
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'rules'">
+          <div class="rmm-section-label"><i class="fa fa-sliders me-2 text-indigo"/>Site Configuration, Post Requirements &amp; Exclusions</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Client Sites Matrix', 'Physical sites directory', ['sites', 'matrix', 'client'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_client_site')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-building"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Client Sites Matrix</span>
+                  <span class="rmm-pill pill-primary">Directory</span>
+                </div>
+                <div class="rmm-card-desc">Directory of physical client sites, risk tiers, geofencing coordinates, and site contacts.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Site Posts', 'Guard post locations', ['posts', 'guard', 'post'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_post')">
+              <div class="rmm-card-icon icon-indigo"><i class="fa fa-map-marker"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Site Posts Directory</span>
+                  <span class="rmm-pill pill-info">Posts</span>
+                </div>
+                <div class="rmm-card-desc">Define specific guard guard posts per site (e.g., Main Gate, Control Room, Patrol).</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Site Requirements', 'Guard headcount and grade requirements', ['requirements', 'headcount', 'grade'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_site_requirement')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-clipboard"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Site Post Requirements</span>
+                  <span class="rmm-pill pill-warning">Rules</span>
+                </div>
+                <div class="rmm-card-desc">Required guard headcount, mandatory certifications, and minimum guard grades per post.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Shift Templates', 'Day and night shift definitions', ['template', 'hours', 'shift'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_shift_template')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-clock-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Shift Templates &amp; Hours</span>
+                  <span class="rmm-pill pill-success">Timing</span>
+                </div>
+                <div class="rmm-card-desc">Standard 12-hour / 8-hour shift definitions, day/night shift start &amp; end hours.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Exclusions &amp; Blacklists', 'Client blacklists and disqualifications', ['exclusion', 'blacklist', 'ban'])"
+                 t-on-click="() => this.openAction('security_operations.action_security_guard_exclusion')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-ban"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Exclusions &amp; Blacklists</span>
+                  <span class="rmm-pill pill-rose">Blacklists</span>
+                </div>
+                <div class="rmm-card-desc">Client blacklists, site disqualifications, and location restriction compliance rules.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 5: EXTRA GUIDANCE & MANUALS (NEW!)
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Rostering User Guide &amp; Best Practices</div>
+          
+          <div class="rmm-guide-grid">
+            <!-- Step 1 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">1</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-plus-circle me-2 text-primary"/>Creating a Roster Batch</div>
+                <div class="rmm-guide-text">
+                  In the <strong>Rostering Hub</strong> sidebar, click <strong>New Batch</strong> or select an existing client batch. Choose your client partner, site, and cycle month. The system automatically calculates cycle start and end dates based on company defaults.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">2</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-cogs me-2 text-info"/>Generating Shift Slots</div>
+                <div class="rmm-guide-text">
+                  Click <strong>Generate Slots</strong> on a draft batch. DeployGuard reads your active <em>Site Post Requirements</em> and <em>Shift Templates</em> to create exact unassigned shift slots for every date in the cycle.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">3</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-user-plus me-2 text-success"/>Guard Assignment &amp; AI Suggestions</div>
+                <div class="rmm-guide-text">
+                  Click any unassigned slot cell in the grid. The right inspector panel opens automatically showing <strong>AI Suggested Guards</strong> ranked 1-100% based on proximity, grade match, rest hours, and overtime status.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">4</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-exclamation-triangle me-2 text-warning"/>Overriding Warnings &amp; Audit Logs</div>
+                <div class="rmm-guide-text">
+                  If assigning a guard causes an ineligibility warning (e.g. rest hour conflict), DeployGuard prompts for an <strong>Override Reason</strong>. Every override is logged for audit compliance with a <em>WRONG FIT</em> tag.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">5</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-paper-plane me-2 text-purple"/>Approval &amp; Publishing</div>
+                <div class="rmm-guide-text">
+                  Once all slots are assigned, click <strong>Submit for Approval</strong>. Authorized operations managers review the batch before clicking <strong>Confirm &amp; Publish</strong> to notify guards via WhatsApp.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shortcuts & Rules Cheatsheet -->
+          <div class="rmm-cheatsheet-box">
+            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>DeployGuard Rostering Shortcuts &amp; Rules</div>
+            <div class="rmm-cheatsheet-grid">
+              <div class="rmm-cs-item"><span class="rmm-kbd">Esc</span> Close Command Center</div>
+              <div class="rmm-cs-item"><span class="rmm-kbd">Alt + M</span> Open Command Center from Rostering</div>
+              <div class="rmm-cs-item"><span class="rmm-kbd">Drag &amp; Drop</span> Reassign guards directly on grid/board</div>
+              <div class="rmm-cs-item"><i class="fa fa-check-circle text-success me-1"/> Mandatory Rest: 12 Hours between shifts</div>
+              <div class="rmm-cs-item"><i class="fa fa-shield text-info me-1"/> Max Shift: 12 Hours continuous duty</div>
+              <div class="rmm-cs-item"><i class="fa fa-bell text-warning me-1"/> Auto WhatsApp Check-in 1 Hour before shift</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="rmm-footer">
+        <div class="rmm-footer-status">
+          <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>System Operational</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-shield me-1"/>DeployGuard AI 19.0 Active</span>
+        </div>
+        <div class="rmm-footer-tip">
+          Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace
         </div>
       </div>
 
-      <!-- Search Input -->
-      <div class="rmm-search-box">
-        <i class="fa fa-search rmm-search-icon"/>
-        <input type="text"
-               class="rmm-search-input"
-               placeholder="Search rostering tools, features, rules..."
-               t-model="state.searchQuery"/>
-      </div>
-
-      <button class="rmm-close-btn" t-on-click="close" title="Close Mega Menu (Esc)">
-        <i class="fa fa-times"/>
-      </button>
-    </div>
-
-    <!-- 4-Column Mega Grid -->
-    <div class="rmm-grid">
-
-      <!-- Column 1: Core Workspaces -->
-      <div class="rmm-col" t-if="isGroupVisible('workspaces')">
-        <div class="rmm-col-header">
-          <div class="rmm-col-icon blue"><i class="fa fa-laptop"/></div>
-          <span class="rmm-col-title">Core Workspaces</span>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_shift_planner.action_rostering_hub')">
-          <div class="rmm-card-icon text-info"><i class="fa fa-calendar-check-o"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Rostering Hub
-              <span class="rmm-badge rmm-badge-primary">PRIMARY</span>
-            </div>
-            <div class="rmm-card-desc">Interactive weekly/monthly schedule grid with real-time gap counters &amp; guard search.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_shift_planner.action_roster_board')">
-          <div class="rmm-card-icon text-primary"><i class="fa fa-columns"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Roster Board
-              <span class="rmm-badge rmm-badge-success">KANBAN</span>
-            </div>
-            <div class="rmm-card-desc">Visual drag-and-drop matrix view for rapid shift reassignments.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_shift_planner.action_weekly_checkin')">
-          <div class="rmm-card-icon text-success"><i class="fa fa-check-square-o"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Weekly Check-in
-              <span class="rmm-badge rmm-badge-warning">OPS</span>
-            </div>
-            <div class="rmm-card-desc">Supervisor weekly shift sign-off, operations review, and readiness portal.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Column 2: AI & Demand Planning -->
-      <div class="rmm-col" t-if="isGroupVisible('planning')">
-        <div class="rmm-col-header">
-          <div class="rmm-col-icon purple"><i class="fa fa-magic"/></div>
-          <span class="rmm-col-title">AI &amp; Demand Planning</span>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_demand_plan')">
-          <div class="rmm-card-icon text-warning"><i class="fa fa-line-chart"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Demand Planning
-              <span class="rmm-badge rmm-badge-primary">EXEC</span>
-            </div>
-            <div class="rmm-card-desc">Contract sizing estimator: Headcount, supervisors, assets, payroll &amp; profit model.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_ai_engine.action_security_smart_recommendation')">
-          <div class="rmm-card-icon text-purple"><i class="fa fa-lightbulb-o"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Smart Recommendations
-              <span class="rmm-badge rmm-badge-ai">AI PRESCRIPTIVE</span>
-            </div>
-            <div class="rmm-card-desc">Automated actions: Overtime reduction, fairness rebalancing, fleet optimization.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Column 3: Roster Records & Batches -->
-      <div class="rmm-col" t-if="isGroupVisible('records')">
-        <div class="rmm-col-header">
-          <div class="rmm-col-icon emerald"><i class="fa fa-folder-open-o"/></div>
-          <span class="rmm-col-title">Records &amp; Batches</span>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_roster_week')">
-          <div class="rmm-card-icon text-emerald"><i class="fa fa-calendar"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Weekly Roster Batches
-            </div>
-            <div class="rmm-card-desc">Published schedule batches, submission status, and client approvals.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_roster_slot')">
-          <div class="rmm-card-icon text-cyan"><i class="fa fa-list"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              All Roster Slots
-            </div>
-            <div class="rmm-card-desc">Granular table view of all individual shift slots, guards, and critical gaps.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_roster_generate_wizard')">
-          <div class="rmm-card-icon text-teal"><i class="fa fa-cogs"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Auto-Roster Wizard
-            </div>
-            <div class="rmm-card-desc">Bulk auto-generation wizard for recurring multi-week site schedules.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Column 4: Rules & Configuration -->
-      <div class="rmm-col" t-if="isGroupVisible('config')">
-        <div class="rmm-col-header">
-          <div class="rmm-col-icon amber"><i class="fa fa-sliders"/></div>
-          <span class="rmm-col-title">Rules &amp; Configuration</span>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_site_post_requirement')">
-          <div class="rmm-card-icon text-amber"><i class="fa fa-map-marker"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Site Post Requirements
-            </div>
-            <div class="rmm-card-desc">Define required guard headcount, grades, and shift requirements per site post.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_shift_type')">
-          <div class="rmm-card-icon text-orange"><i class="fa fa-clock-o"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Shift Types &amp; Hours
-            </div>
-            <div class="rmm-card-desc">Day/Night shift definitions, start/end hours, and break allowances.</div>
-          </div>
-        </div>
-
-        <div class="rmm-card" t-on-click="() => this.openAction('security_operations.action_security_guard_exclusion')">
-          <div class="rmm-card-icon text-danger"><i class="fa fa-ban"/></div>
-          <div class="rmm-card-content">
-            <div class="rmm-card-title">
-              Guard Exclusions
-            </div>
-            <div class="rmm-card-desc">Client blacklists, site disqualifications, and location restriction rules.</div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- Footer Stats & Shortcuts -->
-    <div class="rmm-footer">
-      <div class="rmm-stats">
-        <div class="rmm-stat-item">
-          <i class="fa fa-shield text-info"/>
-          <span>System Status: <strong class="rmm-stat-val text-success">OPERATIONAL</strong></span>
-        </div>
-        <div class="rmm-stat-item">
-          <i class="fa fa-bolt text-warning"/>
-          <span>DeployGuard AI: <strong class="rmm-stat-val">ACTIVE</strong></span>
-        </div>
-      </div>
-
-      <div class="rmm-shortcut-hint">
-        Press <span class="rmm-kbd">Esc</span> to close or <span class="rmm-kbd">Alt + M</span> to open anywhere in Rostering.
-      </div>
     </div>
   </div>
 </t>

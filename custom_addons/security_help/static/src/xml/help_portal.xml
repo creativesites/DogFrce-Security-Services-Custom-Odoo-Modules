@@ -6,7 +6,9 @@
         <!-- Sidebar -->
         <aside class="dg-help-sidebar">
             <div class="dg-help-sidebar-header">
-                <h1><i class="fa fa-question-circle"/> Help Centre</h1>
+                <h1 t-on-click="resetToWelcome" style="cursor: pointer; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Go back to Home/Flows">
+                    <i class="fa fa-question-circle text-primary me-1"/> Help Centre
+                </h1>
                 <div class="dg-help-search">
                     <i class="fa fa-search dg-help-search-icon"/>
                     <input
@@ -19,6 +21,18 @@
                 </div>
             </div>
             <nav class="dg-help-cat-list">
+                <!-- Home button to return to flow diagrams -->
+                <button
+                    class="dg-help-cat-item"
+                    t-att-class="{ active: !state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId }"
+                    t-on-click="resetToWelcome"
+                >
+                    <span class="dg-help-cat-icon" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6)">
+                        <i class="fa fa-map-o"/>
+                    </span>
+                    <span>Workflows &amp; Diagrams</span>
+                </button>
+
                 <button
                     t-foreach="state.categories"
                     t-as="cat"
@@ -43,28 +57,149 @@
         <main class="dg-help-main">
 
             <!-- Welcome screen (no category, no search) -->
-            <t t-if="!state.activeCatId and !state.searching and !state.activeArticleId">
-                <div class="dg-help-welcome">
-                    <div class="dg-help-welcome-logo">
-                        <i class="fa fa-shield"/>
+            <t t-if="!state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId">
+                <div class="dg-help-welcome-container">
+                    
+                    <!-- Welcome Hero -->
+                    <div class="dg-help-welcome-hero">
+                        <div class="dg-help-welcome-logo">
+                            <i class="fa fa-shield"/>
+                        </div>
+                        <h2>How can we help you?</h2>
+                        <p>Search for specific guides on the left, browse core categories below, or explore our interactive operational flows.</p>
                     </div>
-                    <h2>How can we help you?</h2>
-                    <p>Choose a topic from the sidebar, or search for any topic above. Browse categories below to get started.</p>
-                    <div class="dg-help-cat-grid">
-                        <button
-                            t-foreach="state.categories"
-                            t-as="cat"
-                            t-key="cat.id"
-                            class="dg-help-cat-tile"
-                            t-on-click="() => this.selectCategory(cat.id)"
-                        >
-                            <div class="dg-help-cat-tile-icon" t-att-style="'background:' + cat.color">
-                                <i t-att-class="'fa ' + cat.icon"/>
+
+                    <!-- Interactive Lifecycles & Operational Flows -->
+                    <div class="dg-help-flows-section">
+                        <div class="dg-help-section-header">
+                            <h3><i class="fa fa-map me-2 text-primary"/> Interactive Platform Lifecycles &amp; Flows</h3>
+                            <p class="text-muted">Select an operational flow below to see step-by-step lifecycles and technical execution guidelines.</p>
+                        </div>
+
+                        <!-- Flow Tabs -->
+                        <div class="dg-flow-tabs">
+                            <button t-foreach="flows" t-as="flow" t-key="flow.id"
+                                    t-att-class="'dg-flow-tab-btn ' + (state.activeFlowId === flow.id ? 'active' : '')"
+                                    t-on-click="() => this.selectFlowTab(flow.id)">
+                                <i t-att-class="'fa ' + flow.icon + ' me-2'"/> <span t-esc="flow.title"/>
+                            </button>
+                        </div>
+
+                        <!-- Active Flow Content -->
+                        <t t-set="activeFlow" t-value="flows.find(f => f.id === state.activeFlowId)"/>
+                        <t t-if="activeFlow">
+                            <div class="dg-flow-body">
+                                <p class="dg-flow-description" t-esc="activeFlow.description"/>
+
+                                <!-- Timeline/Stepper -->
+                                <div class="dg-flow-timeline">
+                                    <div t-foreach="activeFlow.steps" t-as="step" t-key="step_index"
+                                         t-att-class="'dg-timeline-step ' + (state.activeStepIdx === step_index ? 'active' : '')"
+                                         t-on-click="() => this.selectFlowStep(step_index)">
+                                        <div class="dg-step-circle">
+                                            <t t-esc="step_index + 1"/>
+                                        </div>
+                                        <div class="dg-step-title" t-esc="step.title"/>
+                                    </div>
+                                </div>
+
+                                <!-- Step Detail Panel with Beginner / Technical Switcher -->
+                                <t t-set="activeStep" t-value="activeFlow.steps[state.activeStepIdx]"/>
+                                <t t-if="activeStep">
+                                    <div class="dg-step-detail-card" t-att-style="'border-top: 4px solid ' + activeFlow.color">
+                                        
+                                        <!-- Header of the detail card -->
+                                        <div class="dg-step-detail-header">
+                                            <div class="dg-step-header-meta">
+                                                <span class="dg-step-num-badge" t-att-style="'background:' + activeFlow.color">Step <t t-esc="state.activeStepIdx + 1"/></span>
+                                                <h4 t-esc="activeStep.title"/>
+                                            </div>
+                                            
+                                            <!-- Toggle: Beginner vs Technical -->
+                                            <div class="dg-view-toggle">
+                                                <button t-att-class="'toggle-btn ' + (!state.technicalView ? 'active' : '')"
+                                                        t-on-click="() => this.toggleTechnicalView(false)">
+                                                    <i class="fa fa-user-circle me-1"/> Beginner View
+                                                </button>
+                                                <button t-att-class="'toggle-btn ' + (state.technicalView ? 'active' : '')"
+                                                        t-on-click="() => this.toggleTechnicalView(true)">
+                                                    <i class="fa fa-code me-1"/> Technical / Dev View
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <!-- Content Body based on Toggle -->
+                                        <div class="dg-step-detail-body">
+                                            
+                                            <!-- BEGINNER VIEW -->
+                                            <t t-if="!state.technicalView">
+                                                <div class="dg-beginner-panel">
+                                                    <p class="dg-step-explanation" t-esc="activeStep.beginner"/>
+                                                    
+                                                    <div class="dg-step-grid-info">
+                                                        <div class="dg-info-block">
+                                                            <h5><i class="fa fa-mouse-pointer text-primary me-2"/> Key UI Actions</h5>
+                                                            <p class="info-text" t-esc="activeStep.ui_action"/>
+                                                        </div>
+                                                        <div class="dg-info-block">
+                                                            <h5><i class="fa fa-id-badge text-primary me-2"/> Target Operational Role</h5>
+                                                            <p class="info-text" t-esc="activeStep.role"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                            <!-- TECHNICAL VIEW -->
+                                            <t t-if="state.technicalView">
+                                                <div class="dg-technical-panel">
+                                                    <div class="dg-info-block-full">
+                                                        <h5><i class="fa fa-database text-warning me-2"/> Database Model</h5>
+                                                        <code class="technical-code"><t t-esc="activeStep.model"/></code>
+                                                    </div>
+
+                                                    <div class="dg-step-grid-info mt-3">
+                                                        <div class="dg-info-block">
+                                                            <h5><i class="fa fa-toggle-on text-warning me-2"/> Fields &amp; State Transitions</h5>
+                                                            <p class="info-text" t-esc="activeStep.states"/>
+                                                        </div>
+                                                        <div class="dg-info-block">
+                                                            <h5><i class="fa fa-cogs text-warning me-2"/> Core Logic &amp; Methods</h5>
+                                                            <pre class="technical-pre"><t t-esc="activeStep.logic"/></pre>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </t>
+
+                                        </div>
+                                    </div>
+                                </t>
                             </div>
-                            <div class="dg-help-cat-tile-name" t-esc="cat.name"/>
-                            <div class="dg-help-cat-tile-count"><t t-esc="cat.article_count"/> articles</div>
-                        </button>
+                        </t>
+
                     </div>
+
+                    <!-- Categories Grid (Standard Categories) -->
+                    <div class="dg-help-welcome-categories-section">
+                        <div class="dg-help-section-header">
+                            <h3><i class="fa fa-folder-open-o me-2 text-primary"/> Browse Knowledge Base by Category</h3>
+                        </div>
+                        <div class="dg-help-cat-grid">
+                            <button
+                                t-foreach="state.categories"
+                                t-as="cat"
+                                t-key="cat.id"
+                                class="dg-help-cat-tile"
+                                t-on-click="() => this.selectCategory(cat.id)"
+                            >
+                                <div class="dg-help-cat-tile-icon" t-att-style="'background:' + cat.color">
+                                    <i t-att-class="'fa ' + cat.icon"/>
+                                </div>
+                                <div class="dg-help-cat-tile-name" t-esc="cat.name"/>
+                                <div class="dg-help-cat-tile-count"><t t-esc="cat.article_count"/> articles</div>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </t>
 
@@ -102,7 +237,7 @@
             </t>
 
             <!-- Article list for selected category -->
-            <t t-if="state.activeCatId and !state.activeArticleId and !state.searching">
+            <t t-if="state.activeCatId &amp;&amp; !state.activeArticleId &amp;&amp; !state.searching">
                 <div class="dg-help-article-list">
                     <div class="dg-help-article-list-header">
                         <t t-set="activeCat" t-value="state.categories.find(c => c.id === state.activeCatId)"/>

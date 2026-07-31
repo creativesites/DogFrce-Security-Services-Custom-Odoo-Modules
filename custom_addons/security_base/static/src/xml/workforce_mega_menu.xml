@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_base.WorkforceMegaMenu" owl="1">
+  <div class="rmm-overlay" t-on-click.self="() => this.close()" tabindex="0">
+    <div class="rmm-container">
+
+      <!-- Header -->
+      <div class="rmm-header">
+        <div class="rmm-brand">
+          <div class="rmm-brand-badge">
+            <i class="fa fa-users me-2"/>DeployGuard Workforce
+          </div>
+          <div>
+            <h2 class="rmm-title">Workforce Command Center</h2>
+            <div class="rmm-subtitle">Guard Roster, Compliance Vetting, Discipline &amp; HR Guidance Hub</div>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="rmm-search-box">
+          <i class="fa fa-search rmm-search-icon"/>
+          <input type="text"
+                 class="rmm-search-input"
+                 placeholder="Search workforce tools, guards, licenses, or policies (e.g., 'Directory', 'SIA', 'Discipline')..."
+                 t-model="state.searchQuery"/>
+        </div>
+
+        <button class="rmm-close-btn" t-on-click="() => this.close()" title="Close Command Center (Esc)">
+          <i class="fa fa-times"/>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="rmm-tabs-bar">
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'launchpad' ? 'active' : '')"
+                t-on-click="() => this.setTab('launchpad')">
+          <i class="fa fa-rocket me-2"/>Quick Launchpad
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'compliance' ? 'active' : '')"
+                t-on-click="() => this.setTab('compliance')">
+          <i class="fa fa-shield me-2"/>Compliance &amp; Vetting
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'discipline' ? 'active' : '')"
+                t-on-click="() => this.setTab('discipline')">
+          <i class="fa fa-gavel me-2"/>Discipline &amp; Conduct
+        </button>
+        <button t-att-class="'rmm-tab-btn ' + (state.activeTab === 'payroll_leave' ? 'active' : '')"
+                t-on-click="() => this.setTab('payroll_leave')">
+          <i class="fa fa-sun-o me-2"/>Leave, Loans &amp; Payroll
+        </button>
+        <button t-att-class="'rmm-tab-btn rmm-tab-guidance ' + (state.activeTab === 'guidance' ? 'active' : '')"
+                t-on-click="() => this.setTab('guidance')">
+          <i class="fa fa-book me-2"/>HR Policy &amp; Guidance
+        </button>
+      </div>
+
+      <!-- Main Body Content -->
+      <div class="rmm-body">
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 1: QUICK LAUNCHPAD
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'launchpad'">
+          <div class="rmm-section-label"><i class="fa fa-star me-2 text-primary"/>Core Guard Workspaces &amp; Directory</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Workforce Dashboard', 'Interactive guard headcount and metrics', ['dashboard', 'workforce', 'kpi'])"
+                 t-on-click="() => this.openAction('security_base.action_workforce_dashboard')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-tachometer"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Workforce Dashboard</span>
+                  <span class="rmm-pill pill-primary">Primary</span>
+                </div>
+                <div class="rmm-card-desc">Central workforce hub: active guard headcount, live on-duty meters, and compliance warnings.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Roster Directory', 'Searchable employee guard directory', ['guard', 'employees', 'directory', 'kanban'])"
+                 t-on-click="() => this.openAction('hr.open_view_employee_list_my')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-users"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Directory</span>
+                  <span class="rmm-pill pill-success">Directory</span>
+                </div>
+                <div class="rmm-card-desc">Kanban and table matrix of all security guards, grades, assigned sites, and contact details.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Posting Console', 'Live site posting and guard clockin', ['posting', 'console', 'clockin'])"
+                 t-on-click="() => this.openAction('security_attendance.action_posting_console')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-location-arrow"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Posting Console</span>
+                  <span class="rmm-pill pill-purple">Live Ops</span>
+                </div>
+                <div class="rmm-card-desc">Real-time guard posting console: GPS clock-in verification, supervisor check-ins, and field status.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Grades', 'Security guard grade classification', ['grade', 'level', 'sequence'])"
+                 t-on-click="() => this.openAction('security_base.action_security_grade')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-id-badge"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Security Guard Grades</span>
+                  <span class="rmm-pill pill-warning">Grades</span>
+                </div>
+                <div class="rmm-card-desc">Manage guard career levels (Grade A Supervisor, Grade B Senior Guard, Grade C Basic).</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 2: COMPLIANCE & VETTING
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'compliance'">
+          <div class="rmm-section-label"><i class="fa fa-shield me-2 text-warning"/>License Expirations, Vetting Checks &amp; Mandatory Certifications</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Document Expirations Register', 'License and document expiration log', ['document', 'license', 'expiry'])"
+                 t-on-click="() => this.openAction('security_documents.action_security_employee_document')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-id-card-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Document &amp; License Register</span>
+                  <span class="rmm-pill pill-purple">Compliance</span>
+                </div>
+                <div class="rmm-card-desc">Track SIA/PSIRA licenses, firearm permits, medical certificates, and upcoming renewal alerts.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Security Certifications', 'Guard skills and certifications', ['certifications', 'skills', 'training'])"
+                 t-on-click="() => this.openAction('security_base.action_security_certification')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-certificate"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Certifications Catalog</span>
+                  <span class="rmm-pill pill-success">Skills</span>
+                </div>
+                <div class="rmm-card-desc">Firearm handling, first aid, K9 handling, CCTV operation, and VIP escort certifications.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Document Types', 'Types of required documents', ['types', 'documents', 'license'])"
+                 t-on-click="() => this.openAction('security_documents.action_security_document_type')">
+              <div class="rmm-card-icon icon-teal"><i class="fa fa-file-text"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Document Types</span>
+                  <span class="rmm-pill pill-info">Setup</span>
+                </div>
+                <div class="rmm-card-desc">Configure mandatory document templates (National ID, Police Clearance, Firearm License).</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 3: DISCIPLINE & CONDUCT
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'discipline'">
+          <div class="rmm-section-label"><i class="fa fa-gavel me-2 text-danger"/>Incident Reports, Disciplinary Hearings &amp; AWOL Tracking</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Incident Reports', 'Guard misconduct and incident logs', ['incident', 'misconduct', 'warnings'])"
+                 t-on-click="() => this.openAction('security_discipline.action_security_guard_incident')">
+              <div class="rmm-card-icon icon-rose"><i class="fa fa-exclamation-triangle"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Incident &amp; Misconduct Log</span>
+                  <span class="rmm-pill pill-rose">Warnings</span>
+                </div>
+                <div class="rmm-card-desc">Log guard policy violations, sleeping on duty, late arrival, and verbal/written warnings.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('AWOL Heatmap', 'Absent without leave heatmap', ['awol', 'absent', 'heatmap'])"
+                 t-on-click="() => this.openAction('security_attendance.action_awol_heatmap')">
+              <div class="rmm-card-icon icon-amber"><i class="fa fa-user-times"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">AWOL Heatmap</span>
+                  <span class="rmm-pill pill-warning">Absence</span>
+                </div>
+                <div class="rmm-card-desc">Visual site heatmap identifying unexcused absences and high-risk shift abandonments.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Incident Action Templates', 'Standard penalty guidelines', ['actions', 'penalties', 'discipline'])"
+                 t-on-click="() => this.openAction('security_discipline.action_security_incident_action')">
+              <div class="rmm-card-icon icon-purple"><i class="fa fa-balance-scale"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Disciplinary Penalty Matrix</span>
+                  <span class="rmm-pill pill-purple">Rules</span>
+                </div>
+                <div class="rmm-card-desc">Standardized penalty actions: formal reprimands, wage deductions, and suspension criteria.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 4: LEAVE, LOANS & PAYROLL
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'payroll_leave'">
+          <div class="rmm-section-label"><i class="fa fa-sun-o me-2 text-success"/>Guard Leave Requests, Salary Advance Loans &amp; Payslips</div>
+          <div class="rmm-card-grid">
+
+            <div class="rmm-card" t-if="matchesSearch('Guard Leave Requests', 'Timeoff and leave requests', ['leave', 'timeoff', 'rest'])"
+                 t-on-click="() => this.openAction('security_leave.action_security_leave_request')">
+              <div class="rmm-card-icon icon-emerald"><i class="fa fa-sun-o"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Guard Leave Requests</span>
+                  <span class="rmm-pill pill-success">Time Off</span>
+                </div>
+                <div class="rmm-card-desc">Process annual leave, sick leave, compassionate leave, and rest day rotations.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Salary Advance Loans', 'Guard equipment and salary loans', ['loans', 'advances', 'payroll'])"
+                 t-on-click="() => this.openAction('security_loans.action_security_loan')">
+              <div class="rmm-card-icon icon-blue"><i class="fa fa-money"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Salary Advances &amp; Loans</span>
+                  <span class="rmm-pill pill-primary">Loans</span>
+                </div>
+                <div class="rmm-card-desc">Approve salary advances, equipment replacement loans, and monthly payroll deductions.</div>
+              </div>
+            </div>
+
+            <div class="rmm-card" t-if="matchesSearch('Payroll Command Center', 'Guard wage slips and payroll batch', ['payroll', 'payslips', 'wages'])"
+                 t-on-click="() => this.openAction('security_payroll_core.action_security_payroll_command_center')">
+              <div class="rmm-card-icon icon-teal"><i class="fa fa-calculator"/></div>
+              <div class="rmm-card-content">
+                <div class="rmm-card-header">
+                  <span class="rmm-card-title">Payroll Command Center</span>
+                  <span class="rmm-pill pill-info">Payroll</span>
+                </div>
+                <div class="rmm-card-desc">Monthly guard wage calculation, overtime pay computation, and payslip generation.</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═════════════════════════════════════════════════════════════════
+             TAB 5: HR POLICY & GUIDANCE
+             ═════════════════════════════════════════════════════════════════ -->
+        <div class="rmm-tab-content" t-if="state.activeTab === 'guidance'">
+          <div class="rmm-section-label"><i class="fa fa-book me-2 text-primary"/>DeployGuard Workforce Management SOP &amp; Policy Guidelines</div>
+          
+          <div class="rmm-guide-grid">
+            <!-- Step 1 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">1</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-user-plus me-2 text-primary"/>Guard Onboarding &amp; Vetting Workflow</div>
+                <div class="rmm-guide-text">
+                  Register new guards in the <strong>Guard Directory</strong>. Assign security grade (Grade A-C), upload required compliance documents (*National ID, Police Clearance, Firearm License*), and verify vetting status before roster assignment.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">2</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-shield me-2 text-warning"/>License Expiration Monitoring</div>
+                <div class="rmm-guide-text">
+                  DeployGuard automatically scans document expiration dates daily. Documents expiring within 30 days are highlighted on the <strong>Workforce Dashboard</strong> to trigger timely renewals before guards are blocked from rostering.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">3</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-gavel me-2 text-danger"/>Disciplinary Escalation Matrix</div>
+                <div class="rmm-guide-text">
+                  Incident violations follow a 3-tier escalation rule: 1st Offense = Verbal Warning, 2nd Offense = Written Warning &amp; Shift Suspension, 3rd Offense = Disciplinary Hearing &amp; Site Blacklisting.
+                </div>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="rmm-guide-card">
+              <div class="rmm-guide-num">4</div>
+              <div class="rmm-guide-body">
+                <div class="rmm-guide-title"><i class="fa fa-money me-2 text-success"/>Loan &amp; Advance Rules</div>
+                <div class="rmm-guide-text">
+                  Salary advances are capped at 50% of net monthly guard pay and require active supervisor approval. Deductions are automatically factored into monthly payroll calculation.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shortcuts & Rules Cheatsheet -->
+          <div class="rmm-cheatsheet-box">
+            <div class="rmm-cheatsheet-title"><i class="fa fa-keyboard-o me-2 text-indigo"/>Workforce Keyboard Shortcuts &amp; Guidelines</div>
+            <div class="rmm-cheatsheet-grid">
+              <div class="rmm-cs-item"><span class="rmm-kbd">Esc</span> Close Command Center</div>
+              <div class="rmm-cs-item"><span class="rmm-kbd">Alt + W</span> Open Workforce Command Center</div>
+              <div class="rmm-cs-item"><i class="fa fa-check-circle text-success me-1"/> Mandatory Vetting: Police Clearance required</div>
+              <div class="rmm-cs-item"><i class="fa fa-shield text-info me-1"/> Firearm Permit: Annual recertification required</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="rmm-footer">
+        <div class="rmm-footer-status">
+          <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>Workforce Bus Active</span>
+          <span class="rmm-status-pill blue"><i class="fa fa-users me-1"/>DeployGuard HR 19.0</span>
+        </div>
+        <div class="rmm-footer-tip">
+          Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace
+        </div>
+      </div>
+
+    </div>
+  </div>
+</t>
+</templates>
