@@ -141,7 +141,7 @@ export class WorkforceDashboard extends Component {
                 const leaves = await this.orm.searchRead(
                     "security.leave.request",
                     [],
-                    ["id", "employee_id", "date_from", "date_to", "leave_type", "state"],
+                    ["id", "employee_id", "date_from", "date_to", "leave_type_id", "state"],
                     { order: "date_from desc", limit: 15 }
                 );
                 this.state.leaveRequests = leaves;

@@ -1,7 +1,10 @@
 import base64
+import logging
 
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class SecurityPayrollRuleSet(models.Model):
@@ -95,22 +98,26 @@ class SecurityPayrollPeriod(models.Model):
             employees = attendance_records.mapped("employee_id")
             if not employees:
                 raise ValidationError("No attendance records found for this payroll period.")
-            for employee in employees:
-                payslip = payslip_model.search(
-                    [
-                        ("period_id", "=", period.id),
-                        ("employee_id", "=", employee.id),
-                    ],
-                    limit=1,
-                )
-                if not payslip:
-                    payslip = payslip_model.create(
-                        {
-                            "period_id": period.id,
-                            "employee_id": employee.id,
-                        }
-                    )
-                payslip.action_compute_from_sources()
+
+            existing_payslips = payslip_model.search([
+                ("period_id", "=", period.id),
+            ])
+            existing_employees = existing_payslips.mapped("employee_id")
+            missing_employees = employees - existing_employees
+            vals_list = []
+            for employee in missing_employees:
+                vals_list.append({
+                    "period_id": period.id,
+                    "employee_id": employee.id,
+                })
+            if vals_list:
+                payslip_model.create(vals_list)
+
+            all_payslips = payslip_model.search([
+                ("period_id", "=", period.id),
+                ("employee_id", "in", employees.ids),
+            ])
+            all_payslips.action_compute_from_sources()
             period.state = "processed"
 
     def action_recompute_payslips(self):
@@ -166,7 +173,8 @@ class SecurityPayrollPeriod(models.Model):
                 })
                 mail.send()
                 sent += 1
-            except Exception:
+            except Exception as exc:
+                _logger.exception("Failed to email payslip %s for employee %s: %s", payslip.name, employee.name, exc)
                 failed += 1
         return {
             "type": "ir.actions.client",
@@ -414,6 +422,12 @@ class SecurityPayslip(models.Model):
     def action_confirm(self):
         for payslip in self:
             payslip.state = "confirmed"
+            active_loans = self.env["security.employee.loan"].search([
+                ("employee_id", "=", payslip.employee_id.id),
+                ("state", "=", "active"),
+            ])
+            if active_loans:
+                active_loans.action_apply_carry_forward(payslip)
 
     def action_mark_paid(self):
         for payslip in self:
@@ -472,15 +486,26 @@ class SecurityPayslip(models.Model):
         attendance_model = self.env["security.attendance.record"]
         has_loans = "security.employee.loan" in self.env
         has_incidents = "security.incident" in self.env
+
+        periods = self.mapped("period_id")
+        employees = self.mapped("employee_id")
+        all_records = attendance_model.browse()
+        if periods and employees:
+            date_from = min(periods.mapped("date_from"))
+            date_to = max(periods.mapped("date_to"))
+            all_records = attendance_model.search([
+                ("employee_id", "in", employees.ids),
+                ("shift_date", ">=", date_from),
+                ("shift_date", "<=", date_to),
+            ])
+
         for payslip in self:
             if not payslip.employee_id or not payslip.period_id:
                 continue
-            attendance_records = attendance_model.search(
-                [
-                    ("employee_id", "=", payslip.employee_id.id),
-                    ("shift_date", ">=", payslip.period_id.date_from),
-                    ("shift_date", "<=", payslip.period_id.date_to),
-                ]
+            attendance_records = all_records.filtered(
+                lambda r: r.employee_id.id == payslip.employee_id.id and
+                          r.shift_date >= payslip.period_id.date_from and
+                          r.shift_date <= payslip.period_id.date_to
             )
             payslip.attendance_record_ids = [(6, 0, attendance_records.ids)]
             payslip._compute_period_metrics()
@@ -561,22 +586,24 @@ class SecurityPayslip(models.Model):
 
             # 1. Social Security Commission (SSC) Deduction Calculation (Namibia)
             # SSC is calculated on basic wage/salary (Normal + Sunday + Public Holiday hours)
-            basic_ssc_base = sum(
-                line[2]["amount"]
-                for line in earning_lines
-                if line[2]["code"] in ("NORMAL", "SUNDAY", "PUBLIC_HOLIDAY", "SATURDAY", "NIGHT")
-            )
-            ssc_rate = rule_set.employee_ssc_rate or 0.009
-            ssc_cap = rule_set.ssc_salary_cap or 9000.0
-            ssc_deduction = min(basic_ssc_base, ssc_cap) * ssc_rate
-            if ssc_deduction > 0:
-                deduction_lines.append((0, 0, {
-                    "name": "Social Security Commission (SSC)",
-                    "code": "SSC",
-                    "quantity": 1.0,
-                    "rate": ssc_deduction,
-                    "amount": ssc_deduction,
-                }))
+            ssc_deduction = 0.0
+            if rule_set.country_code == "NA":
+                basic_ssc_base = sum(
+                    line[2]["amount"]
+                    for line in earning_lines
+                    if line[2]["code"] in ("NORMAL", "SUNDAY", "PUBLIC_HOLIDAY", "SATURDAY", "NIGHT")
+                )
+                ssc_rate = rule_set.employee_ssc_rate if rule_set.employee_ssc_rate is not False else 0.009
+                ssc_cap = rule_set.ssc_salary_cap if rule_set.ssc_salary_cap is not False else 9000.0
+                ssc_deduction = min(basic_ssc_base, ssc_cap) * ssc_rate
+                if ssc_deduction > 0:
+                    deduction_lines.append((0, 0, {
+                        "name": "Social Security Commission (SSC)",
+                        "code": "SSC",
+                        "quantity": 1.0,
+                        "rate": ssc_deduction,
+                        "amount": ssc_deduction,
+                    }))
 
             # 2. Pay As You Earn (PAYE) Deduction Calculation (Namibia)
             # SSC is tax-deductible in Namibia
@@ -628,6 +655,7 @@ class SecurityPayslip(models.Model):
                             "quantity": 1.0,
                             "rate": amount,
                             "amount": amount,
+                            "loan_id": loan.id,
                         }))
                         # Create a tracking record against the loan so balance_remaining
                         # decreases each period and the loan auto-closes at zero.
@@ -669,10 +697,28 @@ class SecurityPayslip(models.Model):
                     if excess <= 0:
                         break
                     remove = min(line.amount, excess)
+                    old_amount = line.amount
+                    new_amount = line.amount - remove
                     line.carry_forward_amount = remove
-                    line.amount -= remove
+                    line.amount = new_amount
                     line.capped = True
                     excess -= remove
+
+                    if line.code == "LOAN" and line.loan_id:
+                        loan_ded = self.env["security.loan.deduction"].search([
+                            ("loan_id", "=", line.loan_id.id),
+                            ("payslip_id", "=", payslip.id),
+                        ], limit=1)
+                        if loan_ded:
+                            if new_amount <= 0:
+                                loan_ded.unlink()
+                            else:
+                                loan_ded.write({
+                                    "amount": new_amount,
+                                    "capped": True,
+                                    "carry_forward_amount": remove,
+                                })
+
                     if line.amount <= 0:
                         line.unlink()
 

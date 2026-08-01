@@ -815,7 +815,7 @@ class SecurityAttendanceRecord(models.Model):
             if site and site.supervisor_id and site.supervisor_id.user_id:
                 recipients |= site.supervisor_id.user_id
             mgr_users = self.env["res.users"].search(
-                [("group_ids", "in", [self.env.ref("base.group_system").id])],
+                [("group_ids", "in", [self.env.ref("security_base.group_security_manager").id])],
                 limit=3,
             )
             recipients |= mgr_users

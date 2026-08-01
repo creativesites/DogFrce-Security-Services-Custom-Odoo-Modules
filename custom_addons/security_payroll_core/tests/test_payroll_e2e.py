@@ -7,9 +7,10 @@ Coverage:
   → Payslip state machine (draft → confirmed → paid)
 """
 
-from odoo.tests.common import TransactionCase
+from odoo.tests.common import TransactionCase, tagged
 
 
+@tagged('post_install', '-at_install')
 class TestPayrollE2E(TransactionCase):
     """
     Full end-to-end payroll pipeline test:

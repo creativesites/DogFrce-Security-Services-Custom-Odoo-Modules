@@ -5,7 +5,7 @@
     "category": "Security/Accounting",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_billing", "account", "security_accounting_controls"],
+    "depends": ["security_billing", "account", "security_accounting_controls", "security_reconciliation_billing_account"],
     "data": [
         "views/security_billing_invoice_views.xml",
     ],

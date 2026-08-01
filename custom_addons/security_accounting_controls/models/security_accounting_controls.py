@@ -278,7 +278,7 @@ class ResPartner(models.Model):
                     ("partner_id", "=", partner.id),
                     ("state", "not in", ["paid", "cancelled"]),
                 ])
-                partner.security_invoice_outstanding = sum(unpaid.mapped("total_amount"))
+                partner.security_invoice_outstanding = sum(unpaid.mapped("balance_amount"))
                 partner.security_invoice_count = len(unpaid)
             else:
                 partner.security_invoice_outstanding = 0

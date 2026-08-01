@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime, time
 from odoo.tests.common import TransactionCase
 
 class TestLeaveAccrual(TransactionCase):
@@ -6,6 +6,20 @@ class TestLeaveAccrual(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        # Create dependencies for roster slot
+        cls.post_type = cls.env["security.post.type"].create({
+            "name": "Standard Post",
+        })
+        cls.post = cls.env["security.post"].create({
+            "name": "Test Post",
+            "post_type_id": cls.post_type.id,
+        })
+        cls.shift_template = cls.env["security.shift.template"].create({
+            "name": "Day Shift",
+            "start_hour": 6.0,
+            "end_hour": 18.0,
+        })
+
         # Create a leave type with worked-time accrual
         cls.leave_type = cls.env["security.leave.type"].create({
             "name": "Test Annual Leave",
@@ -32,11 +46,22 @@ class TestLeaveAccrual(TransactionCase):
         prev_month_start = prev_month_start.replace(day=1)
         for i in range(22):
             shift_date = prev_month_start + timedelta(days=i)
+            # Create required roster slot first to satisfy not-null constraint
+            slot = self.env["security.roster.slot"].create({
+                "shift_date": shift_date,
+                "post_id": self.post.id,
+                "shift_template_id": self.shift_template.id,
+                "employee_id": self.employee.id,
+            })
+            check_in_dt = datetime.combine(shift_date, time(6, 0))
+            check_out_dt = datetime.combine(shift_date, time(18, 0))
             self.env["security.attendance.record"].create({
                 "employee_id": self.employee.id,
                 "shift_date": shift_date,
-                "status": "present",
+                "check_in": check_in_dt,
+                "check_out": check_out_dt,
                 "manual_presence": "present",
+                "roster_slot_id": slot.id,
             })
         # Run accrual cron
         self.env["security.leave.type"].action_cron_accrue_leave()
@@ -58,11 +83,22 @@ class TestLeaveAccrual(TransactionCase):
         prev_month_start = date.today().replace(day=1) - timedelta(days=1)
         prev_month_start = prev_month_start.replace(day=1)
         for i in range(10):
+            shift_date = prev_month_start + timedelta(days=i)
+            slot = self.env["security.roster.slot"].create({
+                "shift_date": shift_date,
+                "post_id": self.post.id,
+                "shift_template_id": self.shift_template.id,
+                "employee_id": employee2.id,
+            })
+            check_in_dt = datetime.combine(shift_date, time(6, 0))
+            check_out_dt = datetime.combine(shift_date, time(18, 0))
             self.env["security.attendance.record"].create({
                 "employee_id": employee2.id,
-                "shift_date": prev_month_start + timedelta(days=i),
-                "status": "present",
+                "shift_date": shift_date,
+                "check_in": check_in_dt,
+                "check_out": check_out_dt,
                 "manual_presence": "present",
+                "roster_slot_id": slot.id,
             })
         self.env["security.leave.type"].action_cron_accrue_leave()
         balance2.invalidate_recordset()

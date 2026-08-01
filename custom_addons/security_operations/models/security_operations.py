@@ -956,8 +956,15 @@ class SecurityRosterBatch(models.Model):
             batch.approved_by_id = self.env.user.id
 
     def action_reject(self):
-        for batch in self:
-            batch.state = "draft"
+        self.ensure_one()
+        return {
+            "name": "Reject Roster Batch",
+            "type": "ir.actions.act_window",
+            "res_model": "security.roster.reject.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"default_batch_id": self.id},
+        }
 
     def action_copy_from_previous_month(self):
         """Copy all confirmed slots from the most recent previous batch."""
@@ -1533,6 +1540,32 @@ class SecurityRosterSlot(models.Model):
             },
         }
 
+    @api.constrains("employee_id", "shift_date", "shift_template_id", "state")
+    def _check_double_booking(self):
+        for slot in self:
+            if not slot.employee_id or slot.state not in ("assigned", "confirmed"):
+                continue
+            overlapping = self.search([
+                ("employee_id", "=", slot.employee_id.id),
+                ("shift_date", "=", slot.shift_date),
+                ("shift_template_id", "=", slot.shift_template_id.id),
+                ("state", "in", ("assigned", "confirmed")),
+                ("id", "!=", slot.id),
+            ])
+            if overlapping:
+                raise ValidationError(
+                    f"Employee {slot.employee_id.name} is already booked for the shift "
+                    f"'{slot.shift_template_id.name}' on {slot.shift_date}."
+                )
+
+    def write(self, vals):
+        if self:
+            self.env.cr.execute(
+                "SELECT id FROM security_roster_slot WHERE id IN %s FOR UPDATE",
+                [tuple(self.ids)]
+            )
+        return super().write(vals)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # OPERATIONS DASHBOARD DATA PROVIDER
@@ -1680,3 +1713,22 @@ class SecurityOperationsDashboard(models.AbstractModel):
             filled += 1
 
         return filled
+
+
+class SecurityRosterRejectWizard(models.TransientModel):
+    _name = "security.roster.reject.wizard"
+    _description = "Reject Roster Batch Wizard"
+
+    batch_id = fields.Many2one("security.roster.batch", required=True, string="Roster Batch")
+    rejection_reason = fields.Text(required=True, string="Reason for Rejection")
+
+    def action_confirm_rejection(self):
+        self.ensure_one()
+        if not self.rejection_reason or not self.rejection_reason.strip():
+            raise ValidationError("Please provide a valid reason for rejecting this roster.")
+        self.batch_id.write({
+            "state": "draft",
+            "rejection_reason": self.rejection_reason.strip(),
+        })
+        return {"type": "ir.actions.act_window_close"}
+

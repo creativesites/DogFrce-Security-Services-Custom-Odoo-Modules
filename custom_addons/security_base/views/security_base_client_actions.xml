@@ -47,16 +47,4 @@
               action="hr.open_view_employee_list_my"
               sequence="10"/>
 
-    <menuitem id="menu_security_workforce_grades"
-              name="Guard Grades"
-              parent="menu_security_workforce_root"
-              action="action_security_grade"
-              sequence="15"/>
-
-    <menuitem id="menu_security_workforce_certifications"
-              name="Certifications &amp; Vetting"
-              parent="menu_security_workforce_root"
-              action="action_security_certification"
-              sequence="20"/>
-
 </odoo>

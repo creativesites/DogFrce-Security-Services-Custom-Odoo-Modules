@@ -82,6 +82,13 @@
     <field name="sequence">11</field>
 </record>
 
+<record id="cat_reconciliation" model="security.help.category">
+    <field name="name">Cross-Module Reconciliation</field>
+    <field name="icon">fa-refresh</field>
+    <field name="color">#0284c7</field>
+    <field name="sequence">12</field>
+</record>
+
 
 <!-- ═══════════════════════════════════════════════════════
      GETTING STARTED
@@ -2036,6 +2043,106 @@
 
 <h3>3. Custom AI Persona Instructions</h3>
 <p>Configure the <strong>Custom System Prompt</strong> in WhatsApp Settings to customize the tone, language style (e.g., professional, concise, or local Zambian English context), and operational guidance for the AI assistant.</p>
+    ]]></field>
+</record>
+
+<!-- ═══════════════════════════════════════════════════════
+     CROSS-MODULE RECONCILIATION
+════════════════════════════════════════════════════════ -->
+
+<record id="art_reconciliation_overview" model="security.help.article">
+    <field name="category_id" ref="cat_reconciliation"/>
+    <field name="title">DeployGuard Synchronization &amp; Reconciliation Overview</field>
+    <field name="summary">How DeployGuard operational data synchronizes seamlessly with Odoo native accounting and HR models</field>
+    <field name="sequence">1</field>
+    <field name="tags">reconciliation sync outbox core links jobs accounting audit</field>
+    <field name="body"><![CDATA[
+<h2>DeployGuard Cross-Module Synchronization &amp; Reconciliation</h2>
+
+<p>DeployGuard's Cross-Module Reconciliation Engine ensures complete financial and operational consistency between DeployGuard security operations (client contracts, rosters, shift billing, attendance) and native Odoo core applications (General Ledger Accounting, HR Attendance, Inventory).</p>
+
+<h3>Core Principles &amp; Legal Authorities</h3>
+<ul>
+  <li><strong>Accounting is the Legal Financial Ledger:</strong> Once an invoice or payment is posted in Odoo Accounting, it represents the legal general ledger. DeployGuard mirrors Accounting and never reopens or rewrites posted moves.</li>
+  <li><strong>DeployGuard is Operational Truth:</strong> DeployGuard owns site operational requirements, guard scheduling, shift attendance interpretation, and draft billing proposals.</li>
+  <li><strong>Durable Outbox Job Queue:</strong> All sync events generate durable outbox jobs with unique correlation IDs, bounded retries, and complete audit histories.</li>
+</ul>
+
+<h3>Key Features</h3>
+<ul>
+  <li><strong>Automatic Record Linking:</strong> Maintains canonical record links (<code>security.reconciliation.link</code>) between operational records and standard Odoo documents.</li>
+  <li><strong>Financial Conflict Prevention:</strong> Material discrepancies on posted accounting documents automatically raise open conflicts for accountant review rather than overriding ledger entries.</li>
+  <li><strong>Nightly Discovery Sweeps:</strong> An automated background sweep scans for unlinked records, payment state drift, or un-reconciled balances across all active companies.</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_reconciliation_billing_accounting" model="security.help.article">
+    <field name="category_id" ref="cat_reconciliation"/>
+    <field name="title">Billing &amp; Odoo Accounting Reconciliation</field>
+    <field name="summary">How client invoices, payments, and credit notes synchronize with Odoo Customer Invoices and Payments</field>
+    <field name="sequence">2</field>
+    <field name="tags">billing invoice accounting move payment credit note sync guardrails</field>
+    <field name="body"><![CDATA[
+<h2>Billing &amp; Odoo Accounting Reconciliation Guide</h2>
+
+<p>DeployGuard integrates seamlessly with standard Odoo Customer Invoices (<code>account.move</code>) and Customer Payments (<code>account.payment</code>).</p>
+
+<h3>1. Draft Invoice Synchronization</h3>
+<p>When you create or update a draft invoice in <strong>Client Billing → Invoices</strong>, DeployGuard creates or updates a corresponding draft Odoo Customer Invoice in <code>account.move</code> with all services, quantities, rate card prices, and sales tax lines.</p>
+
+<h3>2. Invoice Posting &amp; Validation</h3>
+<p>Validating or sending a DeployGuard invoice automatically posts the linked Odoo Customer Invoice in Accounting.</p>
+
+<h3>3. Post-Posting Guardrail &amp; Financial Conflicts</h3>
+<p>If you attempt to edit line items or amounts on a DeployGuard invoice whose linked Odoo Customer Invoice is already posted in Accounting:</p>
+<ul>
+  <li>DeployGuard <strong>never reopens or rewrites</strong> the posted Accounting move (<code>move.button_draft()</code> is strictly prevented).</li>
+  <li>The Reconciliation Engine flags a <strong>Financial Conflict</strong> in <strong>Operations → Reconciliation → Conflicts</strong>.</li>
+  <li>An accountant reviews the conflict and issues a standard Odoo Credit Note or adjustment.</li>
+</ul>
+
+<h3>4. Payment Reconciliation &amp; Credit Notes</h3>
+<ul>
+  <li><strong>Payments:</strong> Posted client payments reconcile directly against the linked Odoo invoice without creating synthetic delta or balancing entries.</li>
+  <li><strong>Credit Notes:</strong> Confirmed DeployGuard credit notes generate and post linked Customer Refunds (<code>out_refund</code>) in Odoo Accounting.</li>
+</ul>
+    ]]></field>
+</record>
+
+<record id="art_reconciliation_conflicts_jobs" model="security.help.article">
+    <field name="category_id" ref="cat_reconciliation"/>
+    <field name="title">Managing Reconciliation Conflicts, Jobs &amp; Audit Logs</field>
+    <field name="summary">How to use the Operations → Reconciliation workspace to resolve conflicts, retry jobs, and inspect audit logs</field>
+    <field name="sequence">3</field>
+    <field name="tags">conflicts jobs queue retry audit log workspace rules</field>
+    <field name="body"><![CDATA[
+<h2>Reconciliation Workspace Guide (Operations → Reconciliation)</h2>
+
+<p>The Reconciliation Workspace allows managers and accountants to oversee cross-module data flow and resolve operational or financial exceptions.</p>
+
+<h3>1. Conflicts Tab</h3>
+<p>Displays all open financial or operational differences requiring manual resolution:</p>
+<ul>
+  <li>Click any conflict record to view side-by-side field diffs.</li>
+  <li>Click <strong>Assign to Me</strong> to take ownership of the conflict.</li>
+  <li>Select a Resolution option (<em>Use Source</em>, <em>Use Target</em>, <em>Manual Adjustment</em>, or <em>Ignore</em>).</li>
+  <li>Provide a mandatory <strong>Audit Note</strong> explaining the decision and click <strong>Resolve</strong>.</li>
+</ul>
+
+<h3>2. Sync Jobs Queue</h3>
+<p>Tracks all background synchronization jobs:</p>
+<ul>
+  <li>Displays job state (<code>Pending</code>, <code>Running</code>, <code>Retry</code>, <code>Done</code>, <code>Conflict</code>, <code>Failed</code>).</li>
+  <li>View attempt counts, correlation IDs, and detailed error tracebacks for failed attempts.</li>
+  <li>Click <strong>Requeue Job</strong> to re-trigger a transient failure.</li>
+</ul>
+
+<h3>3. Record Links &amp; Audit Logs</h3>
+<ul>
+  <li><strong>Record Links:</strong> Search active identities connecting DeployGuard records to standard Odoo models, with direct <em>Open Source Record</em> and <em>Open Target Record</em> navigation buttons.</li>
+  <li><strong>Audit Log:</strong> Search append-only execution records by actor, result status, correlation ID, or timestamp.</li>
+</ul>
     ]]></field>
 </record>
 

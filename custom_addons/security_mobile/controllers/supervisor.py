@@ -146,6 +146,9 @@ class SupervisorController(http.Controller):
         env = request.env
         site_id_param = kw.get("site_id")
 
+        user = env.user
+        is_manager_or_owner = user.has_group(GROUP_MANAGER) or user.has_group(GROUP_OWNER)
+
         if site_id_param:
             # ── Single-site posting sheet ──────────────────────────────────
             try:
@@ -156,6 +159,11 @@ class SupervisorController(http.Controller):
             site = env["security.client.site"].sudo().browse(site_id)
             if not site.exists():
                 return _json_err(f"Site {site_id} not found.", status=404)
+
+            if not is_manager_or_owner:
+                employee = _employee_for_user()
+                if not employee or site.supervisor_id.id != employee.id:
+                    return _json_err("Access denied: You are not the assigned supervisor for this site.", status=403)
 
             batch = env["security.attendance.batch"].sudo().search(
                 [("attendance_date", "=", today), ("site_id", "=", site_id)], limit=1
@@ -205,7 +213,14 @@ class SupervisorController(http.Controller):
                 })
 
         # ── All-sites summary (no site_id) ────────────────────────────────
-        sites = env["security.client.site"].sudo().search([("active", "=", True)])
+        domain = [("active", "=", True)]
+        if not is_manager_or_owner:
+            employee = _employee_for_user()
+            if not employee:
+                return _json_err("No employee record linked to your account.", status=403)
+            domain.append(("supervisor_id", "=", employee.id))
+
+        sites = env["security.client.site"].sudo().search(domain)
         summaries = [_site_day_summary(site, today, env) for site in sites]
         # Put sites with active batches first, then by name
         summaries.sort(key=lambda s: (0 if s["has_batch"] else 1, s["site_name"]))
@@ -234,6 +249,13 @@ class SupervisorController(http.Controller):
         record = request.env["security.attendance.record"].sudo().browse(int(record_id))
         if not record.exists():
             return _json_err(f"Attendance record {record_id} not found.", status=404)
+
+        user = request.env.user
+        is_manager_or_owner = user.has_group(GROUP_MANAGER) or user.has_group(GROUP_OWNER)
+        if not is_manager_or_owner:
+            employee = _employee_for_user()
+            if not employee or record.site_id.supervisor_id.id != employee.id:
+                return _json_err("Access denied: You are not the assigned supervisor for this site.", status=403)
 
         vals = {}
         if manual_presence:
@@ -284,6 +306,13 @@ class SupervisorController(http.Controller):
         if not record.exists():
             return _json_err(f"Attendance record {record_id} not found.", status=404)
 
+        user = request.env.user
+        is_manager_or_owner = user.has_group(GROUP_MANAGER) or user.has_group(GROUP_OWNER)
+        if not is_manager_or_owner:
+            employee = _employee_for_user()
+            if not employee or record.site_id.supervisor_id.id != employee.id:
+                return _json_err("Access denied: You are not the assigned supervisor for this site.", status=403)
+
         now = datetime.utcnow()
         vals = {action: now}
         if action == "check_in":
@@ -311,6 +340,13 @@ class SupervisorController(http.Controller):
         batch = request.env["security.attendance.batch"].sudo().browse(int(batch_id))
         if not batch.exists():
             return _json_err(f"Batch {batch_id} not found.", status=404)
+
+        user = request.env.user
+        is_manager_or_owner = user.has_group(GROUP_MANAGER) or user.has_group(GROUP_OWNER)
+        if not is_manager_or_owner:
+            employee = _employee_for_user()
+            if not employee or batch.site_id.supervisor_id.id != employee.id:
+                return _json_err("Access denied: You are not the assigned supervisor for this site.", status=403)
 
         if batch.state not in ("draft",):
             return _json_err(
@@ -351,6 +387,13 @@ class SupervisorController(http.Controller):
         site = env["security.client.site"].sudo().browse(site_id)
         if not site.exists():
             return _json_err(f"Site {site_id} not found.", status=404)
+
+        user = env.user
+        is_manager_or_owner = user.has_group(GROUP_MANAGER) or user.has_group(GROUP_OWNER)
+        if not is_manager_or_owner:
+            employee = _employee_for_user()
+            if not employee or site.supervisor_id.id != employee.id:
+                return _json_err("Access denied: You are not the assigned supervisor for this site.", status=403)
 
         # Find guards already assigned today at this site
         batch = env["security.attendance.batch"].sudo().search(
@@ -445,6 +488,13 @@ class SupervisorController(http.Controller):
         site = env["security.client.site"].sudo().browse(site_id)
         if not site.exists():
             return _json_err(f"Site {site_id} not found.", status=404)
+
+        user = env.user
+        is_manager_or_owner = user.has_group(GROUP_MANAGER) or user.has_group(GROUP_OWNER)
+        if not is_manager_or_owner:
+            supervisor_emp = _employee_for_user()
+            if not supervisor_emp or site.supervisor_id.id != supervisor_emp.id:
+                return _json_err("Access denied: You are not the assigned supervisor for this site.", status=403)
 
         employee = env["hr.employee"].sudo().browse(int(employee_id))
         if not employee.exists():

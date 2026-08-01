@@ -194,16 +194,26 @@ class PinController(http.Controller):
         if not stored_hash:
             return _json_err("PIN not configured for this employee.", status=401)
 
-        if stored_hash != pin_hash:
-            return _json_err("Invalid PIN.", status=401)
-
         # Authenticate the linked user
         user = employee.user_id
         if not user:
             return _json_err("No Odoo user linked to this employee.", status=401)
 
-        # Create a new session
-        request.session.authenticate(db, user.login, user._crypt_context().hash(pin_hash))
+        crypt_context = env["res.users"]._crypt_context()
+        try:
+            verified = crypt_context.verify(pin_hash, stored_hash)
+        except Exception:
+            verified = False
+
+        if not verified:
+            return _json_err("Invalid PIN.", status=401)
+
+        # Create a new session directly and manually
+        request.session.uid = user.id
+        request.session.login = user.login
+        request.session.db = db
+        request.session.session_token = user._get_session_token(request.session)
+        request.update_env(user=user.id)
 
         return _json_ok({
             "uid": user.id,
@@ -232,6 +242,10 @@ class PinController(http.Controller):
         if not employee:
             return _json_err("No employee record linked to your account.")
 
-        employee.sudo().write({"security_mobile_pin_hash": pin_hash})
+        crypt_context = request.env["res.users"]._crypt_context()
+        secure_hash = crypt_context.hash(pin_hash)
+
+        employee.sudo().write({"security_mobile_pin_hash": secure_hash})
         return _json_ok({"message": "PIN updated successfully."})
+
 

@@ -5,7 +5,7 @@
     "category": "Accounting",
     "author": "Winston Zulu",
     "license": "LGPL-3",
-    "depends": ["security_payroll_core", "security_operations", "security_attendance"],
+    "depends": ["security_payroll_core", "security_operations", "security_attendance", "account"],
     "data": [
         "data/ir_sequence.xml",
         "data/security_billing_cron.xml",

@@ -56,6 +56,8 @@
         'security_operations_crm',
         'security_payroll_core',
         'security_portal',
+        'security_reconciliation_billing_account',
+        'security_reconciliation_core',
         'security_reporting',
         'security_shift_planner',
         'security_theme',

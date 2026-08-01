@@ -82,10 +82,10 @@ class SecurityEmployeeLoan(models.Model):
             else:
                 loan.installment_amount = 0.0
 
-    @api.depends("total_repayment_amount", "deduction_line_ids.amount", "state")
+    @api.depends("total_repayment_amount", "deduction_line_ids.amount", "deduction_line_ids.payslip_id", "state")
     def _compute_balance_remaining(self):
         for loan in self:
-            deducted = sum(loan.deduction_line_ids.mapped("amount"))
+            deducted = sum(loan.deduction_line_ids.filtered(lambda d: d.payslip_id).mapped("amount"))
             balance = loan.total_repayment_amount - deducted
             loan.balance_remaining = max(balance, 0.0)
             if loan.state == "active" and loan.balance_remaining <= 0:
@@ -153,17 +153,34 @@ class SecurityEmployeeLoan(models.Model):
             if loan.state in ("draft", "submitted", "approved"):
                 loan.state = "draft"
 
-    def action_apply_carry_forward(self):
+    def action_apply_carry_forward(self, payslip):
         """Called by payroll after capping — adds carry-forward to the next deduction line."""
+        from dateutil.relativedelta import relativedelta
+        from datetime import date
         for loan in self:
-            carry = sum(loan.deduction_line_ids.filtered("capped").mapped("carry_forward_amount"))
+            capped_deds = loan.deduction_line_ids.filtered(
+                lambda d: d.payslip_id == payslip and d.capped and d.carry_forward_amount > 0
+            )
+            carry = sum(capped_deds.mapped("carry_forward_amount"))
             if carry <= 0:
                 continue
+
             next_line = loan.deduction_line_ids.filtered(
                 lambda l: not l.payslip_id and not l.capped
             ).sorted("deduction_date")[:1]
+
             if next_line:
                 next_line.amount += carry
+            else:
+                ref_date = max(capped_deds.mapped("deduction_date")) if capped_deds else date.today()
+                next_month_date = ref_date + relativedelta(months=1)
+                self.env["security.loan.deduction"].create({
+                    "loan_id": loan.id,
+                    "deduction_date": next_month_date,
+                    "amount": carry,
+                })
+
+            capped_deds.write({"carry_forward_amount": 0.0})
 
 
 class SecurityLoanDeduction(models.Model):
@@ -211,3 +228,10 @@ class SecurityPayslip(models.Model):
         "loan_deduction_id",
         string="Loan Deductions",
     )
+
+
+class SecurityPayslipDeductionLine(models.Model):
+    _inherit = "security.payslip.deduction.line"
+
+    loan_id = fields.Many2one("security.employee.loan", string="Linked Loan")
+

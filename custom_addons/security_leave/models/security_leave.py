@@ -186,8 +186,10 @@ class SecurityLeaveBalance(models.Model):
 
 class SecurityLeaveRequest(models.Model):
     _name = "security.leave.request"
+    _inherit = ["mail.thread"]
     _description = "Security Leave Request"
     _order = "date_from desc, id desc"
+
 
     name = fields.Char(compute="_compute_name", store=True)
     employee_id = fields.Many2one(
@@ -326,6 +328,11 @@ class SecurityLeaveRequest(models.Model):
 
     def action_refuse(self):
         for leave in self:
+            if leave.state == "approved" and leave.balance_id:
+                leave.balance_id.balance_days += leave.requested_days
+                leave.message_post(
+                    body=f"Leave request refused. Reverted {leave.requested_days:.1f} days to leave balance."
+                )
             leave.state = "refused"
             # I-5: create notification for operations supervisor
             if "security.notification" in self.env:
@@ -338,7 +345,21 @@ class SecurityLeaveRequest(models.Model):
 
     def action_reset_to_draft(self):
         for request in self:
+            if request.state == "approved" and request.balance_id:
+                request.balance_id.balance_days += request.requested_days
+                request.message_post(
+                    body=f"Leave request reset to Draft. Reverted {request.requested_days:.1f} days to leave balance."
+                )
             request.state = "draft"
+
+    def unlink(self):
+        for leave in self:
+            if leave.state == "approved":
+                raise ValidationError(
+                    "You cannot delete an approved leave request. Reset it to draft or refuse it first to restore the balance."
+                )
+        return super().unlink()
+
 
 
 class SecurityRosterSlot(models.Model):

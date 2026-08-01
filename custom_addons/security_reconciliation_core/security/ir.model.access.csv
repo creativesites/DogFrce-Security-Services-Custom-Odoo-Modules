@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_reconciliation_rule_manager,security.reconciliation.rule manager,model_security_reconciliation_rule,base.group_system,1,1,1,1
+access_security_reconciliation_link_manager,security.reconciliation.link manager,model_security_reconciliation_link,base.group_system,1,1,1,1
+access_security_reconciliation_job_manager,security.reconciliation.job manager,model_security_reconciliation_job,base.group_system,1,1,1,1
+access_security_reconciliation_log_manager,security.reconciliation.log manager,model_security_reconciliation_log,base.group_system,1,0,0,0
+access_security_reconciliation_conflict_manager,security.reconciliation.conflict manager,model_security_reconciliation_conflict,base.group_system,1,1,1,0

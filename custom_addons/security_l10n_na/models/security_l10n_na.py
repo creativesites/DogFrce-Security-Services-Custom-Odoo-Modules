@@ -70,3 +70,33 @@ class SecurityPublicHoliday(models.Model):
     holiday_date = fields.Date(required=True)
     active = fields.Boolean(default=True)
     note = fields.Text()
+
+    def _recompute_matching_attendance_records(self, dates):
+        if not dates:
+            return
+        records = self.env["security.attendance.record"].search([
+            ("shift_date", "in", list(dates))
+        ])
+        if records:
+            records.modified(["shift_date"])
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        holidays = super().create(vals_list)
+        dates = {h.holiday_date for h in holidays if h.holiday_date}
+        self._recompute_matching_attendance_records(dates)
+        return holidays
+
+    def write(self, vals):
+        old_dates = {h.holiday_date for h in self if h.holiday_date}
+        res = super().write(vals)
+        if "holiday_date" in vals:
+            new_dates = {h.holiday_date for h in self if h.holiday_date}
+            self._recompute_matching_attendance_records(old_dates | new_dates)
+        return res
+
+    def unlink(self):
+        dates = {h.holiday_date for h in self if h.holiday_date}
+        res = super().unlink()
+        self._recompute_matching_attendance_records(dates)
+        return res

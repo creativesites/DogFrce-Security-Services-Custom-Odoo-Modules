@@ -11,86 +11,27 @@ class SecurityBillingInvoice(models.Model):
         copy=False,
     )
 
-    def write(self, vals):
-        result = super().write(vals)
-        # Auto-sync to Odoo Account Move when validated/sent or paid
-        if "state" in vals and vals["state"] in ("sent", "paid"):
-            self.action_sync_to_odoo_invoice()
-            if not self.env.context.get("skip_auto_reconcile"):
-                self.action_auto_reconcile()
-        return result
-
     def action_sync_to_odoo_invoice(self):
-        """Create or update corresponding native Odoo account.move invoice."""
-        journal_model = self.env["account.journal"]
-        move_model = self.env["account.move"]
-
+        """Delegates invoice synchronization to Reconciliation Core Adapter."""
+        Adapter = self.env["security.reconciliation.billing.adapter"]
+        Job = self.env["security.reconciliation.job"]
         for inv in self:
-            if inv.state == "draft":
-                continue
-
-            journal = journal_model.search([
-                ("type", "=", "sale"),
-                ("company_id", "=", self.env.company.id)
-            ], limit=1)
-
-            if not journal:
-                # Standard Odoo account.move requires a valid sales journal.
-                # If no journal exists (e.g., during database seeding before accounting COA is set up),
-                # we skip the sync gracefully to avoid NotNullViolation database crashes.
-                continue
-
-            vals = {
-                "move_type": "out_invoice",
-                "partner_id": inv.partner_id.id,
-                "invoice_date": inv.invoice_date,
-                "invoice_date_due": inv.due_date,
-                "currency_id": inv.currency_id.id,
-                "ref": inv.name,
-                "journal_id": journal.id if journal else False,
-            }
-
-            move = inv.move_id
-            was_posted = False
-            if move:
-                if move.state == "posted":
-                    was_posted = True
-                    move.button_draft()
-                move.write(vals)
-            else:
-                move = move_model.create(vals)
-                # Avoid recursion during sync write
-                super(SecurityBillingInvoice, inv).write({"move_id": move.id})
-
-            # Map lines
-            tax = self.env["account.tax"].search([
-                ("type_tax_use", "=", "sale"),
-                ("amount", "=", inv.vat_rate if hasattr(inv, "vat_rate") else 15.0),
-                ("company_id", "=", self.env.company.id)
-            ], limit=1)
-
-            product = self.env["product.product"].search([
-                ("name", "ilike", "Security"),
-                ("type", "=", "service")
-            ], limit=1)
-
-            line_vals = [(5, 0, 0)] # Clear existing lines cleanly
-            for line in inv.line_ids:
-                line_vals.append((0, 0, {
-                    "name": line.name,
-                    "quantity": line.quantity * max(line.guard_count, 1),
-                    "price_unit": line.unit_price,
-                    "product_id": product.id if product else False,
-                    "tax_ids": [(6, 0, [tax.id])] if tax else [],
-                }))
-            if line_vals:
-                move.write({"invoice_line_ids": line_vals})
-
-            # If the custom invoice is sent or paid, or was posted previously, make sure Odoo move is posted
-            if (inv.state in ("sent", "paid") or was_posted) and move.state == "draft":
-                move.action_post()
-
+            company = inv.company_id if hasattr(inv, "company_id") and inv.company_id else self.env.company
+            rule = Adapter._get_or_create_rule(company)
+            job = Job.create({
+                "rule_id": rule.id,
+                "company_id": company.id,
+                "origin_model": "security.billing.invoice",
+                "origin_res_id": inv.id,
+                "event_type": "write",
+                "direction": "deployguard_to_odoo",
+            })
+            job._process()
         return True
+
+    def action_auto_reconcile(self):
+        """Delegates auto reconciliation to Reconciliation Core Adapter."""
+        return self.action_sync_to_odoo_invoice()
 
     def action_view_odoo_invoice(self):
         self.ensure_one()
@@ -106,156 +47,28 @@ class SecurityBillingInvoice(models.Model):
             }
         return False
 
-    def action_auto_reconcile(self):
-        """Bidirectionally reconcile custom security invoices and standard Odoo invoices."""
-        if self.env.context.get("skip_auto_reconcile"):
-            return True
-
-        for inv in self:
-            # 1. Ensure Odoo invoice exists and is posted if custom invoice is sent/paid
-            if inv.state in ("sent", "paid"):
-                if not inv.move_id:
-                    inv.action_sync_to_odoo_invoice()
-                
-                move = inv.move_id
-                if move and move.state == "draft":
-                    move.action_post()
-
-            # 2. If Odoo invoice is posted, perform bidirectional payment matching
-            if inv.move_id and inv.move_id.state == "posted":
-                move = inv.move_id
-                
-                # In Odoo, paid amount = amount_total - amount_residual
-                odoo_paid = move.amount_total - move.amount_residual
-                
-                # In DogForce, total posted payments
-                custom_paid = sum(
-                    inv.payment_ids.filtered(lambda p: p.state == "posted").mapped("amount")
-                )
-
-                if abs(odoo_paid - custom_paid) > 0.01:
-                    if odoo_paid > custom_paid:
-                        # Odoo is ahead. Synchronize payments from Odoo -> DogForce
-                        diff = odoo_paid - custom_paid
-                        self.env["security.client.payment"].with_context(
-                            skip_odoo_payment_sync=True,
-                            skip_auto_reconcile=True
-                        ).create({
-                            "invoice_id": inv.id,
-                            "amount": diff,
-                            "payment_date": fields.Date.context_today(self),
-                            "payment_method": "bank_transfer",
-                            "bank_reference": f"Auto-Reconciled from Odoo Invoice {move.name}",
-                            "state": "posted",
-                        })
-                        inv._compute_payment_status()
-                    else:
-                        # DogForce is ahead. Synchronize payments from DogForce -> Odoo
-                        diff = custom_paid - odoo_paid
-                        journal = self.env["account.journal"].search([
-                            ("type", "in", ("bank", "cash")),
-                            ("company_id", "=", self.env.company.id)
-                        ], limit=1)
-                        if journal:
-                            register_wizard = self.env["account.payment.register"].with_context(
-                                active_model="account.move",
-                                active_ids=move.ids,
-                                skip_auto_reconcile=True,
-                            ).create({
-                                "amount": diff,
-                                "payment_date": fields.Date.context_today(self),
-                                "journal_id": journal.id,
-                            })
-                            register_wizard.action_create_payments()
-
-            # 3. Synchronize final invoice state
-            if inv.move_id:
-                move = inv.move_id
-                if move.payment_state in ("paid", "in_payment") and inv.state != "paid":
-                    inv.with_context(skip_auto_reconcile=True).write({"state": "paid"})
-                elif inv.state == "paid" and move.payment_state not in ("paid", "in_payment"):
-                    # If custom is paid, make sure standard Odoo invoice is fully paid
-                    if move.state == "posted" and move.amount_residual > 0.01:
-                        journal = self.env["account.journal"].search([
-                            ("type", "in", ("bank", "cash")),
-                            ("company_id", "=", self.env.company.id)
-                        ], limit=1)
-                        if journal:
-                            register_wizard = self.env["account.payment.register"].with_context(
-                                active_model="account.move",
-                                active_ids=move.ids,
-                                skip_auto_reconcile=True,
-                            ).create({
-                                "amount": move.amount_residual,
-                                "payment_date": fields.Date.context_today(self),
-                                "journal_id": journal.id,
-                            })
-                            register_wizard.action_create_payments()
-
-        return True
-
 
 class SecurityClientPayment(models.Model):
     _inherit = "security.client.payment"
 
     def action_post(self):
-        super().action_post()
-        if self.env.context.get("skip_odoo_payment_sync") or self.env.context.get("skip_auto_reconcile"):
-            return True
-
-        for payment in self:
-            invoice = payment.invoice_id
-            if invoice.move_id and invoice.move_id.state == "posted":
-                journal = self.env["account.journal"].search([
-                    ("type", "in", ("bank", "cash")),
-                    ("company_id", "=", self.env.company.id)
-                ], limit=1)
-                if journal:
-                    odoo_paid = invoice.move_id.amount_total - invoice.move_id.amount_residual
-                    custom_paid = sum(
-                        invoice.payment_ids.filtered(lambda p: p.state == "posted").mapped("amount")
-                    )
-                    if odoo_paid < custom_paid:
-                        delta = custom_paid - odoo_paid
-                        register_wizard = self.env["account.payment.register"].with_context(
-                            active_model="account.move",
-                            active_ids=invoice.move_id.ids,
-                            skip_auto_reconcile=True,
-                        ).create({
-                            "amount": delta,
-                            "payment_date": payment.payment_date or fields.Date.context_today(self),
-                            "journal_id": journal.id,
-                        })
-                        register_wizard.action_create_payments()
-                    
-                    invoice.with_context(skip_auto_reconcile=True).action_auto_reconcile()
-        return True
-
-    def action_cancel(self):
-        super().action_cancel()
-        if self.env.context.get("skip_odoo_payment_sync") or self.env.context.get("skip_auto_reconcile"):
-            return True
-
-        for payment in self:
-            invoice = payment.invoice_id
-            if invoice.move_id:
-                invoice.action_auto_reconcile()
-        return True
-
-
-class AccountPayment(models.Model):
-    _inherit = "account.payment"
-
-    def action_post(self):
         res = super().action_post()
-        if self.env.context.get("skip_auto_reconcile"):
+        if self.env.context.get("reconciliation_origin") == "billing_account_invoice":
             return res
+        Adapter = self.env["security.reconciliation.billing.adapter"]
+        Job = self.env["security.reconciliation.job"]
         for payment in self:
-            moves = payment.reconciled_bill_ids | payment.reconciled_invoice_ids
-            if moves:
-                custom_invoices = self.env["security.billing.invoice"].search([("move_id", "in", moves.ids)])
-                if custom_invoices:
-                    custom_invoices.action_auto_reconcile()
+            company = payment.company_id if hasattr(payment, "company_id") and payment.company_id else self.env.company
+            rule = Adapter._get_or_create_rule(company)
+            job = Job.create({
+                "rule_id": rule.id,
+                "company_id": company.id,
+                "origin_model": "security.client.payment",
+                "origin_res_id": payment.id,
+                "event_type": "state_change",
+                "direction": "deployguard_to_odoo",
+            })
+            job._process()
         return res
 
 
@@ -270,47 +83,21 @@ class SecurityBillingCreditNote(models.Model):
     )
 
     def action_confirm(self):
-        super().action_confirm()
-        for cn in self:
-            if cn.invoice_id and cn.invoice_id.move_id and not cn.move_id:
-                orig_move = cn.invoice_id.move_id
-                refund_vals = {
-                    "move_type": "out_refund",
-                    "partner_id": cn.partner_id.id,
-                    "invoice_date": cn.date,
-                    "ref": f"Credit Note for {orig_move.name}: {cn.reason or ''}",
-                    "currency_id": cn.currency_id.id,
-                    "invoice_line_ids": [(0, 0, {
-                        "name": f"Credit Note: {cn.reason or 'Adjustment'}",
-                        "quantity": 1.0,
-                        "price_unit": cn.amount,
-                    })],
-                }
-                refund_move = self.env["account.move"].create(refund_vals)
-                if refund_move and cn.state in ("confirmed", "applied"):
-                    refund_move.action_post()
-                cn.move_id = refund_move.id
-
-    def action_apply(self):
-        super().action_apply()
-        for cn in self:
-            if not cn.move_id:
-                cn.action_confirm()
-            elif cn.move_id and cn.move_id.state == "draft":
-                cn.move_id.action_post()
-
-
-class AccountMove(models.Model):
-    _inherit = "account.move"
-
-    def write(self, vals):
-        res = super().write(vals)
-        if self.env.context.get("skip_auto_reconcile"):
+        res = super().action_confirm()
+        if self.env.context.get("reconciliation_origin") == "billing_account_invoice":
             return res
-
-        if "payment_state" in vals or "amount_residual" in vals:
-            custom_invoices = self.env["security.billing.invoice"].search([("move_id", "in", self.ids)])
-            if custom_invoices:
-                custom_invoices.with_context(skip_auto_reconcile=True).action_auto_reconcile()
+        Adapter = self.env["security.reconciliation.billing.adapter"]
+        Job = self.env["security.reconciliation.job"]
+        for cn in self:
+            company = cn.company_id if hasattr(cn, "company_id") and cn.company_id else self.env.company
+            rule = Adapter._get_or_create_rule(company)
+            job = Job.create({
+                "rule_id": rule.id,
+                "company_id": company.id,
+                "origin_model": "security.billing.credit.note",
+                "origin_res_id": cn.id,
+                "event_type": "state_change",
+                "direction": "deployguard_to_odoo",
+            })
+            job._process()
         return res
-

@@ -11,14 +11,19 @@ Coverage:
   - Missing checkout flag (>= 2 records)
 """
 
-from odoo.tests.common import TransactionCase
+from odoo.tests.common import TransactionCase, tagged
 
 
+@tagged('post_install', '-at_install')
 class TestAnomalyDetection(TransactionCase):
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+
+        cls.env.user.tz = "UTC"
+        if cls.env.company.partner_id:
+            cls.env.company.partner_id.tz = "UTC"
 
         # Rule set
         cls.rule_set = cls.env["security.payroll.rule.set"].search(

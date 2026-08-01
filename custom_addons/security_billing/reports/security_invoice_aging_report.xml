@@ -33,17 +33,18 @@
                             <t t-foreach="docs" t-as="inv">
                                 <t t-set="today" t-value="datetime.date.today()"/>
                                 <t t-set="days_overdue" t-value="(today - inv.due_date).days if inv.due_date else 0"/>
+                                <t t-set="amt" t-value="inv.balance_amount if hasattr(inv, 'balance_amount') else inv.total_amount"/>
                                 <tr>
                                     <td><t t-esc="inv.partner_id.name"/></td>
                                     <td><t t-esc="inv.name"/></td>
                                     <td><t t-esc="inv.invoice_date"/></td>
                                     <td><t t-esc="inv.due_date"/></td>
-                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount"/></td>
-                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if days_overdue &lt;= 0 else '0.00'"/></td>
-                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if 1 &lt;= days_overdue &lt;= 30 else '0.00'"/></td>
-                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if 31 &lt;= days_overdue &lt;= 60 else '0.00'"/></td>
-                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if 61 &lt;= days_overdue &lt;= 90 else '0.00'"/></td>
-                                    <td class="text-end"><t t-esc="'%.2f' % inv.total_amount if days_overdue &gt; 90 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % amt"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % amt if days_overdue &lt;= 0 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % amt if 1 &lt;= days_overdue &lt;= 30 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % amt if 31 &lt;= days_overdue &lt;= 60 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % amt if 61 &lt;= days_overdue &lt;= 90 else '0.00'"/></td>
+                                    <td class="text-end"><t t-esc="'%.2f' % amt if days_overdue &gt; 90 else '0.00'"/></td>
                                 </tr>
                             </t>
                         </tbody>

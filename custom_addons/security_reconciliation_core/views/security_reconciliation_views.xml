@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_reconciliation_rule_list" model="ir.ui.view">
+        <field name="name">security.reconciliation.rule.list</field>
+        <field name="model">security.reconciliation.rule</field>
+        <field name="arch" type="xml"><list><field name="sequence"/><field name="name"/><field name="adapter_code"/><field name="source_model"/><field name="target_model"/><field name="sync_mode"/><field name="active"/><field name="job_count"/><field name="conflict_count"/></list></field>
+    </record>
+    <record id="view_security_reconciliation_rule_form" model="ir.ui.view">
+        <field name="name">security.reconciliation.rule.form</field>
+        <field name="model">security.reconciliation.rule</field>
+        <field name="arch" type="xml"><form><sheet><div class="oe_title"><h1><field name="name"/></h1></div><group><group><field name="active"/><field name="company_id" groups="base.group_multi_company"/><field name="sequence"/><field name="adapter_code"/><field name="source_model"/><field name="target_model"/></group><group><field name="sync_direction"/><field name="sync_mode"/><field name="conflict_policy"/><field name="max_attempts"/><field name="retry_delay_minutes"/></group></group><group string="Adapter Handler"><field name="handler_model"/><field name="handler_method"/></group><field name="notes" placeholder="Scope, field authority, and operator notes..."/></sheet></form></field>
+    </record>
+    <record id="view_security_reconciliation_link_list" model="ir.ui.view">
+        <field name="name">security.reconciliation.link.list</field>
+        <field name="model">security.reconciliation.link</field>
+        <field name="arch" type="xml"><list><field name="adapter_code"/><field name="source_model"/><field name="source_res_id"/><field name="target_model"/><field name="target_res_id"/><field name="external_key"/><field name="state"/><field name="last_source_sync_at"/><field name="last_target_sync_at"/></list></field>
+    </record>
+    <record id="view_security_reconciliation_job_list" model="ir.ui.view">
+        <field name="name">security.reconciliation.job.list</field>
+        <field name="model">security.reconciliation.job</field>
+        <field name="arch" type="xml"><list decoration-danger="state == 'failed'" decoration-warning="state in ('retry', 'conflict')"><field name="name"/><field name="rule_id"/><field name="origin_model"/><field name="origin_res_id"/><field name="direction"/><field name="event_type"/><field name="state"/><field name="attempt_count"/><field name="next_attempt_at"/><field name="error_message"/></list></field>
+    </record>
+    <record id="view_security_reconciliation_job_form" model="ir.ui.view">
+        <field name="name">security.reconciliation.job.form</field>
+        <field name="model">security.reconciliation.job</field>
+        <field name="arch" type="xml"><form><header><button name="action_requeue" type="object" string="Requeue" class="btn-primary" invisible="state not in ('failed', 'retry', 'cancelled', 'conflict')"/><button name="action_cancel" type="object" string="Cancel" invisible="state not in ('pending', 'retry')"/><field name="state" widget="statusbar"/></header><sheet><group><group><field name="rule_id"/><field name="link_id"/><field name="origin_model"/><field name="origin_res_id"/><field name="direction"/><field name="event_type"/></group><group><field name="correlation_id" readonly="1"/><field name="attempt_count" readonly="1"/><field name="next_attempt_at"/><field name="started_at" readonly="1"/><field name="completed_at" readonly="1"/></group></group><group string="Failure"><field name="error_message" readonly="1"/></group><field name="payload_json" widget="json" readonly="1"/></sheet></form></field>
+    </record>
+    <record id="view_security_reconciliation_conflict_list" model="ir.ui.view">
+        <field name="name">security.reconciliation.conflict.list</field>
+        <field name="model">security.reconciliation.conflict</field>
+        <field name="arch" type="xml"><list decoration-danger="severity == 'financial'" decoration-warning="severity == 'blocking'"><field name="name"/><field name="rule_id"/><field name="severity"/><field name="state"/><field name="assigned_to_id"/><field name="create_date"/></list></field>
+    </record>
+    <record id="view_security_reconciliation_conflict_form" model="ir.ui.view">
+        <field name="name">security.reconciliation.conflict.form</field>
+        <field name="model">security.reconciliation.conflict</field>
+        <field name="arch" type="xml"><form><header><button name="action_assign_to_me" type="object" string="Assign to Me" invisible="state in ('resolved', 'dismissed')"/><button name="action_resolve" type="object" string="Resolve" class="btn-primary" invisible="state != 'assigned'"/><field name="state" widget="statusbar"/></header><sheet><group><group><field name="job_id"/><field name="link_id"/><field name="severity"/><field name="assigned_to_id"/></group><group><field name="resolution"/><field name="resolved_by_id" readonly="1"/><field name="resolved_at" readonly="1"/></group></group><field name="field_diffs_json" widget="json" readonly="1"/><field name="resolution_note" placeholder="Required resolution rationale..."/></sheet></form></field>
+    </record>
+    <record id="view_security_reconciliation_log_list" model="ir.ui.view">
+        <field name="name">security.reconciliation.log.list</field>
+        <field name="model">security.reconciliation.log</field>
+        <field name="arch" type="xml"><list><field name="create_date"/><field name="job_id"/><field name="rule_id"/><field name="result"/><field name="message"/></list></field>
+    </record>
+    <record id="action_security_reconciliation_rules" model="ir.actions.act_window"><field name="name">Sync Rules</field><field name="res_model">security.reconciliation.rule</field><field name="view_mode">list,form</field></record>
+    <record id="action_security_reconciliation_links" model="ir.actions.act_window"><field name="name">Record Links</field><field name="res_model">security.reconciliation.link</field><field name="view_mode">list,form</field></record>
+    <record id="action_security_reconciliation_jobs" model="ir.actions.act_window"><field name="name">Sync Jobs</field><field name="res_model">security.reconciliation.job</field><field name="view_mode">list,form</field></record>
+    <record id="action_security_reconciliation_conflicts" model="ir.actions.act_window"><field name="name">Conflicts</field><field name="res_model">security.reconciliation.conflict</field><field name="view_mode">list,form</field></record>
+    <record id="action_security_reconciliation_logs" model="ir.actions.act_window"><field name="name">Audit Log</field><field name="res_model">security.reconciliation.log</field><field name="view_mode">list</field></record>
+    <menuitem id="menu_security_reconciliation_root" name="Reconciliation" parent="security_base.menu_security_root" sequence="95" groups="base.group_system"/>
+    <menuitem id="menu_security_reconciliation_conflicts" name="Conflicts" parent="menu_security_reconciliation_root" action="action_security_reconciliation_conflicts" sequence="10"/>
+    <menuitem id="menu_security_reconciliation_jobs" name="Sync Jobs" parent="menu_security_reconciliation_root" action="action_security_reconciliation_jobs" sequence="20"/>
+    <menuitem id="menu_security_reconciliation_links" name="Record Links" parent="menu_security_reconciliation_root" action="action_security_reconciliation_links" sequence="30"/>
+    <menuitem id="menu_security_reconciliation_rules" name="Sync Rules" parent="menu_security_reconciliation_root" action="action_security_reconciliation_rules" sequence="40"/>
+    <menuitem id="menu_security_reconciliation_logs" name="Audit Log" parent="menu_security_reconciliation_root" action="action_security_reconciliation_logs" sequence="50"/>
+</odoo>

@@ -86,44 +86,53 @@ class SecurityWhatsAppBridge(models.AbstractModel):
         reply_msg = None
         execution_status = "success"
 
-        if intent == "owner_stats":
-            reply_msg = self.get_owner_stats_summary()
-        elif intent == "manager_stats":
-            reply_msg = self.get_manager_stats_summary()
-        elif intent == "status":
-            reply_msg = self.get_roster_status_summary_formatted()
-        elif intent in ("help", "greeting_help"):
-            reply_msg = self.get_help_menu()
-        elif intent == "guard_query":
-            reply_msg = self._handle_guard_query(clean_text)
-        elif intent == "incident_report":
-            reply_msg = self._handle_incident_report(clean_text, sender, sender_name)
-        elif intent == "bulk_site_attendance":
-            reply_msg = self._handle_bulk_site_attendance(clean_text)
-        elif intent == "lateness":
-            reply_msg = self._handle_guard_lateness(clean_text)
-        elif intent == "awol":
-            reply_msg = self._handle_guard_awol(clean_text)
-        elif intent == "unrelated_chitchat":
-            enable_ai = config.enable_ai_fallback if config else True
-            ignore_unrelated = config.ignore_unrelated_messages if config else True
+        try:
+            with self.env.cr.savepoint():
+                if intent == "owner_stats":
+                    reply_msg = self.get_owner_stats_summary()
+                elif intent == "manager_stats":
+                    reply_msg = self.get_manager_stats_summary()
+                elif intent == "status":
+                    reply_msg = self.get_roster_status_summary_formatted()
+                elif intent in ("help", "greeting_help"):
+                    reply_msg = self.get_help_menu()
+                elif intent == "guard_query":
+                    reply_msg = self._handle_guard_query(clean_text)
+                elif intent == "incident_report":
+                    reply_msg = self._handle_incident_report(clean_text, sender, sender_name)
+                elif intent == "bulk_site_attendance":
+                    reply_msg = self._handle_bulk_site_attendance(clean_text)
+                elif intent == "lateness":
+                    reply_msg = self._handle_guard_lateness(clean_text)
+                elif intent == "awol":
+                    reply_msg = self._handle_guard_awol(clean_text)
+                elif intent == "unrelated_chitchat":
+                    enable_ai = config.enable_ai_fallback if config else True
+                    ignore_unrelated = config.ignore_unrelated_messages if config else True
 
-            ai_reply = None
-            if enable_ai:
-                ai_reply = self._try_ai_engine_parse(clean_text, sender, sender_name, chat_history)
+                    ai_reply = None
+                    if enable_ai:
+                        ai_reply = self._try_ai_engine_parse(clean_text, sender, sender_name, chat_history)
 
-            if ai_reply:
-                reply_msg = ai_reply
-            elif ignore_unrelated:
-                # Log as ignored and return None (silent ignore, no spam)
-                execution_status = "ignored"
-                reply_msg = None
-            else:
-                reply_msg = (
-                    "ℹ️ *DogForce AI:* Unrecognized command.\n"
-                    "DogForce processes security, roster, guard, & incident commands.\n"
-                    "Type `HELP` for available commands."
-                )
+                    if ai_reply:
+                        reply_msg = ai_reply
+                    elif ignore_unrelated:
+                        # Log as ignored and return None (silent ignore, no spam)
+                        execution_status = "ignored"
+                        reply_msg = None
+                    else:
+                        reply_msg = (
+                            "ℹ️ *DogForce AI:* Unrecognized command.\n"
+                            "DogForce processes security, roster, guard, & incident commands.\n"
+                            "Type `HELP` for available commands."
+                        )
+        except Exception as exc:
+            _logger.exception("WhatsApp Bridge | Downstream intent execution failed: %s", exc)
+            execution_status = "error"
+            reply_msg = (
+                "⚠️ *DogForce AI:* An error occurred while processing your request. "
+                "Our engineering team has been notified."
+            )
 
         if reply_msg:
             self._log_message(
