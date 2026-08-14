@@ -20,6 +20,19 @@ let currentQr = null;
 let connectionStatus = 'disconnected'; // 'disconnected' | 'connecting' | 'connected'
 let retryCount = 0;
 
+// ── Pairing code (phone number linking) state ───────────────────────────────
+let currentPairingCode = null;
+let pairingCodeGeneratedAt = null;
+let pairingPhoneNumber = null;
+let pairingInFlight = false;
+let lastPairingRequestAt = 0;
+
+const PAIRING_CODE_TTL_SECONDS = 60; // WhatsApp expects the code entered within ~60s
+const PAIRING_COOLDOWN_MS = 30000; // Avoid hammering WhatsApp's servers and getting throttled
+const PAIRING_MAX_ATTEMPTS = 3;
+const PAIRING_RETRY_BASE_DELAY_MS = 1500;
+const PAIRING_SOCKET_READY_TIMEOUT_MS = 15000;
+
 // Ensure session directory exists
 if (!fs.existsSync(SESSION_DIR)) {
     fs.mkdirSync(SESSION_DIR, { recursive: true });
@@ -46,7 +59,9 @@ async function connectToWhatsApp() {
         sock = makeWASocket({
             version,
             auth: state,
-            printQRInTerminal: true,
+            // Must be false for pairing-code linking to work reliably (Baileys docs);
+            // our own /qr endpoint renders the QR independently from the raw `qr` string anyway.
+            printQRInTerminal: false,
             browser: ['DeployGuard', 'Chrome', '120.0.0'],
             logger: pino({ level: 'silent' }) // Silence noisy internal Baileys logging
         });
@@ -65,10 +80,13 @@ async function connectToWhatsApp() {
             if (connection === 'open') {
                 connectionStatus = 'connected';
                 currentQr = null;
+                currentPairingCode = null;
+                pairingCodeGeneratedAt = null;
+                pairingPhoneNumber = null;
                 retryCount = 0;
                 logger.info('WhatsApp connection successfully opened!');
             }
-            
+
             if (connection === 'close') {
                 currentQr = null;
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
@@ -90,6 +108,9 @@ async function connectToWhatsApp() {
                     setTimeout(connectToWhatsApp, delay);
                 } else {
                     logger.error('Logged out of WhatsApp. Clearing session store and restarting scanner...');
+                    currentPairingCode = null;
+                    pairingCodeGeneratedAt = null;
+                    pairingPhoneNumber = null;
                     try {
                         fs.rmSync(SESSION_DIR, { recursive: true, force: true });
                         fs.mkdirSync(SESSION_DIR, { recursive: true });
