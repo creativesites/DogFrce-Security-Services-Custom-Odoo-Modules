@@ -16,7 +16,7 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 
 ---
 
-## Demo server
+## Demo server (Zambia localisation only — OUT OF SCOPE for DogForce Namibia)
 
 | | |
 |---|---|
@@ -24,26 +24,37 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 | **SSH** | `ssh root@47.84.205.81` |
 | **Odoo admin password** | `admin123` |
 | **Database name** | `dogforce-demo` |
-| **DB host (Render PG)** | `dpg-d8hu5gtdt1ts73enc480-a.singapore-postgres.render.com` |
-| **DB user** | `odoo` |
-| **DB password** | `umDKFz8bHRvq7ZGy7nJlYznWoZq1ZW7l` |
 | **Docker container** | `dogforce-demo-odoo-1` |
+
+> ⚠️ This server holds Zambian localisation data only. **Never deploy Namibia modules here.**
+
+---
+
+## Production server
+
+| | |
+|---|---|
+| **Domain** | `https://dogforcesecurityservices.com` |
+| **IP** | `199.192.23.46` (12 GB RAM Namecheap VPS) |
+| **SSH** | `ssh root@199.192.23.46` (password: `4Li02oO6R5mCT6Uyhx`) |
+| **Odoo superadmin** | `admin` / `admin123` |
+| **Database** | `dogforce_prod` |
+| **DB user/pass** | `odoo` / `DogForce_Prod_Db_2026_SecurePass!` |
+| **Docker container** | `dogforce-prod-odoo` |
 | **Remote addons path** | `/opt/dogforce/custom_addons` |
 
-### Demo user accounts (Odoo)
+### Production user accounts (Odoo)
 
-All demo accounts use password **`Demo2026!`**
+> These are real production accounts — NOT demo accounts. Passwords are stable and will never be reset by any module upgrade.
 
 | Role | Display name | Login | Password | Access |
 |---|---|---|---|---|
-| System Admin (Owner) | Demo Admin | `demo.admin@dogforce.demo` | `Demo2026!` | Full platform — settings, payroll, billing, AI assistant |
-| Operations Manager | Demo Manager | `demo.manager@dogforce.demo` | `Demo2026!` | Rosters, attendance, leave approvals, client sites |
-| Field Operator (Supervisor) | Demo Operator | `demo.operator@dogforce.demo` | `Demo2026!` | Posting console, guard records, incidents, equipment |
-| Read-Only Viewer | Demo Viewer | `demo.viewer@dogforce.demo` | `Demo2026!` | View dashboards, reports, attendance — no edits |
+| Owner / Full Admin | Kuume | `kuume@dogforcesecurityservices.com` | `Df!K9#mP2@xQr7zN` | Full platform — owner dashboard, payroll, billing, AI, settings |
+| System Administrator | DogForce Administrator | `admin@dogforcesecurityservices.com` | `Df!A7#rJ3@xKp9wM` | Full platform — same as owner |
+| Operations Manager | Wilbert | `wilbert@dogforcesecurityservices.com` | `Df!W4#nB8@yLm2qT` | Rosters, attendance, leave approvals, client sites |
 | Odoo superadmin | — | `admin` | `admin123` | Full Odoo backend incl. technical menus |
 
-> Demo accounts are seeded by `custom_addons/security_demo_site/data/demo_accounts.xml`.
-> To reset a demo account password: `Settings → Users → [user] → Save` (Odoo re-hashes on save).
+> **Password reset policy**: Passwords are created directly in the database via `odoo shell`. No XML data file controls them, so **no deployment will ever reset them**. To change a password, use Settings → Users → [user] → Set Password in the Odoo UI.
 
 ### Mobile app role mapping
 
@@ -51,9 +62,10 @@ The mobile app maps Odoo users to roles by checking the login/name string:
 
 | Odoo account | Mobile role | App section |
 |---|---|---|
-| `demo.admin@dogforce.demo` | `owner` | Owner dashboard tabs |
-| `demo.manager@dogforce.demo` | `manager` | Manager dashboard tabs |
-| `demo.operator@dogforce.demo` | `supervisor` | Supervisor tabs |
+| `kuume@dogforcesecurityservices.com` | `owner` | Owner dashboard tabs |
+| `admin@dogforcesecurityservices.com` | `owner` | Owner dashboard tabs |
+| `wilbert@dogforcesecurityservices.com` | `manager` | Manager dashboard tabs |
+
 
 ---
 
