@@ -4,30 +4,16 @@ _logger = logging.getLogger(__name__)
 
 
 def post_init_hook(env):
-    """Point every user still on the old fullscreen Command Center action
-    (or with no home action at all) at the shell-wrapped Home dashboard.
+    """DeployGuard Shell installed successfully.
 
-    Users who deliberately picked a different home action keep it.
+    We deliberately do NOT redirect users to a specific home action here.
+    The shell is a transparent layout enhancement — it wraps every Odoo page
+    via template inheritance and the WebClient patch, so users land on whatever
+    home they already had and the rail + nav panel simply appear around it.
+
+    Setting action_id on every user would create a hard dependency: if this
+    module is ever uninstalled, every user gets a broken home screen because
+    the 'deployguard.main_command_center' tag would be unregistered.
     """
-    action = env.ref(
-        "security_base.action_deployguard_main_command_center",
-        raise_if_not_found=False,
-    )
-    if not action:
-        _logger.warning(
-            "DeployGuard Shell: home action xmlid not found, skipping post_init_hook."
-        )
-        return
+    _logger.info("DeployGuard Shell: installed. No user home actions modified.")
 
-    users = env["res.users"].search([
-        ("share", "=", False),
-        "|",
-        ("action_id", "=", False),
-        ("action_id", "=", action.id),
-    ])
-    if users:
-        users.write({"action_id": action.id})
-
-    default_user = env.ref("base.default_user", raise_if_not_found=False)
-    if default_user and not default_user.action_id:
-        default_user.sudo().write({"action_id": action.id})

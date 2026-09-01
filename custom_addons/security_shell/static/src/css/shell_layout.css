@@ -6,8 +6,12 @@
    they are today.
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* The single navbar-suppression rule allowed to use !important in shell_*.css. */
-.o_main_navbar { display: none !important; }
+/* The single navbar-suppression rule allowed to use !important in shell_*.css.
+   This is scoped to .dgs-shell-active (added to <body> by ShellRail on mount)
+   so that if the shell JS fails to initialise, the standard Odoo navbar remains
+   visible and the site never goes blank. */
+.dgs-shell-active .o_main_navbar { display: none !important; }
+
 
 .o_web_client {
     display: flex;

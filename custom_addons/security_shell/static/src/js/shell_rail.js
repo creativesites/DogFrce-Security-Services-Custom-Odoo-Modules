@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
 
@@ -23,6 +23,16 @@ export class ShellRail extends Component {
     setup() {
         this.shell = useService("deployguard_shell");
         this.action = useService("action");
+
+        onMounted(() => {
+            // Activate shell CSS (hides Odoo navbar, enables shell layout).
+            // Only fires after all component setup has succeeded.
+            document.body.classList.add("dgs-shell-active");
+        });
+
+        onWillUnmount(() => {
+            document.body.classList.remove("dgs-shell-active");
+        });
     }
 
     get railItems() {
