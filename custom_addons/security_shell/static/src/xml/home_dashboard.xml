@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shell.HomeDashboard" owl="1">
+  <div class="dgs-home">
+
+    <!-- Header strip -->
+    <div class="dgs-home-header">
+      <div class="dgs-home-search" t-on-click="onSearchFocus">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <span class="dgs-home-search-placeholder">Search anything...</span>
+        <span class="dgs-home-search-kbd">⌘ K</span>
+      </div>
+      <div class="dgs-home-header-actions">
+        <button class="dgs-home-icon-btn" t-on-click="onBellClick" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 8a6 6 0 1112 0c0 4 1.5 5.5 1.5 5.5H4.5S6 12 6 8z"/>
+            <path d="M10 19a2 2 0 004 0"/>
+          </svg>
+        </button>
+        <button class="dgs-home-avatar" t-on-click="onAvatarClick" title="My profile" aria-label="My profile">
+          <t t-esc="userInitials"/>
+        </button>
+      </div>
+    </div>
+
+    <!-- Title block -->
+    <div class="dgs-home-title-block">
+      <h1 class="dgs-home-title">Home</h1>
+      <div class="dgs-home-subline">
+        <span t-if="sitesCount !== undefined and sitesCount !== null">
+          Everything across <t t-esc="sitesCount"/> sites, one screen.
+        </span>
+        <span t-else="">Everything in one screen.</span>
+        <span class="dgs-home-date"> · <t t-esc="todayLabel"/></span>
+      </div>
+    </div>
+
+    <!-- Role toggle + period pills -->
+    <div class="dgs-home-controls">
+      <div class="dgs-home-pill-group" t-if="roles.isOwner">
+        <button t-attf-class="dgs-home-pill-dark {{ uiState.previewRole === 'owner' ? 'active' : '' }}"
+                t-on-click="() => this.setPreviewRole('owner')">Owner</button>
+        <button t-attf-class="dgs-home-pill-dark {{ uiState.previewRole === 'manager' ? 'active' : '' }}"
+                t-on-click="() => this.setPreviewRole('manager')">Manager</button>
+      </div>
+      <div class="dgs-home-pill-group light">
+        <button t-attf-class="dgs-home-pill-light {{ uiState.period === 'today' ? 'active' : '' }}"
+                t-on-click="() => this.setPeriod('today')">Today</button>
+        <button t-attf-class="dgs-home-pill-light {{ uiState.period === 'week' ? 'active' : '' }}"
+                t-on-click="() => this.setPeriod('week')">Week</button>
+        <button t-attf-class="dgs-home-pill-light {{ uiState.period === 'month' ? 'active' : '' }}"
+                t-on-click="() => this.setPeriod('month')">Month</button>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="dgs-home-quick-grid">
+      <t t-foreach="quickActions" t-as="item" t-key="item.key">
+        <div class="dgs-home-quick-tile" t-on-click="() => this.onQuickAction(item)">
+          <div class="dgs-home-quick-icon"><t t-esc="item.iconLetter"/></div>
+          <div class="dgs-home-quick-title"><t t-esc="item.label"/></div>
+          <div class="dgs-home-quick-subtitle"><t t-esc="item.subtitle"/></div>
+        </div>
+      </t>
+    </div>
+
+    <!-- Today -->
+    <h2 class="dgs-home-section-heading">Today</h2>
+    <div class="dgs-home-today-grid">
+
+      <div class="dgs-home-coverage-card" t-if="coverage">
+        <div class="dgs-coverage-headline">
+          <span class="dgs-coverage-percent dgs-mono"><t t-esc="coverage.percent"/>%</span>
+          <span class="dgs-coverage-sub">Posts filled this <t t-esc="uiState.period"/></span>
+          <span t-attf-class="dgs-coverage-status status-{{ coverage.status }}"><t t-esc="coverageStatusLabel"/></span>
+        </div>
+        <div class="dgs-coverage-bar">
+          <div class="dgs-coverage-bar-fill" t-attf-style="width: {{ coverage.percent }}%"/>
+          <div class="dgs-coverage-bar-marker" t-attf-style="left: {{ coverage.percent }}%"/>
+          <span class="dgs-coverage-bar-label">Posts filled</span>
+          <span class="dgs-coverage-bar-chip dgs-mono"><t t-esc="coverage.filled"/> / <t t-esc="coverage.required"/></span>
+        </div>
+        <div class="dgs-coverage-histogram-panel">
+          <div class="dgs-coverage-legend">
+            <span class="dgs-legend-dot gaps"/> Gaps
+            <span class="dgs-legend-dot at_risk"/> At risk
+            <span class="dgs-legend-dot covered"/> Covered
+          </div>
+          <div class="dgs-coverage-histogram">
+            <t t-foreach="histogramBars" t-as="bar" t-key="bar_index">
+              <div class="dgs-coverage-bar-cell" t-attf-style="height: {{ bar }}%"/>
+            </t>
+          </div>
+          <div class="dgs-coverage-axis">
+            <span>06:00</span><span>14:00</span><span>22:00</span>
+          </div>
+        </div>
+      </div>
+      <div class="dgs-home-coverage-card dgs-home-coverage-unavailable" t-else="">
+        <p>Coverage data isn't available on this database.</p>
+      </div>
+
+      <div class="dgs-home-attention-card">
+        <div class="dgs-attention-header">
+          <span>Needs attention</span>
+          <a href="#" t-on-click.prevent="onViewAllAttention" t-if="attentionRows.length">View all</a>
+        </div>
+        <t t-if="attentionRows.length">
+          <t t-foreach="attentionRows" t-as="row" t-key="row.key">
+            <div class="dgs-attention-row" t-on-click="() => this.onAttentionClick(row)">
+              <span class="dgs-attention-count dgs-mono"><t t-esc="row.count"/></span>
+              <span class="dgs-attention-label"><t t-esc="row.label"/></span>
+              <svg class="dgs-attention-chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 6l6 6-6 6"/>
+              </svg>
+            </div>
+          </t>
+        </t>
+        <div class="dgs-attention-all-clear" t-else="">All clear — nothing needs attention right now.</div>
+      </div>
+
+    </div>
+
+    <!-- Modules -->
+    <h2 class="dgs-home-section-heading">Modules</h2>
+    <t t-foreach="moduleFamilies" t-as="family" t-key="family.key">
+      <div class="dgs-home-family">
+        <div class="dgs-home-family-label"><t t-esc="family.label"/> <span class="dgs-mono"><t t-esc="family.leafCount"/></span></div>
+        <div class="dgs-home-module-grid">
+          <t t-foreach="family.tiles" t-as="tile" t-key="tile.key">
+            <div t-attf-class="dgs-home-module-tile {{ tile.soon || tile.missing ? 'disabled' : '' }}"
+                 t-on-click="() => this.onModuleTileClick(family, tile)">
+              <div class="dgs-home-module-initials dgs-mono"><t t-esc="tile.initials"/></div>
+              <div class="dgs-home-module-name"><t t-esc="tile.label"/></div>
+              <span class="dgs-home-module-chip soon" t-if="tile.soon">SOON</span>
+              <span class="dgs-home-module-chip count" t-elif="tile.count">
+                <t t-esc="tile.count"/>
+              </span>
+            </div>
+          </t>
+        </div>
+      </div>
+    </t>
+
+    <!-- Metrics -->
+    <h2 class="dgs-home-section-heading">Metrics</h2>
+    <div class="dgs-home-metrics-grid">
+      <t t-foreach="metrics" t-as="metric" t-key="metric.key">
+        <div class="dgs-home-metric-card">
+          <div class="dgs-metric-label"><t t-esc="metric.label"/></div>
+          <div class="dgs-metric-value dgs-mono">
+            <t t-if="metric.value !== null and metric.value !== undefined"><t t-esc="metric.value"/></t>
+            <t t-else="">—</t>
+          </div>
+          <div class="dgs-metric-meta" t-if="metric.meta"><t t-esc="metric.meta"/></div>
+        </div>
+      </t>
+    </div>
+
+  </div>
+</t>
+</templates>

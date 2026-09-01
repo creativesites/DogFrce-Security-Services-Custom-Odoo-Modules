@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shell.ShellNavPanel" owl="1">
+  <div class="dgs-nav-overlay-scrim" t-on-click="() => this.shell.setExpanded(false)"/>
+  <div class="dgs-nav-panel" role="navigation" aria-label="DeployGuard section navigation">
+
+    <div class="dgs-company-switcher" t-on-click="toggleCompanyMenu" tabindex="0">
+      <img class="dgs-company-logo" src="/security_theme/static/src/img/deployguard.png" alt=""/>
+      <div class="dgs-company-info">
+        <div class="dgs-company-name"><t t-esc="companyName"/></div>
+        <div class="dgs-company-meta" t-if="sitesCount !== undefined and sitesCount !== null">
+          <t t-esc="sitesCount"/> SITES
+        </div>
+      </div>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </div>
+
+    <div class="dgs-nav-heading-row">
+      <span class="dgs-nav-heading">Navigate</span>
+      <button class="dgs-nav-overflow" t-on-click="toggleFullMenu" title="Full menu — every screen, curated or not" aria-label="Full menu">···</button>
+    </div>
+
+    <input type="text"
+           class="dgs-nav-search"
+           placeholder="Search navigation..."
+           t-att-value="shell.state.searchQuery"
+           t-on-input="onSearchInput"/>
+
+    <div t-attf-class="dgs-nav-home-row {{ shell.state.isHome ? 'active' : '' }}"
+         t-on-click="onHomeClick">
+      <span>Home</span>
+      <span class="dgs-nav-home-tag">DEFAULT</span>
+    </div>
+
+    <div class="dgs-nav-tree">
+      <t t-foreach="catalog" t-as="group" t-key="group.key">
+        <div class="dgs-nav-row dgs-nav-row-0" t-on-click="() => this.toggleGroup(group)">
+          <svg class="dgs-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path t-if="isGroupOpen(group)" d="M6 9l6 6 6-6"/>
+            <path t-else="" d="M9 6l6 6-6 6"/>
+          </svg>
+          <span class="dgs-nav-label"><t t-esc="group.label"/></span>
+          <span class="dgs-nav-count"><t t-esc="group.leafCount"/></span>
+        </div>
+
+        <t t-if="isGroupOpen(group)">
+          <t t-foreach="group.children" t-as="subgroup" t-key="subgroup.key">
+            <div class="dgs-nav-row dgs-nav-row-1" t-on-click="() => this.toggleGroup(subgroup)">
+              <svg class="dgs-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path t-if="isGroupOpen(subgroup)" d="M6 9l6 6 6-6"/>
+                <path t-else="" d="M9 6l6 6-6 6"/>
+              </svg>
+              <span class="dgs-nav-label"><t t-esc="subgroup.label"/></span>
+              <span class="dgs-nav-count"><t t-esc="subgroup.children.length"/></span>
+            </div>
+
+            <t t-if="isGroupOpen(subgroup)">
+              <t t-foreach="subgroup.children" t-as="leaf" t-key="leaf.key">
+                <div t-attf-class="dgs-nav-row dgs-nav-row-2 {{ leaf.soon ? 'dgs-nav-row-soon' : '' }} {{ isMissing(leaf) ? 'dgs-nav-row-missing' : '' }} {{ shell.state.activeLeafKey === leaf.key ? 'active' : '' }}"
+                     t-on-click="() => this.onLeafClick(leaf)"
+                     t-att-title="leaf.soon ? leaf.label + ' — coming soon' : (isMissing(leaf) ? leaf.label + ' — not installed' : leaf.label)">
+                  <span class="dgs-nav-label"><t t-esc="leaf.label"/></span>
+                  <span class="dgs-nav-chip" t-if="leaf.soon">SOON</span>
+                  <span class="dgs-nav-chip" t-elif="isMissing(leaf)">NOT INSTALLED</span>
+                  <span class="dgs-nav-count" t-elif="leafCount(leaf) !== null"><t t-esc="leafCount(leaf)"/></span>
+                </div>
+              </t>
+            </t>
+          </t>
+        </t>
+      </t>
+    </div>
+
+    <div class="dgs-nav-scrim" t-if="uiState.companyMenuOpen" t-on-click="toggleCompanyMenu"/>
+    <div class="dgs-company-menu" t-if="uiState.companyMenuOpen">
+      <t t-foreach="availableCompanies" t-as="comp" t-key="comp.id">
+        <div class="dgs-company-menu-item" t-on-click="() => this.selectCompany(comp.id)">
+          <t t-esc="comp.name"/>
+        </div>
+      </t>
+    </div>
+
+  </div>
+
+  <!-- Full menu — every menu item the user's groups grant, exactly as the
+       classic navbar exposed it. The curated tree above is a priority
+       subset; this is the completeness guarantee (never lose a screen). -->
+  <div class="dgs-fullmenu-scrim" t-if="uiState.fullMenuOpen" t-on-click="toggleFullMenu"/>
+  <div class="dgs-fullmenu-panel" t-if="uiState.fullMenuOpen" role="dialog" aria-label="Full menu">
+    <div class="dgs-fullmenu-header">
+      <span class="dgs-fullmenu-title">Full menu</span>
+      <button class="dgs-fullmenu-close" t-on-click="toggleFullMenu" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <input type="text"
+           class="dgs-nav-search"
+           placeholder="Search every screen..."
+           t-att-value="uiState.fullMenuQuery"
+           t-on-input="onFullMenuSearch"/>
+    <div class="dgs-fullmenu-list">
+      <t t-if="!fullMenuGroups.length">
+        <div class="dgs-fullmenu-empty">No matches</div>
+      </t>
+      <t t-foreach="fullMenuGroups" t-as="appGroup" t-key="appGroup.key">
+        <div class="dgs-fullmenu-app-label"><t t-esc="appGroup.label"/></div>
+        <t t-foreach="appGroup.items" t-as="item" t-key="item.id">
+          <div class="dgs-fullmenu-item" t-on-click="() => this.onFullMenuItemClick(item)">
+            <t t-esc="item.name"/>
+          </div>
+        </t>
+      </t>
+    </div>
+  </div>
+</t>
+</templates>

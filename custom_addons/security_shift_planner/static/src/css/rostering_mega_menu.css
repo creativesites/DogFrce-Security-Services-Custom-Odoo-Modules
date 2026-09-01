@@ -2,11 +2,15 @@
    DEPLOYGUARD ROSTERING COMMAND CENTER — PREMIUM LIGHT THEME STYLING
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Fullscreen Overlay Backdrop */
+/* Overlay backdrop — scoped to the DeployGuard shell canvas (.o_action_manager,
+   the nearest positioned ancestor) rather than the viewport, so the shell's
+   rail + nav panel stay visible instead of being covered by this modal.
+   Shared by security_fleet, security_equipment, security_operations and
+   security_base's mega-menu components — see rmm-* class reuse there. */
 .rmm-overlay {
-    position: fixed;
+    position: absolute;
     inset: 0;
-    z-index: 10050;
+    z-index: 500;
     background: rgba(15, 23, 42, 0.45);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);

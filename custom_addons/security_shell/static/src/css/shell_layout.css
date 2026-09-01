@@ -1,0 +1,688 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DeployGuard Shell — global chrome
+   Rail (76px) + nav panel (300px, collapsible) + canvas (o_action_manager).
+   The shell owns the viewport; only the canvas scrolls. .o_control_panel is
+   left untouched — breadcrumbs, view switcher and search stay exactly as
+   they are today.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* The single navbar-suppression rule allowed to use !important in shell_*.css. */
+.o_main_navbar { display: none !important; }
+
+.o_web_client {
+    display: flex;
+    align-items: stretch;
+    position: fixed;
+    inset: 0;
+    padding: 12px;
+    gap: 12px;
+    background: var(--dgs-desk);
+    overflow: hidden;
+}
+
+html, body {
+    overflow: hidden;
+}
+
+.o_action_manager {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--dgs-r-shell);
+    background: var(--dgs-canvas);
+    overflow: auto;
+    position: relative;
+}
+
+/* ── Rail ──────────────────────────────────────────────────────────────── */
+
+.dgs-rail {
+    flex: 0 0 76px;
+    width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+    background: var(--dgs-rail);
+    border-radius: var(--dgs-r-shell);
+    font-family: var(--dgs-font);
+}
+
+.dgs-rail-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex: 0 0 auto;
+}
+
+.dgs-rail-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.dgs-rail-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--dgs-rail-icon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background .15s;
+}
+
+.dgs-rail-toggle:hover,
+.dgs-rail-toggle:focus-visible {
+    background: var(--dgs-rail-hover);
+    outline: none;
+}
+
+.dgs-rail-divider {
+    width: 28px;
+    height: 1px;
+    background: var(--dgs-rail-divider);
+    flex: 0 0 auto;
+}
+
+.dgs-rail-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.dgs-rail-sections::-webkit-scrollbar { display: none; }
+
+.dgs-rail-item {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: none;
+    background: transparent;
+    color: var(--dgs-rail-icon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background .15s, color .15s;
+}
+
+.dgs-rail-item svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 1.9;
+}
+
+.dgs-rail-item:hover,
+.dgs-rail-item:focus-visible {
+    background: var(--dgs-rail-hover);
+    outline: none;
+}
+
+.dgs-rail-item.active {
+    background: var(--dgs-rail-active);
+    color: #101724;
+}
+
+.dgs-rail-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.dgs-rail-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #2A3446;
+    color: #E7EAF0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--dgs-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    flex: 0 0 auto;
+}
+
+/* ── Nav panel ─────────────────────────────────────────────────────────── */
+
+.dgs-nav-panel {
+    flex: 0 0 300px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-shell);
+    padding: 16px 14px;
+    overflow: hidden;
+    font-family: var(--dgs-font);
+    position: relative;
+}
+
+.dgs-company-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-control);
+    cursor: pointer;
+    transition: background .15s;
+    flex: 0 0 auto;
+}
+
+.dgs-company-switcher:hover { background: #F6F8FB; }
+
+.dgs-company-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.dgs-company-info { min-width: 0; flex: 1 1 auto; }
+
+.dgs-company-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ds-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-company-meta {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    letter-spacing: .3px;
+    color: var(--ds-text-subtle);
+}
+
+.dgs-nav-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 4px 8px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-heading {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--ds-text);
+}
+
+.dgs-nav-overflow {
+    color: var(--ds-text-subtle);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+}
+
+.dgs-nav-search {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 0 0 10px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-control);
+    background: var(--dgs-canvas);
+    color: var(--ds-text-2);
+    font-size: 13px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-search:focus {
+    outline: none;
+    border-color: var(--ds-accent-mid);
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, .08);
+}
+
+.dgs-nav-home-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border-radius: 11px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    background: transparent;
+    color: var(--ds-text);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.dgs-nav-home-row.active {
+    background: var(--dgs-rail);
+    color: #FFFFFF;
+}
+
+.dgs-nav-home-tag {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    opacity: .7;
+}
+
+.dgs-nav-tree {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dgs-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 11px;
+    cursor: pointer;
+    color: var(--ds-text-2);
+    transition: background .12s;
+}
+
+.dgs-nav-row:hover { background: #F4F6FA; }
+
+.dgs-nav-row.dgs-nav-row-missing,
+.dgs-nav-row.dgs-nav-row-soon {
+    cursor: default;
+}
+
+.dgs-nav-row.dgs-nav-row-missing:hover,
+.dgs-nav-row.dgs-nav-row-soon:hover {
+    background: transparent;
+}
+
+.dgs-nav-chevron {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+    color: var(--ds-text-subtle);
+}
+
+.dgs-nav-row-0 { padding-left: 12px; }
+.dgs-nav-row-0 .dgs-nav-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #101724;
+}
+
+.dgs-nav-row-1 { padding-left: 34px; }
+.dgs-nav-row-1 .dgs-nav-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ds-text-subtle);
+}
+
+.dgs-nav-row-2 { padding-left: 48px; }
+.dgs-nav-row-2 .dgs-nav-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+}
+
+.dgs-nav-row-2.dgs-nav-row-soon .dgs-nav-label,
+.dgs-nav-row-2.dgs-nav-row-missing .dgs-nav-label {
+    opacity: .6;
+}
+
+.dgs-nav-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-nav-count {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    background: var(--ds-slate);
+    color: var(--ds-text-muted);
+    border-radius: 9px;
+    padding: 2px 7px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-chip {
+    font-family: var(--dgs-mono);
+    font-size: 9px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
+    background: var(--ds-slate);
+    border-radius: 8px;
+    padding: 2px 6px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-row-2.active .dgs-nav-label {
+    color: var(--ds-accent);
+    font-weight: 700;
+}
+
+.dgs-company-menu {
+    position: absolute;
+    top: 66px;
+    left: 14px;
+    right: 14px;
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-control);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 6px;
+    z-index: 1051;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.dgs-company-menu-item {
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-company-menu-item:hover { background: var(--dgs-canvas); }
+
+/* ── Overlay scrim (nav panel < 1280px, see Responsive below) ───────────── */
+
+.dgs-nav-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 23, 36, .35);
+    z-index: 1049;
+}
+
+.dgs-nav-overlay-scrim {
+    display: none;
+}
+
+/* ── Full menu (··· — completeness fallback) ──────────────────────────── */
+
+.dgs-fullmenu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1060;
+    background: rgba(16, 23, 36, .35);
+}
+
+.dgs-fullmenu-panel {
+    position: fixed;
+    top: 12px;
+    bottom: 12px;
+    left: 100px;
+    width: 320px;
+    z-index: 1061;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-shell);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--dgs-font);
+}
+
+.dgs-fullmenu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dgs-fullmenu-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ds-text);
+}
+
+.dgs-fullmenu-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: var(--dgs-canvas);
+    color: var(--ds-text-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.dgs-fullmenu-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.dgs-fullmenu-app-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 12px 8px 4px;
+}
+
+.dgs-fullmenu-app-label:first-child { padding-top: 4px; }
+
+.dgs-fullmenu-item {
+    padding: 8px 8px;
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-fullmenu-item:hover { background: var(--dgs-canvas); }
+
+.dgs-fullmenu-empty {
+    padding: 24px 8px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+}
+
+@media (max-width: 900px) {
+    .dgs-fullmenu-panel {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: auto;
+        border-radius: 0;
+    }
+}
+
+/* ── Command palette (⌘/Ctrl+K) ───────────────────────────────────────── */
+
+.dgs-palette-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(16, 23, 36, .45);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 12vh;
+}
+
+.dgs-palette-box {
+    width: 100%;
+    max-width: 560px;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-card);
+    box-shadow: var(--dgs-lift-hover);
+    overflow: hidden;
+    font-family: var(--dgs-font);
+}
+
+.dgs-palette-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--ds-border-light);
+    color: var(--ds-text-subtle);
+}
+
+.dgs-palette-search input {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: var(--ds-text);
+    background: transparent;
+}
+
+.dgs-palette-kbd {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    color: var(--ds-text-subtle);
+    background: var(--dgs-canvas);
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+.dgs-palette-results {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.dgs-palette-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.dgs-palette-row:hover { background: var(--dgs-canvas); }
+
+.dgs-palette-row-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ds-text);
+}
+
+.dgs-palette-row-path {
+    font-size: 11.5px;
+    color: var(--ds-text-subtle);
+    white-space: nowrap;
+}
+
+.dgs-palette-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 1280px) {
+    /* Below 1280px the nav panel always renders as a floating sheet with a
+       scrim, never inline in the flex row. */
+    .dgs-nav-panel {
+        position: fixed;
+        top: 12px;
+        bottom: 12px;
+        left: 100px;
+        z-index: 1050;
+        box-shadow: var(--dgs-lift-hover);
+    }
+
+    .dgs-nav-overlay-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(16, 23, 36, .35);
+        z-index: 1049;
+    }
+}
+
+@media (max-width: 900px) {
+    .o_web_client {
+        flex-direction: column;
+        padding: 0;
+        gap: 0;
+    }
+
+    .dgs-rail {
+        flex: 0 0 56px;
+        width: 100%;
+        height: 56px;
+        order: 3;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        border-radius: 0;
+        padding: 0 6px;
+    }
+
+    .dgs-rail-logo,
+    .dgs-rail-toggle,
+    .dgs-rail-divider,
+    .dgs-rail-bottom .dgs-rail-item:not(.dgs-rail-mobile-item) {
+        display: none;
+    }
+
+    .dgs-rail-sections {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 4px;
+    }
+
+    .dgs-rail-item {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+    }
+
+    .dgs-rail-bottom {
+        margin-top: 0;
+        flex-direction: row;
+    }
+
+    .o_action_manager {
+        border-radius: 0;
+        order: 1;
+    }
+
+    .dgs-nav-panel {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 0;
+    }
+}
