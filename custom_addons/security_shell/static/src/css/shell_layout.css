@@ -6,15 +6,25 @@
    they are today.
 ═══════════════════════════════════════════════════════════════════════════ */
 
-/* The single navbar-suppression rule allowed to use !important in shell_*.css.
-   This is scoped to .dgs-shell-active (added to <body> by ShellRail on mount)
-   so that if the shell JS fails to initialise, the standard Odoo navbar remains
-   visible and the site never goes blank. */
+/* The navbar-suppression rules allowed to use !important in shell_*.css.
+   Scoped to .dgs-shell-active (added to <body> by ShellRail on mount) so
+   that if the shell JS fails to initialise, the standard Odoo navbar remains
+   visible and the site never goes blank.
+   Odoo 19 wraps the actual navbar (.o_main_navbar) in an outer <header
+   class="o_navbar">; hiding only the inner nav leaves the header as a live
+   flex item in the shell's row layout, still taking space and intercepting
+   clicks/scroll — both must be hidden. */
 .dgs-shell-active .o_main_navbar { display: none !important; }
+.dgs-shell-active header.o_navbar { display: none !important; }
 
 
-.o_web_client {
+/* html .o_web_client (core webclient_layout.scss, via @extend on the `html`
+   selector) sets flex-flow: column nowrap at specificity (0,0,1,1). A bare
+   .o_web_client rule here can't win a cascade tie against that regardless of
+   load order, so this selector adds `body` to match/exceed it. */
+html body.o_web_client {
     display: flex;
+    flex-direction: row;
     align-items: stretch;
     position: fixed;
     inset: 0;
@@ -28,7 +38,13 @@ html, body {
     overflow: hidden;
 }
 
-.o_action_manager {
+/* Same specificity issue as html body.o_web_client above, but worse: core's
+   actual compiled selector here is `html .o_web_client > .o_action_manager`
+   (2 classes + 1 type = higher specificity than a plain `html body
+   .o_action_manager`, since CSS compares class-count before type-count).
+   We want the canvas itself to scroll (our dashboard doesn't follow core's
+   nested .o_action > .o_content scroll structure), so match 2 classes. */
+html body.o_web_client .o_action_manager {
     flex: 1 1 auto;
     min-width: 0;
     display: flex;

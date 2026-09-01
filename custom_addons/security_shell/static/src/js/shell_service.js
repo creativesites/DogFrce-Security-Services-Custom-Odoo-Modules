@@ -113,11 +113,17 @@ export const shellService = {
             }
         }
 
-        function isResolved(xmlid) {
+        // `st` defaults to this service's own (untracked) reactive state, but
+        // callers should pass their own useState()-wrapped `this.shell.state`
+        // so the read registers as a dependency of THEIR render — Owl's
+        // reactive tracking is per-proxy-instance, not per-target, so a read
+        // through this closure's own `state` never triggers a caller's
+        // re-render no matter how the underlying value changes.
+        function isResolved(xmlid, st = state) {
             if (!xmlid) {
                 return false;
             }
-            return !!state.resolvedActions[xmlid];
+            return !!st.resolvedActions[xmlid];
         }
 
         async function loadPayload(period = "today") {
@@ -135,10 +141,12 @@ export const shellService = {
         }
 
         /** Role- and search-filtered nav tree. Filtering happens here, never
-         * in the template (HANDOFF §5.4). */
-        function getVisibleCatalog() {
-            const query = (state.searchQuery || "").trim().toLowerCase();
-            const isOwner = state.roles.isOwner;
+         * in the template (HANDOFF §5.4). `st` should be the caller's own
+         * useState()-wrapped state (see isResolved above) so this read
+         * registers as a dependency of the caller's own render. */
+        function getVisibleCatalog(st = state) {
+            const query = (st.searchQuery || "").trim().toLowerCase();
+            const isOwner = st.roles.isOwner;
 
             const filterLeaf = (leaf) => {
                 if (leaf.owner && !isOwner) {

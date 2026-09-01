@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { onMounted, onWillUnmount } from "@odoo/owl";
+import { onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { patch } from "@web/core/utils/patch";
 import { useService } from "@web/core/utils/hooks";
 import { WebClient } from "@web/webclient/webclient";
@@ -11,7 +11,15 @@ import { ShellCommandPalette } from "./shell_command_palette";
 patch(WebClient.prototype, {
     setup() {
         super.setup();
-        this.shell = useService("deployguard_shell");
+        const shellService = useService("deployguard_shell");
+        // shellService's reactive state has no callback of its own. Owl's
+        // reactive tracking is per-proxy-instance, not per-target — reads
+        // must go through a proxy that was itself created with useState(),
+        // or no render ever gets subscribed. Without this, WebClient's own
+        // template (t-if="shell.state.expanded" / "shell.state.paletteOpen",
+        // inserted via t-inherit) never re-renders when those flags change,
+        // even though the state itself mutates fine.
+        this.shell = { ...shellService, state: useState(shellService.state) };
         this.shellActionService = useService("action");
 
         this._onShellKeyDown = this._onShellKeyDown.bind(this);

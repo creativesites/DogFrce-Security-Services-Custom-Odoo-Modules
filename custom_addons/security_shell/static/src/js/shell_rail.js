@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
 
@@ -21,7 +21,15 @@ export class ShellRail extends Component {
     static props = { "*": true };
 
     setup() {
-        this.shell = useService("deployguard_shell");
+        const shellService = useService("deployguard_shell");
+        // shellService's reactive state has no callback of its own (it's a
+        // shared singleton, not owned by any one component). Owl's reactive
+        // tracking is per-proxy-instance, not per-target — reads must go
+        // through a proxy that was itself created with useState(), or no
+        // render ever gets subscribed. Wrapping .state locally (methods are
+        // plain closures over the shared raw state, so they still mutate it
+        // correctly) is what actually wires this component's re-render.
+        this.shell = { ...shellService, state: useState(shellService.state) };
         this.action = useService("action");
 
         onMounted(() => {

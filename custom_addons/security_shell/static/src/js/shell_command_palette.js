@@ -9,7 +9,8 @@ export class ShellCommandPalette extends Component {
     static props = { "*": true };
 
     setup() {
-        this.shell = useService("deployguard_shell");
+        const shellService = useService("deployguard_shell");
+        this.shell = { ...shellService, state: useState(shellService.state) };
         this.action = useService("action");
         this.uiState = useState({ query: "" });
         this.inputRef = useRef("paletteInput");
@@ -35,7 +36,7 @@ export class ShellCommandPalette extends Component {
                     if (leaf.owner && !isOwner) {
                         continue;
                     }
-                    if (!this.shell.isResolved(leaf.action)) {
+                    if (!this.shell.isResolved(leaf.action, this.shell.state)) {
                         continue;
                     }
                     const haystack = `${group.label} ${subgroup.label} ${leaf.label}`.toLowerCase();

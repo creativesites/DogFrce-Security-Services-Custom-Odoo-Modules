@@ -33,7 +33,8 @@ export class HomeDashboard extends Component {
     static props = { "*": true };
 
     setup() {
-        this.shell = useService("deployguard_shell");
+        const shellService = useService("deployguard_shell");
+        this.shell = { ...shellService, state: useState(shellService.state) };
         this.action = useService("action");
 
         this.uiState = useState({
@@ -169,7 +170,7 @@ export class HomeDashboard extends Component {
     }
 
     get moduleFamilies() {
-        const catalog = this.shell.getVisibleCatalog();
+        const catalog = this.shell.getVisibleCatalog(this.shell.state);
         return catalog.map((group) => ({
             key: group.key,
             label: group.label,
@@ -185,7 +186,7 @@ export class HomeDashboard extends Component {
                     .map((w) => w[0].toUpperCase())
                     .join(""),
                 count: leaf.countKey ? this.payload?.nav_counts?.[leaf.countKey] : null,
-                missing: !leaf.soon && (!leaf.action || !this.shell.isResolved(leaf.action)),
+                missing: !leaf.soon && (!leaf.action || !this.shell.isResolved(leaf.action, this.shell.state)),
             })),
         }));
     }

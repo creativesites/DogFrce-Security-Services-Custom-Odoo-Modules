@@ -9,7 +9,16 @@ export class ShellNavPanel extends Component {
     static props = { "*": true };
 
     setup() {
-        this.shell = useService("deployguard_shell");
+        const shellService = useService("deployguard_shell");
+        // shellService's reactive state has no callback of its own (it's a
+        // shared singleton, not owned by any one component). Owl's reactive
+        // tracking is per-proxy-instance, not per-target — reads must go
+        // through a proxy that was itself created with useState(), or no
+        // render ever gets subscribed. Wrapping .state locally (methods are
+        // plain closures over the shared raw state, so they still mutate it
+        // correctly) is what actually wires this component's re-render for
+        // group toggles, search, resolved actions, and payload updates.
+        this.shell = { ...shellService, state: useState(shellService.state) };
         this.action = useService("action");
         this.menuService = useService("menu");
         let company = null;
@@ -23,7 +32,7 @@ export class ShellNavPanel extends Component {
     }
 
     get catalog() {
-        return this.shell.getVisibleCatalog();
+        return this.shell.getVisibleCatalog(this.shell.state);
     }
 
     get companyName() {
@@ -65,7 +74,12 @@ export class ShellNavPanel extends Component {
     }
 
     isGroupOpen(group) {
-        return this.shell.isGroupOpen(group.key);
+        // Read through this.shell.state (this component's own useState-
+        // wrapped proxy) rather than delegating to shellService's
+        // isGroupOpen(), which reads via a different, untracked reactive
+        // proxy closed over inside the service — that read wouldn't
+        // register as a dependency of THIS component's render.
+        return !!this.shell.state.openGroups[group.key];
     }
 
     toggleGroup(group) {
@@ -97,7 +111,7 @@ export class ShellNavPanel extends Component {
         if (this.shell.state.resolving) {
             return false;
         }
-        return !this.shell.isResolved(leaf.action);
+        return !this.shell.isResolved(leaf.action, this.shell.state);
     }
 
     onLeafClick(leaf) {
