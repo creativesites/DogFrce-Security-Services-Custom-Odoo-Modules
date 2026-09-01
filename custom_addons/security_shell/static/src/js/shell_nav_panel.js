@@ -11,6 +11,7 @@ export class ShellNavPanel extends Component {
     setup() {
         this.shell = useService("deployguard_shell");
         this.action = useService("action");
+        this.menuService = useService("menu");
         let company = null;
         try {
             company = useService("company");
@@ -18,7 +19,7 @@ export class ShellNavPanel extends Component {
             company = null;
         }
         this.company = company;
-        this.uiState = useState({ companyMenuOpen: false });
+        this.uiState = useState({ companyMenuOpen: false, fullMenuOpen: false, fullMenuQuery: "" });
     }
 
     get catalog() {
@@ -106,5 +107,56 @@ export class ShellNavPanel extends Component {
         this.action.doAction(leaf.action, { clearBreadcrumbs: true }).catch((e) => {
             console.error("DeployGuard Shell: failed to open", leaf.action, e);
         });
+    }
+
+    /** Completeness guarantee: the curated tree is a deliberate subset
+     * (HANDOFF §5.5). "Full menu" falls back to Odoo's own menu service —
+     * every menu item the user's groups grant them, exactly as before the
+     * shell existed — so nothing is ever unreachable, curated or not. */
+    toggleFullMenu() {
+        this.uiState.fullMenuOpen = !this.uiState.fullMenuOpen;
+        this.uiState.fullMenuQuery = "";
+    }
+
+    onFullMenuSearch(ev) {
+        this.uiState.fullMenuQuery = ev.target.value;
+    }
+
+    get fullMenuGroups() {
+        let allMenus = [];
+        try {
+            allMenus = this.menuService.getAll() || [];
+        } catch (e) {
+            console.warn("DeployGuard Shell: menu service unavailable for full menu", e);
+            return [];
+        }
+        const query = (this.uiState.fullMenuQuery || "").trim().toLowerCase();
+        const byId = new Map(allMenus.map((m) => [m.id, m]));
+        const apps = new Map();
+
+        for (const item of allMenus) {
+            const hasAction = item.actionID || (item.action && item.action !== "");
+            if (!hasAction || item.id === "root") {
+                continue;
+            }
+            if (query && !item.name.toLowerCase().includes(query)) {
+                continue;
+            }
+            const app = byId.get(item.appID) || item;
+            const appLabel = app.name || "Other";
+            if (!apps.has(item.appID)) {
+                apps.set(item.appID, { key: item.appID, label: appLabel, items: [] });
+            }
+            apps.get(item.appID).items.push(item);
+        }
+
+        return [...apps.values()]
+            .filter((g) => g.items.length)
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    onFullMenuItemClick(item) {
+        this.menuService.selectMenu(item);
+        this.uiState.fullMenuOpen = false;
     }
 }

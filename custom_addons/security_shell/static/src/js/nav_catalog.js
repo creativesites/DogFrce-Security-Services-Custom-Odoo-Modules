@@ -29,6 +29,7 @@ export const NAV_CATALOG = [
                     { key: "site_hub", label: "Interactive Site Hub", action: "security_operations.action_security_site_hub" },
                     { key: "incidents", label: "Incidents", action: "security_discipline.action_security_incident", countKey: "incidents" },
                     { key: "whatsapp_control_room", label: "WhatsApp Control Room", action: "security_ai_whatsapp_bridge.action_whatsapp_chat_workspace_client" },
+                    { key: "whatsapp_dashboard", label: "WhatsApp Dashboard", action: "security_ai_whatsapp_bridge.action_whatsapp_dashboard_client" },
                 ],
             },
             {
@@ -244,6 +245,8 @@ export const NAV_CATALOG = [
                 children: [
                     { key: "notifications", label: "Notifications", action: "security_notifications.action_security_notifications" },
                     { key: "ai_assistant", label: "AI assistant", action: "security_ai_engine.action_security_ai_chat_session" },
+                    { key: "whatsapp_settings", label: "WhatsApp settings", action: "security_ai_whatsapp_bridge.action_security_whatsapp_config_server" },
+                    { key: "help_centre", label: "Help Centre", action: "security_help.action_help_portal" },
                     { key: "product_tour", label: "Product tour", action: "security_tour.action_security_tour_definition" },
                     { key: "licensing", label: "Licensing", action: "security_licensing.action_security_license", owner: true },
                     { key: "backup_offsite_sync", label: "Backup & offsite sync", action: "security_backup_vault.action_security_backup_record", owner: true },

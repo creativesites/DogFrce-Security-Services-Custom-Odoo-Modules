@@ -424,6 +424,102 @@ html, body {
     display: none;
 }
 
+/* ── Full menu (··· — completeness fallback) ──────────────────────────── */
+
+.dgs-fullmenu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1060;
+    background: rgba(16, 23, 36, .35);
+}
+
+.dgs-fullmenu-panel {
+    position: fixed;
+    top: 12px;
+    bottom: 12px;
+    left: 100px;
+    width: 320px;
+    z-index: 1061;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-shell);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--dgs-font);
+}
+
+.dgs-fullmenu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dgs-fullmenu-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ds-text);
+}
+
+.dgs-fullmenu-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: var(--dgs-canvas);
+    color: var(--ds-text-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.dgs-fullmenu-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.dgs-fullmenu-app-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 12px 8px 4px;
+}
+
+.dgs-fullmenu-app-label:first-child { padding-top: 4px; }
+
+.dgs-fullmenu-item {
+    padding: 8px 8px;
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-fullmenu-item:hover { background: var(--dgs-canvas); }
+
+.dgs-fullmenu-empty {
+    padding: 24px 8px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+}
+
+@media (max-width: 900px) {
+    .dgs-fullmenu-panel {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: auto;
+        border-radius: 0;
+    }
+}
+
 /* ── Command palette (⌘/Ctrl+K) ───────────────────────────────────────── */
 
 .dgs-palette-overlay {
