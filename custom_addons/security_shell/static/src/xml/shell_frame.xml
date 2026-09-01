@@ -8,14 +8,14 @@
      search) lives inside .o_action_manager and is untouched.
      ═══════════════════════════════════════════════════════════════════════ -->
 <t t-inherit="web.WebClient" t-inherit-mode="extension">
-  <xpath expr="//div[hasclass('o_action_manager')]" position="before">
+  <xpath expr="//ActionContainer" position="before">
     <ShellRail/>
     <ShellNavPanel t-if="shell.state.expanded"/>
   </xpath>
 </t>
 
 <t t-inherit="web.WebClient" t-inherit-mode="extension">
-  <xpath expr="//div[hasclass('o_action_manager')]" position="after">
+  <xpath expr="//ActionContainer" position="after">
     <ShellCommandPalette t-if="shell.state.paletteOpen"/>
   </xpath>
 </t>
