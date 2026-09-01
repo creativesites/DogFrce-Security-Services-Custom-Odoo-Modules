@@ -33,7 +33,7 @@
     border-radius: 24px;
     box-shadow: 0 32px 80px -20px rgba(0, 0, 0, 0.8), inset 0 1px rgba(255,255,255,.06);
     color: #f8fafc;
-    padding: 28px clamp(20px, 3vw, 38px);
+    padding: 28px clamp(20px, 3vw, 38px) 36px;
     display: flex;
     flex-direction: column;
     gap: 26px;
@@ -55,10 +55,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    background: #ffffff;
     border-radius: 13px;
     color: #fff;
     box-shadow: 0 8px 20px rgba(37, 99, 235, .32);
+    overflow: hidden;
+}
+
+.dfal-brand-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 4px;
 }
 
 .dfal-brand { display: flex; align-items: center; gap: 12px; min-width: 220px; }
@@ -259,51 +267,6 @@
     line-height: 1.3;
 }
 
-/* Footer */
-.dfal-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    padding-top: 16px;
-    font-size: 12px;
-    color: #64748b;
-}
-
-.dfal-footer-status {
-    display: flex;
-    gap: 8px;
-}
-
-.dfal-status-pill {
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
-.dfal-status-pill.green {
-    background: rgba(34, 197, 94, 0.15);
-    color: #4ade80;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
-.dfal-status-pill.blue {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.dfal-kbd {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-family: monospace;
-    font-size: 10px;
-    color: #cbd5e1;
-}
-
 /* Keep the launcher trigger optically level with the native navbar menus. */
 .o_main_navbar .dfal-apps-toggler {
     align-items: center;
@@ -348,5 +311,4 @@
     .dfal-header { flex-wrap: wrap; gap: 14px; }
     .dfal-search-box { order: 3; flex-basis: 100%; max-width: none; }
     .dfal-close-btn { margin-left: auto; }
-    .dfal-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
 }

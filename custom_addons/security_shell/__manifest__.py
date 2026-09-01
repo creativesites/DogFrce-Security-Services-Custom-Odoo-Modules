@@ -1,0 +1,32 @@
+{
+    "name": "DeployGuard Shell",
+    "version": "19.0.1.0.0",
+    "category": "Customization",
+    "summary": "Global navigation shell and role-aware home dashboard",
+    "author": "Winston Zulu",
+    "license": "LGPL-3",
+    "depends": ["web", "security_base", "security_theme"],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/security_shell_actions.xml",
+        "views/security_shell_menu.xml",
+    ],
+    "assets": {
+        "web.assets_backend": [
+            "security_shell/static/src/css/shell_tokens.css",
+            "security_shell/static/src/css/shell_layout.css",
+            "security_shell/static/src/css/shell_home.css",
+            "security_shell/static/src/js/nav_catalog.js",
+            "security_shell/static/src/js/shell_service.js",
+            "security_shell/static/src/js/shell_rail.js",
+            "security_shell/static/src/js/shell_nav_panel.js",
+            "security_shell/static/src/js/shell_command_palette.js",
+            "security_shell/static/src/js/shell_frame.js",
+            "security_shell/static/src/js/home_dashboard.js",
+            "security_shell/static/src/xml/*.xml",
+        ],
+    },
+    "post_init_hook": "post_init_hook",
+    "installable": True,
+    "application": False,
+}
