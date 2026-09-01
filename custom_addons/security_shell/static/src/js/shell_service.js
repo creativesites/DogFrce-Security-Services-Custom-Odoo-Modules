@@ -16,9 +16,9 @@ function loadPersisted() {
     }
 }
 
-function savePersisted(expanded, openGroups) {
+function savePersisted(expanded, openGroups, openMenuIds) {
     try {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ expanded, openGroups }));
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ expanded, openGroups, openMenuIds }));
     } catch {
         // localStorage unavailable (private mode, quota) — collapse state just won't persist.
     }
@@ -35,6 +35,11 @@ export const shellService = {
         const state = reactive({
             expanded: hasStoredPreference ? persisted.expanded : defaultExpanded,
             openGroups: { ...DEFAULT_OPEN_GROUPS, ...(persisted.openGroups || {}) },
+            // Open/closed state for nodes in the LIVE menu tree (shell_nav_panel's
+            // flatRows), keyed by real ir.ui.menu id — separate from openGroups
+            // above (which only applies to the Home dashboard's curated tile
+            // grid). Persisted so a user's expanded sections survive reloads.
+            openMenuIds: { ...(persisted.openMenuIds || {}) },
             searchQuery: "",
             resolving: true,
             resolvedActions: {},
@@ -53,7 +58,16 @@ export const shellService = {
         });
 
         function persist() {
-            savePersisted(state.expanded, state.openGroups);
+            savePersisted(state.expanded, state.openGroups, state.openMenuIds);
+        }
+
+        function isMenuNodeOpen(id) {
+            return !!state.openMenuIds[id];
+        }
+
+        function toggleMenuNode(id) {
+            state.openMenuIds[id] = !isMenuNodeOpen(id);
+            persist();
         }
 
         function toggleExpanded() {
@@ -221,6 +235,8 @@ export const shellService = {
             toggleGroup,
             isGroupOpen,
             openGroup,
+            isMenuNodeOpen,
+            toggleMenuNode,
             isResolved,
             loadPayload,
             getVisibleCatalog,

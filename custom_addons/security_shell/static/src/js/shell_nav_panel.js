@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { Component, useState } from "@odoo/owl";
-import { useService } from "@web/core/utils/hooks";
+import { useService, useBus } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
 
 export class ShellNavPanel extends Component {
@@ -21,6 +21,11 @@ export class ShellNavPanel extends Component {
         this.shell = { ...shellService, state: useState(shellService.state) };
         this.action = useService("action");
         this.menuService = useService("menu");
+        // The menu service isn't itself a reactive object, and switching apps
+        // (via the app switcher) doesn't touch anything we track above, so
+        // without this the panel would keep showing the previous app's tree
+        // until something unrelated happened to force a re-render.
+        useBus(this.env.bus, "MENUS:APP-CHANGED", () => this.render(true));
         let company = null;
         try {
             company = useService("company");
@@ -31,12 +36,13 @@ export class ShellNavPanel extends Component {
         this.uiState = useState({ companyMenuOpen: false, fullMenuOpen: false, fullMenuQuery: "" });
     }
 
-    get catalog() {
-        return this.shell.getVisibleCatalog(this.shell.state);
-    }
-
     get companyName() {
         return user.activeCompany?.name || "DeployGuard Security";
+    }
+
+    get logoUrl() {
+        const companyId = user.activeCompany?.id;
+        return companyId ? `/web/image/res.company/${companyId}/logo` : "/web/static/img/logo.png";
     }
 
     get sitesCount() {
@@ -73,60 +79,97 @@ export class ShellNavPanel extends Component {
         this.shell.state.searchQuery = ev.target.value;
     }
 
-    isGroupOpen(group) {
-        // Read through this.shell.state (this component's own useState-
-        // wrapped proxy) rather than delegating to shellService's
-        // isGroupOpen(), which reads via a different, untracked reactive
-        // proxy closed over inside the service — that read wouldn't
-        // register as a dependency of THIS component's render.
-        return !!this.shell.state.openGroups[group.key];
-    }
-
-    toggleGroup(group) {
-        this.shell.toggleGroup(group.key);
-    }
-
     onHomeClick() {
         this.action.doAction("security_base.action_deployguard_main_command_center", {
             clearBreadcrumbs: true,
         });
     }
 
-    leafCount(leaf) {
-        const counts = this.shell.state.payload?.nav_counts;
-        if (!leaf.countKey || !counts) {
-            return null;
-        }
-        const value = counts[leaf.countKey];
-        return typeof value === "number" ? value : null;
+    /** The app whose tree this panel renders — defaults to the current app
+     * (as set by the app switcher / whatever action is showing), falling
+     * back to the first available app if none is current yet. */
+    get currentApp() {
+        return this.menuService.getCurrentApp() || this.menuService.getApps()[0] || null;
     }
 
-    isMissing(leaf) {
-        if (leaf.soon) {
-            return false;
-        }
-        if (!leaf.action) {
-            return true;
-        }
-        if (this.shell.state.resolving) {
-            return false;
-        }
-        return !this.shell.isResolved(leaf.action, this.shell.state);
+    isNodeOpen(id) {
+        // Direct read through this.shell.state (this component's own
+        // useState()-wrapped proxy) — see the note on the constructor above;
+        // a method call into shellService would read via an untracked proxy.
+        return !!this.shell.state.openMenuIds[id];
     }
 
-    onLeafClick(leaf) {
-        if (leaf.soon || this.isMissing(leaf)) {
-            return;
-        }
-        this.action.doAction(leaf.action, { clearBreadcrumbs: true }).catch((e) => {
-            console.error("DeployGuard Shell: failed to open", leaf.action, e);
-        });
+    toggleNode(id) {
+        this.shell.toggleMenuNode(id);
     }
 
-    /** Completeness guarantee: the curated tree is a deliberate subset
-     * (HANDOFF §5.5). "Full menu" falls back to Odoo's own menu service —
-     * every menu item the user's groups grant them, exactly as before the
-     * shell existed — so nothing is ever unreachable, curated or not. */
+    /** Flattens the LIVE menu tree (real names, real hierarchy, real access
+     * control — Odoo already filtered it server-side to what this user's
+     * groups grant) into a depth-annotated row list, honoring per-node
+     * open/closed state. While searching, every branch containing a match
+     * is force-shown and force-expanded; non-matching branches are pruned
+     * entirely rather than just hidden, so results aren't buried. */
+    get flatRows() {
+        const app = this.currentApp;
+        if (!app) {
+            return [];
+        }
+        const tree = this.menuService.getMenuAsTree(app.id);
+        const query = (this.shell.state.searchQuery || "").trim().toLowerCase();
+        const rows = [];
+
+        const subtreeMatches = (node) => {
+            if (node.name && node.name.toLowerCase().includes(query)) {
+                return true;
+            }
+            return (node.childrenTree || []).some(subtreeMatches);
+        };
+
+        const walk = (nodes, depth) => {
+            for (const node of nodes) {
+                if (node.id === "root") {
+                    continue;
+                }
+                const children = node.childrenTree || [];
+                const hasChildren = children.length > 0;
+                const selfMatches = !query || (node.name || "").toLowerCase().includes(query);
+                const childMatches = query && hasChildren && children.some(subtreeMatches);
+                if (query && !selfMatches && !childMatches) {
+                    continue;
+                }
+                const isOpen = query ? true : this.isNodeOpen(node.id);
+                rows.push({
+                    id: node.id,
+                    label: node.name,
+                    depth,
+                    hasChildren,
+                    isOpen,
+                    hasAction: !!node.actionID,
+                });
+                if (hasChildren && isOpen) {
+                    walk(children, depth + 1);
+                }
+            }
+        };
+
+        walk(tree.childrenTree || [], 0);
+        return rows;
+    }
+
+    onRowClick(row) {
+        if (row.hasChildren) {
+            this.toggleNode(row.id);
+            // A section header can also carry its own action (rare, but
+            // real in this tree) — open it too, same as Odoo's own navbar.
+        }
+        if (row.hasAction) {
+            this.menuService.selectMenu(this.menuService.getMenu(row.id));
+        }
+    }
+
+    /** Secondary, always-complete fallback: every menu item across every
+     * app, grouped by app — a global search that doesn't depend on which
+     * app's tree the main panel happens to be showing right now. */
     toggleFullMenu() {
         this.uiState.fullMenuOpen = !this.uiState.fullMenuOpen;
         this.uiState.fullMenuQuery = "";

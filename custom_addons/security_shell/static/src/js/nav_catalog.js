@@ -58,6 +58,13 @@ export const NAV_CATALOG = [
                     { key: "armoury_ledger", label: "Armoury ledger", soon: true },
                 ],
             },
+            {
+                key: "whatsapp_admin",
+                label: "WhatsApp admin",
+                children: [
+                    { key: "whatsapp_audit_logs", label: "Conversation audit logs", action: "security_ai_whatsapp_bridge.action_security_whatsapp_message_log", owner: true },
+                ],
+            },
         ],
     },
     {

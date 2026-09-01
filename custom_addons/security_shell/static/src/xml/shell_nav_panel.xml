@@ -5,7 +5,7 @@
   <div class="dgs-nav-panel" role="navigation" aria-label="DeployGuard section navigation">
 
     <div class="dgs-company-switcher" t-on-click="toggleCompanyMenu" tabindex="0">
-      <img class="dgs-company-logo" src="/security_theme/static/src/img/deployguard.png" alt=""/>
+      <img class="dgs-company-logo" t-att-src="logoUrl" alt=""/>
       <div class="dgs-company-info">
         <div class="dgs-company-name"><t t-esc="companyName"/></div>
         <div class="dgs-company-meta" t-if="sitesCount !== undefined and sitesCount !== null">
@@ -34,42 +34,24 @@
       <span class="dgs-nav-home-tag">DEFAULT</span>
     </div>
 
+    <div class="dgs-nav-app-label" t-if="currentApp"><t t-esc="currentApp.name"/></div>
+
     <div class="dgs-nav-tree">
-      <t t-foreach="catalog" t-as="group" t-key="group.key">
-        <div class="dgs-nav-row dgs-nav-row-0" t-on-click="() => this.toggleGroup(group)">
-          <svg class="dgs-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <path t-if="isGroupOpen(group)" d="M6 9l6 6 6-6"/>
+      <t t-if="!flatRows.length">
+        <div class="dgs-nav-empty">No matches</div>
+      </t>
+      <t t-foreach="flatRows" t-as="row" t-key="row.id">
+        <div t-attf-class="dgs-nav-row dgs-nav-row-n {{ row.hasChildren ? 'dgs-nav-row-group' : 'dgs-nav-row-leaf' }}"
+             t-attf-style="padding-left: {{ 12 + row.depth * 16 }}px"
+             t-on-click="() => this.onRowClick(row)"
+             t-att-title="row.label">
+          <svg t-if="row.hasChildren" class="dgs-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path t-if="row.isOpen" d="M6 9l6 6 6-6"/>
             <path t-else="" d="M9 6l6 6-6 6"/>
           </svg>
-          <span class="dgs-nav-label"><t t-esc="group.label"/></span>
-          <span class="dgs-nav-count"><t t-esc="group.leafCount"/></span>
+          <span t-else="" class="dgs-nav-chevron-spacer"/>
+          <span class="dgs-nav-label"><t t-esc="row.label"/></span>
         </div>
-
-        <t t-if="isGroupOpen(group)">
-          <t t-foreach="group.children" t-as="subgroup" t-key="subgroup.key">
-            <div class="dgs-nav-row dgs-nav-row-1" t-on-click="() => this.toggleGroup(subgroup)">
-              <svg class="dgs-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-                <path t-if="isGroupOpen(subgroup)" d="M6 9l6 6 6-6"/>
-                <path t-else="" d="M9 6l6 6-6 6"/>
-              </svg>
-              <span class="dgs-nav-label"><t t-esc="subgroup.label"/></span>
-              <span class="dgs-nav-count"><t t-esc="subgroup.children.length"/></span>
-            </div>
-
-            <t t-if="isGroupOpen(subgroup)">
-              <t t-foreach="subgroup.children" t-as="leaf" t-key="leaf.key">
-                <div t-attf-class="dgs-nav-row dgs-nav-row-2 {{ leaf.soon ? 'dgs-nav-row-soon' : '' }} {{ isMissing(leaf) ? 'dgs-nav-row-missing' : '' }} {{ shell.state.activeLeafKey === leaf.key ? 'active' : '' }}"
-                     t-on-click="() => this.onLeafClick(leaf)"
-                     t-att-title="leaf.soon ? leaf.label + ' — coming soon' : (isMissing(leaf) ? leaf.label + ' — not installed' : leaf.label)">
-                  <span class="dgs-nav-label"><t t-esc="leaf.label"/></span>
-                  <span class="dgs-nav-chip" t-if="leaf.soon">SOON</span>
-                  <span class="dgs-nav-chip" t-elif="isMissing(leaf)">NOT INSTALLED</span>
-                  <span class="dgs-nav-count" t-elif="leafCount(leaf) !== null"><t t-esc="leafCount(leaf)"/></span>
-                </div>
-              </t>
-            </t>
-          </t>
-        </t>
       </t>
     </div>
 

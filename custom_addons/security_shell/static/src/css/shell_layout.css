@@ -70,6 +70,11 @@ html body.o_web_client .o_action_manager {
     font-family: var(--dgs-font);
 }
 
+.dgs-rail-appswitch-wrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
 .dgs-rail-logo {
     width: 44px;
     height: 44px;
@@ -87,6 +92,58 @@ html body.o_web_client .o_action_manager {
     height: 100%;
     object-fit: contain;
 }
+
+.dgs-rail-appswitch {
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    transition: box-shadow .15s;
+}
+
+.dgs-rail-appswitch:hover,
+.dgs-rail-appswitch:focus-visible {
+    box-shadow: 0 0 0 2px var(--dgs-rail-hover);
+    outline: none;
+}
+
+.dgs-rail-flyout-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1039;
+}
+
+.dgs-appswitch-menu {
+    position: absolute;
+    top: 0;
+    left: 88px;
+    width: 220px;
+    z-index: 1040;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-control);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 8px;
+    font-family: var(--dgs-font);
+}
+
+.dgs-appswitch-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 6px 8px 4px;
+}
+
+.dgs-appswitch-item {
+    padding: 8px 8px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-appswitch-item:hover { background: var(--dgs-canvas); }
 
 .dgs-rail-toggle {
     width: 40px;
@@ -157,6 +214,74 @@ html body.o_web_client .o_action_manager {
     background: var(--dgs-rail-active);
     color: #101724;
 }
+
+.dgs-rail-item-initial {
+    font-family: var(--dgs-mono);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* ── Rail hover flyouts ────────────────────────────────────────────────
+   Hovering a rail item previews its section's real children without
+   requiring a click — a short show-delay avoids flicker while scanning
+   past icons, and a longer hide-delay tolerates the diagonal mouse path
+   from the icon into the flyout itself. */
+.dgs-rail-item-flyout {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.dgs-rail-flyout {
+    position: absolute;
+    top: 0;
+    left: 56px;
+    min-width: 220px;
+    max-width: 280px;
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 1040;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-control);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 8px;
+    font-family: var(--dgs-font);
+    visibility: hidden;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity .12s, transform .12s, visibility .12s;
+    transition-delay: .1s;
+}
+
+.dgs-rail-item-flyout:hover .dgs-rail-flyout,
+.dgs-rail-flyout:hover {
+    visibility: visible;
+    opacity: 1;
+    transform: translateX(0);
+    transition-delay: .25s, .25s, 0s;
+}
+
+.dgs-rail-flyout-heading {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 6px 8px 4px;
+}
+
+.dgs-rail-flyout-item {
+    padding: 8px 8px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-rail-flyout-item:hover { background: var(--dgs-canvas); }
 
 .dgs-rail-bottom {
     margin-top: auto;
@@ -345,30 +470,44 @@ html body.o_web_client .o_action_manager {
     color: var(--ds-text-subtle);
 }
 
-.dgs-nav-row-0 { padding-left: 12px; }
-.dgs-nav-row-0 .dgs-nav-label {
-    font-size: 13.5px;
+/* Depth-based row styling for the live menu tree (arbitrary nesting —
+   padding-left is set inline per-row from row.depth). A group row (has
+   children, toggles open/closed) reads slightly heavier than a leaf row
+   (navigates directly) so the hierarchy stays scannable without needing a
+   fixed number of levels. */
+.dgs-nav-row-group .dgs-nav-label {
+    font-size: 13px;
     font-weight: 600;
     color: #101724;
 }
 
-.dgs-nav-row-1 { padding-left: 34px; }
-.dgs-nav-row-1 .dgs-nav-label {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--ds-text-subtle);
-}
-
-.dgs-nav-row-2 { padding-left: 48px; }
-.dgs-nav-row-2 .dgs-nav-label {
+.dgs-nav-row-leaf .dgs-nav-label {
     font-size: 13px;
     font-weight: 500;
     color: var(--ds-text-2);
 }
 
-.dgs-nav-row-2.dgs-nav-row-soon .dgs-nav-label,
-.dgs-nav-row-2.dgs-nav-row-missing .dgs-nav-label {
-    opacity: .6;
+.dgs-nav-chevron-spacer {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-app-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 10px 10px 4px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-empty {
+    padding: 24px 10px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
 }
 
 .dgs-nav-label {

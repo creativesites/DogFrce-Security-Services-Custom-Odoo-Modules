@@ -3,8 +3,21 @@
 <t t-name="security_shell.ShellRail" owl="1">
   <div class="dgs-rail" role="navigation" aria-label="DeployGuard primary navigation">
 
-    <div class="dgs-rail-logo" title="DeployGuard" aria-label="DeployGuard">
-      <img t-att-src="logoUrl" alt="DeployGuard"/>
+    <div class="dgs-rail-appswitch-wrap">
+      <button class="dgs-rail-logo dgs-rail-appswitch" t-on-click="toggleAppSwitcher"
+              title="Switch app" aria-label="Switch app">
+        <img t-att-src="logoUrl" alt=""/>
+      </button>
+
+      <div class="dgs-rail-flyout-scrim" t-if="uiState.appSwitcherOpen" t-on-click="toggleAppSwitcher"/>
+      <div class="dgs-appswitch-menu" t-if="uiState.appSwitcherOpen" role="menu" aria-label="Apps">
+        <div class="dgs-appswitch-heading">Apps</div>
+        <t t-foreach="apps" t-as="app" t-key="app.id">
+          <div class="dgs-appswitch-item" t-on-click="() => this.onAppClick(app)">
+            <t t-esc="app.name"/>
+          </div>
+        </t>
+      </div>
     </div>
 
     <button class="dgs-rail-toggle"
@@ -20,59 +33,37 @@
     <div class="dgs-rail-divider"/>
 
     <div class="dgs-rail-sections">
-      <t t-foreach="railItems" t-as="item" t-key="item.key">
-        <button t-attf-class="dgs-rail-item {{ isActive(item) ? 'active' : '' }}"
-                t-on-click="() => this.onItemClick(item)"
-                t-att-title="item.label"
-                t-att-aria-label="item.label">
+      <button class="dgs-rail-item dgs-rail-item-flyout"
+              t-on-click="onHomeClick"
+              title="Home"
+              aria-label="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l9-8 9 8"/>
+          <path d="M5 10v10h14V10"/>
+        </svg>
+      </button>
 
-          <svg t-if="item.icon === 'home'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 11l9-8 9 8"/>
-            <path d="M5 10v10h14V10"/>
-          </svg>
-
-          <svg t-if="item.icon === 'operations'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6l7-3z"/>
-          </svg>
-
-          <svg t-if="item.icon === 'rostering'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="5" width="18" height="16" rx="2"/>
-            <path d="M16 3v4M8 3v4M3 10h18"/>
-          </svg>
-
-          <svg t-if="item.icon === 'people'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="8" r="3"/>
-            <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/>
-            <path d="M16 8a3 3 0 100-6 3 3 0 000 6z"/>
-            <path d="M15.5 14c2.7.4 4.5 2.5 4.5 6"/>
-          </svg>
-
-          <svg t-if="item.icon === 'payroll'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="7" width="20" height="10" rx="2"/>
-            <circle cx="12" cy="12" r="2.5"/>
-            <path d="M6 9v.01M18 15v.01"/>
-          </svg>
-
-          <svg t-if="item.icon === 'reports'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 20V10M12 20V4M20 20v-7"/>
-          </svg>
-        </button>
+      <t t-foreach="railItems" t-as="item" t-key="item.id">
+        <div class="dgs-rail-item-flyout">
+          <button t-attf-class="dgs-rail-item {{ isActive(item) ? 'active' : '' }}"
+                  t-on-click="() => this.onItemClick(item)"
+                  t-att-title="item.label"
+                  t-att-aria-label="item.label">
+            <span class="dgs-rail-item-initial"><t t-esc="item.initial"/></span>
+          </button>
+          <div class="dgs-rail-flyout" t-if="item.children.length" role="menu" t-att-aria-label="item.label">
+            <div class="dgs-rail-flyout-heading"><t t-esc="item.label"/></div>
+            <t t-foreach="item.children" t-as="child" t-key="child.id">
+              <div class="dgs-rail-flyout-item" t-on-click="() => this.onFlyoutChildClick(child)">
+                <t t-esc="child.name"/>
+              </div>
+            </t>
+          </div>
+        </div>
       </t>
     </div>
 
     <div class="dgs-rail-bottom">
-      <button class="dgs-rail-item"
-              t-on-click="onAppSwitcherClick"
-              title="Open workspace switcher"
-              aria-label="Open workspace switcher">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-          <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-          <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-          <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-        </svg>
-      </button>
-
       <button class="dgs-rail-item"
               t-on-click="onSettingsClick"
               title="Settings"
