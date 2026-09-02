@@ -179,6 +179,52 @@ html body.o_web_client .o_action_manager {
     font-weight: 700;
 }
 
+/* ── Rail hover tooltips ───────────────────────────────────────────────
+   Every rail control gets an immediate name label on hover/focus — the
+   rail is icon-only, so nothing here should ever require guessing. This
+   is deliberately near-instant (no show-delay), unlike the fuller flyout
+   preview below. */
+.dgs-rail-appswitch,
+.dgs-rail-toggle,
+.dgs-rail-item,
+.dgs-rail-avatar {
+    position: relative;
+}
+
+.dgs-rail-tooltip {
+    position: absolute;
+    top: 50%;
+    left: calc(100% + 10px);
+    transform: translateY(-50%) translateX(-4px);
+    background: #101724;
+    color: #FFFFFF;
+    font-family: var(--dgs-font);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    padding: 5px 9px;
+    border-radius: 7px;
+    white-space: nowrap;
+    z-index: 1045;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .08s, transform .08s, visibility .08s;
+}
+
+.dgs-rail-appswitch:hover .dgs-rail-tooltip,
+.dgs-rail-appswitch:focus-visible .dgs-rail-tooltip,
+.dgs-rail-toggle:hover .dgs-rail-tooltip,
+.dgs-rail-toggle:focus-visible .dgs-rail-tooltip,
+.dgs-rail-item:hover .dgs-rail-tooltip,
+.dgs-rail-item:focus-visible .dgs-rail-tooltip,
+.dgs-rail-avatar:hover .dgs-rail-tooltip,
+.dgs-rail-avatar:focus-visible .dgs-rail-tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+}
+
 /* ── Rail hover flyouts ────────────────────────────────────────────────
    Hovering a rail item previews its section's real children without
    requiring a click — a short show-delay avoids flicker while scanning
@@ -206,8 +252,8 @@ html body.o_web_client .o_action_manager {
     visibility: hidden;
     opacity: 0;
     transform: translateX(-4px);
-    transition: opacity .12s, transform .12s, visibility .12s;
-    transition-delay: .1s;
+    transition: opacity .1s, transform .1s, visibility .1s;
+    transition-delay: .05s;
 }
 
 .dgs-rail-item-flyout:hover .dgs-rail-flyout,
@@ -215,7 +261,7 @@ html body.o_web_client .o_action_manager {
     visibility: visible;
     opacity: 1;
     transform: translateX(0);
-    transition-delay: .25s, .25s, 0s;
+    transition-delay: .12s, .12s, 0s;
 }
 
 .dgs-rail-flyout-heading {

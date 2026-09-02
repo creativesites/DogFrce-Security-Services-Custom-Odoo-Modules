@@ -82,6 +82,10 @@ export class ShellRail extends Component {
             }));
     }
 
+    get userName() {
+        return user.name || "My profile";
+    }
+
     get userInitials() {
         const name = user.name || "";
         return name
