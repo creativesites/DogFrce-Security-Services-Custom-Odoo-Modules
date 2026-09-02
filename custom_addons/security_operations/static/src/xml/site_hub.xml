@@ -33,7 +33,7 @@
             <!-- Header bar -->
             <div class="sh-header d-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-white">
                 <div class="d-flex align-items-center gap-3">
-                    <i class="fa fa-building-o fs-4" style="color: var(--df-navy);"/>
+                    <i class="fa fa-building-o fs-4" style="color: var(--ds-accent);"/>
                     <div>
                         <h4 class="mb-0 fw-bold"><t t-esc="state.site.name"/></h4>
                         <small class="text-muted">
@@ -187,7 +187,7 @@
                             <i class="fa fa-exclamation-triangle me-1"/>
                             Gaps Only
                             <t t-if="state.gapsOnly">
-                                <span class="ms-1 badge" style="background: var(--df-amber); color: #1B2040;">ON</span>
+                                <span class="ms-1 badge" style="background: #F5A20B; color: #1B3A6B;">ON</span>
                             </t>
                         </button>
                     </div>

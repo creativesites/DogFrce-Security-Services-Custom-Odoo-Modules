@@ -12,14 +12,14 @@
         <!-- Brand Header -->
         <div class="od-brand px-4 py-3">
             <div class="fw-bold" style="font-size:15px; color:#ffffff; letter-spacing:.3px;">
-                <i class="fa fa-dashboard me-2" style="color:#38bdf8;"/><t t-esc="companyName"/> Operations
+                <i class="fa fa-dashboard me-2" style="color:#8494AC;"/><t t-esc="companyName"/> Operations
             </div>
             <div style="font-size:11px; color:#94a3b8; margin-top:2px;">Shift &amp; Incident Control</div>
         </div>
 
         <!-- Site Filter -->
         <div class="px-3 pt-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#8494AC; margin-bottom:6px;">
                 Security Site
             </div>
             <select class="form-select form-select-sm od-select" t-on-change="onSiteFilterChange">
@@ -32,7 +32,7 @@
 
         <!-- Shift Filter -->
         <div class="px-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:6px;">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#8494AC; margin-bottom:6px;">
                 Shift Type
             </div>
             <select class="form-select form-select-sm od-select" t-on-change="onShiftFilterChange">
@@ -44,7 +44,7 @@
 
         <!-- Quick Action Buttons -->
         <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
-            <button class="btn btn-sm text-white w-100 fw-semibold" style="background:#2563eb; border-radius:8px;" t-att-disabled="state.filling" t-on-click="autoFillGaps">
+            <button class="btn btn-sm text-white w-100 fw-semibold" style="background:#1B3A6B; border-radius:8px;" t-att-disabled="state.filling" t-on-click="autoFillGaps">
                 <t t-if="state.filling"><span class="spinner-border spinner-border-sm me-1"/>Filling Gaps...</t>
                 <t t-else=""><i class="fa fa-magic me-1"/>Auto-Fill All Open Gaps</t>
             </button>
@@ -60,15 +60,15 @@
 
         <!-- Shift Fill Rate Gauge -->
         <div t-if="state.data" class="px-3 py-3">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:8px;">
+            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#8494AC; margin-bottom:8px;">
                 Daily Guard Fill Rate
             </div>
             <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="fw-bold" style="font-size:18px; color:#1e1b4b;"><t t-esc="state.data.fill_rate_pct"/>%</span>
-                <span class="small text-muted"><t t-esc="state.data.on_duty_count"/> / <t t-esc="state.data.total_scheduled"/> Guarded</span>
+                <span class="fw-bold" style="font-family:var(--ds-mono); font-variant-numeric:tabular-nums; font-size:18px; color:#ffffff;"><t t-esc="state.data.fill_rate_pct"/>%</span>
+                <span class="small" style="font-family:var(--ds-mono); font-variant-numeric:tabular-nums; color:#94a3b8;"><t t-esc="state.data.on_duty_count"/> / <t t-esc="state.data.total_scheduled"/> Guarded</span>
             </div>
-            <div class="progress" style="height:7px; border-radius:4px; background:#e2e8f0;">
-                <div class="progress-bar" t-att-style="'width:' + state.data.fill_rate_pct + '%; background:#2563eb;'"/>
+            <div class="progress" style="height:7px; border-radius:4px; background:#263347;">
+                <div class="progress-bar" t-att-style="'width:' + state.data.fill_rate_pct + '%; background:#6B93D6;'"/>
             </div>
         </div>
 
@@ -93,15 +93,15 @@
             <div t-if="state.data" class="od-kpi-pills">
                 <div class="od-kpi-card text-center">
                     <div class="text-muted x-small fw-semibold text-uppercase">Scheduled Today</div>
-                    <div class="fs-5 fw-bold text-dark"><t t-esc="state.data.total_scheduled"/></div>
+                    <div class="od-kpi-value fs-5 fw-bold text-dark"><t t-esc="state.data.total_scheduled"/></div>
                 </div>
                 <div class="od-kpi-card text-center">
                     <div class="text-muted x-small fw-semibold text-uppercase">On Duty</div>
-                    <div class="fs-5 fw-bold text-success"><t t-esc="state.data.on_duty_count"/></div>
+                    <div class="od-kpi-value fs-5 fw-bold text-success"><t t-esc="state.data.on_duty_count"/></div>
                 </div>
                 <div class="od-kpi-card text-center">
                     <div class="text-muted x-small fw-semibold text-uppercase">Critical Open Gaps</div>
-                    <div t-att-class="'fs-5 fw-bold ' + (state.data.open_gaps_count > 0 ? 'text-danger' : 'text-muted')">
+                    <div t-att-class="'od-kpi-value fs-5 fw-bold ' + (state.data.open_gaps_count > 0 ? 'text-danger' : 'text-muted')">
                         <t t-esc="state.data.open_gaps_count"/>
                     </div>
                 </div>

@@ -9,17 +9,15 @@
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background:
-        radial-gradient(circle at 18% 0%, rgba(30, 58, 138, 0.08) 0, transparent 32%),
-        linear-gradient(135deg, #f8fafc 0%, #e2e8f0 54%, #f1f5f9 100%);
-    color: #0f172a;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--ds-bg);
+    color: var(--ds-text);
+    font-family: var(--ds-font);
 }
 
 /* Sidebar */
 .od-nav-sidebar {
-    background: #1a2332 !important;
-    color: #dce4f0 !important;
+    background: #101724 !important; /* --dgs-rail's tone — this dashboard's internal sidebar plays the same role as the shell rail, so it shares its dark surface rather than a second, slightly-different navy. */
+    color: #DCE4F0 !important;
     min-height: 0;
     overflow-y: auto;
     box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
@@ -35,7 +33,7 @@
     border: 1px solid #364b66 !important;
     color: #dce4f0 !important;
     font-size: 12px !important;
-    border-radius: 8px !important;
+    border-radius: var(--ds-radius-md) !important;
 }
 
 .od-select option {
@@ -45,8 +43,8 @@
 
 .od-select:focus {
     background-color: #2d3b55 !important;
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25) !important;
+    border-color: var(--ds-accent) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.25) !important;
 }
 
 /* Main Area Flex Constraints */
@@ -58,12 +56,14 @@
     flex-direction: column;
 }
 
-/* Glass Header Banner */
+/* Header banner — flat, matching the rail tone (no decorative gradients per
+   the design system: the only gradient allowed anywhere is the coverage/
+   metric ramp). */
 .od-header {
-    background: linear-gradient(135deg, #1a2332 0%, #263347 60%, #111827 100%) !important;
-    border-bottom: 3px solid #2563eb;
+    background: #101724 !important;
+    border-bottom: 3px solid var(--ds-accent);
     padding: 16px 28px !important;
-    box-shadow: 0 10px 25px -5px rgba(26, 35, 50, 0.25);
+    box-shadow: 0 10px 25px -5px rgba(16, 23, 36, 0.25);
     flex-shrink: 0;
 }
 
@@ -75,18 +75,23 @@
 }
 
 .od-kpi-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
     padding: 10px 16px;
     min-width: 130px;
-    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    box-shadow: var(--ds-shadow-sm);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .od-kpi-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    box-shadow: var(--ds-shadow);
+}
+
+.od-kpi-value {
+    font-family: var(--ds-mono);
+    font-variant-numeric: tabular-nums;
 }
 
 .od-workspace {
@@ -112,21 +117,21 @@
 }
 
 .od-card {
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-sm);
     transition: all 0.2s ease;
 }
 
 .od-card:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    border-color: var(--ds-accent-mid);
+    box-shadow: var(--ds-shadow);
 }
 
 .od-card-active {
-    border-color: #2563eb !important;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3) !important;
+    border-color: var(--ds-accent) !important;
+    box-shadow: 0 0 0 2px rgba(27, 58, 107, 0.3) !important;
 }
 
 /* Inspector Drawer */
@@ -136,10 +141,10 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    background: #ffffff !important;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 12px 36px rgba(15, 23, 42, 0.1);
+    background: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-md);
 }
 
 .od-badge {
@@ -164,27 +169,28 @@
 }
 
 .od-modal-content {
-    background: #ffffff;
-    border-radius: 14px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    background: var(--ds-surface);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-md);
     width: 100%;
     max-width: 540px;
     overflow: hidden;
 }
 
-/* ── Top Header Custom Search Styling ── */
+/* ── Top Header Custom Search Styling (white-on-dark — header stays the rail
+     tone, so this is correctly a light-on-dark treatment, not --ds-* tokens) ── */
 .od-search-group {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: 8px !important;
+    border-radius: var(--ds-radius-md) !important;
     overflow: hidden;
     transition: all 0.2s ease;
 }
 
 .od-search-group:focus-within {
     background: rgba(255, 255, 255, 0.18) !important;
-    border-color: #38bdf8 !important;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(199, 217, 244, 0.35) !important;
 }
 
 .od-search-addon {
