@@ -188,38 +188,95 @@ html body.o_web_client .o_action_manager {
    plain position:absolute/fixed descendant. The popover service portals
    this content elsewhere, so it always renders in full regardless of rail
    scroll position. */
+/* The popover service wraps our content in its own positioned element —
+   .dgs-rail-popover-shell (passed as popoverClass) is that outer wrapper,
+   styled here as one elevated surface. Content components (this file's
+   .dgs-rail-popover) stay unstyled-as-a-box so the elevation, border and
+   radius live in exactly one place. */
+.dgs-rail-popover-shell {
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(16, 23, 36, .04), 0 16px 40px rgba(16, 23, 36, .16);
+    padding: 10px;
+}
+
 .dgs-rail-popover {
-    min-width: 160px;
-    max-width: 280px;
+    min-width: 172px;
+    max-width: 300px;
     max-height: 70vh;
     overflow-y: auto;
     font-family: var(--dgs-font);
 }
 
+.dgs-rail-popover-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ds-accent);
+    flex: 0 0 auto;
+}
+
 .dgs-rail-popover-tip {
-    font-size: 12.5px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
     font-weight: 600;
     color: var(--ds-text);
-    padding: 2px 2px;
+    padding: 4px 6px;
     white-space: nowrap;
 }
 
 .dgs-rail-popover-heading {
-    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 8px 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.dgs-rail-popover-heading-text {
+    font-size: 13.5px;
     font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--ds-text-subtle);
-    padding: 2px 8px 8px;
+    letter-spacing: -.1px;
+    color: var(--ds-text);
+}
+
+.dgs-rail-popover-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
 }
 
 .dgs-rail-popover-row {
-    padding: 7px 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 7px 10px 7px calc(10px + var(--depth, 0) * 16px);
     border-radius: 9px;
     font-size: 13px;
     white-space: nowrap;
     overflow: hidden;
+    transition: background .1s ease;
+}
+
+.dgs-rail-popover-label {
+    overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* A thin connector line under nested rows — the same "you're inside a
+   section" cue the sidebar tree gives via indentation, kept legible here
+   even without the sidebar's chevrons. */
+.dgs-rail-popover-guide {
+    position: absolute;
+    left: calc(10px + (var(--depth, 0) - 1) * 16px + 7px);
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--ds-border);
 }
 
 .dgs-rail-popover-row.clickable {
@@ -228,19 +285,24 @@ html body.o_web_client .o_action_manager {
     cursor: pointer;
 }
 
-.dgs-rail-popover-row.clickable:hover { background: var(--dgs-canvas); }
+.dgs-rail-popover-row.clickable:hover {
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
+}
+
+.dgs-rail-popover-row.clickable:active { background: var(--ds-accent-light); }
 
 .dgs-rail-popover-row.heading {
     font-weight: 700;
     color: var(--ds-text-subtle);
-    font-size: 11.5px;
+    font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.5px;
     cursor: default;
-    padding-top: 12px;
+    margin-top: 6px;
 }
 
-.dgs-rail-popover-row.heading:first-child { padding-top: 7px; }
+.dgs-rail-popover-row.heading:first-child { margin-top: 0; }
 
 .dgs-rail-bottom {
     margin-top: auto;

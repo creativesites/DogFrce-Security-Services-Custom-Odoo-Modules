@@ -35,22 +35,33 @@
         </xpath>
     </template>
 
-    <!-- Apply branded body class synchronously on first parse — no FOUC -->
+    <!-- Apply branded body class synchronously on first parse — no FOUC.
+         The brand identity itself (logo, name, tagline, feature list) now
+         lives in the brand panel below, sitting beside the card rather than
+         stacked on top of it. -->
     <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
         <xpath expr="//div[@id='oe_structure_login_top']" position="before">
             <script>document.body.classList.add('dg_login_branded');</script>
             <t t-set="dg_login_bg" t-value="request.env['ir.config_parameter'].sudo().get_param('security.theme.login_bg_color', '#1B3A6B')"/>
             <style t-if="dg_login_bg">:root { --dg-login-accent: <t t-out="dg_login_bg"/>; }</style>
-            <div class="dg_login_header text-center mb-3">
-                <img src="/security_theme/static/src/img/deployguard-w.png"
-                     alt="DogForce"
-                     style="max-height:56px; width:auto;"/>
-                <div class="dg_platform_name fw-bold mt-2" style="font-size:1.15rem; letter-spacing:.03em;">DogForce Security Platform</div>
-                <div class="dg_platform_tagline text-muted small" style="color:#fff !important; opacity:0.7;">Professional Security Management Suite</div>
-                <div class="dg_login_highlights">
-                    <span><i class="fa fa-shield"/> Guard Operations</span>
-                    <span><i class="fa fa-calendar-check-o"/> Shift Control</span>
-                    <span><i class="fa fa-line-chart"/> Executive Reporting</span>
+        </xpath>
+    </template>
+
+    <!-- Brand panel — a sibling of the login card (not nested inside it),
+         so CSS can lay them out side by side like a real product's auth
+         screen instead of one narrow stacked column. -->
+    <template id="login_brand_panel" inherit_id="web.login_layout" name="DogForce Login Brand Panel">
+        <xpath expr="//div[hasclass('container') and hasclass('py-5')]" position="before">
+            <div class="dg_login_brandpanel">
+                <div class="dg_login_brandpanel_mark">
+                    <img src="/security_theme/static/src/img/deployguard-w.png" alt="DogForce"/>
+                </div>
+                <div class="dg_login_brandpanel_name">DogForce Security Platform</div>
+                <div class="dg_login_brandpanel_tag">Command every site, every shift, every guard — in real time, from one screen.</div>
+                <div class="dg_login_brandpanel_features">
+                    <div class="dg_login_feature"><i class="fa fa-shield"/><span>Guard operations, live</span></div>
+                    <div class="dg_login_feature"><i class="fa fa-calendar-check-o"/><span>Rostering &amp; shift control</span></div>
+                    <div class="dg_login_feature"><i class="fa fa-line-chart"/><span>Executive reporting</span></div>
                 </div>
             </div>
         </xpath>

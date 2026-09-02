@@ -1,185 +1,276 @@
 /* =========================================================
-   DogForce Login Page Branding - single-column card
+   DogForce Login Page — full-bleed branded auth screen
+   Brand panel (identity, hero copy) + a separate elevated card
+   (the actual Odoo login form), laid out side by side on a
+   full-viewport backdrop instead of one narrow stacked column.
    ========================================================= */
 
 body.dg_login_branded {
-    background-color: #F8FAFC;
     min-height: 100vh;
+    background:
+        radial-gradient(circle at 12% -10%, rgba(255, 255, 255, .10) 0, transparent 42%),
+        radial-gradient(circle at 88% 108%, rgba(255, 255, 255, .08) 0, transparent 46%),
+        linear-gradient(155deg, var(--dg-login-accent, #1B3A6B) 0%, #0E1B32 78%);
+    background-attachment: fixed;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* A fine dot grid over the gradient — a security/radar cue rather than a
+   decorative flourish, kept faint enough to read as texture, not pattern. */
+body.dg_login_branded::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, .12) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: radial-gradient(ellipse 80% 65% at 50% 40%, #000 0%, transparent 72%);
+    mask-image: radial-gradient(ellipse 80% 65% at 50% 40%, #000 0%, transparent 72%);
+    pointer-events: none;
+    z-index: 0;
 }
 
 body.dg_login_branded #wrapwrap {
     background: transparent;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
 }
 
-/* Container — wide enough to give the card room to breathe */
-body.dg_login_branded .container {
-    width: 94vw !important;
-    max-width: 660px !important;
-    min-width: 280px;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+body.dg_login_branded main {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
 }
 
-/* Card explicit width — matches container ceiling */
-body.dg_login_branded .card {
+/* The container Odoo wraps the card in becomes one flex item; the brand
+   panel (injected as its sibling) becomes the other — both centered as a
+   pair rather than the card alone. */
+body.dg_login_branded main > .container.py-5 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(32px, 6vw, 96px);
+    flex-wrap: wrap;
+    max-width: 1120px !important;
+    width: 92vw !important;
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+}
+
+/* ── Brand panel ─────────────────────────────────────────── */
+
+.dg_login_brandpanel {
+    flex: 1 1 380px;
+    max-width: 460px;
+    color: #FFFFFF;
+    position: relative;
+    z-index: 1;
+    padding: 8px;
+}
+
+.dg_login_brandpanel_mark {
+    margin-bottom: 28px;
+}
+
+.dg_login_brandpanel_mark img {
+    height: 40px;
+    width: auto;
+}
+
+.dg_login_brandpanel_name {
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight: 800;
+    letter-spacing: -.02em;
+    line-height: 1.12;
+    margin-bottom: 18px;
+}
+
+.dg_login_brandpanel_tag {
+    font-size: 16px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, .72);
+    max-width: 42ch;
+    margin-bottom: 36px;
+}
+
+.dg_login_brandpanel_features {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.dg_login_feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, .88);
+}
+
+.dg_login_feature i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .10);
+    border: 1px solid rgba(255, 255, 255, .14);
+    font-size: 13px;
+    flex: 0 0 auto;
+}
+
+@media (max-width: 860px) {
+    .dg_login_brandpanel { display: none; }
+}
+
+/* ── Auth card ────────────────────────────────────────────── */
+
+body.dg_login_branded .card.o_database_list {
+    flex: 0 0 auto;
     width: 100%;
-    max-width: 660px;
-}
-
-/* Bootstrap col override — take full container width */
-body.dg_login_branded main .container .row > [class*="col-"] {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 0 0 100% !important;
-    margin-left: 0 !important;
-}
-
-@media (max-width: 576px) {
-    body.dg_login_branded .container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-    }
-}
-
-/* ── Card ── */
-body.dg_login_branded .card {
-    border: none;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.97);
-    box-shadow: 0 24px 72px rgba(15, 31, 54, 0.16);
+    max-width: 408px;
+    margin: 0 !important;
+    border: 1px solid rgba(255, 255, 255, .5);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .98);
+    box-shadow: 0 1px 2px rgba(8, 15, 28, .06), 0 30px 70px rgba(8, 15, 28, .35);
     overflow: hidden;
 }
 
 body.dg_login_branded .card-body {
+    padding: 40px 36px 32px;
+}
+
+/* Odoo's own company-logo block stays — small, top of the card, quiet —
+   rather than being replaced; it already reads correctly for a tenant
+   that's configured their own company logo. Just tighten its spacing to
+   match the new card proportions. */
+body.dg_login_branded .card-body > .text-center.pb-3.border-bottom {
+    padding-bottom: 20px !important;
+    margin-bottom: 24px !important;
+    border-bottom: 1px solid #EEF1F6 !important;
+}
+
+body.dg_login_branded .card-body > .text-center.pb-3.border-bottom img {
+    max-height: 44px !important;
+}
+
+body.dg_login_branded .card-body > .oe_login_form,
+body.dg_login_branded form[action="/web/login"] {
     padding: 0;
 }
 
-/* ── Branded header inside card — solid fill in the tenant's configured
-     accent (security_login_bg_color), with a soft highlight for texture.
-     The one deliberate hero moment on this page, same exception as the
-     app switcher's own decorative treatment. ── */
-body.dg_login_branded .dg_login_header {
-    background:
-        radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.16) 0, transparent 36%),
-        var(--dg-login-accent, #1B3A6B);
-    padding: 1.75rem 2rem 1.5rem;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-body.dg_login_branded .dg_login_header::after {
-    content: "";
-    position: absolute;
-    right: -60px;
-    bottom: -80px;
-    width: 220px;
-    height: 220px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-body.dg_login_branded .dg_login_header img {
-    max-height: 56px;
-    width: auto;
-    position: relative;
-    z-index: 1;
-}
-
-body.dg_login_branded .dg_login_header .dg_platform_name {
-    color: #ffffff !important;
-    font-size: 1.2rem !important;
-    font-weight: 700;
-    margin-top: 0.6rem;
-    letter-spacing: 0.02em;
-    position: relative;
-    z-index: 1;
-}
-
-body.dg_login_branded .dg_login_header .dg_platform_tagline {
-    color: #a8c4e0 !important;
-    font-size: 0.78rem !important;
-    margin-top: 0.2rem;
-    position: relative;
-    z-index: 1;
-}
-
-body.dg_login_branded .dg_login_highlights {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.4rem;
-    margin-top: 1rem;
-    position: relative;
-    z-index: 1;
-}
-
-body.dg_login_branded .dg_login_highlights span {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.07);
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 0.7rem;
+body.dg_login_branded .form-label {
+    font-size: 13px;
     font-weight: 600;
-    padding: 0.25rem 0.65rem;
-}
-
-/* ── Form area ── */
-body.dg_login_branded .card-body > .oe_login_form,
-body.dg_login_branded form[action="/web/login"] {
-    padding: 1.5rem 2rem;
-}
-
-/* Hide default Odoo company logo (replaced by our header) */
-body.dg_login_branded .text-center.pb-3.border-bottom {
-    display: none;
+    color: #47506B;
+    margin-bottom: 6px;
 }
 
 body.dg_login_branded .form-control {
-    min-height: 42px;
-    border-radius: 7px;
-    border-color: #E2E8F0;
+    min-height: 44px;
+    border-radius: 11px;
+    border: 1px solid #E3E7EE;
+    background: #FAFBFD;
+    font-size: 14.5px;
+    padding: 10px 14px;
+    transition: border-color .12s, box-shadow .12s, background .12s;
 }
 
 body.dg_login_branded .form-control:focus {
+    background: #FFFFFF;
     border-color: var(--dg-login-accent, #1B3A6B);
-    box-shadow: 0 0 0 0.2rem rgba(27, 58, 107, 0.18);
+    box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--dg-login-accent, #1B3A6B) 14%, transparent);
+}
+
+body.dg_login_branded .input-group .o_show_password {
+    border-radius: 0 11px 11px 0 !important;
+    border-color: #E3E7EE;
+    background: #FAFBFD;
+    color: #8A93A6;
+}
+
+body.dg_login_branded .input-group .form-control {
+    border-radius: 11px 0 0 11px;
+}
+
+body.dg_login_branded .mb-3 { margin-bottom: 18px !important; }
+
+body.dg_login_branded .alert {
+    border-radius: 11px;
+    font-size: 13.5px;
+    padding: 10px 14px;
+    border: none;
+}
+
+body.dg_login_branded .alert-danger {
+    background: #FDECEC;
+    color: #B3261E;
+}
+
+body.dg_login_branded .alert-success {
+    background: #E8F6EF;
+    color: #157A52;
 }
 
 /* Submit button */
 body.dg_login_branded .btn-primary {
-    background-color: var(--dg-login-accent, #1B3A6B) !important;
+    background: var(--dg-login-accent, #1B3A6B) !important;
     border-color: var(--dg-login-accent, #1B3A6B) !important;
-    padding: 0.65rem 1.5rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    border-radius: 7px;
-    transition: background-color 0.2s, transform 0.15s, box-shadow 0.15s;
-    filter: brightness(1);
+    min-height: 46px;
+    font-weight: 700;
+    font-size: 14.5px;
+    letter-spacing: .01em;
+    border-radius: 12px;
+    transition: filter .15s, transform .12s, box-shadow .15s;
 }
 
 body.dg_login_branded .btn-primary:hover {
-    filter: brightness(0.88);
+    filter: brightness(1.08);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(27, 58, 107, 0.24);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--dg-login-accent, #1B3A6B) 35%, transparent);
+}
+
+body.dg_login_branded .btn-primary:active { transform: translateY(0); }
+
+body.dg_login_branded .oe_login_buttons { margin-top: 6px !important; }
+
+/* "Other login options" (OAuth), when configured */
+body.dg_login_branded .o_login_auth em {
+    color: #9AA3B5 !important;
+    font-size: 12.5px;
+}
+
+body.dg_login_branded .o_login_auth .list-group-item {
+    border-radius: 11px !important;
+    border: 1px solid #E3E7EE !important;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #35405A;
+    transition: background .12s, border-color .12s;
+}
+
+body.dg_login_branded .o_login_auth .list-group-item:hover {
+    background: #F5F6F9;
+    border-color: #D7DCE6 !important;
 }
 
 /* ── Footer ── */
 body.dg_login_branded .dg_login_footer {
-    color: #94A3B8;
-    font-size: 0.73rem;
+    color: #9AA3B5;
+    font-size: 12.5px;
     text-align: center;
-    margin-top: 1rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid #E2E8F0;
+    margin-top: 24px !important;
+    padding-top: 18px !important;
+    border-top: 1px solid #EEF1F6 !important;
 }
 
 body.dg_login_branded .dg_login_footer a {
-    color: #64748B;
+    color: #6B7690;
     text-decoration: none;
 }
 
@@ -190,4 +281,9 @@ body.dg_login_branded .dg_login_footer a:hover {
 /* Hide "Powered by Odoo" link */
 body.dg_login_branded a[href*="odoo.com"] {
     display: none !important;
+}
+
+@media (max-width: 460px) {
+    body.dg_login_branded main > .container.py-5 { padding: 1.5rem 0; }
+    body.dg_login_branded .card-body { padding: 32px 22px 26px; }
 }

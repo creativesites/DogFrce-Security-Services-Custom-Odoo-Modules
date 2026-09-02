@@ -3,16 +3,23 @@
 <t t-name="security_shell.ShellRailFlyout" owl="1">
   <div class="dgs-rail-popover" t-ref="root">
     <t t-if="!props.nodes or !props.nodes.length">
-      <div class="dgs-rail-popover-tip"><t t-esc="props.label"/></div>
+      <div class="dgs-rail-popover-tip">
+        <span class="dgs-rail-popover-dot"/>
+        <t t-esc="props.label"/>
+      </div>
     </t>
     <t t-else="">
-      <div class="dgs-rail-popover-heading"><t t-esc="props.label"/></div>
+      <div class="dgs-rail-popover-heading">
+        <span class="dgs-rail-popover-dot"/>
+        <span class="dgs-rail-popover-heading-text"><t t-esc="props.label"/></span>
+      </div>
       <div class="dgs-rail-popover-list">
         <t t-foreach="props.nodes" t-as="node" t-key="node.id">
           <div t-attf-class="dgs-rail-popover-row {{ node.clickable ? 'clickable' : 'heading' }}"
-               t-attf-style="padding-left: {{ 10 + node.depth * 14 }}px"
+               t-attf-style="--depth: {{ node.depth }}"
                t-on-click="() => this.onRowClick(node)">
-            <t t-esc="node.label"/>
+            <span class="dgs-rail-popover-guide" t-if="node.depth > 0"/>
+            <span class="dgs-rail-popover-label"><t t-esc="node.label"/></span>
           </div>
         </t>
       </div>

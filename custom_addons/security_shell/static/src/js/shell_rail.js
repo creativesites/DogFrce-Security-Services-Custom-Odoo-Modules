@@ -95,7 +95,9 @@ export class ShellRail extends Component {
         this.flyout = usePopover(ShellRailFlyout, {
             position: "right",
             holdOnHover: true,
-            animation: false,
+            animation: true,
+            arrow: true,
+            popoverClass: "dgs-rail-popover-shell",
         });
         this._openTimer = null;
         this._closeTimer = null;
