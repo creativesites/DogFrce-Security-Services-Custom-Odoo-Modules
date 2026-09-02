@@ -39,6 +39,8 @@
     <template id="login_branded" inherit_id="web.login" name="DogForce Login Branding">
         <xpath expr="//div[@id='oe_structure_login_top']" position="before">
             <script>document.body.classList.add('dg_login_branded');</script>
+            <t t-set="dg_login_bg" t-value="request.env['ir.config_parameter'].sudo().get_param('security.theme.login_bg_color', '#1B3A6B')"/>
+            <style t-if="dg_login_bg">:root { --dg-login-accent: <t t-out="dg_login_bg"/>; }</style>
             <div class="dg_login_header text-center mb-3">
                 <img src="/security_theme/static/src/img/deployguard-w.png"
                      alt="DogForce"

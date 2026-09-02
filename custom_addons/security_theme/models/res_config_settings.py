@@ -19,7 +19,7 @@ class ResConfigSettings(models.TransientModel):
 
     security_login_bg_color = fields.Char(
         string='Login Background Color',
-        default='#1e3a5f',
+        default='#1B3A6B',
         config_parameter='security.theme.login_bg_color')
 
     security_ui_font = fields.Selection([
@@ -35,6 +35,6 @@ class ResConfigSettings(models.TransientModel):
 
     security_report_primary_color = fields.Char(
         string='Report Primary Color',
-        default='#1e3a5f',
+        default='#1B3A6B',
         help='Color used for PDF report headers, table headers, and footers.',
         config_parameter='security.theme.report_primary_color')

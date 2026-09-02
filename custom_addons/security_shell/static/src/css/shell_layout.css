@@ -841,7 +841,7 @@ html body.o_web_client .o_action_manager {
         padding: 0 6px;
     }
 
-    .dgs-rail-logo,
+    .dgs-rail-appswitch,
     .dgs-rail-toggle,
     .dgs-rail-divider,
     .dgs-rail-bottom .dgs-rail-item:not(.dgs-rail-mobile-item) {

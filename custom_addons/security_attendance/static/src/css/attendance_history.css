@@ -1,19 +1,19 @@
 /* ── Attendance History OWL Component ──────────────────────────────────────── */
 
 .ah-root {
-    --ah-navy:     #1B2040;
-    --ah-amber:    #F5A523;
-    --ah-bg:       #f5f6fa;
+    --ah-navy:     #1B3A6B;
+    --ah-amber:    #F5A20B;
+    --ah-bg:       #F8FAFC;
     --ah-surface:  #ffffff;
-    --ah-border:   #e2e6ef;
-    --ah-text:     #1a1d2e;
-    --ah-muted:    #7a839e;
+    --ah-border:   #E2E8F0;
+    --ah-text:     #0D1117;
+    --ah-muted:    #64748B;
     --ah-present:  #22c55e;
-    --ah-late:     #f59e0b;
-    --ah-absent:   #ef4444;
-    --ah-awol:     #dc2626;
+    --ah-late:     #F5A20B;
+    --ah-absent:   #F87171;
+    --ah-awol:     #991B1B;
     --ah-incomplete: #8b5cf6;
-    --ah-scheduled: #64748b;
+    --ah-scheduled: #64748B;
     --ah-radius:   8px;
     --ah-shadow:   0 1px 3px rgba(0,0,0,.08);
 
@@ -189,6 +189,7 @@
     font-size: 28px;
     font-weight: 700;
     line-height: 1;
+    font-family: var(--ds-mono);
     font-variant-numeric: tabular-nums;
     color: var(--ah-navy);
 }
@@ -258,7 +259,7 @@
 }
 
 .ah-row-header {
-    background: #f8f9fc;
+    background: #F1F4F8;
     min-height: 34px;
     font-size: 11px;
     font-weight: 600;
@@ -272,10 +273,10 @@
     transition: background .1s;
 }
 .ah-row-data:hover {
-    background: #f8f9fc;
+    background: #F1F4F8;
 }
 .ah-row-expanded {
-    background: #f0f3fb;
+    background: #EBF1FB;
 }
 
 /* ── Status stripe ───────────────────────────────────────────────────────────── */
@@ -387,13 +388,13 @@
     letter-spacing: .05em;
     white-space: nowrap;
 }
-.ah-badge-present     { background: #dcfce7; color: #166534; }
-.ah-badge-late        { background: #fef9c3; color: #854d0e; }
+.ah-badge-present     { background: #E6F4EE; color: #0D7A4E; }
+.ah-badge-late        { background: #FEF3C7; color: #92400E; }
 .ah-badge-early_leave { background: #ffedd5; color: #9a3412; }
-.ah-badge-absent      { background: #fee2e2; color: #991b1b; }
-.ah-badge-awol        { background: #dc2626; color: #fff; }
+.ah-badge-absent      { background: #FEE2E2; color: #991B1B; }
+.ah-badge-awol        { background: #991B1B; color: #fff; }
 .ah-badge-incomplete  { background: #ede9fe; color: #5b21b6; }
-.ah-badge-scheduled   { background: #f1f5f9; color: #475569; }
+.ah-badge-scheduled   { background: #F1F4F8; color: #475569; }
 
 /* ── Flag chips ──────────────────────────────────────────────────────────────── */
 
@@ -401,7 +402,7 @@
     width: 22px;
     height: 22px;
     border-radius: 4px;
-    background: #f1f5f9;
+    background: #F1F4F8;
     color: var(--ah-muted);
     display: flex;
     align-items: center;
@@ -502,9 +503,9 @@
     padding: 4px 10px;
     border-radius: 6px;
 }
-.ah-flag-danger  { background: #fee2e2; color: #991b1b; }
-.ah-flag-warn    { background: #fef9c3; color: #854d0e; }
-.ah-flag-ok      { background: #dcfce7; color: #166534; }
+.ah-flag-danger  { background: #FEE2E2; color: #991B1B; }
+.ah-flag-warn    { background: #FEF3C7; color: #92400E; }
+.ah-flag-ok      { background: #E6F4EE; color: #0D7A4E; }
 .ah-flag-info    { background: #e0f2fe; color: #0369a1; }
 
 .ah-note {

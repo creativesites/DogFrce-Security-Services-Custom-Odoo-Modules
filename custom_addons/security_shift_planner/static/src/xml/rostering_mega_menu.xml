@@ -405,17 +405,6 @@
 
       </div>
 
-      <!-- Footer -->
-      <div class="rmm-footer">
-        <div class="rmm-footer-status">
-          <span class="rmm-status-pill green"><i class="fa fa-check-circle me-1"/>System Operational</span>
-          <span class="rmm-status-pill blue"><i class="fa fa-shield me-1"/>DogForce AI 19.0 Active</span>
-        </div>
-        <div class="rmm-footer-tip">
-          Click outside or press <span class="rmm-kbd">Esc</span> to return to workspace
-        </div>
-      </div>
-
     </div>
   </div>
 </t>

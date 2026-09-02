@@ -43,8 +43,8 @@
 .o_posting_console input[type="date"]:focus,
 .o_posting_console select:focus {
     outline: none;
-    border-color: #38bdf8 !important;
-    box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    border-color: #6B93D6 !important;
+    box-shadow: 0 0 0 2px rgba(107, 147, 214, 0.25);
 }
 
 /* ── Scrollbar theming (webkit) ──────────────────────────────────────── */

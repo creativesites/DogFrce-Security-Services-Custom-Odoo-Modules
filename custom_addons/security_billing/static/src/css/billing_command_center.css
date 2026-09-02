@@ -4,10 +4,10 @@
    ========================================================================== */
 
 :root {
-    --bcc-bg-main: #f8fafc;
+    --bcc-bg-main: #F8FAFC;
     --bcc-bg-card: #ffffff;
-    --bcc-border-color: #f1f5f9;
-    --bcc-border-color-dark: #e2e8f0;
+    --bcc-border-color: #F1F4F8;
+    --bcc-border-color-dark: #E2E8F0;
     
     /* Typography */
     --bcc-font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -23,8 +23,8 @@
     --bcc-accent-indigo: #4f46e5;
     --bcc-accent-emerald: #10b981;
     --bcc-accent-cyan: #0ea5e9;
-    --bcc-accent-amber: #f59e0b;
-    --bcc-accent-crimson: #ef4444;
+    --bcc-accent-amber: #92400E;
+    --bcc-accent-crimson: #991B1B;
 }
 
 .bcc-root {
@@ -71,7 +71,7 @@
     width: 40px;
     height: 40px;
     border-radius: 8px;
-    background-color: #f1f5f9;
+    background-color: #F1F4F8;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -131,7 +131,7 @@
 }
 
 .bcc-btn-secondary:hover {
-    background-color: #f8fafc;
+    background-color: #F8FAFC;
     border-color: var(--bcc-slate-muted);
     color: var(--bcc-charcoal);
 }
@@ -337,7 +337,7 @@
 }
 
 .bcc-pill:hover {
-    background: #f8fafc;
+    background: #F8FAFC;
     color: var(--bcc-charcoal);
 }
 
@@ -422,7 +422,7 @@
 }
 
 .bcc-table .btn-outline-secondary:hover {
-    background-color: #f8fafc;
+    background-color: #F8FAFC;
     border-color: var(--bcc-slate-muted);
     color: var(--bcc-charcoal);
 }
@@ -439,16 +439,16 @@
     border: none;
 }
 
-.bcc-badge-draft { background: #f1f5f9; color: var(--bcc-slate-medium); }
+.bcc-badge-draft { background: #F1F4F8; color: var(--bcc-slate-medium); }
 .bcc-badge-sent { background: #eff6ff; color: #1e40af; }
 .bcc-badge-paid { background: #f0fdf4; color: #16803d; }
-.bcc-badge-cancelled { background: #f8fafc; color: var(--bcc-slate-muted); }
+.bcc-badge-cancelled { background: #F8FAFC; color: var(--bcc-slate-muted); }
 .bcc-badge-overdue { background: #fff1f2; color: #9f1239; margin-left: 4px; }
 
 /* Progress Bars inside AR tab */
 .progress {
     border-radius: 3px;
-    background-color: #f1f5f9 !important;
+    background-color: #F1F4F8 !important;
 }
 
 .progress-bar {

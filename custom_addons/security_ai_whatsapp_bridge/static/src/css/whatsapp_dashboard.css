@@ -5,8 +5,8 @@
 
 .dg-wa-container {
     padding: clamp(20px, 3vw, 36px);
-    background: radial-gradient(circle at top right, #ecfdf5 0, transparent 28rem), #f8fafc;
-    color: #0f172a;
+    background: #F8FAFC;
+    color: #0D1117;
     min-height: 100vh;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -18,7 +18,7 @@
     align-items: center;
     margin-bottom: 28px;
     padding-bottom: 16px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .dg-wa-header-title {
@@ -30,12 +30,12 @@
 .dg-wa-header-title h1 {
     font-size: 1.55rem;
     font-weight: 750;
-    color: #0f172a;
+    color: #0D1117;
     margin: 0;
 }
 
 .dg-wa-eyebrow {
-    color: #64748b;
+    color: #64748B;
     font-size: .7rem;
     font-weight: 750;
     letter-spacing: .11em;
@@ -86,7 +86,7 @@
 }
 
 .dg-wa-btn-primary {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: #059669;
     color: #ffffff;
 }
 
@@ -99,13 +99,13 @@
 .dg-wa-btn-secondary {
     background: #ffffff;
     color: #475569;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
 }
 
 .dg-wa-btn-secondary:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
-    color: #0f172a;
+    background: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #0D1117;
 }
 
 .dg-wa-btn-workspace {
@@ -130,7 +130,7 @@
 
 .dg-wa-kpi-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 16px;
     padding: 16px 20px;
     display: flex;
@@ -143,14 +143,14 @@
 .dg-wa-kpi-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 20px rgba(15, 23, 42, 0.04);
-    border-color: #cbd5e1;
+    border-color: #CBD5E1;
 }
 
 .dg-wa-kpi-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    color: #64748b;
+    color: #64748B;
     font-size: 0.85rem;
     font-weight: 500;
 }
@@ -168,13 +168,13 @@
 .dg-wa-kpi-val {
     font-size: 1.8rem;
     font-weight: 800;
-    color: #0f172a;
+    color: #0D1117;
     margin-top: 12px;
 }
 
 .dg-wa-kpi-sub {
     font-size: 0.75rem;
-    color: #64748b;
+    color: #64748B;
     margin-top: 4px;
 }
 
@@ -193,7 +193,7 @@
 
 .dg-wa-panel {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 16px;
     padding: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -202,7 +202,7 @@
 .dg-wa-panel-title {
     font-size: 1rem;
     font-weight: 700;
-    color: #0f172a;
+    color: #0D1117;
     margin-bottom: 16px;
     display: flex;
     justify-content: space-between;
@@ -215,7 +215,7 @@
     align-items: flex-start;
     gap: 12px;
     padding: 12px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #F1F4F8;
     transition: background 0.2s;
 }
 
@@ -251,17 +251,17 @@
 .dg-wa-stream-sender {
     font-size: 0.875rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #0D1117;
 }
 
 .dg-wa-stream-time {
     font-size: 0.75rem;
-    color: #64748b;
+    color: #64748B;
 }
 
 .dg-wa-stream-text {
     font-size: 0.825rem;
-    color: #334155;
+    color: #374151;
     line-height: 1.4;
 }
 
@@ -273,15 +273,15 @@
     color: #0369a1;
     font-weight: 600;
     text-transform: uppercase;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
 }
 
 .dg-wa-overview { color: #475569; font-size: .875rem; }
-.dg-wa-overview-stat { align-items: center; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; padding: 10px 0; }
-.dg-wa-overview-stat strong { color: #0f172a; font-size: .9rem; }
-.dg-wa-command-heading { color: #0f172a; font-size: .76rem; font-weight: 750; letter-spacing: .08em; margin: 20px 0 10px; text-transform: uppercase; }
-.dg-wa-command-list { color: #64748b; font-size: .8rem; line-height: 1.9; margin: 0; padding-left: 18px; }
-.dg-wa-command-list code { background: #f1f5f9; border-radius: 4px; color: #334155; padding: 2px 4px; }
+.dg-wa-overview-stat { align-items: center; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; padding: 10px 0; }
+.dg-wa-overview-stat strong { color: #0D1117; font-size: .9rem; }
+.dg-wa-command-heading { color: #0D1117; font-size: .76rem; font-weight: 750; letter-spacing: .08em; margin: 20px 0 10px; text-transform: uppercase; }
+.dg-wa-command-list { color: #64748B; font-size: .8rem; line-height: 1.9; margin: 0; padding-left: 18px; }
+.dg-wa-command-list code { background: #F1F4F8; border-radius: 4px; color: #374151; padding: 2px 4px; }
 
 /* Live Control Room Chat Workspace */
 .dg-wa-chat-layout {
@@ -291,26 +291,26 @@
     background: #ffffff;
     border-radius: 18px;
     overflow: hidden;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
 }
 
 .dg-wa-chat-sidebar {
     background: #fff;
-    border-right: 1px solid #e2e8f0;
+    border-right: 1px solid #E2E8F0;
     display: flex;
     flex-direction: column;
 }
 
 .dg-wa-thread-item {
     padding: 14px 16px;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #F1F4F8;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .dg-wa-thread-item:hover {
-    background: #f1f5f9;
+    background: #F1F4F8;
 }
 
 .dg-wa-thread-item.active {
@@ -319,7 +319,7 @@
 }
 
 .dg-wa-chat-main {
-    background: radial-gradient(circle at 0 0, #ecfdf5, transparent 24rem), #f8fafc;
+    background: #F8FAFC;
     display: flex;
     flex-direction: column;
 }
@@ -345,8 +345,8 @@
 .dg-wa-bubble-inbound {
     align-self: flex-start;
     background: #ffffff;
-    color: #0f172a;
-    border: 1px solid #e2e8f0;
+    color: #0D1117;
+    border: 1px solid #E2E8F0;
     border-bottom-left-radius: 2px;
 }
 
@@ -362,14 +362,14 @@
     background: #ffffff;
     display: flex;
     gap: 12px;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #E2E8F0;
 }
 
 .dg-wa-chat-input-bar input {
     flex: 1;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    color: #0f172a;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    color: #0D1117;
     padding: 10px 16px;
     border-radius: 8px;
     outline: none;
@@ -382,13 +382,13 @@
 
 .dg-wa-workspace { padding-top: 22px; }
 .dg-wa-workspace-header { align-items: end; display: flex; justify-content: space-between; margin: 0 auto 18px; max-width: 1440px; }
-.dg-wa-workspace-header h1 { color: #0f172a; font-size: 1.55rem; font-weight: 750; margin: 0; }
-.dg-wa-filter-group { background: #e2e8f0; border-radius: 10px; display: flex; gap: 3px; padding: 3px; }
-.dg-wa-filter { background: transparent; border: 0; border-radius: 7px; color: #64748b; cursor: pointer; font-size: .78rem; font-weight: 650; padding: 7px 10px; }
+.dg-wa-workspace-header h1 { color: #0D1117; font-size: 1.55rem; font-weight: 750; margin: 0; }
+.dg-wa-filter-group { background: #E2E8F0; border-radius: 10px; display: flex; gap: 3px; padding: 3px; }
+.dg-wa-filter { background: transparent; border: 0; border-radius: 7px; color: #64748B; cursor: pointer; font-size: .78rem; font-weight: 650; padding: 7px 10px; }
 .dg-wa-filter.active { background: #fff; box-shadow: 0 1px 3px rgba(15,23,42,.12); color: #047857; }
-.dg-wa-thread-header { align-items: center; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; padding: 16px; }
-.dg-wa-thread-header h3, .dg-wa-chat-thread-bar h3 { color: #0f172a; font-size: 1rem; margin: 0; }
-.dg-wa-chat-thread-bar { align-items: center; background: rgba(255,255,255,.9); border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; padding: 14px 20px; }
+.dg-wa-thread-header { align-items: center; border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; padding: 16px; }
+.dg-wa-thread-header h3, .dg-wa-chat-thread-bar h3 { color: #0D1117; font-size: 1rem; margin: 0; }
+.dg-wa-chat-thread-bar { align-items: center; background: rgba(255,255,255,.9); border-bottom: 1px solid #E2E8F0; display: flex; justify-content: space-between; padding: 14px 20px; }
 .dg-wa-chat-thread-bar span { color: #059669; font-size: .8rem; }
 
 @media (max-width: 720px) {

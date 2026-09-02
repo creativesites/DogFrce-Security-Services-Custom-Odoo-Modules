@@ -3,11 +3,7 @@
    ========================================================= */
 
 body.dg_login_branded {
-    background-color: #f7fbff;
-    background-image:
-        radial-gradient(circle at 14% 12%, rgba(59, 130, 246, 0.12) 0, transparent 32%),
-        radial-gradient(circle at 86% 80%, rgba(45, 90, 158, 0.08) 0, transparent 30%),
-        linear-gradient(135deg, #f8fbff 0%, #eef5ff 52%, #f7fafc 100%);
+    background-color: #F8FAFC;
     min-height: 100vh;
 }
 
@@ -58,11 +54,14 @@ body.dg_login_branded .card-body {
     padding: 0;
 }
 
-/* ── Branded header inside card ── */
+/* ── Branded header inside card — solid fill in the tenant's configured
+     accent (security_login_bg_color), with a soft highlight for texture.
+     The one deliberate hero moment on this page, same exception as the
+     app switcher's own decorative treatment. ── */
 body.dg_login_branded .dg_login_header {
     background:
-        radial-gradient(circle at 20% 10%, rgba(147, 197, 253, 0.26) 0, transparent 36%),
-        linear-gradient(145deg, #183a5f 0%, #214d7c 52%, #2d5a9e 100%);
+        radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.16) 0, transparent 36%),
+        var(--dg-login-accent, #1B3A6B);
     padding: 1.75rem 2rem 1.5rem;
     text-align: center;
     position: relative;
@@ -143,49 +142,49 @@ body.dg_login_branded .text-center.pb-3.border-bottom {
 body.dg_login_branded .form-control {
     min-height: 42px;
     border-radius: 7px;
-    border-color: #d7e0eb;
+    border-color: #E2E8F0;
 }
 
 body.dg_login_branded .form-control:focus {
-    border-color: #2d5a9e;
-    box-shadow: 0 0 0 0.2rem rgba(45, 90, 158, 0.22);
+    border-color: var(--dg-login-accent, #1B3A6B);
+    box-shadow: 0 0 0 0.2rem rgba(27, 58, 107, 0.18);
 }
 
 /* Submit button */
 body.dg_login_branded .btn-primary {
-    background-color: #1e3a5f !important;
-    border-color: #1e3a5f !important;
+    background-color: var(--dg-login-accent, #1B3A6B) !important;
+    border-color: var(--dg-login-accent, #1B3A6B) !important;
     padding: 0.65rem 1.5rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     border-radius: 7px;
     transition: background-color 0.2s, transform 0.15s, box-shadow 0.15s;
+    filter: brightness(1);
 }
 
 body.dg_login_branded .btn-primary:hover {
-    background-color: #2d5a9e !important;
-    border-color: #2d5a9e !important;
+    filter: brightness(0.88);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.24);
+    box-shadow: 0 4px 12px rgba(27, 58, 107, 0.24);
 }
 
 /* ── Footer ── */
 body.dg_login_branded .dg_login_footer {
-    color: #94a3b8;
+    color: #94A3B8;
     font-size: 0.73rem;
     text-align: center;
     margin-top: 1rem;
     padding-top: 0.9rem;
-    border-top: 1px solid #e2e8f0;
+    border-top: 1px solid #E2E8F0;
 }
 
 body.dg_login_branded .dg_login_footer a {
-    color: #64748b;
+    color: #64748B;
     text-decoration: none;
 }
 
 body.dg_login_branded .dg_login_footer a:hover {
-    color: #1e3a5f;
+    color: var(--dg-login-accent, #1B3A6B);
 }
 
 /* Hide "Powered by Odoo" link */

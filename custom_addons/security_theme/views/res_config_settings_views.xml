@@ -12,7 +12,7 @@
                      logo="/security_theme/static/src/img/deployguard.png">
 
                     <block title="UI Theme Preset" name="security_theme_preset">
-                        <setting string="Active Theme" help="Applies a color scheme to the backend navigation bar.">
+                        <setting string="Active Theme" help="Applies an accent color across primary buttons, links and status indicators.">
                             <field name="security_active_theme" widget="radio" class="o_light_label"/>
                         </setting>
                     </block>
