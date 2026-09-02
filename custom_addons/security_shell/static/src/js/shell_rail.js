@@ -5,6 +5,7 @@ import { useService, useBus } from "@web/core/utils/hooks";
 import { usePopover } from "@web/core/popover/popover_hook";
 import { user } from "@web/core/user";
 import { ShellRailFlyout } from "./shell_rail_flyout";
+import { ShellProfileCard } from "./shell_profile_card";
 
 /** Maps a real (live, not hand-listed) section name to one of a small,
  * coherent icon set by keyword — so new sections that appear in Odoo's
@@ -101,6 +102,16 @@ export class ShellRail extends Component {
         });
         this._openTimer = null;
         this._closeTimer = null;
+
+        // Click-triggered (not hover), auto-closes on click-away by default —
+        // the right behavior for an actionable menu (log out, preferences)
+        // rather than a transient preview.
+        this.profileMenu = usePopover(ShellProfileCard, {
+            position: "right-end",
+            animation: true,
+            arrow: true,
+            popoverClass: "dgs-profile-popover-shell",
+        });
 
         this.sectionsRef = useRef("sections");
 
@@ -237,14 +248,13 @@ export class ShellRail extends Component {
         });
     }
 
-    onAvatarClick() {
+    onAvatarClick(ev) {
         this.flyout.close();
-        this.action.doAction({
-            type: "ir.actions.act_window",
-            res_model: "res.users",
-            res_id: user.userId,
-            views: [[false, "form"]],
-            target: "current",
-        });
+        clearTimeout(this._openTimer);
+        if (this.profileMenu.isOpen) {
+            this.profileMenu.close();
+            return;
+        }
+        this.profileMenu.open(ev.currentTarget, {});
     }
 }

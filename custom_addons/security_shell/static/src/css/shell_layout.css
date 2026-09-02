@@ -304,6 +304,108 @@ html body.o_web_client .o_action_manager {
 
 .dgs-rail-popover-row.heading:first-child { margin-top: 0; }
 
+/* ── Profile card ──────────────────────────────────────────────────────
+   The rail avatar's click menu — built on Odoo's own "user_menuitems"
+   registry (shell_profile_card.js), so Log out, My Preferences, and
+   anything any other installed module contributes there all show up
+   correctly, with the same elevated-surface treatment as the rest of the
+   shell's popovers rather than a bare unstyled list. */
+.dgs-profile-popover-shell {
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(16, 23, 36, .04), 0 16px 40px rgba(16, 23, 36, .16);
+    padding: 0;
+    overflow: hidden;
+}
+
+.dgs-profile-card {
+    width: 268px;
+    font-family: var(--dgs-font);
+}
+
+.dgs-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 18px 16px;
+    background: var(--dgs-canvas);
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.dgs-profile-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    border: 1px solid var(--ds-border);
+    background: #FFFFFF;
+}
+
+.dgs-profile-header-text { min-width: 0; }
+
+.dgs-profile-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ds-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-profile-login {
+    font-size: 12px;
+    color: var(--ds-text-subtle);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+
+.dgs-profile-db {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    color: var(--ds-text-faint, var(--ds-text-subtle));
+    margin-top: 4px;
+}
+
+.dgs-profile-list {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 1px;
+}
+
+.dgs-profile-item {
+    display: block;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .1s ease;
+}
+
+.dgs-profile-item:hover {
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
+}
+
+.dgs-profile-card .dgs-profile-item.danger { color: #C0392B !important; }
+.dgs-profile-card .dgs-profile-item.danger:hover { background: #FDECEC; color: #A5271D !important; }
+
+.dgs-profile-divider {
+    height: 1px;
+    background: var(--ds-border);
+    margin: 6px 4px;
+}
+
 .dgs-rail-bottom {
     margin-top: auto;
     display: flex;

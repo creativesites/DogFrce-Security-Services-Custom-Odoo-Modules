@@ -24,6 +24,7 @@
             "security_shell/static/src/js/shell_frame.js",
             "security_shell/static/src/js/shell_loading_bar.js",
             "security_shell/static/src/js/shell_rail_flyout.js",
+            "security_shell/static/src/js/shell_profile_card.js",
             "security_shell/static/src/js/home_dashboard.js",
             "security_shell/static/src/xml/*.xml",
         ],
