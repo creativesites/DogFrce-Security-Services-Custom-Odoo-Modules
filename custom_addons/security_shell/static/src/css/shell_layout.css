@@ -70,80 +70,38 @@ html body.o_web_client .o_action_manager {
     font-family: var(--dgs-font);
 }
 
-.dgs-rail-appswitch-wrap {
-    position: relative;
-    flex: 0 0 auto;
-}
-
-.dgs-rail-logo {
+/* App switcher — a grid icon, deliberately not the company/site logo (that
+   lives in the nav panel header now, as branding+workspace context, a
+   separate concept from "which application"). Opens the existing
+   DogForceAppLauncher overlay (security_theme), mounted as a shell sibling
+   in shell_frame.xml since its usual mount point inside .o_main_navbar is
+   unreachable once the shell hides that navbar. */
+.dgs-rail-appswitch {
     width: 44px;
     height: 44px;
     border-radius: 14px;
-    background: #FFFFFF;
+    border: none;
+    background: var(--dgs-rail-hover);
+    color: var(--dgs-rail-icon);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    flex: 0 0 auto;
-}
-
-.dgs-rail-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.dgs-rail-appswitch {
-    border: none;
-    padding: 2px;
     cursor: pointer;
-    transition: box-shadow .15s;
+    flex: 0 0 auto;
+    transition: background .15s, color .15s;
+}
+
+.dgs-rail-appswitch svg {
+    width: 19px;
+    height: 19px;
 }
 
 .dgs-rail-appswitch:hover,
 .dgs-rail-appswitch:focus-visible {
-    box-shadow: 0 0 0 2px var(--dgs-rail-hover);
+    background: var(--dgs-rail-active);
+    color: #101724;
     outline: none;
 }
-
-.dgs-rail-flyout-scrim {
-    position: fixed;
-    inset: 0;
-    z-index: 1039;
-}
-
-.dgs-appswitch-menu {
-    position: absolute;
-    top: 0;
-    left: 88px;
-    width: 220px;
-    z-index: 1040;
-    background: var(--dgs-panel);
-    border-radius: var(--dgs-r-control);
-    box-shadow: var(--dgs-lift-hover);
-    padding: 8px;
-    font-family: var(--dgs-font);
-}
-
-.dgs-appswitch-heading {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--ds-text-subtle);
-    padding: 6px 8px 4px;
-}
-
-.dgs-appswitch-item {
-    padding: 8px 8px;
-    border-radius: 9px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ds-text-2);
-    cursor: pointer;
-}
-
-.dgs-appswitch-item:hover { background: var(--dgs-canvas); }
 
 .dgs-rail-toggle {
     width: 40px;
@@ -481,6 +439,18 @@ html body.o_web_client .o_action_manager {
     color: #101724;
 }
 
+/* Active leaf: never rely on color alone (accessibility) — a left accent
+   bar plus weight/background carries the "you are here" state. */
+.dgs-nav-row.active {
+    background: var(--dgs-rail-active);
+    box-shadow: inset 3px 0 0 var(--dgs-rail);
+}
+
+.dgs-nav-row.active .dgs-nav-label {
+    color: #101724;
+    font-weight: 600;
+}
+
 .dgs-nav-row-leaf .dgs-nav-label {
     font-size: 13px;
     font-weight: 500;
@@ -561,14 +531,31 @@ html body.o_web_client .o_action_manager {
 }
 
 .dgs-company-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     padding: 8px 10px;
     border-radius: 9px;
     font-size: 13px;
+    font-weight: 500;
     color: var(--ds-text-2);
     cursor: pointer;
 }
 
+.dgs-company-menu-item svg { flex: 0 0 auto; color: var(--ds-text-subtle); }
+
 .dgs-company-menu-item:hover { background: var(--dgs-canvas); }
+
+.dgs-company-menu-section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 10px 10px 4px;
+}
+
+.dgs-company-menu-section-label:first-child { padding-top: 4px; }
 
 /* ── Overlay scrim (nav panel < 1280px, see Responsive below) ───────────── */
 

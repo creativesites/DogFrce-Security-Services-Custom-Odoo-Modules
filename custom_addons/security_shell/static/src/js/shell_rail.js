@@ -4,6 +4,31 @@ import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { useService, useBus } from "@web/core/utils/hooks";
 import { user } from "@web/core/user";
 
+/** Maps a real (live, not hand-listed) section name to one of a small,
+ * coherent icon set by keyword — so new sections that appear in Odoo's
+ * menu tree still get a sensible icon instead of a random letter, without
+ * needing a name-by-name lookup table to keep in sync. */
+const ICON_RULES = [
+    [/operation/i, "operations"],
+    [/roster|schedul|shift/i, "calendar"],
+    [/workforce|people|employee|guard/i, "people"],
+    [/payroll|finance|billing|invoic/i, "payroll"],
+    [/client|site\b/i, "building"],
+    [/equipment|asset/i, "package"],
+    [/fleet|transport|vehicle/i, "truck"],
+    [/report|analytic|dashboard/i, "chart"],
+    [/whatsapp|message|chat/i, "message"],
+    [/help/i, "help"],
+    [/config|setting|admin/i, "settings"],
+    [/notification/i, "bell"],
+    [/reconcil|migration|sync/i, "link"],
+];
+
+function iconForLabel(label) {
+    const match = ICON_RULES.find(([re]) => re.test(label || ""));
+    return match ? match[1] : "folder";
+}
+
 export class ShellRail extends Component {
     static template = "security_shell.ShellRail";
     static props = { "*": true };
@@ -21,7 +46,6 @@ export class ShellRail extends Component {
         this.action = useService("action");
         this.menuService = useService("menu");
         useBus(this.env.bus, "MENUS:APP-CHANGED", () => this.render(true));
-        this.uiState = useState({ appSwitcherOpen: false });
 
         onMounted(() => {
             // Activate shell CSS (hides Odoo navbar, enables shell layout).
@@ -52,14 +76,10 @@ export class ShellRail extends Component {
             .map((node) => ({
                 id: node.id,
                 label: node.name,
-                initial: (node.name || "?").trim().charAt(0).toUpperCase(),
+                icon: iconForLabel(node.name),
                 children: (node.childrenTree || []).slice(0, 12),
                 hasAction: !!node.actionID,
             }));
-    }
-
-    get apps() {
-        return this.menuService.getApps();
     }
 
     get userInitials() {
@@ -72,21 +92,9 @@ export class ShellRail extends Component {
             .join("") || "?";
     }
 
-    /** The site's own logo (company branding), not a fixed DeployGuard
-     * asset — this tile is now the app switcher, so it should show what the
-     * customer actually operates under. */
-    get logoUrl() {
-        const companyId = user.activeCompany?.id;
-        return companyId ? `/web/image/res.company/${companyId}/logo` : "/web/static/img/logo.png";
-    }
-
     isActive(item) {
-        // activeGroupKey is still populated from the old curated-catalog
-        // resolver (shell_service.js's findByActionResId), which doesn't
-        // know about live menu ids — rail highlighting against the real
-        // tree is a follow-up, not wired yet. Never mis-highlight in the
-        // meantime.
-        return false;
+        const st = this.shell.state;
+        return st.activeMenuId === item.id || st.activeMenuAncestorIds.includes(item.id);
     }
 
     onItemClick(item) {
@@ -111,13 +119,8 @@ export class ShellRail extends Component {
         this.shell.toggleExpanded();
     }
 
-    toggleAppSwitcher() {
-        this.uiState.appSwitcherOpen = !this.uiState.appSwitcherOpen;
-    }
-
-    onAppClick(app) {
-        this.uiState.appSwitcherOpen = false;
-        this.menuService.selectMenu(app);
+    onAppLauncherClick() {
+        this.shell.toggleAppLauncher();
     }
 
     onSettingsClick() {

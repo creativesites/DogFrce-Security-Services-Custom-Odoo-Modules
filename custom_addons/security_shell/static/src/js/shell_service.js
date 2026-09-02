@@ -25,9 +25,9 @@ function savePersisted(expanded, openGroups, openMenuIds) {
 }
 
 export const shellService = {
-    dependencies: ["orm"],
+    dependencies: ["orm", "menu"],
 
-    start(env, { orm }) {
+    start(env, { orm, menu }) {
         const persisted = loadPersisted();
         const hasStoredPreference = "expanded" in persisted;
         const defaultExpanded = window.innerWidth >= 1280;
@@ -40,6 +40,20 @@ export const shellService = {
             // above (which only applies to the Home dashboard's curated tile
             // grid). Persisted so a user's expanded sections survive reloads.
             openMenuIds: { ...(persisted.openMenuIds || {}) },
+            // The real ir.ui.menu id of whatever action is currently showing
+            // (null if it doesn't match anything in the live tree — e.g. a
+            // record form reached by drilling in, not a menu-level screen),
+            // plus the chain of ancestor group ids above it. Both the rail
+            // and the nav panel derive their active-state highlighting from
+            // this — there is no second, hand-maintained active-state map.
+            activeMenuId: null,
+            activeMenuAncestorIds: [],
+            // Reuses security_theme's existing DogForceAppLauncher overlay
+            // (search + priority workspace cards + full app grid) rather
+            // than a new one-off dropdown — mounted as a shell sibling (see
+            // shell_frame.xml) since its original mount point, inside
+            // .o_main_navbar, is unreachable once the shell hides that navbar.
+            appLauncherOpen: false,
             searchQuery: "",
             resolving: true,
             resolvedActions: {},
@@ -59,6 +73,14 @@ export const shellService = {
 
         function persist() {
             savePersisted(state.expanded, state.openGroups, state.openMenuIds);
+        }
+
+        function toggleAppLauncher() {
+            state.appLauncherOpen = !state.appLauncherOpen;
+        }
+
+        function closeAppLauncher() {
+            state.appLauncherOpen = false;
         }
 
         function isMenuNodeOpen(id) {
@@ -192,37 +214,48 @@ export const shellService = {
             return groups;
         }
 
-        /** Best-effort: given the numeric res_id of the action currently
-         * showing in the action manager, find which nav leaf/group it
-         * belongs to so the rail + nav panel can highlight it. Silently
-         * finds nothing for actions outside the curated tree. */
-        function findByActionResId(resId) {
-            if (!resId) {
-                return null;
+        /** Given the numeric action id currently showing in the action
+         * manager, find its node in the LIVE menu tree (current app) and the
+         * chain of group ids above it, by walking the same tree the nav
+         * panel renders — no second, hand-maintained map to drift out of
+         * sync. Returns nulls if the action isn't menu-level (e.g. a record
+         * form reached by drilling into a list, not a menu itself). */
+        function findActiveMenuPath(actionResId) {
+            const app = menu.getCurrentApp();
+            if (!app || !actionResId) {
+                return { leafId: null, ancestorIds: [] };
             }
-            for (const group of NAV_CATALOG) {
-                for (const subgroup of group.children) {
-                    for (const leaf of subgroup.children) {
-                        const resolved = leaf.action && state.resolvedActions[leaf.action];
-                        if (resolved && resolved.resId === resId) {
-                            return { group, subgroup, leaf };
-                        }
+            const tree = menu.getMenuAsTree(app.id);
+            let found = null;
+            const walk = (nodes, path) => {
+                for (const node of nodes) {
+                    if (found) {
+                        return;
+                    }
+                    if (node.actionID === actionResId) {
+                        found = { leafId: node.id, ancestorIds: [...path] };
+                        return;
+                    }
+                    if (node.childrenTree && node.childrenTree.length) {
+                        walk(node.childrenTree, [...path, node.id]);
                     }
                 }
-            }
-            return null;
+            };
+            walk(tree.childrenTree || [], []);
+            return found || { leafId: null, ancestorIds: [] };
         }
 
         function setActiveController(actionResId, actionTag) {
             state.isHome = actionTag === "deployguard.main_command_center";
-            const found = state.isHome ? null : findByActionResId(actionResId);
-            if (found) {
-                state.activeGroupKey = found.group.key;
-                state.activeLeafKey = found.leaf.key;
-                openGroup(found.group.key);
-            } else {
-                state.activeGroupKey = null;
-                state.activeLeafKey = null;
+            const { leafId, ancestorIds } = state.isHome
+                ? { leafId: null, ancestorIds: [] }
+                : findActiveMenuPath(actionResId);
+            state.activeMenuId = leafId;
+            state.activeMenuAncestorIds = ancestorIds;
+            for (const id of ancestorIds) {
+                if (!state.openMenuIds[id]) {
+                    state.openMenuIds[id] = true;
+                }
             }
         }
 
@@ -237,6 +270,8 @@ export const shellService = {
             openGroup,
             isMenuNodeOpen,
             toggleMenuNode,
+            toggleAppLauncher,
+            closeAppLauncher,
             isResolved,
             loadPayload,
             getVisibleCatalog,

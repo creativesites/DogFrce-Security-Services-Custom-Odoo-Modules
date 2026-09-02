@@ -41,7 +41,7 @@
         <div class="dgs-nav-empty">No matches</div>
       </t>
       <t t-foreach="flatRows" t-as="row" t-key="row.id">
-        <div t-attf-class="dgs-nav-row dgs-nav-row-n {{ row.hasChildren ? 'dgs-nav-row-group' : 'dgs-nav-row-leaf' }}"
+        <div t-attf-class="dgs-nav-row dgs-nav-row-n {{ row.hasChildren ? 'dgs-nav-row-group' : 'dgs-nav-row-leaf' }} {{ row.isActive ? 'active' : '' }}"
              t-attf-style="padding-left: {{ 12 + row.depth * 16 }}px"
              t-on-click="() => this.onRowClick(row)"
              t-att-title="row.label">
@@ -56,11 +56,37 @@
     </div>
 
     <div class="dgs-nav-scrim" t-if="uiState.companyMenuOpen" t-on-click="toggleCompanyMenu"/>
-    <div class="dgs-company-menu" t-if="uiState.companyMenuOpen">
-      <t t-foreach="availableCompanies" t-as="comp" t-key="comp.id">
-        <div class="dgs-company-menu-item" t-on-click="() => this.selectCompany(comp.id)">
-          <t t-esc="comp.name"/>
-        </div>
+    <div class="dgs-company-menu" t-if="uiState.companyMenuOpen" role="dialog" aria-label="Workspace">
+      <div class="dgs-company-menu-section-label">Quick access</div>
+      <div class="dgs-company-menu-item" t-on-click="onPanelHomeClick">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>
+        </svg>
+        <span>Command Centre</span>
+      </div>
+      <div class="dgs-company-menu-item" t-on-click="onPanelSettingsClick">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 00.3 1.9l.05.05a2 2 0 11-2.8 2.8l-.05-.05a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.05.05a2 2 0 11-2.8-2.8l.05-.05a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.05-.05a2 2 0 112.8-2.8l.05.05a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.05-.05a2 2 0 112.8 2.8l-.05.05a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+        </svg>
+        <span>Settings</span>
+      </div>
+      <div class="dgs-company-menu-item" t-on-click="onPanelHelpClick" t-if="helpActionAvailable">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M9.5 9a2.5 2.5 0 114 2c-.7.6-1.5 1.1-1.5 2.3"/>
+          <path d="M12 17.2v.01"/>
+        </svg>
+        <span>Help Centre</span>
+      </div>
+
+      <t t-if="availableCompanies.length > 1">
+        <div class="dgs-company-menu-section-label">Company</div>
+        <t t-foreach="availableCompanies" t-as="comp" t-key="comp.id">
+          <div class="dgs-company-menu-item" t-on-click="() => this.selectCompany(comp.id)">
+            <span><t t-esc="comp.name"/></span>
+          </div>
+        </t>
       </t>
     </div>
 

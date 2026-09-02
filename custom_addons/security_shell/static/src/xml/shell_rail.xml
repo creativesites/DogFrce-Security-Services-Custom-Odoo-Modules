@@ -3,22 +3,20 @@
 <t t-name="security_shell.ShellRail" owl="1">
   <div class="dgs-rail" role="navigation" aria-label="DeployGuard primary navigation">
 
-    <div class="dgs-rail-appswitch-wrap">
-      <button class="dgs-rail-logo dgs-rail-appswitch" t-on-click="toggleAppSwitcher"
-              title="Switch app" aria-label="Switch app">
-        <img t-att-src="logoUrl" alt=""/>
-      </button>
-
-      <div class="dgs-rail-flyout-scrim" t-if="uiState.appSwitcherOpen" t-on-click="toggleAppSwitcher"/>
-      <div class="dgs-appswitch-menu" t-if="uiState.appSwitcherOpen" role="menu" aria-label="Apps">
-        <div class="dgs-appswitch-heading">Apps</div>
-        <t t-foreach="apps" t-as="app" t-key="app.id">
-          <div class="dgs-appswitch-item" t-on-click="() => this.onAppClick(app)">
-            <t t-esc="app.name"/>
-          </div>
-        </t>
-      </div>
-    </div>
+    <button class="dgs-rail-appswitch" t-on-click="onAppLauncherClick"
+            title="Switch application" aria-label="Switch application">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="5" cy="5" r="1.6"/>
+        <circle cx="12" cy="5" r="1.6"/>
+        <circle cx="19" cy="5" r="1.6"/>
+        <circle cx="5" cy="12" r="1.6"/>
+        <circle cx="12" cy="12" r="1.6"/>
+        <circle cx="19" cy="12" r="1.6"/>
+        <circle cx="5" cy="19" r="1.6"/>
+        <circle cx="12" cy="19" r="1.6"/>
+        <circle cx="19" cy="19" r="1.6"/>
+      </svg>
+    </button>
 
     <button class="dgs-rail-toggle"
             t-on-click="onToggleClick"
@@ -49,7 +47,67 @@
                   t-on-click="() => this.onItemClick(item)"
                   t-att-title="item.label"
                   t-att-aria-label="item.label">
-            <span class="dgs-rail-item-initial"><t t-esc="item.initial"/></span>
+
+            <svg t-if="item.icon === 'operations'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6l7-3z"/>
+            </svg>
+            <svg t-elif="item.icon === 'calendar'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="5" width="18" height="16" rx="2"/>
+              <path d="M16 3v4M8 3v4M3 10h18"/>
+            </svg>
+            <svg t-elif="item.icon === 'people'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="8" r="3"/>
+              <path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/>
+              <path d="M16 8a3 3 0 100-6 3 3 0 000 6z"/>
+              <path d="M15.5 14c2.7.4 4.5 2.5 4.5 6"/>
+            </svg>
+            <svg t-elif="item.icon === 'payroll'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="10" rx="2"/>
+              <circle cx="12" cy="12" r="2.5"/>
+              <path d="M6 9v.01M18 15v.01"/>
+            </svg>
+            <svg t-elif="item.icon === 'building'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="4" y="3" width="12" height="18" rx="1"/>
+              <path d="M8 7h.01M12 7h.01M8 11h.01M12 11h.01M8 15h.01M12 15h.01"/>
+              <path d="M16 21v-6h4v6"/>
+            </svg>
+            <svg t-elif="item.icon === 'package'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 8l-9-5-9 5 9 5 9-5z"/>
+              <path d="M3 8v8l9 5 9-5V8"/>
+              <path d="M12 13v8"/>
+            </svg>
+            <svg t-elif="item.icon === 'truck'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="6" width="14" height="11" rx="1"/>
+              <path d="M15 10h4l3 3v4h-7z"/>
+              <circle cx="6" cy="19" r="1.6"/>
+              <circle cx="17.5" cy="19" r="1.6"/>
+            </svg>
+            <svg t-elif="item.icon === 'chart'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 20V10M12 20V4M20 20v-7"/>
+            </svg>
+            <svg t-elif="item.icon === 'message'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.5 8.5 0 01-8.5 8.5c-1.3 0-2.5-.3-3.6-.8L3 21l1.8-5.4A8.5 8.5 0 1121 11.5z"/>
+            </svg>
+            <svg t-elif="item.icon === 'help'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/>
+              <path d="M9.5 9a2.5 2.5 0 114 2c-.7.6-1.5 1.1-1.5 2.3"/>
+              <path d="M12 17.2v.01"/>
+            </svg>
+            <svg t-elif="item.icon === 'settings'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.7 1.7 0 00.3 1.9l.05.05a2 2 0 11-2.8 2.8l-.05-.05a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.05.05a2 2 0 11-2.8-2.8l.05-.05a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.05-.05a2 2 0 112.8-2.8l.05.05a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.05-.05a2 2 0 112.8 2.8l-.05.05a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+            </svg>
+            <svg t-elif="item.icon === 'bell'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 8a6 6 0 1112 0c0 4 1.5 5.5 1.5 5.5H4.5S6 12 6 8z"/>
+              <path d="M10 19a2 2 0 004 0"/>
+            </svg>
+            <svg t-elif="item.icon === 'link'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 14a4.5 4.5 0 006 0l3-3a4.24 4.24 0 00-6-6l-1.5 1.5"/>
+              <path d="M14 10a4.5 4.5 0 00-6 0l-3 3a4.24 4.24 0 006 6l1.5-1.5"/>
+            </svg>
+            <svg t-else="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/>
+            </svg>
           </button>
           <div class="dgs-rail-flyout" t-if="item.children.length" role="menu" t-att-aria-label="item.label">
             <div class="dgs-rail-flyout-heading"><t t-esc="item.label"/></div>

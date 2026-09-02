@@ -85,6 +85,27 @@ export class ShellNavPanel extends Component {
         });
     }
 
+    onPanelHomeClick() {
+        this.uiState.companyMenuOpen = false;
+        this.onHomeClick();
+    }
+
+    onPanelSettingsClick() {
+        this.uiState.companyMenuOpen = false;
+        this.action.doAction("base_setup.action_general_configuration", {
+            clearBreadcrumbs: true,
+        });
+    }
+
+    get helpActionAvailable() {
+        return this.shell.isResolved("security_help.action_help_portal", this.shell.state);
+    }
+
+    onPanelHelpClick() {
+        this.uiState.companyMenuOpen = false;
+        this.action.doAction("security_help.action_help_portal", { clearBreadcrumbs: true }).catch(() => {});
+    }
+
     /** The app whose tree this panel renders — defaults to the current app
      * (as set by the app switcher / whatever action is showing), falling
      * back to the first available app if none is current yet. */
@@ -145,6 +166,7 @@ export class ShellNavPanel extends Component {
                     hasChildren,
                     isOpen,
                     hasAction: !!node.actionID,
+                    isActive: this.shell.state.activeMenuId === node.id,
                 });
                 if (hasChildren && isOpen) {
                     walk(children, depth + 1);
