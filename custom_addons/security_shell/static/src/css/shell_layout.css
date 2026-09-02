@@ -179,113 +179,68 @@ html body.o_web_client .o_action_manager {
     font-weight: 700;
 }
 
-/* ── Rail hover tooltips ───────────────────────────────────────────────
-   Every rail control gets an immediate name label on hover/focus — the
-   rail is icon-only, so nothing here should ever require guessing. This
-   is deliberately near-instant (no show-delay), unlike the fuller flyout
-   preview below. */
-.dgs-rail-appswitch,
-.dgs-rail-toggle,
-.dgs-rail-item,
-.dgs-rail-avatar {
-    position: relative;
-}
-
-.dgs-rail-tooltip {
-    position: absolute;
-    top: 50%;
-    left: calc(100% + 10px);
-    transform: translateY(-50%) translateX(-4px);
-    background: #101724;
-    color: #FFFFFF;
-    font-family: var(--dgs-font);
-    font-size: 12px;
-    font-weight: 600;
-    line-height: 1.2;
-    padding: 5px 9px;
-    border-radius: 7px;
-    white-space: nowrap;
-    z-index: 1045;
-    visibility: hidden;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .08s, transform .08s, visibility .08s;
-}
-
-.dgs-rail-appswitch:hover .dgs-rail-tooltip,
-.dgs-rail-appswitch:focus-visible .dgs-rail-tooltip,
-.dgs-rail-toggle:hover .dgs-rail-tooltip,
-.dgs-rail-toggle:focus-visible .dgs-rail-tooltip,
-.dgs-rail-item:hover .dgs-rail-tooltip,
-.dgs-rail-item:focus-visible .dgs-rail-tooltip,
-.dgs-rail-avatar:hover .dgs-rail-tooltip,
-.dgs-rail-avatar:focus-visible .dgs-rail-tooltip {
-    visibility: visible;
-    opacity: 1;
-    transform: translateY(-50%) translateX(0);
-}
-
-/* ── Rail hover flyouts ────────────────────────────────────────────────
-   Hovering a rail item previews its section's real children without
-   requiring a click — a short show-delay avoids flicker while scanning
-   past icons, and a longer hide-delay tolerates the diagonal mouse path
-   from the icon into the flyout itself. */
-.dgs-rail-item-flyout {
-    position: relative;
-    flex: 0 0 auto;
-}
-
-.dgs-rail-flyout {
-    position: absolute;
-    top: 0;
-    left: 56px;
-    min-width: 220px;
+/* ── Rail hover popover ────────────────────────────────────────────────
+   Every rail control's hover feedback (plain name, or a full section
+   preview) renders through Odoo's own popover service (see shell_rail.js)
+   rather than a CSS-only flyout nested inside .dgs-rail-sections — that
+   container scrolls vertically once there are more sections than fit on
+   screen, and overflow clipping on a scrolling ancestor silently crops a
+   plain position:absolute/fixed descendant. The popover service portals
+   this content elsewhere, so it always renders in full regardless of rail
+   scroll position. */
+.dgs-rail-popover {
+    min-width: 160px;
     max-width: 280px;
     max-height: 70vh;
     overflow-y: auto;
-    z-index: 1040;
-    background: var(--dgs-panel);
-    border-radius: var(--dgs-r-control);
-    box-shadow: var(--dgs-lift-hover);
-    padding: 8px;
     font-family: var(--dgs-font);
-    visibility: hidden;
-    opacity: 0;
-    transform: translateX(-4px);
-    transition: opacity .1s, transform .1s, visibility .1s;
-    transition-delay: .05s;
 }
 
-.dgs-rail-item-flyout:hover .dgs-rail-flyout,
-.dgs-rail-flyout:hover {
-    visibility: visible;
-    opacity: 1;
-    transform: translateX(0);
-    transition-delay: .12s, .12s, 0s;
+.dgs-rail-popover-tip {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ds-text);
+    padding: 2px 2px;
+    white-space: nowrap;
 }
 
-.dgs-rail-flyout-heading {
+.dgs-rail-popover-heading {
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
     color: var(--ds-text-subtle);
-    padding: 6px 8px 4px;
+    padding: 2px 8px 8px;
 }
 
-.dgs-rail-flyout-item {
-    padding: 8px 8px;
+.dgs-rail-popover-row {
+    padding: 7px 8px;
     border-radius: 9px;
     font-size: 13px;
-    font-weight: 500;
-    color: var(--ds-text-2);
-    cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.dgs-rail-flyout-item:hover { background: var(--dgs-canvas); }
+.dgs-rail-popover-row.clickable {
+    font-weight: 500;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-rail-popover-row.clickable:hover { background: var(--dgs-canvas); }
+
+.dgs-rail-popover-row.heading {
+    font-weight: 700;
+    color: var(--ds-text-subtle);
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    cursor: default;
+    padding-top: 12px;
+}
+
+.dgs-rail-popover-row.heading:first-child { padding-top: 7px; }
 
 .dgs-rail-bottom {
     margin-top: auto;
@@ -383,13 +338,30 @@ html body.o_web_client .o_action_manager {
     color: var(--ds-text);
 }
 
-.dgs-nav-overflow {
+.dgs-nav-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dgs-nav-overflow,
+.dgs-nav-close {
     color: var(--ds-text-subtle);
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 8px;
     border: none;
     background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .12s, color .12s;
+}
+
+.dgs-nav-overflow:hover,
+.dgs-nav-close:hover {
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
 }
 
 .dgs-nav-search {
@@ -877,4 +849,51 @@ html body.o_web_client .o_action_manager {
         bottom: 0;
         border-radius: 0;
     }
+}
+
+/* ── Global loading bar ───────────────────────────────────────────────
+   Every RPC funnels through this one indicator (shellService, off Odoo's
+   own rpcBus) — the "something is happening" signal a normal SaaS app
+   gives you, which the shell doesn't get for free once the classic
+   navbar's own affordances are hidden. position:fixed pulls it out of
+   the .o_web_client flex row entirely so it never consumes layout space. */
+.dgs-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 1200;
+    overflow: hidden;
+    background: transparent;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s ease .15s;
+}
+
+.dgs-loading-bar.is-active {
+    opacity: 1;
+    transition-delay: 0s;
+}
+
+.dgs-loading-bar-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--dgs-rail) 0%, var(--ds-accent, #1B3A6B) 50%, var(--dgs-rail) 100%);
+    background-size: 200% 100%;
+    transform: translateX(-100%);
+}
+
+.dgs-loading-bar.is-active .dgs-loading-bar-fill {
+    animation: dgs-loading-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes dgs-loading-sweep {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dgs-loading-bar-fill { animation: none !important; transform: none; }
 }

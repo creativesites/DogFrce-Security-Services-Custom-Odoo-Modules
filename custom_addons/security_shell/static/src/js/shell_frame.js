@@ -7,6 +7,7 @@ import { WebClient } from "@web/webclient/webclient";
 import { ShellRail } from "./shell_rail";
 import { ShellNavPanel } from "./shell_nav_panel";
 import { ShellCommandPalette } from "./shell_command_palette";
+import { ShellLoadingBar } from "./shell_loading_bar";
 import { DogForceAppLauncher } from "@security_theme/js/dogforce_app_launcher";
 
 patch(WebClient.prototype, {
@@ -77,5 +78,6 @@ WebClient.components = {
     ShellRail,
     ShellNavPanel,
     ShellCommandPalette,
+    ShellLoadingBar,
     DogForceAppLauncher,
 };

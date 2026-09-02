@@ -2,6 +2,7 @@
 
 import { reactive } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { rpcBus } from "@web/core/network/rpc";
 import { NAV_CATALOG, collectActionXmlIds } from "./nav_catalog";
 
 const STORAGE_KEY = "dgs.nav.v1";
@@ -30,7 +31,11 @@ export const shellService = {
     start(env, { orm, menu }) {
         const persisted = loadPersisted();
         const hasStoredPreference = "expanded" in persisted;
-        const defaultExpanded = window.innerWidth >= 1280;
+        // Collapsed by default on first-ever load — a narrow rail plus canvas
+        // reads calmer than a full sidebar the instant the app appears, and
+        // it's one click away. A user's own explicit choice (stored once they
+        // toggle) always wins over this default afterward.
+        const defaultExpanded = false;
 
         const state = reactive({
             expanded: hasStoredPreference ? persisted.expanded : defaultExpanded,
@@ -69,6 +74,21 @@ export const shellService = {
             activeGroupKey: null,
             activeLeafKey: null,
             isHome: true,
+            // Count, not a bool: several requests can overlap (e.g. a page's
+            // own data load plus the shell's own payload refresh), and the
+            // bar should only hide once every one of them has settled.
+            pendingRequestCount: 0,
+        });
+
+        // Global loading indicator: every RPC in the app funnels through this
+        // one bus (core/network/rpc.js), so this is the single place that
+        // reliably knows "something is happening" without each screen having
+        // to report its own loading state.
+        rpcBus.addEventListener("RPC:REQUEST", () => {
+            state.pendingRequestCount++;
+        });
+        rpcBus.addEventListener("RPC:RESPONSE", () => {
+            state.pendingRequestCount = Math.max(0, state.pendingRequestCount - 1);
         });
 
         function persist() {

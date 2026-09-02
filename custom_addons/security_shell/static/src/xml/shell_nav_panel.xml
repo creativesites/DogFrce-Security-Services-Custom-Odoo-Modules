@@ -19,7 +19,14 @@
 
     <div class="dgs-nav-heading-row">
       <span class="dgs-nav-heading">Navigate</span>
-      <button class="dgs-nav-overflow" t-on-click="toggleFullMenu" title="Full menu — every screen, curated or not" aria-label="Full menu">···</button>
+      <div class="dgs-nav-heading-actions">
+        <button class="dgs-nav-overflow" t-on-click="toggleFullMenu" title="Full menu — every screen, curated or not" aria-label="Full menu">···</button>
+        <button class="dgs-nav-close" t-on-click="() => this.shell.setExpanded(false)" title="Collapse sidebar" aria-label="Collapse sidebar">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6l12 12M18 6L6 18"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <input type="text"

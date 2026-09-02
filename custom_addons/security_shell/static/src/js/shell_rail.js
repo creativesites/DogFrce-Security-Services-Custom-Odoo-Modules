@@ -1,8 +1,10 @@
 /** @odoo-module **/
 
-import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useEffect, useRef, useState } from "@odoo/owl";
 import { useService, useBus } from "@web/core/utils/hooks";
+import { usePopover } from "@web/core/popover/popover_hook";
 import { user } from "@web/core/user";
+import { ShellRailFlyout } from "./shell_rail_flyout";
 
 /** Maps a real (live, not hand-listed) section name to one of a small,
  * coherent icon set by keyword — so new sections that appear in Odoo's
@@ -29,6 +31,41 @@ function iconForLabel(label) {
     return match ? match[1] : "folder";
 }
 
+/** Fully-expanded, depth-annotated flatten of a menu node's subtree for the
+ * hover preview — deliberately not click-to-drill like the sidebar tree,
+ * since this is a transient hover surface where drilling would cost more
+ * hovers than it saves. Capped so a huge section (Configuration) doesn't
+ * produce a popover taller than the screen. */
+function flattenPreview(node, cap = 40) {
+    const rows = [];
+    const walk = (n, depth) => {
+        if (rows.length >= cap) {
+            return;
+        }
+        for (const child of n.childrenTree || []) {
+            if (rows.length >= cap) {
+                return;
+            }
+            const hasChildren = !!(child.childrenTree && child.childrenTree.length);
+            rows.push({
+                id: child.id,
+                label: child.name,
+                depth,
+                clickable: !!child.actionID,
+                menu: child,
+            });
+            if (hasChildren) {
+                walk(child, depth + 1);
+            }
+        }
+    };
+    walk(node, 0);
+    return rows;
+}
+
+const HOVER_OPEN_DELAY = 220;
+const HOVER_CLOSE_DELAY = 160;
+
 export class ShellRail extends Component {
     static template = "security_shell.ShellRail";
     static props = { "*": true };
@@ -47,6 +84,35 @@ export class ShellRail extends Component {
         this.menuService = useService("menu");
         useBus(this.env.bus, "MENUS:APP-CHANGED", () => this.render(true));
 
+        // Every rail icon's hover feedback (plain name tooltip or a full
+        // section preview) goes through one popover instance, portalled by
+        // Odoo's own popover service instead of living inside
+        // .dgs-rail-sections — that container scrolls vertically once there
+        // are more top-level sections than fit on screen, and CSS overflow
+        // clipping on a scrolling ancestor silently crops a plain
+        // position:absolute/fixed descendant, which is exactly why a
+        // hand-rolled CSS-only flyout there couldn't be trusted to show.
+        this.flyout = usePopover(ShellRailFlyout, {
+            position: "right",
+            holdOnHover: true,
+            animation: false,
+        });
+        this._openTimer = null;
+        this._closeTimer = null;
+
+        this.sectionsRef = useRef("sections");
+
+        // Keep the active section's icon in view without the user having to
+        // scroll for it — most relevant right after navigating somewhere
+        // deep in a long rail.
+        useEffect(
+            () => {
+                const el = this.sectionsRef.el?.querySelector(".dgs-rail-item.active");
+                el?.scrollIntoView({ block: "nearest" });
+            },
+            () => [this.shell.state.activeMenuId]
+        );
+
         onMounted(() => {
             // Activate shell CSS (hides Odoo navbar, enables shell layout).
             // Only fires after all component setup has succeeded.
@@ -55,6 +121,8 @@ export class ShellRail extends Component {
 
         onWillUnmount(() => {
             document.body.classList.remove("dgs-shell-active");
+            clearTimeout(this._openTimer);
+            clearTimeout(this._closeTimer);
         });
     }
 
@@ -77,7 +145,7 @@ export class ShellRail extends Component {
                 id: node.id,
                 label: node.name,
                 icon: iconForLabel(node.name),
-                children: (node.childrenTree || []).slice(0, 12),
+                menu: node,
                 hasAction: !!node.actionID,
             }));
     }
@@ -101,7 +169,42 @@ export class ShellRail extends Component {
         return st.activeMenuId === item.id || st.activeMenuAncestorIds.includes(item.id);
     }
 
+    /** ev.currentTarget + either a plain label (simple tooltip) or a menu
+     * node (full subtree preview). Used for every rail control, so hovering
+     * any icon — including Home, the app switcher, Settings, the avatar —
+     * always says what it is; the ones with a real menu node additionally
+     * preview their contents for "long hover, then navigate" without a
+     * click. */
+    onHoverStart(ev, { label, node }) {
+        clearTimeout(this._closeTimer);
+        clearTimeout(this._openTimer);
+        const target = ev.currentTarget;
+        this._openTimer = setTimeout(() => {
+            const nodes = node ? flattenPreview(node) : [];
+            this.flyout.open(target, {
+                label: label || node?.name,
+                nodes,
+                onNavigate: (previewNode) => this.menuService.selectMenu(previewNode.menu),
+                onHoverStart: () => clearTimeout(this._closeTimer),
+                onHoverEnd: () => this.scheduleClose(),
+                close: () => this.flyout.close(),
+            });
+        }, HOVER_OPEN_DELAY);
+    }
+
+    onHoverEnd() {
+        clearTimeout(this._openTimer);
+        this.scheduleClose();
+    }
+
+    scheduleClose() {
+        clearTimeout(this._closeTimer);
+        this._closeTimer = setTimeout(() => this.flyout.close(), HOVER_CLOSE_DELAY);
+    }
+
     onItemClick(item) {
+        clearTimeout(this._openTimer);
+        this.flyout.close();
         this.shell.setExpanded(true);
         this.shell.toggleMenuNode(item.id);
         if (item.hasAction) {
@@ -109,11 +212,8 @@ export class ShellRail extends Component {
         }
     }
 
-    onFlyoutChildClick(child) {
-        this.menuService.selectMenu(child);
-    }
-
     onHomeClick() {
+        this.flyout.close();
         this.action.doAction("security_base.action_deployguard_main_command_center", {
             clearBreadcrumbs: true,
         });
@@ -124,16 +224,19 @@ export class ShellRail extends Component {
     }
 
     onAppLauncherClick() {
+        this.flyout.close();
         this.shell.toggleAppLauncher();
     }
 
     onSettingsClick() {
+        this.flyout.close();
         this.action.doAction("base_setup.action_general_configuration", {
             clearBreadcrumbs: true,
         });
     }
 
     onAvatarClick() {
+        this.flyout.close();
         this.action.doAction({
             type: "ir.actions.act_window",
             res_model: "res.users",

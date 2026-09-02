@@ -9,6 +9,7 @@
      ═══════════════════════════════════════════════════════════════════════ -->
 <t t-inherit="web.WebClient" t-inherit-mode="extension">
   <xpath expr="//ActionContainer" position="before">
+    <ShellLoadingBar/>
     <ShellRail/>
     <ShellNavPanel t-if="shell.state.expanded"/>
   </xpath>
