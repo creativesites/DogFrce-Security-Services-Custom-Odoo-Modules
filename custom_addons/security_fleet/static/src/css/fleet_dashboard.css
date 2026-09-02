@@ -10,8 +10,8 @@
     min-height: 0;
     max-height: 100vh;
     overflow: hidden;
-    background: #f8fafc;
-    color: #0f172a;
+    background: #F8FAFC;
+    color: #0D1117;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -24,86 +24,86 @@
     min-height: 0;
     overflow-y: auto;
     box-shadow: 2px 0 10px rgba(15, 23, 42, 0.04);
-    border-right: 1px solid #e2e8f0;
+    border-right: 1px solid #E2E8F0;
     z-index: 10;
 }
 
 /* Sidebar overrides for inline templates white colors */
 .fd-brand div {
-    color: #0f172a !important;
+    color: #0D1117 !important;
 }
 
 .fd-brand div[style*="rgba(255,255,255,0.6)"] {
-    color: #64748b !important;
+    color: #64748B !important;
 }
 
 .fd-nav-sidebar div[style*="color:rgba(255,255,255"] {
-    color: #64748b !important;
+    color: #64748B !important;
 }
 
 .fd-nav-sidebar .text-white,
 .fd-nav-sidebar .text-white-50,
 .fd-nav-sidebar .small.text-white-50 {
-    color: #64748b !important;
+    color: #64748B !important;
 }
 
 .fd-nav-sidebar span[style*="color:#ffffff"] {
-    color: #0f172a !important;
+    color: #0D1117 !important;
 }
 
 /* Sidebar progress bars override */
 .fd-nav-sidebar .progress {
-    background-color: #f1f5f9 !important;
-    border: 1px solid #e2e8f0 !important;
+    background-color: #F1F4F8 !important;
+    border: 1px solid #E2E8F0 !important;
 }
 
 /* Sidebar bottom Spend MTD card */
 .fd-nav-sidebar .mt-auto {
-    background: #f8fafc !important;
-    border-top: 1px solid #e2e8f0 !important;
+    background: #F8FAFC !important;
+    border-top: 1px solid #E2E8F0 !important;
 }
 
 .fd-nav-sidebar .mt-auto .text-white-50 {
-    color: #64748b !important;
+    color: #64748B !important;
 }
 
 .fd-nav-sidebar .mt-auto .text-white {
-    color: #0f172a !important;
+    color: #0D1117 !important;
 }
 
 /* Override default outline action buttons in sidebar */
 .fd-nav-sidebar button.btn-outline-secondary {
-    border-color: #cbd5e1 !important;
+    border-color: #CBD5E1 !important;
     color: #475569 !important;
     background-color: #ffffff !important;
 }
 
 .fd-nav-sidebar button.btn-outline-secondary:hover {
-    background-color: #f8fafc !important;
-    border-color: #94a3b8 !important;
-    color: #0f172a !important;
+    background-color: #F8FAFC !important;
+    border-color: #94A3B8 !important;
+    color: #0D1117 !important;
 }
 
 .fd-brand {
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .fd-select {
     background-color: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    color: #0f172a !important;
+    border: 1px solid #CBD5E1 !important;
+    color: #0D1117 !important;
     font-size: 12px !important;
     border-radius: 8px !important;
 }
 
 .fd-select option {
     background-color: #ffffff !important;
-    color: #0f172a !important;
+    color: #0D1117 !important;
 }
 
 .fd-select:focus {
     background-color: #ffffff !important;
-    border-color: #10b981 !important;
+    border-color: #0D7A4E !important;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
 }
 
@@ -119,14 +119,14 @@
 /* Premium Light Header Banner */
 .fd-header {
     background: #ffffff !important;
-    border-bottom: 3px solid #10b981;
+    border-bottom: 3px solid #0D7A4E;
     padding: 16px 28px !important;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
     flex-shrink: 0;
 }
 
 .fd-header h3.text-white {
-    color: #0f172a !important;
+    color: #0D1117 !important;
 }
 
 .fd-header span[style*="rgba(255,255,255"] {
@@ -142,7 +142,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #10b981;
+    color: #0D7A4E;
     font-size: 20px;
 }
 
@@ -163,7 +163,7 @@
 
 .fd-top-btn {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #CBD5E1;
     color: #475569;
     transition: all 0.2s ease;
     border-radius: 8px;
@@ -174,16 +174,16 @@
 }
 
 .fd-top-btn:hover {
-    background: #f8fafc;
-    color: #0f172a;
-    border-color: #94a3b8;
+    background: #F8FAFC;
+    color: #0D1117;
+    border-color: #94A3B8;
     transform: translateY(-1px);
 }
 
 /* Stat Cards Ribbon */
 .fd-kpi-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 12px;
     padding: 12px 18px;
     min-width: 130px;
@@ -194,7 +194,7 @@
 .fd-kpi-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
-    border-color: #cbd5e1;
+    border-color: #CBD5E1;
 }
 
 /* Main Workspace */
@@ -223,19 +223,19 @@
 /* Fleet Cards */
 .fd-card {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     transition: all 0.2s ease;
 }
 
 .fd-card:hover {
-    border-color: #cbd5e1;
+    border-color: #CBD5E1;
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
 }
 
 .fd-card-active {
-    border-color: #10b981 !important;
+    border-color: #0D7A4E !important;
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
 }
 
@@ -259,28 +259,28 @@
     position: sticky !important;
     top: 0 !important;
     z-index: 5 !important;
-    background: #f8fafc !important;
+    background: #F8FAFC !important;
     color: #475569;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 12px 18px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #E2E8F0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .fd-table td {
     padding: 12px 18px;
     vertical-align: middle;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #F1F4F8;
     font-size: 13px;
-    color: #334155;
+    color: #374151;
     transition: background-color 0.15s ease;
 }
 
 .fd-table tr:hover td {
-    background-color: #f8fafc;
+    background-color: #F8FAFC;
 }
 
 /* Inspector Drawer */
@@ -291,7 +291,7 @@
     display: flex;
     flex-direction: column;
     background: #ffffff !important;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 14px;
     box-shadow: 0 12px 36px rgba(15, 23, 42, 0.04);
 }
@@ -307,15 +307,15 @@
     gap: 4px;
 }
 
-.fd-badge-available { background: #d1fae5; color: #047857; }
+.fd-badge-available { background: #E6F4EE; color: #0A5F3D; }
 .fd-badge-in_transit { background: #dbeafe; color: #1d4ed8; }
-.fd-badge-in_service { background: #fef3c7; color: #b45309; }
-.fd-badge-scrapped { background: #f1f5f9; color: #64748b; }
+.fd-badge-in_service { background: #FEF3C7; color: #92400E; }
+.fd-badge-scrapped { background: #F1F4F8; color: #64748B; }
 
-.fd-badge-draft { background: #f1f5f9; color: #64748b; }
+.fd-badge-draft { background: #F1F4F8; color: #64748B; }
 .fd-badge-boarding { background: #e0e7ff; color: #4338ca; }
-.fd-badge-completed { background: #d1fae5; color: #047857; }
-.fd-badge-cancelled { background: #fee2e2; color: #b91c1c; }
+.fd-badge-completed { background: #E6F4EE; color: #0A5F3D; }
+.fd-badge-cancelled { background: #FEE2E2; color: #991B1B; }
 
 /* Modals */
 .fd-modal-backdrop {
@@ -336,5 +336,5 @@
     width: 100%;
     max-width: 520px;
     overflow: hidden;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
 }
