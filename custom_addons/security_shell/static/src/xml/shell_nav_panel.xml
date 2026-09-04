@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shell.ShellNavPanel" owl="1">
+  <div class="dgs-nav-overlay-scrim" t-on-click="() => this.shell.setExpanded(false)"/>
+  <div class="dgs-nav-panel" role="navigation" aria-label="DeployGuard section navigation">
+
+    <div class="dgs-company-switcher" t-on-click="toggleCompanyMenu" tabindex="0">
+      <img class="dgs-company-logo" t-att-src="logoUrl" alt=""/>
+      <div class="dgs-company-info">
+        <div class="dgs-company-name"><t t-esc="companyName"/></div>
+        <div class="dgs-company-meta" t-if="sitesCount !== undefined and sitesCount !== null">
+          <t t-esc="sitesCount"/> SITES
+        </div>
+      </div>
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 9l6 6 6-6"/>
+      </svg>
+    </div>
+
+    <div class="dgs-nav-heading-row">
+      <span class="dgs-nav-heading">Navigate</span>
+      <div class="dgs-nav-heading-actions">
+        <button class="dgs-nav-overflow" t-on-click="toggleFullMenu" title="Full menu — every screen, curated or not" aria-label="Full menu">···</button>
+        <button class="dgs-nav-close" t-on-click="() => this.shell.setExpanded(false)" title="Collapse sidebar" aria-label="Collapse sidebar">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 6l12 12M18 6L6 18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <input type="text"
+           class="dgs-nav-search"
+           placeholder="Search navigation..."
+           t-att-value="shell.state.searchQuery"
+           t-on-input="onSearchInput"/>
+
+    <div t-attf-class="dgs-nav-home-row {{ shell.state.isHome ? 'active' : '' }}"
+         t-on-click="onHomeClick">
+      <span>Home</span>
+      <span class="dgs-nav-home-tag">DEFAULT</span>
+    </div>
+
+    <div class="dgs-nav-app-label" t-if="currentApp"><t t-esc="currentApp.name"/></div>
+
+    <div class="dgs-nav-tree">
+      <t t-if="!flatRows.length">
+        <div class="dgs-nav-empty">No matches</div>
+      </t>
+      <t t-foreach="flatRows" t-as="row" t-key="row.id">
+        <div t-attf-class="dgs-nav-row dgs-nav-row-n {{ row.hasChildren ? 'dgs-nav-row-group' : 'dgs-nav-row-leaf' }} {{ row.isActive ? 'active' : '' }}"
+             t-attf-style="padding-left: {{ 12 + row.depth * 16 }}px"
+             t-on-click="() => this.onRowClick(row)"
+             t-att-title="row.label">
+          <svg t-if="row.hasChildren" class="dgs-nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path t-if="row.isOpen" d="M6 9l6 6 6-6"/>
+            <path t-else="" d="M9 6l6 6-6 6"/>
+          </svg>
+          <span t-else="" class="dgs-nav-chevron-spacer"/>
+          <span class="dgs-nav-label"><t t-esc="row.label"/></span>
+        </div>
+      </t>
+    </div>
+
+    <div class="dgs-nav-scrim" t-if="uiState.companyMenuOpen" t-on-click="toggleCompanyMenu"/>
+    <div class="dgs-company-menu" t-if="uiState.companyMenuOpen" role="dialog" aria-label="Workspace">
+      <div class="dgs-company-menu-section-label">Quick access</div>
+      <div class="dgs-company-menu-item" t-on-click="onPanelHomeClick">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>
+        </svg>
+        <span>Command Centre</span>
+      </div>
+      <div class="dgs-company-menu-item" t-on-click="onPanelSettingsClick">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 00.3 1.9l.05.05a2 2 0 11-2.8 2.8l-.05-.05a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.05.05a2 2 0 11-2.8-2.8l.05-.05a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.05-.05a2 2 0 112.8-2.8l.05.05a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.05-.05a2 2 0 112.8 2.8l-.05.05a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+        </svg>
+        <span>Settings</span>
+      </div>
+      <div class="dgs-company-menu-item" t-on-click="onPanelHelpClick" t-if="helpActionAvailable">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M9.5 9a2.5 2.5 0 114 2c-.7.6-1.5 1.1-1.5 2.3"/>
+          <path d="M12 17.2v.01"/>
+        </svg>
+        <span>Help Centre</span>
+      </div>
+
+      <t t-if="availableCompanies.length > 1">
+        <div class="dgs-company-menu-section-label">Company</div>
+        <t t-foreach="availableCompanies" t-as="comp" t-key="comp.id">
+          <div class="dgs-company-menu-item" t-on-click="() => this.selectCompany(comp.id)">
+            <span><t t-esc="comp.name"/></span>
+          </div>
+        </t>
+      </t>
+    </div>
+
+  </div>
+
+  <!-- Full menu — every menu item the user's groups grant, exactly as the
+       classic navbar exposed it. The curated tree above is a priority
+       subset; this is the completeness guarantee (never lose a screen). -->
+  <div class="dgs-fullmenu-scrim" t-if="uiState.fullMenuOpen" t-on-click="toggleFullMenu"/>
+  <div class="dgs-fullmenu-panel" t-if="uiState.fullMenuOpen" role="dialog" aria-label="Full menu">
+    <div class="dgs-fullmenu-header">
+      <span class="dgs-fullmenu-title">Full menu</span>
+      <button class="dgs-fullmenu-close" t-on-click="toggleFullMenu" aria-label="Close">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+    </div>
+    <input type="text"
+           class="dgs-nav-search"
+           placeholder="Search every screen..."
+           t-att-value="uiState.fullMenuQuery"
+           t-on-input="onFullMenuSearch"/>
+    <div class="dgs-fullmenu-list">
+      <t t-if="!fullMenuGroups.length">
+        <div class="dgs-fullmenu-empty">No matches</div>
+      </t>
+      <t t-foreach="fullMenuGroups" t-as="appGroup" t-key="appGroup.key">
+        <div class="dgs-fullmenu-app-label"><t t-esc="appGroup.label"/></div>
+        <t t-foreach="appGroup.items" t-as="item" t-key="item.id">
+          <div class="dgs-fullmenu-item" t-on-click="() => this.onFullMenuItemClick(item)">
+            <t t-esc="item.name"/>
+          </div>
+        </t>
+      </t>
+    </div>
+  </div>
+</t>
+</templates>

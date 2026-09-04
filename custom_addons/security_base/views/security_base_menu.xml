@@ -18,15 +18,6 @@
     />
 
     <menuitem
-        id="menu_security_home_command_center"
-        name="⚡ Home Command Center"
-        parent="menu_security_home"
-        action="action_deployguard_main_command_center"
-        sequence="0"
-        groups="base.group_user"
-    />
-
-    <menuitem
         id="menu_security_configuration"
         name="Configuration"
         parent="menu_security_root"

@@ -2,7 +2,7 @@
 
 .rd-root {
     min-height: 100%;
-    background: #f0f2f7;
+    background: #F8FAFC;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -12,7 +12,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #1B2040;
+    background: #1B3A6B;
     padding: 14px 28px;
     gap: 12px;
 }
@@ -28,7 +28,7 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #F5A523;
+    background: #F5A20B;
 }
 
 .rd-title {
@@ -82,7 +82,7 @@
     align-items: center;
     justify-content: center;
     padding: 80px 20px;
-    color: #8892a4;
+    color: #94A3B8;
     gap: 10px;
 }
 
@@ -90,7 +90,7 @@
     width: 36px;
     height: 36px;
     border: 3px solid #d6dae4;
-    border-top-color: #F5A523;
+    border-top-color: #F5A20B;
     border-radius: 50%;
     animation: rd-spin 0.7s linear infinite;
 }
@@ -98,7 +98,7 @@
 @keyframes rd-spin { to { transform: rotate(360deg); } }
 
 .rd-empty-icon { font-size: 3rem; color: #c5cad6; }
-.rd-empty-sub { font-size: 0.875rem; color: #aab0be; }
+.rd-empty-sub { font-size: 0.875rem; color: #94A3B8; }
 
 /* ── KPI Strip ── */
 .rd-kpi-strip {
@@ -141,22 +141,22 @@
 .rd-kpi-value {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1B2040;
+    color: #1B3A6B;
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
 }
 
-.rd-kpi-sub { font-size: 0.78rem; color: #8892a4; }
+.rd-kpi-sub { font-size: 0.78rem; color: #94A3B8; }
 
 .rd-kpi-label {
     font-size: 0.78rem;
-    color: #8892a4;
+    color: #94A3B8;
     margin-top: 2px;
 }
 
 /* KPI colour variants */
 .rd-kpi-green { border-left-color: #22c55e; }
-.rd-kpi-green .rd-kpi-icon { background: #dcfce7; color: #16a34a; }
+.rd-kpi-green .rd-kpi-icon { background: #E6F4EE; color: #0D7A4E; }
 
 .rd-kpi-blue { border-left-color: #3b82f6; }
 .rd-kpi-blue .rd-kpi-icon { background: #dbeafe; color: #1d4ed8; }
@@ -164,8 +164,8 @@
 .rd-kpi-teal { border-left-color: #14b8a6; }
 .rd-kpi-teal .rd-kpi-icon { background: #ccfbf1; color: #0d9488; }
 
-.rd-kpi-amber { border-left-color: #F5A523; }
-.rd-kpi-amber .rd-kpi-icon { background: #fef3c7; color: #d97706; }
+.rd-kpi-amber { border-left-color: #F5A20B; }
+.rd-kpi-amber .rd-kpi-icon { background: #FEF3C7; color: #92400E; }
 
 .rd-kpi-red { border-left-color: #ef4444; }
 .rd-kpi-red .rd-kpi-icon { background: #fee2e2; color: #dc2626; }
@@ -197,13 +197,13 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px 12px;
-    border-bottom: 1px solid #f0f2f7;
+    border-bottom: 1px solid #F8FAFC;
 }
 
 .rd-card-title {
     font-weight: 600;
     font-size: 0.9rem;
-    color: #1B2040;
+    color: #1B3A6B;
 }
 
 .rd-legend {
@@ -211,7 +211,7 @@
     align-items: center;
     gap: 12px;
     font-size: 0.75rem;
-    color: #8892a4;
+    color: #94A3B8;
 }
 
 .rd-legend-dot {
@@ -222,8 +222,8 @@
     margin-right: 4px;
 }
 
-.rd-dot-invoiced { background: #1B2040; }
-.rd-dot-paid { background: #F5A523; }
+.rd-dot-invoiced { background: #1B3A6B; }
+.rd-dot-paid { background: #F5A20B; }
 
 /* ── Bar chart ── */
 .rd-chart-area {
@@ -235,7 +235,7 @@
 
 .rd-chart-empty {
     font-size: 0.85rem;
-    color: #aab0be;
+    color: #94A3B8;
     text-align: center;
     width: 100%;
     padding: 40px 0;
@@ -269,7 +269,7 @@
 
 .rd-bar-invoiced {
     flex: 1;
-    background: #1B2040;
+    background: #1B3A6B;
     border-radius: 4px 4px 0 0;
     min-height: 4px;
     transition: height 0.3s ease;
@@ -281,7 +281,7 @@
 
 .rd-bar-paid {
     flex: 1;
-    background: #F5A523;
+    background: #F5A20B;
     border-radius: 4px 4px 0 0;
     min-height: 4px;
     transition: height 0.3s ease;
@@ -290,7 +290,7 @@
 
 .rd-bar-label {
     font-size: 0.7rem;
-    color: #8892a4;
+    color: #94A3B8;
     text-align: center;
     white-space: nowrap;
     overflow: hidden;
@@ -300,7 +300,7 @@
 
 /* ── Clients table ── */
 .rd-card-clients .rd-card-header {
-    border-bottom: 1px solid #f0f2f7;
+    border-bottom: 1px solid #F8FAFC;
 }
 
 .rd-table {
@@ -312,12 +312,12 @@
 .rd-table thead th {
     padding: 10px 16px;
     text-align: left;
-    color: #8892a4;
+    color: #94A3B8;
     font-weight: 600;
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    border-bottom: 1px solid #f0f2f7;
+    border-bottom: 1px solid #F8FAFC;
     background: #fafbfd;
 }
 
@@ -325,7 +325,7 @@
 
 .rd-table td {
     padding: 11px 16px;
-    color: #1B2040;
+    color: #1B3A6B;
     border-bottom: 1px solid #f5f6f9;
 }
 
@@ -344,5 +344,5 @@
     white-space: nowrap;
 }
 
-.rd-paid { color: #16a34a !important; }
-.rd-outstanding { color: #d97706 !important; font-weight: 600; }
+.rd-paid { color: #0D7A4E !important; }
+.rd-outstanding { color: #92400E !important; font-weight: 600; }

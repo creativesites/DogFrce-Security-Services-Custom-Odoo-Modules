@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shell.ShellCommandPalette" owl="1">
+  <div class="dgs-palette-overlay" t-on-click.self="close" t-on-keydown="onKeyDown">
+    <div class="dgs-palette-box" role="dialog" aria-label="Quick navigation">
+      <div class="dgs-palette-search">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <input type="text"
+               t-ref="paletteInput"
+               placeholder="Jump to anything..."
+               t-att-value="uiState.query"
+               t-on-input="onInput"
+               t-on-keydown="onKeyDown"/>
+        <span class="dgs-palette-kbd">Esc</span>
+      </div>
+      <div class="dgs-palette-results">
+        <t t-if="!results.length">
+          <div class="dgs-palette-empty">No matches</div>
+        </t>
+        <t t-foreach="results" t-as="row" t-key="row.leaf.key">
+          <div class="dgs-palette-row" t-on-click="() => this.onRowClick(row)">
+            <span class="dgs-palette-row-label"><t t-esc="row.leaf.label"/></span>
+            <span class="dgs-palette-row-path">
+              <t t-esc="row.group.label"/> / <t t-esc="row.subgroup.label"/>
+            </span>
+          </div>
+        </t>
+      </div>
+    </div>
+  </div>
+</t>
+</templates>

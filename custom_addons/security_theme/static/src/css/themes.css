@@ -1,225 +1,106 @@
 /* =========================================================
    DogForce Theme Presets
    Applied via body class: .o_theme_<name>
+
+   Scope, after the DeployGuard shell + design_system.css landed:
+   - The shell hides .o_main_navbar entirely, so per-theme navbar
+     recoloring is dead weight — removed.
+   - Backend surfaces (control panel, forms, kanban, lists) are governed
+     by security_base/design_system.css's flat "Clean Corporate Light"
+     system. The old glassmorphism/gradient overrides here fought that
+     system and violated the one-gradient-in-the-product rule — removed.
+   - What a preset still legitimately controls: the accent color on
+     primary buttons, links and the active statusbar button, so admins
+     can pick a personalization flavor without breaking the shared look.
+   - The font-family bridge below is load-bearing, not decorative: it's
+     the only rule that applies the --dg-font-family white-label font
+     choice (set by theme_loader.js / the login font-loader template) to
+     backend prose. Don't remove it.
    ========================================================= */
 
-/* ── Typography — --dg-font-family set by theme_loader.js (backend)
-      or by <style> injected via QWeb (login/frontend)          ── */
 body[class*="o_theme_"],
 body.dg_login_branded {
     font-family: var(--dg-font-family, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
 }
 
-/* ── DogForce Navy (default) ─────────────────────────────── */
+/* ── DogForce Navy (default) — matches --ds-accent exactly ── */
 .o_theme_dogforce_navy {
-    --dg-primary: #1e3a5f;
-    --dg-primary-light: #2d5a9e;
-    --dg-primary-dark: #0f1f36;
-    --dg-accent: #3b82f6;
-    --dg-surface: #f8fafc;
-    --dg-sidebar-text: #c8d8f0;
-    --dg-gradient-main: linear-gradient(135deg, #154b71 0%, #306ec3 58%, #1c9591 100%);
-    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.13) 0, transparent 34%), linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%);
-    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fbff 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(30, 58, 95, 0.04) 100%);
-    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(239, 246, 255, 0.96) 100%);
-    --dg-navbar-text: #18304f;
-    --dg-navbar-entry-bg: rgba(30, 58, 95, 0.06);
-    --dg-navbar-entry-hover-bg: rgba(59, 130, 246, 0.12);
-    --dg-heading-text: #143153;
-    --dg-shadow-deep: 0 18px 42px rgba(30, 58, 95, 0.12);
-}
-
-.o_theme_dogforce_navy .o_main_navbar {
-    background: var(--dg-gradient-main) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: 0 8px 24px rgba(15, 31, 54, 0.28);
-}
-
-.o_theme_dogforce_navy .o_main_navbar .o_menu_brand,
-.o_theme_dogforce_navy .o_main_navbar .o_nav_entry,
-.o_theme_dogforce_navy .o_main_navbar a,
-.o_theme_dogforce_navy .o_main_navbar .o_menu_sections>li>a {
-    color: #c8d8f0 !important;
-}
-
-.o_theme_dogforce_navy .o_main_navbar .o_nav_entry:hover,
-.o_theme_dogforce_navy .o_main_navbar .o_menu_sections>li>a:hover {
-    background-color: #2d5a9e !important;
-    color: #ffffff !important;
+    --dg-primary: #1B3A6B;
+    --dg-primary-hover: #142F58;
 }
 
 .o_theme_dogforce_navy .btn-primary {
-    background-color: #1e3a5f !important;
-    border-color: #1e3a5f !important;
+    background-color: #1B3A6B !important;
+    border-color: #1B3A6B !important;
 }
 
 .o_theme_dogforce_navy .btn-primary:hover,
 .o_theme_dogforce_navy .btn-primary:focus {
-    background-color: #2d5a9e !important;
-    border-color: #2d5a9e !important;
+    background-color: #142F58 !important;
+    border-color: #142F58 !important;
 }
 
 .o_theme_dogforce_navy a:not(.btn) {
-    color: #2d5a9e;
+    color: #1B3A6B;
 }
 
 .o_theme_dogforce_navy .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
-    background-color: #1e3a5f !important;
+    background-color: #1B3A6B !important;
 }
 
-/* ── Corporate Dark ──────────────────────────────────────── */
+/* ── Corporate Dark (amber accent) ── */
 .o_theme_corporate_dark {
-    --dg-primary: #16213e;
-    --dg-primary-light: #e67e22;
-    --dg-primary-dark: #0d1117;
-    --dg-accent: #e67e22;
-    --dg-surface: #faf9f7;
-    --dg-sidebar-text: #e8e8e8;
-    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #fff7ed 58%, #ffedd5 100%);
-    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(230, 126, 34, 0.12) 0, transparent 34%), linear-gradient(135deg, #fffaf5 0%, #f8fafc 54%, #fff7ed 100%);
-    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #fffaf5 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(230, 126, 34, 0.08) 0%, rgba(22, 33, 62, 0.04) 100%);
-    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 247, 237, 0.96) 100%);
-    --dg-navbar-text: #2d2530;
-    --dg-navbar-entry-bg: rgba(230, 126, 34, 0.08);
-    --dg-navbar-entry-hover-bg: rgba(230, 126, 34, 0.14);
-    --dg-heading-text: #3b2a1d;
-    --dg-shadow-deep: 0 18px 42px rgba(13, 17, 23, 0.11);
-}
-
-.o_theme_corporate_dark .o_main_navbar {
-    background: var(--dg-gradient-main) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: 0 8px 24px rgba(13, 17, 23, 0.28);
-}
-
-.o_theme_corporate_dark .o_main_navbar .o_menu_brand,
-.o_theme_corporate_dark .o_main_navbar .o_nav_entry,
-.o_theme_corporate_dark .o_main_navbar a,
-.o_theme_corporate_dark .o_main_navbar .o_menu_sections>li>a {
-    color: #e8e8e8 !important;
-}
-
-.o_theme_corporate_dark .o_main_navbar .o_nav_entry:hover,
-.o_theme_corporate_dark .o_main_navbar .o_menu_sections>li>a:hover {
-    background-color: #e67e22 !important;
-    color: #ffffff !important;
+    --dg-primary: #C2660D;
+    --dg-primary-hover: #A6560A;
 }
 
 .o_theme_corporate_dark .btn-primary {
-    background-color: #e67e22 !important;
-    border-color: #e67e22 !important;
+    background-color: #C2660D !important;
+    border-color: #C2660D !important;
     color: #ffffff !important;
 }
 
 .o_theme_corporate_dark .btn-primary:hover {
-    background-color: #d35400 !important;
-    border-color: #d35400 !important;
+    background-color: #A6560A !important;
+    border-color: #A6560A !important;
 }
 
 .o_theme_corporate_dark a:not(.btn) {
-    color: #e67e22;
+    color: #C2660D;
 }
 
 .o_theme_corporate_dark .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
-    background-color: #e67e22 !important;
+    background-color: #C2660D !important;
 }
 
-/* ── Forest Guard ────────────────────────────────────────── */
+/* ── Forest Guard (green accent) ── */
 .o_theme_forest_guard {
-    --dg-primary: #1a3a2a;
-    --dg-primary-light: #2e7d32;
-    --dg-primary-dark: #0d1f15;
-    --dg-accent: #4ade80;
-    --dg-surface: #f4f7f4;
-    --dg-sidebar-text: #c8e6c9;
-    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #f0fdf4 58%, #dcfce7 100%);
-    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(74, 222, 128, 0.12) 0, transparent 34%), linear-gradient(135deg, #f8fff9 0%, #f4f7f4 54%, #f0fdf4 100%);
-    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f7fcf8 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(74, 222, 128, 0.08) 0%, rgba(26, 58, 42, 0.04) 100%);
-    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(240, 253, 244, 0.96) 100%);
-    --dg-navbar-text: #173526;
-    --dg-navbar-entry-bg: rgba(46, 125, 50, 0.08);
-    --dg-navbar-entry-hover-bg: rgba(46, 125, 50, 0.14);
-    --dg-heading-text: #173526;
-    --dg-shadow-deep: 0 18px 42px rgba(13, 31, 21, 0.11);
-}
-
-.o_theme_forest_guard .o_main_navbar {
-    background: var(--dg-gradient-main) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: 0 8px 24px rgba(13, 31, 21, 0.28);
-}
-
-.o_theme_forest_guard .o_main_navbar .o_menu_brand,
-.o_theme_forest_guard .o_main_navbar .o_nav_entry,
-.o_theme_forest_guard .o_main_navbar a,
-.o_theme_forest_guard .o_main_navbar .o_menu_sections>li>a {
-    color: #c8e6c9 !important;
-}
-
-.o_theme_forest_guard .o_main_navbar .o_nav_entry:hover,
-.o_theme_forest_guard .o_main_navbar .o_menu_sections>li>a:hover {
-    background-color: #2e7d32 !important;
-    color: #ffffff !important;
+    --dg-primary: #0D7A4E;
+    --dg-primary-hover: #0A5F3D;
 }
 
 .o_theme_forest_guard .btn-primary {
-    background-color: #2e7d32 !important;
-    border-color: #2e7d32 !important;
+    background-color: #0D7A4E !important;
+    border-color: #0D7A4E !important;
 }
 
 .o_theme_forest_guard .btn-primary:hover {
-    background-color: #1b5e20 !important;
-    border-color: #1b5e20 !important;
+    background-color: #0A5F3D !important;
+    border-color: #0A5F3D !important;
 }
 
 .o_theme_forest_guard a:not(.btn) {
-    color: #2e7d32;
+    color: #0D7A4E;
 }
 
 .o_theme_forest_guard .o_form_statusbar .btn.o_statusbar_status.o_arrow_button_current {
-    background-color: #2e7d32 !important;
+    background-color: #0D7A4E !important;
 }
 
-/* ── Executive Slate ─────────────────────────────────────── */
+/* ── Executive Slate (neutral grey accent) ── */
 .o_theme_executive_slate {
-    --dg-primary: #1f2937;
-    --dg-primary-light: #4b5563;
-    --dg-primary-dark: #111827;
-    --dg-accent: #6b7280;
-    --dg-surface: #f9fafb;
-    --dg-sidebar-text: #d1d5db;
-    --dg-gradient-main: linear-gradient(135deg, #ffffff 0%, #f1f5f9 58%, #e2e8f0 100%);
-    --dg-gradient-shell: radial-gradient(circle at 18% 0%, rgba(148, 163, 184, 0.14) 0, transparent 34%), linear-gradient(135deg, #fbfdff 0%, #f3f6fa 54%, #f8fafc 100%);
-    --dg-gradient-surface: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-    --dg-gradient-muted: linear-gradient(135deg, rgba(148, 163, 184, 0.1) 0%, rgba(31, 41, 55, 0.04) 100%);
-    --dg-navbar-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.96) 100%);
-    --dg-navbar-text: #1f2937;
-    --dg-navbar-entry-bg: rgba(31, 41, 55, 0.06);
-    --dg-navbar-entry-hover-bg: rgba(31, 41, 55, 0.11);
-    --dg-heading-text: #1f2937;
-    --dg-shadow-deep: 0 18px 42px rgba(17, 24, 39, 0.11);
-}
-
-.o_theme_executive_slate .o_main_navbar {
-    background: var(--dg-gradient-main) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-    box-shadow: 0 8px 24px rgba(17, 24, 39, 0.28);
-}
-
-.o_theme_executive_slate .o_main_navbar .o_menu_brand,
-.o_theme_executive_slate .o_main_navbar .o_nav_entry,
-.o_theme_executive_slate .o_main_navbar a,
-.o_theme_executive_slate .o_main_navbar .o_menu_sections>li>a {
-    color: #d1d5db !important;
-}
-
-.o_theme_executive_slate .o_main_navbar .o_nav_entry:hover,
-.o_theme_executive_slate .o_main_navbar .o_menu_sections>li>a:hover {
-    background-color: #374151 !important;
-    color: #f9fafb !important;
+    --dg-primary: #374151;
+    --dg-primary-hover: #1f2937;
 }
 
 .o_theme_executive_slate .btn-primary {
@@ -240,218 +121,5 @@ body.dg_login_branded {
     background-color: #374151 !important;
 }
 
-/* ── Premium Gradient App Shell ──────────────────────────── */
-body[class*="o_theme_"] {
-    --NavBar-backgroundColor: transparent;
-    --NavBar-entry-color: var(--dg-navbar-text);
-    --NavBar-entry-backgroundColor: var(--dg-navbar-entry-bg);
-    --NavBar-entry-backgroundColor--hover: var(--dg-navbar-entry-hover-bg);
-    --NavBar-entry-backgroundColor--active: var(--dg-navbar-entry-hover-bg);
-    --NavBar-entry-color--hover: var(--dg-primary);
-    --NavBar-entry-color--active: var(--dg-primary);
-}
-
-body[class*="o_theme_"] .o_web_client {
-    background: var(--dg-gradient-shell, linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%));
-}
-
-body[class*="o_theme_"] .o_main_navbar {
-    --NavBar-backgroundColor: transparent;
-    --NavBar-entry-color: var(--dg-navbar-text);
-    --NavBar-entry-backgroundColor: var(--dg-navbar-entry-bg);
-    --NavBar-entry-backgroundColor--hover: var(--dg-navbar-entry-hover-bg);
-    --NavBar-entry-backgroundColor--active: var(--dg-navbar-entry-hover-bg);
-    --NavBar-entry-color--hover: var(--dg-primary);
-    --NavBar-entry-color--active: var(--dg-primary);
-    background: var(--dg-navbar-bg) !important;
-    border-bottom: 1px solid rgba(15, 31, 54, 0.08) !important;
-    box-shadow: 0 8px 28px rgba(15, 31, 54, 0.08);
-}
-
-body[class*="o_theme_"] .o_main_navbar .o_menu_brand,
-body[class*="o_theme_"] .o_main_navbar .o_nav_entry,
-body[class*="o_theme_"] .o_main_navbar a,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li>a {
-    color: var(--dg-navbar-text) !important;
-}
-
-body[class*="o_theme_"] .o_main_navbar .o_nav_entry:hover,
-body[class*="o_theme_"] .o_main_navbar .o_nav_entry:focus,
-body[class*="o_theme_"] .o_main_navbar .o_nav_entry.active,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li>a:hover,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li>a:focus,
-body[class*="o_theme_"] .o_main_navbar .o_menu_sections>li.show>a {
-    background: var(--dg-navbar-entry-hover-bg) !important;
-    color: var(--dg-primary) !important;
-}
-
-body[class*="o_theme_"] .o_action_manager,
-body[class*="o_theme_"] .o_content,
-body[class*="o_theme_"] .o_kanban_renderer,
-body[class*="o_theme_"] .o_list_renderer,
-body[class*="o_theme_"] .o_form_view {
-    background: transparent !important;
-}
-
-body[class*="o_theme_"] .o_action {
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.28) 180px, rgba(255, 255, 255, 0) 360px),
-        var(--dg-gradient-shell, linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%)) !important;
-}
-
-body[class*="o_theme_"] .o_control_panel {
-    background: rgba(255, 255, 255, 0.9) !important;
-    border: 1px solid rgba(255, 255, 255, 0.58);
-    border-radius: 0 0 14px 14px;
-    box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
-    margin: 0 12px 12px;
-    /* overflow: hidden; */
-}
-
-body[class*="o_theme_"] .o_control_panel::before {
-    content: "";
-    display: block;
-    height: 3px;
-    background: linear-gradient(90deg, transparent 0%, var(--dg-accent) 18%, var(--dg-primary-light) 82%, transparent 100%);
-    opacity: 0.55;
-}
-
-body[class*="o_theme_"] .o_control_panel .breadcrumb,
-body[class*="o_theme_"] .o_control_panel .o_breadcrumb {
-    font-weight: 700;
-}
-
-body[class*="o_theme_"] .o_searchview,
-body[class*="o_theme_"] .o_cp_searchview {
-    border-radius: 8px !important;
-    border-color: rgba(15, 31, 54, 0.12) !important;
-    box-shadow: inset 0 1px 2px rgba(15, 31, 54, 0.04);
-}
-
-body[class*="o_theme_"] .o_content {
-    padding: 12px;
-}
-
-body[class*="o_theme_"] .o_form_sheet_bg {
-    background: transparent !important;
-    padding: 18px;
-}
-
-body[class*="o_theme_"] .o_form_sheet,
-body[class*="o_theme_"] .o_form_view .o_form_sheet {
-    background: var(--dg-gradient-surface, #fff) !important;
-    border: 1px solid rgba(255, 255, 255, 0.72) !important;
-    border-radius: 12px !important;
-    box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18)) !important;
-    /* overflow: hidden; */
-}
-
-body[class*="o_theme_"] .o_form_statusbar,
-body[class*="o_theme_"] .o_form_view header {
-    background: var(--dg-gradient-muted, rgba(30, 58, 95, 0.08)) !important;
-    border-bottom: 1px solid rgba(15, 31, 54, 0.1) !important;
-}
-
-body[class*="o_theme_"] .o_kanban_view {
-    background: transparent !important;
-    padding: 6px;
-}
-
-body[class*="o_theme_"] .o_kanban_record,
-body[class*="o_theme_"] .oe_kanban_card,
-body[class*="o_theme_"] .oe_kanban_global_click {
-    background: var(--dg-gradient-surface, #fff) !important;
-    border: 1px solid rgba(255, 255, 255, 0.68) !important;
-    border-radius: 10px !important;
-    box-shadow: 0 10px 28px rgba(15, 31, 54, 0.12) !important;
-}
-
-body[class*="o_theme_"] .o_kanban_record:hover,
-body[class*="o_theme_"] .oe_kanban_card:hover,
-body[class*="o_theme_"] .oe_kanban_global_click:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18)) !important;
-}
-
-body[class*="o_theme_"] .o_kanban_group {
-    background: rgba(255, 255, 255, 0.72) !important;
-    border: 1px solid rgba(15, 31, 54, 0.08);
-    border-radius: 12px;
-    /* overflow: hidden; */
-}
-
-body[class*="o_theme_"] .o_kanban_group .o_kanban_header,
-body[class*="o_theme_"] .o_column_folded .o_kanban_header {
-    background: var(--dg-gradient-muted, rgba(30, 58, 95, 0.06)) !important;
-    border-bottom: 1px solid rgba(15, 31, 54, 0.08) !important;
-    color: var(--dg-heading-text) !important;
-}
-
-body[class*="o_theme_"] .o_kanban_group .o_column_title {
-    color: var(--dg-heading-text) !important;
-}
-
-body[class*="o_theme_"] .o_list_view,
-body[class*="o_theme_"] .o_list_table,
-body[class*="o_theme_"] .o_renderer.table-responsive {
-    background: rgba(255, 255, 255, 0.94) !important;
-    border-radius: 12px;
-    box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
-    /* overflow: hidden; */
-}
-
-body[class*="o_theme_"] .o_list_table thead,
-body[class*="o_theme_"] .o_list_table thead th {
-    background: var(--dg-gradient-muted, rgba(30, 58, 95, 0.06)) !important;
-    color: var(--dg-heading-text) !important;
-}
-
-body[class*="o_theme_"] .o_list_table tbody tr:hover {
-    background: var(--dg-gradient-muted, rgba(30, 58, 95, 0.08)) !important;
-}
-
-body[class*="o_theme_"] .o_pivot,
-body[class*="o_theme_"] .o_graph_view {
-    background: var(--dg-gradient-surface, #fff) !important;
-    border-radius: 12px;
-    box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
-    /* overflow: hidden; */
-}
-
-body[class*="o_theme_"] .o_df_dashboard {
-    background:
-        radial-gradient(circle at 18% 0%, rgba(59, 130, 246, 0.1) 0, transparent 30%),
-        var(--dg-gradient-shell, linear-gradient(135deg, #f8fbff 0%, #eef4fb 54%, #f7fafc 100%));
-}
-
-body[class*="o_theme_"] .o_df_dashboard .dg-sidebar {
-    background: linear-gradient(160deg, var(--dg-primary-dark) 0%, var(--dg-primary) 100%);
-}
-
-body[class*="o_theme_"] .o_menu_systray .dropdown-menu,
-body[class*="o_theme_"] .o_popover,
-body[class*="o_theme_"] .modal-content {
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    border-radius: 12px;
-    box-shadow: var(--dg-shadow-deep, 0 18px 48px rgba(15, 31, 54, 0.18));
-}
-
-@media (max-width: 767px) {
-    body[class*="o_theme_"] .o_control_panel {
-        margin: 0 6px 8px;
-        border-radius: 0 0 10px 10px;
-    }
-
-    body[class*="o_theme_"] .o_content,
-    body[class*="o_theme_"] .o_form_sheet_bg {
-        padding: 8px;
-    }
-}
-
-/* Enforce high-visibility secondary text across all themes */
-body[class*="o_theme_"] .text-secondary,
-body[class*="o_theme_"] .text-muted,
-body[class*="o_theme_"] i.text-secondary,
-body[class*="o_theme_"] .fa.text-secondary {
-    color: #475569 !important;
-}
+/* High-visibility secondary text is already enforced unconditionally by
+   security_base/design_system.css — no need to repeat it per-theme here. */

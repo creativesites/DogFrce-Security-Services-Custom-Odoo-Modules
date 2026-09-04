@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shell.ShellProfileCard" owl="1">
+  <div class="dgs-profile-card">
+    <div class="dgs-profile-header">
+      <img class="dgs-profile-avatar" t-att-src="avatarUrl" alt=""/>
+      <div class="dgs-profile-header-text">
+        <div class="dgs-profile-name"><t t-esc="userName"/></div>
+        <div class="dgs-profile-login"><t t-esc="userLogin"/></div>
+        <div class="dgs-profile-db"><i class="fa fa-database"/><t t-esc="dbName"/></div>
+      </div>
+    </div>
+
+    <div class="dgs-profile-list">
+      <t t-foreach="items" t-as="item" t-key="item_index">
+        <t t-if="!item.hide">
+          <div t-if="item.type === 'separator'" class="dgs-profile-divider"/>
+          <a t-elif="item.type === 'item'"
+             t-attf-class="dgs-profile-item {{ item.id === 'logout' ? 'danger' : '' }}"
+             t-att-href="item.href"
+             t-on-click.prevent="() => this.onItemClick(item)">
+            <t t-out="item.description"/>
+          </a>
+        </t>
+      </t>
+    </div>
+  </div>
+</t>
+</templates>

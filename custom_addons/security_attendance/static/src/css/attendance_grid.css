@@ -1,7 +1,7 @@
 /* Attendance Summary Grid Modern Styling */
 
 .ag-root {
-    background-color: #f8fafc;
+    background-color: #F8FAFC;
     color: #334155;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     min-height: 100%;
@@ -9,8 +9,8 @@
 
 /* Header */
 .ag-header {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0f291e 100%);
-    border-bottom: 3px solid #10b981;
+    background: #101724;
+    border-bottom: 3px solid #0D7A4E;
     padding: 20px 28px;
     box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
 }
@@ -24,7 +24,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #10b981;
+    color: #0D7A4E;
     font-size: 20px;
 }
 
@@ -33,7 +33,7 @@
     align-items: center;
     gap: 6px;
     background: rgba(16, 185, 129, 0.15);
-    color: #34d399;
+    color: #0D7A4E;
     border: 1px solid rgba(52, 211, 153, 0.3);
     padding: 3px 10px;
     border-radius: 20px;
@@ -46,9 +46,9 @@
 .ag-live-dot {
     width: 7px;
     height: 7px;
-    background-color: #34d399;
+    background-color: #0D7A4E;
     border-radius: 50%;
-    box-shadow: 0 0 8px #34d399;
+    box-shadow: 0 0 8px #0D7A4E;
     animation: ag-pulse 2s infinite;
 }
 
@@ -87,7 +87,7 @@
 }
 
 .ag-select-site option {
-    background: #1e293b;
+    background: #101724;
     color: #ffffff;
 }
 
@@ -95,7 +95,7 @@
 .ag-kpi-card {
     background: #ffffff;
     border-radius: 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     padding: 16px 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -108,10 +108,10 @@
     box-shadow: 0 12px 24px -6px rgba(0, 0, 0, 0.08);
 }
 
-.ag-kpi-border-blue { border-left: 4px solid #3b82f6; }
-.ag-kpi-border-emerald { border-left: 4px solid #10b981; }
-.ag-kpi-border-amber { border-left: 4px solid #f59e0b; }
-.ag-kpi-border-rose { border-left: 4px solid #ef4444; }
+.ag-kpi-border-blue { border-left: 4px solid #1B3A6B; }
+.ag-kpi-border-emerald { border-left: 4px solid #0D7A4E; }
+.ag-kpi-border-amber { border-left: 4px solid var(--ds-warning); }
+.ag-kpi-border-rose { border-left: 4px solid var(--ds-danger); }
 .ag-kpi-border-purple { border-left: 4px solid #8b5cf6; }
 
 .ag-kpi-icon-wrapper {
@@ -124,10 +124,10 @@
     font-size: 18px;
 }
 
-.ag-kpi-icon-blue { background: #eff6ff; color: #3b82f6; }
-.ag-kpi-icon-emerald { background: #ecfdf5; color: #10b981; }
-.ag-kpi-icon-amber { background: #fffbeb; color: #f59e0b; }
-.ag-kpi-icon-rose { background: #fef2f2; color: #ef4444; }
+.ag-kpi-icon-blue { background: #eff6ff; color: #1B3A6B; }
+.ag-kpi-icon-emerald { background: #ecfdf5; color: #0D7A4E; }
+.ag-kpi-icon-amber { background: var(--ds-warning-bg); color: var(--ds-warning); }
+.ag-kpi-icon-rose { background: var(--ds-danger-bg); color: var(--ds-danger); }
 .ag-kpi-icon-purple { background: #f5f3ff; color: #8b5cf6; }
 
 .ag-kpi-label {
@@ -142,14 +142,16 @@
     font-size: 26px;
     font-weight: 800;
     letter-spacing: -0.02em;
-    color: #0f172a;
+    color: #0D1117;
     line-height: 1.2;
+    font-family: var(--ds-mono);
+    font-variant-numeric: tabular-nums;
 }
 
 /* Calendar Card */
 .ag-card-container {
     background: #ffffff;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #E2E8F0;
     border-radius: 14px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     overflow: hidden;
@@ -157,7 +159,7 @@
 
 .ag-card-header {
     background: #ffffff;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #F1F4F8;
     padding: 16px 24px;
     display: flex;
     align-items: center;
@@ -184,7 +186,7 @@
 }
 
 .ag-day-today {
-    border: 2px solid #3b82f6 !important;
+    border: 2px solid #1B3A6B !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
 }
 
@@ -192,7 +194,7 @@
     position: absolute;
     top: 6px;
     right: 6px;
-    background: #3b82f6;
+    background: #1B3A6B;
     color: #ffffff;
     font-size: 9px;
     font-weight: 700;
@@ -204,8 +206,8 @@
 .ag-day-full { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
 .ag-day-partial { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
 .ag-day-low { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-.ag-day-unmarked { background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; }
-.ag-day-empty { background: #fafafa; border: 1px dashed #cbd5e1; opacity: 0.6; }
+.ag-day-unmarked { background: #F1F4F8; border: 1px solid #E2E8F0; color: #475569; }
+.ag-day-empty { background: #fafafa; border: 1px dashed #CBD5E1; opacity: 0.6; }
 
 .ag-chip-badge {
     display: inline-flex;
@@ -229,9 +231,9 @@
     overflow: hidden;
 }
 
-.ag-progress-fill-emerald { background: linear-gradient(90deg, #10b981, #34d399); }
-.ag-progress-fill-amber { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-.ag-progress-fill-rose { background: linear-gradient(90deg, #ef4444, #f87171); }
+.ag-progress-fill-emerald { background: #0D7A4E; }
+.ag-progress-fill-amber { background: #F5A20B; }
+.ag-progress-fill-rose { background: #F87171; }
 
 /* Table Styling */
 .ag-table {
@@ -242,31 +244,31 @@
 }
 
 .ag-table th {
-    background: #f8fafc;
+    background: #F8FAFC;
     color: #475569;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     padding: 12px 18px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #E2E8F0;
 }
 
 .ag-table td {
     padding: 14px 18px;
     vertical-align: middle;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid #F1F4F8;
     font-size: 13px;
     transition: background-color 0.15s ease;
 }
 
 .ag-table tr:hover td {
-    background-color: #f8fafc;
+    background-color: #F8FAFC;
 }
 
 .ag-search-input {
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #CBD5E1;
     border-radius: 8px;
     padding: 6px 12px;
     font-size: 13px;
@@ -275,7 +277,7 @@
 }
 
 .ag-search-input:focus {
-    border-color: #3b82f6;
+    border-color: #1B3A6B;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     outline: none;
 }

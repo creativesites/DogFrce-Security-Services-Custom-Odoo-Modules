@@ -7,19 +7,21 @@
 
 :root {
     --ai-panel-width: 420px;
-    --ai-header-bg: linear-gradient(150deg, #0c1f3d 0%, #1a3660 55%, #2563eb 100%);
-    --ai-accent: #2563eb;
-    --ai-accent-hover: #1d4ed8;
-    --ai-accent-light: #eff6ff;
-    --ai-text: #1e293b;
-    --ai-muted: #64748b;
-    --ai-border: #e2e8f0;
+    /* Flat — matches the rail tone rather than a decorative gradient (the
+       only gradient in the product is the coverage/metric ramp). */
+    --ai-header-bg: #101724;
+    --ai-accent: #1B3A6B;
+    --ai-accent-hover: #142F58;
+    --ai-accent-light: #EBF1FB;
+    --ai-text: #0D1117;
+    --ai-muted: #64748B;
+    --ai-border: #E2E8F0;
     --ai-surface: #ffffff;
-    --ai-bg: #f1f5f9;
-    --ai-user-bg: #2563eb;
+    --ai-bg: #F1F4F8;
+    --ai-user-bg: #1B3A6B;
     --ai-user-text: #ffffff;
     --ai-assistant-bg: #ffffff;
-    --ai-shadow: 0 20px 60px rgba(15, 36, 68, 0.24), 0 4px 16px rgba(0, 0, 0, 0.1);
+    --ai-shadow: 0 20px 60px rgba(16, 23, 36, 0.24), 0 4px 16px rgba(0, 0, 0, 0.1);
     --ai-bubble-radius: 16px;
     --ai-transition: cubic-bezier(0.4, 0, 0.2, 1);
     --ai-z: 1050;
@@ -42,7 +44,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.05rem;
-    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.5), 0 1px 4px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 20px rgba(27, 58, 107, 0.5), 0 1px 4px rgba(0,0,0,0.15);
     z-index: var(--ai-z);
     transition: transform 0.2s var(--ai-transition),
                 box-shadow 0.2s var(--ai-transition),
@@ -52,7 +54,7 @@
 
 .o_ai_chat_toggle:hover {
     transform: scale(1.08) translateY(-1px);
-    box-shadow: 0 8px 28px rgba(37, 99, 235, 0.55);
+    box-shadow: 0 8px 28px rgba(27, 58, 107, 0.55);
 }
 
 /* Hide the floating button when panel is open — header X handles closing */
@@ -67,7 +69,7 @@
     position: absolute;
     top: -4px;
     right: -4px;
-    background: #ef4444;
+    background: #991B1B;
     color: white;
     font-size: 0.62rem;
     font-weight: 700;
@@ -98,7 +100,7 @@
     transform: translateX(calc(var(--ai-panel-width) + 20px));
     transition: transform 0.3s var(--ai-transition);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
-    border-left: 1px solid rgba(37, 99, 235, 0.12);
+    border-left: 1px solid rgba(27, 58, 107, 0.12);
     overflow: hidden;
 }
 
@@ -169,9 +171,9 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #4ade80;
+    background: #22C55E;
     flex-shrink: 0;
-    box-shadow: 0 0 5px rgba(74, 222, 128, 0.6);
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.6);
 }
 
 .o_ai_chat_header_actions {
@@ -209,7 +211,7 @@
     display: flex;
     gap: 6px;
     padding: 8px 12px;
-    background: #f8fafc;
+    background: #F8FAFC;
     border-bottom: 1px solid var(--ai-border);
     flex-shrink: 0;
 }
@@ -236,7 +238,7 @@
 
 .o_ai_chat_mode_btn:hover {
     background: var(--ai-accent-light);
-    border-color: #bfdbfe;
+    border-color: #C7D9F4;
     color: var(--ai-accent);
 }
 
@@ -244,7 +246,7 @@
     background: var(--ai-accent);
     border-color: var(--ai-accent);
     color: white;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 8px rgba(27, 58, 107, 0.3);
 }
 
 /* ── Message area ───────────────────────────────────────────────────────────── */
@@ -264,7 +266,7 @@
 .o_ai_chat_messages::-webkit-scrollbar { width: 3px; }
 .o_ai_chat_messages::-webkit-scrollbar-track { background: transparent; }
 .o_ai_chat_messages::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #CBD5E1;
     border-radius: 4px;
 }
 
@@ -289,7 +291,7 @@
     align-items: center;
     justify-content: center;
     font-size: 1.4rem;
-    box-shadow: 0 4px 20px rgba(37, 99, 235, 0.35);
+    box-shadow: 0 4px 20px rgba(27, 58, 107, 0.35);
     margin-bottom: 4px;
 }
 
@@ -332,10 +334,10 @@
 
 .o_ai_chat_suggestion:hover {
     background: var(--ai-accent-light);
-    border-color: #bfdbfe;
+    border-color: #C7D9F4;
     color: var(--ai-accent);
     transform: translateX(2px);
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 2px 8px rgba(27, 58, 107, 0.1);
 }
 
 /* ── Message bubbles ────────────────────────────────────────────────────────── */
@@ -373,7 +375,7 @@
     font-size: 0.68rem;
     flex-shrink: 0;
     margin-top: 2px;
-    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 6px rgba(27, 58, 107, 0.3);
 }
 
 .o_ai_chat_bubble {
@@ -389,7 +391,7 @@
     color: var(--ai-user-text);
     font-size: 0.875rem;
     border-bottom-right-radius: 4px;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 8px rgba(27, 58, 107, 0.3);
 }
 
 .o_ai_chat_bubble_assistant {
@@ -416,7 +418,7 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #94a3b8;
+    background: #94A3B8;
     animation: ai_typing_bounce 1.3s ease-in-out infinite;
 }
 
@@ -452,7 +454,7 @@
 .o_ai_chat_input_wrap:focus-within {
     border-color: var(--ai-accent);
     background: white;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.08);
 }
 
 .o_ai_chat_input {
@@ -472,7 +474,7 @@
 }
 
 .o_ai_chat_input::placeholder {
-    color: #94a3b8;
+    color: #94A3B8;
     font-size: 0.85rem;
 }
 
@@ -480,8 +482,8 @@
     width: 34px;
     height: 34px;
     border-radius: 10px;
-    background: #e2e8f0;
-    color: #94a3b8;
+    background: #E2E8F0;
+    color: #94A3B8;
     border: none;
     cursor: pointer;
     display: flex;
@@ -498,13 +500,13 @@
 .o_ai_chat_send_btn.is-active {
     background: var(--ai-accent);
     color: white;
-    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 3px 10px rgba(27, 58, 107, 0.4);
     transform: scale(1.04);
 }
 
 .o_ai_chat_send_btn.is-active:hover {
     background: var(--ai-accent-hover);
-    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.5);
+    box-shadow: 0 4px 14px rgba(27, 58, 107, 0.5);
 }
 
 .o_ai_chat_send_btn:disabled {
@@ -517,7 +519,7 @@
 .o_ai_chat_input_hint {
     text-align: center;
     font-size: 0.65rem;
-    color: #cbd5e1;
+    color: #CBD5E1;
     margin-top: 6px;
     letter-spacing: 0.1px;
 }

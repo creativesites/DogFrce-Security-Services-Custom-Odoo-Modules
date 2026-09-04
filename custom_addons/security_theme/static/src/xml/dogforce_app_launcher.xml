@@ -11,7 +11,7 @@
       <!-- Top Header -->
       <div class="dfal-header">
         <div class="dfal-brand">
-          <div class="dfal-brand-mark"><i class="fa fa-shield"/></div>
+          <div class="dfal-brand-mark"><img t-att-src="companyLogoUrl" alt="" class="dfal-brand-logo"/></div>
           <div>
             <div class="dfal-brand-name"><t t-esc="companyName"/></div>
             <div class="dfal-subtitle">Your operational workspace</div>
@@ -39,7 +39,7 @@
           <i class="fa fa-bolt me-2 text-warning"/>Priority workspaces
         </div>
         <div class="dfal-cc-grid">
-          <button class="dfal-cc-card cc-blue" t-on-click="() => this.openClientAction('security_base.action_deployguard_main_command_center')">
+          <button class="dfal-cc-card cc-blue" t-if="isCardVisible('home')" t-on-click="() => this.openClientAction('security_base.action_deployguard_main_command_center')">
             <i class="fa fa-shield dfal-cc-icon"/>
             <div class="dfal-cc-text">
               <span class="dfal-cc-title">Home Command Center</span>
@@ -47,7 +47,7 @@
             </div>
           </button>
 
-          <button class="dfal-cc-card cc-purple" t-on-click="() => this.openClientAction('security_shift_planner.action_rostering_hub')">
+          <button class="dfal-cc-card cc-purple" t-if="isCardVisible('rostering')" t-on-click="() => this.openClientAction('security_shift_planner.action_rostering_hub')">
             <i class="fa fa-calendar dfal-cc-icon"/>
             <div class="dfal-cc-text">
               <span class="dfal-cc-title">Rostering Hub</span>
@@ -55,7 +55,7 @@
             </div>
           </button>
 
-          <button class="dfal-cc-card cc-emerald" t-on-click="() => this.openClientAction('security_base.action_workforce_dashboard')">
+          <button class="dfal-cc-card cc-emerald" t-if="isCardVisible('workforce')" t-on-click="() => this.openClientAction('security_base.action_workforce_dashboard')">
             <i class="fa fa-users dfal-cc-icon"/>
             <div class="dfal-cc-text">
               <span class="dfal-cc-title">Workforce Hub</span>
@@ -63,7 +63,7 @@
             </div>
           </button>
 
-          <button class="dfal-cc-card cc-teal" t-on-click="() => this.openClientAction('security_operations.action_clients_sites_mega_menu')">
+          <button class="dfal-cc-card cc-teal" t-if="isCardVisible('clients_sites')" t-on-click="() => this.openClientAction('security_operations.action_clients_sites_mega_menu')">
             <i class="fa fa-building dfal-cc-icon"/>
             <div class="dfal-cc-text">
               <span class="dfal-cc-title">Clients &amp; Sites</span>
@@ -71,7 +71,7 @@
             </div>
           </button>
 
-          <button class="dfal-cc-card cc-amber" t-on-click="() => this.openClientAction('security_equipment.action_equipment_mega_menu')">
+          <button class="dfal-cc-card cc-amber" t-if="isCardVisible('equipment')" t-on-click="() => this.openClientAction('security_equipment.action_equipment_mega_menu')">
             <i class="fa fa-wrench dfal-cc-icon"/>
             <div class="dfal-cc-text">
               <span class="dfal-cc-title">Equipment &amp; Assets</span>
@@ -79,7 +79,7 @@
             </div>
           </button>
 
-          <button class="dfal-cc-card cc-rose" t-on-click="() => this.openClientAction('security_fleet.action_fleet_mega_menu')">
+          <button class="dfal-cc-card cc-rose" t-if="isCardVisible('fleet')" t-on-click="() => this.openClientAction('security_fleet.action_fleet_mega_menu')">
             <i class="fa fa-car dfal-cc-icon"/>
             <div class="dfal-cc-text">
               <span class="dfal-cc-title">Fleet &amp; Transport</span>
@@ -106,17 +106,6 @@
               <div class="dfal-app-name"><t t-esc="app.name"/></div>
             </div>
           </t>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="dfal-footer">
-        <div class="dfal-footer-status">
-          <span class="dfal-status-pill green"><i class="fa fa-check-circle me-1"/><t t-esc="companyName"/> Active</span>
-          <span class="dfal-status-pill blue"><i class="fa fa-shield me-1"/>Secure workspace</span>
-        </div>
-        <div class="dfal-footer-tip">
-          Click outside or press <span class="dfal-kbd">Esc</span> to dismiss
         </div>
       </div>
 

@@ -8,30 +8,30 @@
     display: flex;
     flex-direction: column;
 
-    /* ── Core surfaces ── */
-    --bg: #f4f6f9;
+    /* ── Core surfaces — aligned to security_base's design_system.css --ds-* tokens ── */
+    --bg: #F8FAFC;
     --surface: #ffffff;
-    --surface-2: #f0f3f7;
-    --border: #e5e8ec;
+    --surface-2: #F1F4F8;
+    --border: #E2E8F0;
     --border-em: #cbd1d9;
 
     /* ── Text scale ── */
-    --ink: #0d1726;
+    --ink: #0D1117;
     --ink-2: #475569;
     --ink-3: #8b95a5;
     --ink-4: #b8bfca;
 
     /* ── Brand / nav ── */
-    --navy: #1a3a5c;
-    --navy-mid: #234a77;
-    --navy-soft: #eaf0f7;
+    --navy: #1B3A6B;
+    --navy-mid: #142F58;
+    --navy-soft: #EBF1FB;
 
     /* ── Used by inline XML styles ── */
-    --text: #0d1726;
+    --text: #0D1117;
     --text-sub: #475569;
     --text-muted: #475569;
-    --red: #dc2626;
-    --acid: #16a34a;
+    --red: #991B1B;
+    --acid: #0D7A4E;
 
     /* ── Section accent colours (used in XML --dg-section-color) ── */
     --cyan: #0891b2;

@@ -1,29 +1,28 @@
 /* ─── Site Management Hub ──────────────────────────────────────────── */
 
 :root {
-    --df-navy: #1B2040;
-    --df-amber: #F5A523;
-    --df-navy-light: rgba(27, 32, 64, 0.08);
-    --df-amber-light: rgba(245, 165, 35, 0.15);
+    --sh-accent-light: rgba(27, 58, 107, 0.08);
+    --sh-amber: #F5A20B; /* matches the coverage-ramp's amber stop */
+    --sh-amber-light: rgba(245, 162, 11, 0.15);
 }
 
 .sh-root {
-    background: #f8f9fa;
+    background: var(--ds-bg);
     min-height: 100vh;
     font-size: 0.875rem;
 }
 
 .sh-header {
-    background: #fff;
+    background: var(--ds-surface);
     position: sticky;
     top: 0;
     z-index: 10;
 }
 
-/* ─── Tabs (DogForce brand colors) ─────────────── */
+/* ─── Tabs ─────────────────────────────────────── */
 
 .sh-tabs .nav-link {
-    color: #6c757d;
+    color: var(--ds-text-subtle);
     border: none;
     padding: 0.6rem 1rem;
     font-size: 0.875rem;
@@ -32,30 +31,30 @@
 }
 
 .sh-tabs .nav-link.active {
-    color: var(--df-navy);
-    border-bottom: 2px solid var(--df-amber);
+    color: var(--ds-accent);
+    border-bottom: 2px solid var(--sh-amber);
     background: transparent;
     font-weight: 600;
 }
 
 .sh-tabs .nav-link:hover {
-    color: var(--df-navy);
-    background: var(--df-navy-light);
+    color: var(--ds-accent);
+    background: var(--sh-accent-light);
 }
 
 /* ─── Calendar ──────────────────────────────── */
 
 .sh-calendar {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
     overflow: hidden;
-    background: #fff;
+    background: var(--ds-surface);
 }
 
 .sh-cal-header {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    background: var(--df-navy);
+    background: var(--ds-accent);
     color: #fff;
 }
 
@@ -70,7 +69,7 @@
 .sh-cal-week {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--ds-border);
 }
 
 .sh-day {
@@ -78,49 +77,51 @@
     padding: 6px;
     position: relative;
     cursor: pointer;
-    border-right: 1px solid #dee2e6;
+    border-right: 1px solid var(--ds-border);
     transition: background 0.15s, opacity 0.2s;
 }
 
 .sh-day:last-child { border-right: none; }
 
-.sh-day:hover { background: var(--df-navy-light); }
+.sh-day:hover { background: var(--sh-accent-light); }
 
 .sh-day-filler,
 .sh-day-empty {
-    background: #f8f9fa;
+    background: var(--ds-bg);
     cursor: default;
 }
 
 .sh-day-filler:hover,
-.sh-day-empty:hover { background: #f8f9fa; }
+.sh-day-empty:hover { background: var(--ds-bg); }
 
-.sh-day-full  { background: rgba(25, 135, 84, 0.08); }
-.sh-day-partial { background: rgba(245, 165, 35, 0.12); }
-.sh-day-none  { background: rgba(220, 53, 69, 0.08); }
+.sh-day-full  { background: var(--ds-success-bg); }
+.sh-day-partial { background: var(--sh-amber-light); }
+.sh-day-none  { background: var(--ds-danger-bg); }
 .sh-day-no-slots { background: #fafafa; }
 
-.sh-day-full:hover  { background: rgba(25, 135, 84, 0.15); }
-.sh-day-partial:hover { background: var(--df-amber-light); }
-.sh-day-none:hover  { background: rgba(220, 53, 69, 0.15); }
+.sh-day-full:hover  { background: #D3EDE0; }
+.sh-day-partial:hover { background: rgba(245, 162, 11, 0.22); }
+.sh-day-none:hover  { background: #FBCACA; }
 
 .sh-day-num {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #343a40;
+    color: var(--ds-text);
     display: block;
 }
 
 .sh-day-count {
     display: block;
     font-size: 0.7rem;
-    color: #6c757d;
+    font-family: var(--ds-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--ds-text-subtle);
     margin-top: 2px;
 }
 
-.sh-day-full .sh-day-count  { color: #198754; font-weight: 600; }
-.sh-day-none .sh-day-count  { color: #dc3545; font-weight: 600; }
-.sh-day-partial .sh-day-count { color: #92600a; font-weight: 600; }
+.sh-day-full .sh-day-count  { color: var(--ds-success); font-weight: 600; }
+.sh-day-none .sh-day-count  { color: var(--ds-danger); font-weight: 600; }
+.sh-day-partial .sh-day-count { color: var(--ds-warning); font-weight: 600; }
 
 /* ─── Mini coverage bar inside calendar cells ─── */
 
@@ -128,7 +129,7 @@
     margin-top: 4px;
     height: 4px;
     border-radius: 2px;
-    background: #e9ecef;
+    background: var(--ds-slate);
     overflow: hidden;
 }
 
@@ -138,9 +139,9 @@
     transition: width 0.3s;
 }
 
-.sh-day-full .sh-day-bar-fill    { background: #198754; }
-.sh-day-partial .sh-day-bar-fill  { background: var(--df-amber); }
-.sh-day-none .sh-day-bar-fill     { background: #dc3545; width: 0% !important; }
+.sh-day-full .sh-day-bar-fill    { background: var(--ds-success); }
+.sh-day-partial .sh-day-bar-fill  { background: var(--sh-amber); }
+.sh-day-none .sh-day-bar-fill     { background: var(--ds-danger); width: 0% !important; }
 
 /* ─── Gaps Only mode ────────────────────────── */
 
@@ -151,9 +152,9 @@
 }
 
 .sh-gaps-only-btn.active {
-    background-color: var(--df-navy);
+    background-color: var(--ds-accent);
     color: #fff;
-    border-color: var(--df-navy);
+    border-color: var(--ds-accent);
 }
 
 /* ─── Day popover ───────────────────────────── */
@@ -163,18 +164,18 @@
     top: 4px;
     left: calc(100% + 4px);
     z-index: 100;
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
     min-width: 240px;
     max-width: 300px;
     padding: 0;
     overflow: hidden;
-    box-shadow: 0 4px 16px rgba(27, 32, 64, 0.12);
+    box-shadow: var(--ds-shadow-md);
 }
 
 .sh-popover-header {
-    background: var(--df-navy);
+    background: var(--ds-accent);
     color: #fff;
     padding: 6px 10px;
     font-size: 0.8rem;
@@ -182,7 +183,7 @@
 
 .sh-popover-slot {
     padding: 6px 10px;
-    border-bottom: 1px solid #f0f0f0;
+    border-bottom: 1px solid var(--ds-border-light);
     font-size: 0.8rem;
 }
 
@@ -201,10 +202,10 @@
     margin-right: 3px;
 }
 
-.sh-legend-full    { background: rgba(25, 135, 84, 0.5); }
-.sh-legend-partial { background: rgba(245, 165, 35, 0.5); }
-.sh-legend-none    { background: rgba(220, 53, 69, 0.4); }
-.sh-legend-empty   { background: #dee2e6; }
+.sh-legend-full    { background: rgba(13, 122, 78, 0.5); }
+.sh-legend-partial { background: rgba(245, 162, 11, 0.5); }
+.sh-legend-none    { background: rgba(153, 27, 27, 0.4); }
+.sh-legend-empty   { background: var(--ds-border); }
 
 /* ─── Loading state ─────────────────────────── */
 

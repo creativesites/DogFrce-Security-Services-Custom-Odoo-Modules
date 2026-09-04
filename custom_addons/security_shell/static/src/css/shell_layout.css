@@ -1,0 +1,1063 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DeployGuard Shell — global chrome
+   Rail (76px) + nav panel (300px, collapsible) + canvas (o_action_manager).
+   The shell owns the viewport; only the canvas scrolls. .o_control_panel is
+   left untouched — breadcrumbs, view switcher and search stay exactly as
+   they are today.
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* The navbar-suppression rules allowed to use !important in shell_*.css.
+   Scoped to .dgs-shell-active (added to <body> by ShellRail on mount) so
+   that if the shell JS fails to initialise, the standard Odoo navbar remains
+   visible and the site never goes blank.
+   Odoo 19 wraps the actual navbar (.o_main_navbar) in an outer <header
+   class="o_navbar">; hiding only the inner nav leaves the header as a live
+   flex item in the shell's row layout, still taking space and intercepting
+   clicks/scroll — both must be hidden. */
+.dgs-shell-active .o_main_navbar { display: none !important; }
+.dgs-shell-active header.o_navbar { display: none !important; }
+
+
+/* html .o_web_client (core webclient_layout.scss, via @extend on the `html`
+   selector) sets flex-flow: column nowrap at specificity (0,0,1,1). A bare
+   .o_web_client rule here can't win a cascade tie against that regardless of
+   load order, so this selector adds `body` to match/exceed it. */
+html body.o_web_client {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    position: fixed;
+    inset: 0;
+    padding: 12px;
+    gap: 12px;
+    background: var(--dgs-desk);
+    overflow: hidden;
+}
+
+html, body {
+    overflow: hidden;
+}
+
+/* Same specificity issue as html body.o_web_client above, but worse: core's
+   actual compiled selector here is `html .o_web_client > .o_action_manager`
+   (2 classes + 1 type = higher specificity than a plain `html body
+   .o_action_manager`, since CSS compares class-count before type-count).
+   We want the canvas itself to scroll (our dashboard doesn't follow core's
+   nested .o_action > .o_content scroll structure), so match 2 classes. */
+html body.o_web_client .o_action_manager {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--dgs-r-shell);
+    background: var(--dgs-canvas);
+    overflow: auto;
+    position: relative;
+}
+
+/* ── Rail ──────────────────────────────────────────────────────────────── */
+
+.dgs-rail {
+    flex: 0 0 76px;
+    width: 76px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 0;
+    background: var(--dgs-rail);
+    border-radius: var(--dgs-r-shell);
+    font-family: var(--dgs-font);
+}
+
+/* App switcher — a grid icon, deliberately not the company/site logo (that
+   lives in the nav panel header now, as branding+workspace context, a
+   separate concept from "which application"). Opens the existing
+   DogForceAppLauncher overlay (security_theme), mounted as a shell sibling
+   in shell_frame.xml since its usual mount point inside .o_main_navbar is
+   unreachable once the shell hides that navbar. */
+.dgs-rail-appswitch {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: none;
+    background: var(--dgs-rail-hover);
+    color: var(--dgs-rail-icon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background .15s, color .15s;
+}
+
+.dgs-rail-appswitch svg {
+    width: 19px;
+    height: 19px;
+}
+
+.dgs-rail-appswitch:hover,
+.dgs-rail-appswitch:focus-visible {
+    background: var(--dgs-rail-active);
+    color: #101724;
+    outline: none;
+}
+
+.dgs-rail-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    color: var(--dgs-rail-icon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background .15s;
+}
+
+.dgs-rail-toggle:hover,
+.dgs-rail-toggle:focus-visible {
+    background: var(--dgs-rail-hover);
+    outline: none;
+}
+
+.dgs-rail-divider {
+    width: 28px;
+    height: 1px;
+    background: var(--dgs-rail-divider);
+    flex: 0 0 auto;
+}
+
+.dgs-rail-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.dgs-rail-sections::-webkit-scrollbar { display: none; }
+
+.dgs-rail-item {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    border: none;
+    background: transparent;
+    color: var(--dgs-rail-icon);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex: 0 0 auto;
+    transition: background .15s, color .15s;
+}
+
+.dgs-rail-item svg {
+    width: 19px;
+    height: 19px;
+    stroke-width: 1.9;
+}
+
+.dgs-rail-item:hover,
+.dgs-rail-item:focus-visible {
+    background: var(--dgs-rail-hover);
+    outline: none;
+}
+
+.dgs-rail-item.active {
+    background: var(--dgs-rail-active);
+    color: #101724;
+}
+
+.dgs-rail-item-initial {
+    font-family: var(--dgs-mono);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* ── Rail hover popover ────────────────────────────────────────────────
+   Every rail control's hover feedback (plain name, or a full section
+   preview) renders through Odoo's own popover service (see shell_rail.js)
+   rather than a CSS-only flyout nested inside .dgs-rail-sections — that
+   container scrolls vertically once there are more sections than fit on
+   screen, and overflow clipping on a scrolling ancestor silently crops a
+   plain position:absolute/fixed descendant. The popover service portals
+   this content elsewhere, so it always renders in full regardless of rail
+   scroll position. */
+/* The popover service wraps our content in its own positioned element —
+   .dgs-rail-popover-shell (passed as popoverClass) is that outer wrapper,
+   styled here as one elevated surface. Content components (this file's
+   .dgs-rail-popover) stay unstyled-as-a-box so the elevation, border and
+   radius live in exactly one place. */
+.dgs-rail-popover-shell {
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(16, 23, 36, .04), 0 16px 40px rgba(16, 23, 36, .16);
+    padding: 10px;
+}
+
+.dgs-rail-popover {
+    min-width: 172px;
+    max-width: 300px;
+    max-height: 70vh;
+    overflow-y: auto;
+    font-family: var(--dgs-font);
+}
+
+.dgs-rail-popover-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ds-accent);
+    flex: 0 0 auto;
+}
+
+.dgs-rail-popover-tip {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ds-text);
+    padding: 4px 6px;
+    white-space: nowrap;
+}
+
+.dgs-rail-popover-heading {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 4px 8px 10px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.dgs-rail-popover-heading-text {
+    font-size: 13.5px;
+    font-weight: 700;
+    letter-spacing: -.1px;
+    color: var(--ds-text);
+}
+
+.dgs-rail-popover-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.dgs-rail-popover-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 7px 10px 7px calc(10px + var(--depth, 0) * 16px);
+    border-radius: 9px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: background .1s ease;
+}
+
+.dgs-rail-popover-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* A thin connector line under nested rows — the same "you're inside a
+   section" cue the sidebar tree gives via indentation, kept legible here
+   even without the sidebar's chevrons. */
+.dgs-rail-popover-guide {
+    position: absolute;
+    left: calc(10px + (var(--depth, 0) - 1) * 16px + 7px);
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--ds-border);
+}
+
+.dgs-rail-popover-row.clickable {
+    font-weight: 500;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-rail-popover-row.clickable:hover {
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
+}
+
+.dgs-rail-popover-row.clickable:active { background: var(--ds-accent-light); }
+
+.dgs-rail-popover-row.heading {
+    font-weight: 700;
+    color: var(--ds-text-subtle);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: default;
+    margin-top: 6px;
+}
+
+.dgs-rail-popover-row.heading:first-child { margin-top: 0; }
+
+/* ── Profile card ──────────────────────────────────────────────────────
+   The rail avatar's click menu — built on Odoo's own "user_menuitems"
+   registry (shell_profile_card.js), so Log out, My Preferences, and
+   anything any other installed module contributes there all show up
+   correctly, with the same elevated-surface treatment as the rest of the
+   shell's popovers rather than a bare unstyled list. */
+.dgs-profile-popover-shell {
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(16, 23, 36, .04), 0 16px 40px rgba(16, 23, 36, .16);
+    padding: 0;
+    overflow: hidden;
+}
+
+.dgs-profile-card {
+    width: 268px;
+    font-family: var(--dgs-font);
+}
+
+.dgs-profile-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 18px 16px;
+    background: var(--dgs-canvas);
+    border-bottom: 1px solid var(--ds-border);
+}
+
+.dgs-profile-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex: 0 0 auto;
+    border: 1px solid var(--ds-border);
+    background: #FFFFFF;
+}
+
+.dgs-profile-header-text { min-width: 0; }
+
+.dgs-profile-name {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ds-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-profile-login {
+    font-size: 12px;
+    color: var(--ds-text-subtle);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+}
+
+.dgs-profile-db {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    color: var(--ds-text-faint, var(--ds-text-subtle));
+    margin-top: 4px;
+}
+
+.dgs-profile-list {
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    gap: 1px;
+}
+
+.dgs-profile-item {
+    display: block;
+    padding: 9px 10px;
+    border-radius: 9px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .1s ease;
+}
+
+.dgs-profile-item:hover {
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
+}
+
+.dgs-profile-card .dgs-profile-item.danger { color: #C0392B !important; }
+.dgs-profile-card .dgs-profile-item.danger:hover { background: #FDECEC; color: #A5271D !important; }
+
+.dgs-profile-divider {
+    height: 1px;
+    background: var(--ds-border);
+    margin: 6px 4px;
+}
+
+.dgs-rail-bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.dgs-rail-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #2A3446;
+    color: #E7EAF0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--dgs-mono);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    flex: 0 0 auto;
+}
+
+/* ── Nav panel ─────────────────────────────────────────────────────────── */
+
+.dgs-nav-panel {
+    flex: 0 0 300px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-shell);
+    padding: 16px 14px;
+    overflow: hidden;
+    font-family: var(--dgs-font);
+    position: relative;
+}
+
+.dgs-company-switcher {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-control);
+    cursor: pointer;
+    transition: background .15s;
+    flex: 0 0 auto;
+}
+
+.dgs-company-switcher:hover { background: #F6F8FB; }
+
+.dgs-company-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    object-fit: contain;
+    flex: 0 0 auto;
+}
+
+.dgs-company-info { min-width: 0; flex: 1 1 auto; }
+
+.dgs-company-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ds-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-company-meta {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    letter-spacing: .3px;
+    color: var(--ds-text-subtle);
+}
+
+.dgs-nav-heading-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 16px 4px 8px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-heading {
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--ds-text);
+}
+
+.dgs-nav-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.dgs-nav-overflow,
+.dgs-nav-close {
+    color: var(--ds-text-subtle);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .12s, color .12s;
+}
+
+.dgs-nav-overflow:hover,
+.dgs-nav-close:hover {
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
+}
+
+.dgs-nav-search {
+    width: 100%;
+    padding: 8px 12px;
+    margin: 0 0 10px;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-control);
+    background: var(--dgs-canvas);
+    color: var(--ds-text-2);
+    font-size: 13px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-search:focus {
+    outline: none;
+    border-color: var(--ds-accent-mid);
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, .08);
+}
+
+.dgs-nav-home-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border-radius: 11px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    flex: 0 0 auto;
+    background: transparent;
+    color: var(--ds-text);
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.dgs-nav-home-row.active {
+    background: var(--dgs-rail);
+    color: #FFFFFF;
+}
+
+.dgs-nav-home-tag {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    opacity: .7;
+}
+
+.dgs-nav-tree {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dgs-nav-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 11px;
+    cursor: pointer;
+    color: var(--ds-text-2);
+    transition: background .12s;
+}
+
+.dgs-nav-row:hover { background: #F4F6FA; }
+
+.dgs-nav-row.dgs-nav-row-missing,
+.dgs-nav-row.dgs-nav-row-soon {
+    cursor: default;
+}
+
+.dgs-nav-row.dgs-nav-row-missing:hover,
+.dgs-nav-row.dgs-nav-row-soon:hover {
+    background: transparent;
+}
+
+.dgs-nav-chevron {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+    color: var(--ds-text-subtle);
+}
+
+/* Depth-based row styling for the live menu tree (arbitrary nesting —
+   padding-left is set inline per-row from row.depth). A group row (has
+   children, toggles open/closed) reads slightly heavier than a leaf row
+   (navigates directly) so the hierarchy stays scannable without needing a
+   fixed number of levels. */
+.dgs-nav-row-group .dgs-nav-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #101724;
+}
+
+/* Active leaf: never rely on color alone (accessibility) — a left accent
+   bar plus weight/background carries the "you are here" state. */
+.dgs-nav-row.active {
+    background: var(--dgs-rail-active);
+    box-shadow: inset 3px 0 0 var(--dgs-rail);
+}
+
+.dgs-nav-row.active .dgs-nav-label {
+    color: #101724;
+    font-weight: 600;
+}
+
+.dgs-nav-row-leaf .dgs-nav-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+}
+
+.dgs-nav-chevron-spacer {
+    width: 13px;
+    height: 13px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-app-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 10px 10px 4px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-empty {
+    padding: 24px 10px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+}
+
+.dgs-nav-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dgs-nav-count {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    background: var(--ds-slate);
+    color: var(--ds-text-muted);
+    border-radius: 9px;
+    padding: 2px 7px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-chip {
+    font-family: var(--dgs-mono);
+    font-size: 9px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
+    background: var(--ds-slate);
+    border-radius: 8px;
+    padding: 2px 6px;
+    flex: 0 0 auto;
+}
+
+.dgs-nav-row-2.active .dgs-nav-label {
+    color: var(--ds-accent);
+    font-weight: 700;
+}
+
+.dgs-company-menu {
+    position: absolute;
+    top: 66px;
+    left: 14px;
+    right: 14px;
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-control);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 6px;
+    z-index: 1051;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.dgs-company-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-company-menu-item svg { flex: 0 0 auto; color: var(--ds-text-subtle); }
+
+.dgs-company-menu-item:hover { background: var(--dgs-canvas); }
+
+.dgs-company-menu-section-label {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 10px 10px 4px;
+}
+
+.dgs-company-menu-section-label:first-child { padding-top: 4px; }
+
+/* ── Overlay scrim (nav panel < 1280px, see Responsive below) ───────────── */
+
+.dgs-nav-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(16, 23, 36, .35);
+    z-index: 1049;
+}
+
+.dgs-nav-overlay-scrim {
+    display: none;
+}
+
+/* ── Full menu (··· — completeness fallback) ──────────────────────────── */
+
+.dgs-fullmenu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 1060;
+    background: rgba(16, 23, 36, .35);
+}
+
+.dgs-fullmenu-panel {
+    position: fixed;
+    top: 12px;
+    bottom: 12px;
+    left: 100px;
+    width: 320px;
+    z-index: 1061;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-shell);
+    box-shadow: var(--dgs-lift-hover);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: var(--dgs-font);
+}
+
+.dgs-fullmenu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dgs-fullmenu-title {
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: var(--ds-text);
+}
+
+.dgs-fullmenu-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: none;
+    background: var(--dgs-canvas);
+    color: var(--ds-text-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.dgs-fullmenu-list {
+    flex: 1 1 auto;
+    overflow-y: auto;
+}
+
+.dgs-fullmenu-app-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--ds-text-subtle);
+    padding: 12px 8px 4px;
+}
+
+.dgs-fullmenu-app-label:first-child { padding-top: 4px; }
+
+.dgs-fullmenu-item {
+    padding: 8px 8px;
+    border-radius: 9px;
+    font-size: 13px;
+    color: var(--ds-text-2);
+    cursor: pointer;
+}
+
+.dgs-fullmenu-item:hover { background: var(--dgs-canvas); }
+
+.dgs-fullmenu-empty {
+    padding: 24px 8px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+}
+
+@media (max-width: 900px) {
+    .dgs-fullmenu-panel {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: auto;
+        border-radius: 0;
+    }
+}
+
+/* ── Command palette (⌘/Ctrl+K) ───────────────────────────────────────── */
+
+.dgs-palette-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1100;
+    background: rgba(16, 23, 36, .45);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 12vh;
+}
+
+.dgs-palette-box {
+    width: 100%;
+    max-width: 560px;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-card);
+    box-shadow: var(--dgs-lift-hover);
+    overflow: hidden;
+    font-family: var(--dgs-font);
+}
+
+.dgs-palette-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--ds-border-light);
+    color: var(--ds-text-subtle);
+}
+
+.dgs-palette-search input {
+    flex: 1 1 auto;
+    border: none;
+    outline: none;
+    font-size: 15px;
+    color: var(--ds-text);
+    background: transparent;
+}
+
+.dgs-palette-kbd {
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    color: var(--ds-text-subtle);
+    background: var(--dgs-canvas);
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+.dgs-palette-results {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.dgs-palette-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.dgs-palette-row:hover { background: var(--dgs-canvas); }
+
+.dgs-palette-row-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ds-text);
+}
+
+.dgs-palette-row-path {
+    font-size: 11.5px;
+    color: var(--ds-text-subtle);
+    white-space: nowrap;
+}
+
+.dgs-palette-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 1280px) {
+    /* Below 1280px the nav panel always renders as a floating sheet with a
+       scrim, never inline in the flex row. */
+    .dgs-nav-panel {
+        position: fixed;
+        top: 12px;
+        bottom: 12px;
+        left: 100px;
+        z-index: 1050;
+        box-shadow: var(--dgs-lift-hover);
+    }
+
+    .dgs-nav-overlay-scrim {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(16, 23, 36, .35);
+        z-index: 1049;
+    }
+}
+
+@media (max-width: 900px) {
+    .o_web_client {
+        flex-direction: column;
+        padding: 0;
+        gap: 0;
+    }
+
+    .dgs-rail {
+        flex: 0 0 56px;
+        width: 100%;
+        height: 56px;
+        order: 3;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        border-radius: 0;
+        padding: 0 6px;
+    }
+
+    .dgs-rail-appswitch,
+    .dgs-rail-toggle,
+    .dgs-rail-divider,
+    .dgs-rail-bottom .dgs-rail-item:not(.dgs-rail-mobile-item) {
+        display: none;
+    }
+
+    .dgs-rail-sections {
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 4px;
+    }
+
+    .dgs-rail-item {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+    }
+
+    .dgs-rail-bottom {
+        margin-top: 0;
+        flex-direction: row;
+    }
+
+    .o_action_manager {
+        border-radius: 0;
+        order: 1;
+    }
+
+    .dgs-nav-panel {
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        border-radius: 0;
+    }
+}
+
+/* ── Global loading bar ───────────────────────────────────────────────
+   Every RPC funnels through this one indicator (shellService, off Odoo's
+   own rpcBus) — the "something is happening" signal a normal SaaS app
+   gives you, which the shell doesn't get for free once the classic
+   navbar's own affordances are hidden. position:fixed pulls it out of
+   the .o_web_client flex row entirely so it never consumes layout space. */
+.dgs-loading-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    z-index: 1200;
+    overflow: hidden;
+    background: transparent;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .2s ease .15s;
+}
+
+.dgs-loading-bar.is-active {
+    opacity: 1;
+    transition-delay: 0s;
+}
+
+.dgs-loading-bar-fill {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, var(--dgs-rail) 0%, var(--ds-accent, #1B3A6B) 50%, var(--dgs-rail) 100%);
+    background-size: 200% 100%;
+    transform: translateX(-100%);
+}
+
+.dgs-loading-bar.is-active .dgs-loading-bar-fill {
+    animation: dgs-loading-sweep 1.1s ease-in-out infinite;
+}
+
+@keyframes dgs-loading-sweep {
+    0% { transform: translateX(-100%); }
+    50% { transform: translateX(0); }
+    100% { transform: translateX(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .dgs-loading-bar-fill { animation: none !important; transform: none; }
+}

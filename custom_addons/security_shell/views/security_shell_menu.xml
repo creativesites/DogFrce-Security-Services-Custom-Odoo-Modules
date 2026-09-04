@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        The shell is chrome, not a menu destination: navigation happens through the rail + nav
+        panel (nav_catalog.js), which resolve their own action xmlids at runtime. No menuitem
+        records are needed here — the existing menu_security_home (security_base) still opens
+        the Home action, now rendered inside the shell frame.
+    -->
+</odoo>

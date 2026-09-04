@@ -1,0 +1,554 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DeployGuard Shell — Home dashboard
+═══════════════════════════════════════════════════════════════════════════ */
+
+.dgs-home {
+    font-family: var(--dgs-font);
+    padding: 24px 28px 40px;
+    max-width: 1360px;
+    margin: 0 auto;
+    color: var(--ds-text);
+}
+
+/* ── Header strip ─────────────────────────────────────────────────────── */
+
+.dgs-home-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.dgs-home-search {
+    flex: 1 1 auto;
+    max-width: 460px;
+    height: 44px;
+    border-radius: var(--dgs-r-pill);
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    color: var(--ds-text-subtle);
+    cursor: pointer;
+}
+
+.dgs-home-search-placeholder {
+    flex: 1 1 auto;
+    font-size: 13.5px;
+}
+
+.dgs-home-search-kbd {
+    font-family: var(--dgs-mono);
+    font-size: 11px;
+    background: var(--dgs-canvas);
+    border-radius: 6px;
+    padding: 3px 7px;
+}
+
+.dgs-home-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+.dgs-home-icon-btn,
+.dgs-home-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--ds-border);
+    background: var(--dgs-panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ds-text-2);
+}
+
+.dgs-home-avatar {
+    font-family: var(--dgs-mono);
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--dgs-rail);
+    color: #FFFFFF;
+    border: none;
+}
+
+/* ── Title block ───────────────────────────────────────────────────────── */
+
+.dgs-home-title-block { margin-bottom: 18px; }
+
+.dgs-home-title {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -1.2px;
+    margin: 0 0 4px;
+    color: var(--ds-text);
+}
+
+.dgs-home-subline {
+    font-size: 14px;
+    color: var(--ds-text-subtle);
+}
+
+/* ── Role toggle + period pills ───────────────────────────────────────── */
+
+.dgs-home-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.dgs-home-pill-group {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: var(--dgs-r-pill);
+}
+
+.dgs-home-pill-group:not(.light) {
+    background: var(--dgs-rail);
+}
+
+.dgs-home-pill-group.light {
+    background: transparent;
+    gap: 8px;
+}
+
+.dgs-home-pill-dark {
+    border: none;
+    background: transparent;
+    color: var(--dgs-rail-icon);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: var(--dgs-r-pill);
+    cursor: pointer;
+}
+
+.dgs-home-pill-dark.active {
+    background: #FFFFFF;
+    color: var(--dgs-rail);
+}
+
+.dgs-home-pill-light {
+    border: 1px solid var(--ds-border);
+    background: var(--dgs-panel);
+    color: var(--ds-text-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 16px;
+    border-radius: var(--dgs-r-pill);
+    cursor: pointer;
+}
+
+.dgs-home-pill-light.active {
+    background: var(--dgs-rail);
+    border-color: var(--dgs-rail);
+    color: #FFFFFF;
+}
+
+/* ── Quick actions ─────────────────────────────────────────────────────── */
+
+.dgs-home-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+}
+
+.dgs-home-quick-tile {
+    background: var(--dgs-panel);
+    border-radius: 18px;
+    padding: 16px;
+    cursor: pointer;
+    box-shadow: var(--dgs-lift);
+    transition: box-shadow .15s, transform .15s;
+}
+
+.dgs-home-quick-tile:hover {
+    box-shadow: var(--dgs-lift-hover);
+    transform: translateY(-1px);
+}
+
+.dgs-home-quick-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--ds-accent-light);
+    color: var(--ds-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--dgs-mono);
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.dgs-home-quick-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ds-text);
+}
+
+.dgs-home-quick-subtitle {
+    font-size: 12px;
+    color: var(--ds-text-subtle);
+    margin-top: 2px;
+}
+
+/* ── Section headings ─────────────────────────────────────────────────── */
+
+.dgs-home-section-heading {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin: 0 0 12px;
+    color: var(--ds-text);
+}
+
+/* ── Today: coverage + attention ──────────────────────────────────────── */
+
+.dgs-home-today-grid {
+    display: grid;
+    grid-template-columns: 1fr 372px;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.dgs-home-coverage-card,
+.dgs-home-attention-card {
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-card);
+    padding: 22px;
+    box-shadow: var(--dgs-lift);
+}
+
+.dgs-home-coverage-unavailable {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+    min-height: 160px;
+}
+
+.dgs-coverage-headline {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.dgs-coverage-percent {
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -2px;
+}
+
+.dgs-coverage-sub {
+    font-size: 13px;
+    color: var(--ds-text-subtle);
+    flex: 1 1 auto;
+}
+
+.dgs-coverage-status {
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.dgs-coverage-status.status-covered { color: var(--ds-success); }
+.dgs-coverage-status.status-at_risk { color: var(--ds-warning); }
+.dgs-coverage-status.status-gaps { color: var(--ds-danger); }
+
+.dgs-coverage-bar {
+    position: relative;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--ds-slate);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    margin-bottom: 18px;
+}
+
+.dgs-coverage-bar-fill {
+    position: absolute;
+    inset: 0;
+    width: 0;
+    background: var(--dgs-ramp);
+    opacity: .9;
+}
+
+.dgs-coverage-bar-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #101724;
+}
+
+.dgs-coverage-bar-label {
+    position: relative;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+}
+
+.dgs-coverage-bar-chip {
+    position: relative;
+    margin-left: auto;
+    font-size: 11px;
+    background: var(--dgs-canvas);
+    color: var(--ds-text);
+    border-radius: 8px;
+    padding: 3px 8px;
+}
+
+.dgs-coverage-histogram-panel {
+    background: #F7F8FB;
+    border-radius: 16px;
+    padding: 14px 16px;
+}
+
+.dgs-coverage-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--ds-text-subtle);
+    margin-bottom: 10px;
+}
+
+.dgs-legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.dgs-legend-dot:first-child { margin-left: 0; }
+.dgs-legend-dot.gaps { background: #F87171; }
+.dgs-legend-dot.at_risk { background: #F5A20B; }
+.dgs-legend-dot.covered { background: #22C55E; }
+
+.dgs-coverage-histogram {
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+}
+
+.dgs-coverage-bar-cell {
+    flex: 1 1 auto;
+    min-width: 2px;
+    border-radius: 2px 2px 0 0;
+    background: var(--dgs-ramp);
+    opacity: .85;
+}
+
+.dgs-coverage-axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-family: var(--dgs-mono);
+    font-size: 10.5px;
+    color: var(--ds-text-subtle);
+}
+
+/* ── Needs attention ───────────────────────────────────────────────────── */
+
+.dgs-attention-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.dgs-attention-header a {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ds-accent);
+    text-decoration: none;
+}
+
+.dgs-attention-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 8px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.dgs-attention-row:hover { background: var(--dgs-canvas); }
+
+.dgs-attention-count {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--ds-danger-bg);
+    color: var(--ds-danger);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    flex: 0 0 auto;
+}
+
+.dgs-attention-label {
+    flex: 1 1 auto;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ds-text-2);
+}
+
+.dgs-attention-chevron { color: var(--ds-text-subtle); flex: 0 0 auto; }
+
+.dgs-attention-all-clear {
+    color: var(--ds-text-subtle);
+    font-size: 13px;
+    padding: 12px 4px;
+}
+
+/* ── Modules ───────────────────────────────────────────────────────────── */
+
+.dgs-home-family { margin-bottom: 22px; }
+
+.dgs-home-family-label {
+    font-size: 12px;
+    color: var(--ds-text-subtle);
+    margin-bottom: 8px;
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+}
+
+.dgs-home-module-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+}
+
+.dgs-home-module-tile {
+    position: relative;
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-tile);
+    padding: 14px 12px;
+    box-shadow: var(--dgs-lift);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dgs-home-module-tile:hover { box-shadow: var(--dgs-lift-hover); }
+
+.dgs-home-module-tile.disabled {
+    cursor: default;
+    opacity: .6;
+}
+
+.dgs-home-module-initials {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: var(--ds-slate);
+    color: var(--ds-text-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dgs-home-module-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ds-text);
+}
+
+.dgs-home-module-chip {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-family: var(--dgs-mono);
+    font-size: 10px;
+    border-radius: 8px;
+    padding: 2px 6px;
+}
+
+.dgs-home-module-chip.soon {
+    letter-spacing: .5px;
+    color: var(--ds-text-subtle);
+    background: var(--ds-slate);
+}
+
+.dgs-home-module-chip.count {
+    color: var(--ds-warning);
+    background: var(--ds-warning-bg);
+}
+
+/* ── Metrics ───────────────────────────────────────────────────────────── */
+
+.dgs-home-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.dgs-home-metric-card {
+    background: var(--dgs-panel);
+    border-radius: var(--dgs-r-card);
+    padding: 18px;
+    box-shadow: var(--dgs-lift);
+}
+
+.dgs-metric-label {
+    font-size: 13px;
+    color: var(--ds-text-subtle);
+    margin-bottom: 8px;
+}
+
+.dgs-metric-value {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1.4px;
+    color: var(--ds-text);
+}
+
+.dgs-metric-meta {
+    font-size: 12px;
+    color: var(--ds-text-subtle);
+    margin-top: 6px;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+    .dgs-home-today-grid { grid-template-columns: 1fr; }
+    .dgs-home-quick-grid { grid-template-columns: repeat(2, 1fr); }
+    .dgs-home-module-grid { grid-template-columns: repeat(3, 1fr); }
+    .dgs-home-metrics-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+    .dgs-home { padding: 16px; }
+    .dgs-home-quick-grid { grid-template-columns: 1fr 1fr; }
+    .dgs-home-module-grid { grid-template-columns: repeat(2, 1fr); }
+    .dgs-home-metrics-grid { grid-template-columns: 1fr; }
+}

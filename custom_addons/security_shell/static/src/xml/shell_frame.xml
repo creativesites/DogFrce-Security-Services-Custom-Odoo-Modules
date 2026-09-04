@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     Mount the rail + collapsible nav panel as siblings of .o_action_manager.
+     shell_layout.css turns their shared parent into the flex row described
+     in HANDOFF §5.1/§5.6. .o_control_panel (breadcrumbs, view switcher,
+     search) lives inside .o_action_manager and is untouched.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<t t-inherit="web.WebClient" t-inherit-mode="extension">
+  <xpath expr="//ActionContainer" position="before">
+    <ShellLoadingBar/>
+    <ShellRail/>
+    <ShellNavPanel t-if="shell.state.expanded"/>
+  </xpath>
+</t>
+
+<t t-inherit="web.WebClient" t-inherit-mode="extension">
+  <xpath expr="//ActionContainer" position="after">
+    <ShellCommandPalette t-if="shell.state.paletteOpen"/>
+    <!-- Reuses security_theme's existing app launcher overlay. Its original
+         mount point (inside .o_main_navbar) is unreachable once the shell
+         hides that navbar via display:none, which no descendant CSS can
+         override — so it's mounted here instead, driven by our own state. -->
+    <DogForceAppLauncher t-if="shell.state.appLauncherOpen" closeLauncher="() => shell.closeAppLauncher()"/>
+  </xpath>
+</t>
+
+</templates>

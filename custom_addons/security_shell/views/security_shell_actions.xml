@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        The Home client action already exists as security_base.action_deployguard_main_command_center
+        (tag "deployguard.main_command_center"). security_shell re-registers that tag to the new
+        HomeDashboard component (see home_dashboard.js) and flips its target to "current" — see
+        security_base_client_actions.xml. No new action record is created here.
+    -->
+</odoo>
