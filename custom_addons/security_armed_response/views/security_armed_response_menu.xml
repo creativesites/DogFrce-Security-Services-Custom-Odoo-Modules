@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_security_armed_response_root"
+        name="Armed Response"
+        parent="security_operations.menu_security_operations_root"
+        sequence="40"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_response_dispatch"
+        name="Dispatch Board"
+        parent="menu_security_armed_response_root"
+        action="action_security_response_dispatch"
+        sequence="10"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_response_unit"
+        name="Response Units"
+        parent="menu_security_armed_response_root"
+        action="action_security_response_unit"
+        sequence="20"
+        groups="group_response_commander"
+    />
+
+    <menuitem
+        id="menu_security_armoury_ledger"
+        name="Armoury Ledger"
+        parent="menu_security_armed_response_root"
+        action="action_security_armoury_ledger"
+        sequence="30"
+        groups="group_armoury_custodian,security_base.group_security_manager"
+    />
+</odoo>

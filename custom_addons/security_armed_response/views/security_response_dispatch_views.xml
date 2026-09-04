@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_response_dispatch_kanban" model="ir.ui.view">
+        <field name="name">security.response.dispatch.kanban</field>
+        <field name="model">security.response.dispatch</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_small_column ar-dispatch-board" default_group_by="state" quick_create="false">
+                <field name="name"/>
+                <field name="site_id"/>
+                <field name="unit_id"/>
+                <field name="priority"/>
+                <field name="state"/>
+                <field name="source"/>
+                <field name="create_date"/>
+                <templates>
+                    <t t-name="card">
+                        <div t-attf-class="ar-dispatch-card ar-priority-{{record.priority.raw_value}}">
+                            <div class="ar-dispatch-card-top">
+                                <span class="ar-dispatch-name"><t t-esc="record.name.value"/></span>
+                                <span t-attf-class="ar-priority-chip ar-priority-chip-{{record.priority.raw_value}}"><t t-esc="record.priority.value"/></span>
+                            </div>
+                            <div class="ar-dispatch-site"><t t-esc="record.site_id.value or 'No site set'"/></div>
+                            <div class="ar-dispatch-meta">
+                                <span t-if="record.unit_id.value"><t t-esc="record.unit_id.value"/></span>
+                                <span t-else="" class="ar-dispatch-unassigned">Unassigned</span>
+                                <span class="ar-dispatch-time"><t t-esc="record.create_date.value"/></span>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_security_response_dispatch_list" model="ir.ui.view">
+        <field name="name">security.response.dispatch.list</field>
+        <field name="model">security.response.dispatch</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="priority == 'critical'" decoration-warning="priority == 'high'">
+                <field name="name"/>
+                <field name="create_date"/>
+                <field name="site_id"/>
+                <field name="source"/>
+                <field name="unit_id"/>
+                <field name="priority"/>
+                <field name="response_time_minutes"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_response_dispatch_form" model="ir.ui.view">
+        <field name="name">security.response.dispatch.form</field>
+        <field name="model">security.response.dispatch</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_acknowledge" type="object" string="Acknowledge" class="oe_highlight" invisible="state != 'new'"/>
+                    <button name="action_dispatch" type="object" string="Dispatch Unit" class="oe_highlight" invisible="state != 'acknowledged'"/>
+                    <button name="action_mark_on_scene" type="object" string="Mark On Scene" class="oe_highlight" invisible="state != 'dispatched'"/>
+                    <button name="action_resolve" type="object" string="Resolve" class="oe_highlight" invisible="state not in ('on_scene', 'dispatched')"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('resolved', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="new,acknowledged,dispatched,on_scene,resolved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Callout">
+                            <field name="source"/>
+                            <field name="site_id"/>
+                            <field name="incident_id" invisible="source != 'incident'"/>
+                            <field name="priority"/>
+                            <field name="caller_name" invisible="source != 'phone_call'"/>
+                            <field name="caller_number" invisible="source != 'phone_call'"/>
+                        </group>
+                        <group string="Response">
+                            <field name="unit_id"/>
+                            <field name="acknowledged_at" readonly="1"/>
+                            <field name="dispatched_at" readonly="1"/>
+                            <field name="on_scene_at" readonly="1"/>
+                            <field name="resolved_at" readonly="1"/>
+                            <field name="response_time_minutes" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="notes" placeholder="Callout details, instructions to the unit..."/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_response_dispatch_search" model="ir.ui.view">
+        <field name="name">security.response.dispatch.search</field>
+        <field name="model">security.response.dispatch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="site_id"/>
+                <field name="unit_id"/>
+                <filter name="filter_open" string="Open callouts" domain="[('state', 'not in', ('resolved', 'cancelled'))]"/>
+                <filter name="filter_critical" string="Critical / High priority" domain="[('priority', 'in', ('critical', 'high'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_site" string="Site" context="{'group_by': 'site_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_response_dispatch" model="ir.actions.act_window">
+        <field name="name">Dispatch Board</field>
+        <field name="res_model">security.response.dispatch</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="context">{'search_default_filter_open': 1}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No open callouts. Raise one when a call comes in or a panic button fires.</p></field>
+    </record>
+</odoo>

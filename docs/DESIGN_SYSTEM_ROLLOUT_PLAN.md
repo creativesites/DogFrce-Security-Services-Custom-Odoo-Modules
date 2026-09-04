@@ -106,13 +106,32 @@ list/form parts) until there's spare capacity.
 These are the `soon: true` leaves in `nav_catalog.js` — **do not build them
 against ad hoc CSS and retrofit later; start on `--ds-*`/`--dgs-*` tokens.**
 
-### Quick Response / Armed Response — does not exist yet
-Confirmed: there is no "Quick Response," "Armed Response," or "dispatch"
-module in the codebase today. `nav_catalog.js` already reserves the shape
-for it (`Operations → Armed response → Unit dispatch board · Live callout
-map · Armoury ledger`, all `soon: true`). When this gets built, it's a new
-module (e.g. `security_armed_response`) depended on by nothing existing;
-wire its actions into those three nav leaves and drop `soon: true`.
+### Armed Response — shipped (dispatch board + armoury), map still open
+`security_armed_response` is live: `security.response.unit` (commander,
+members, assigned `security.vehicle`, status) and `security.response.dispatch`
+(source, site, priority, state machine new → acknowledged → dispatched →
+on scene → resolved/cancelled, response-time compute). The dispatch board
+is a kanban grouped by state, styled on `--ds-*`/`--dgs-*` tokens
+(`dispatch_board.css`) — no live map yet, that leaf (`live_callout_map`)
+stays `soon: true` pending a decision on Odoo's native `web_map` vs. a
+hand-rolled Leaflet component.
+
+Armoury did **not** get a new model — `security_equipment` already modeled
+serialized, license-tracked items (`requires_license` on
+`security.equipment.type`, `license_number`/`license_expiry` on
+`security.equipment.item`) generically enough to cover firearms. The
+"Armoury Ledger" nav leaf is a filtered `ir.actions.act_window` over the
+existing `security.equipment.allocation` register
+(`domain=[("equipment_type_id.requires_license", "=", True)]`), reusing
+its stock kanban/list/form views — zero duplication, zero risk to the
+existing equipment data. A `group_armoury_custodian` role exists for when
+tighter row-level access is wanted; no record rule was added yet (deferred
+deliberately — see the module's own notes — to avoid touching access on a
+model with live production data without a dedicated review).
+
+Not done: telephony-linked call capture (`caller_name`/`caller_number` are
+plain manual fields for now, matching the Telephony leaf's own `soon: true`
+status), and the live callout map.
 
 ### Documents — current module is certification tracking, not a document register
 `security_documents` today is guard certification/expiry tracking

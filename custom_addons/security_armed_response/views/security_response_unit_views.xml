@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_response_unit_list" model="ir.ui.view">
+        <field name="name">security.response.unit.list</field>
+        <field name="model">security.response.unit</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active" decoration-success="status == 'available'" decoration-warning="status in ('dispatched', 'on_scene', 'returning')">
+                <field name="name"/>
+                <field name="commander_id"/>
+                <field name="vehicle_id"/>
+                <field name="base_site_id"/>
+                <field name="status" widget="badge"/>
+                <field name="active_dispatch_id"/>
+                <field name="active" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_response_unit_form" model="ir.ui.view">
+        <field name="name">security.response.unit.form</field>
+        <field name="model">security.response.unit</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="status" widget="statusbar" statusbar_visible="available,dispatched,on_scene,returning,off_duty"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_dispatches" type="object" class="oe_stat_button" icon="fa-bullhorn">
+                            <field name="dispatch_count" widget="statinfo" string="Dispatches"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Alpha 1" default_focus="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="commander_id"/>
+                            <field name="member_ids" widget="many2many_tags"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="vehicle_id"/>
+                            <field name="base_site_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active_dispatch_id" invisible="not active_dispatch_id"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_response_unit_search" model="ir.ui.view">
+        <field name="name">security.response.unit.search</field>
+        <field name="model">security.response.unit</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="commander_id"/>
+                <field name="vehicle_id"/>
+                <filter name="filter_available" string="Available" domain="[('status', '=', 'available')]"/>
+                <filter name="filter_dispatched" string="Dispatched or on scene" domain="[('status', 'in', ('dispatched', 'on_scene'))]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_status" string="Status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_response_unit" model="ir.actions.act_window">
+        <field name="name">Response Units</field>
+        <field name="res_model">security.response.unit</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Register your first armed response unit.</p></field>
+    </record>
+</odoo>
