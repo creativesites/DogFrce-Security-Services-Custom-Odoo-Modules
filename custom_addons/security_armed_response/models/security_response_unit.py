@@ -1,3 +1,6 @@
+import uuid
+from datetime import timedelta
+
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
@@ -40,6 +43,35 @@ class SecurityResponseUnit(models.Model):
     )
     dispatch_ids = fields.One2many("security.response.dispatch", "unit_id", string="Dispatch History")
     dispatch_count = fields.Integer(compute="_compute_dispatch_count")
+
+    # ── Live position ─────────────────────────────────────────────────
+    # Populated manually for now (or via the /api/armed_response endpoint
+    # below with gps_token) until a GPS provider is chosen — see
+    # controllers/gps_ping.py. The map only cares about these three
+    # fields, so swapping in a real feed later is a data-source change,
+    # not a UI change.
+    last_lat = fields.Float("Last Latitude", digits=(10, 6))
+    last_lng = fields.Float("Last Longitude", digits=(10, 6))
+    last_position_at = fields.Datetime("Last Position Update", readonly=True)
+    gps_token = fields.Char(
+        readonly=True, copy=False, default=lambda self: str(uuid.uuid4()),
+        help="Shared secret this unit's tracker/device uses to authenticate position pings. "
+             "Rotate via 'Regenerate GPS Token' if it leaks.",
+    )
+    position_is_stale = fields.Boolean(compute="_compute_position_is_stale")
+
+    @api.depends("last_position_at")
+    def _compute_position_is_stale(self):
+        stale_after = timedelta(minutes=15)
+        now = fields.Datetime.now()
+        for unit in self:
+            unit.position_is_stale = bool(
+                not unit.last_position_at or (now - unit.last_position_at) > stale_after
+            )
+
+    def action_regenerate_gps_token(self):
+        for unit in self:
+            unit.gps_token = str(uuid.uuid4())
 
     @api.depends("dispatch_ids.state")
     def _compute_active_dispatch(self):

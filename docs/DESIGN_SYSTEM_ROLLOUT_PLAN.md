@@ -106,15 +106,26 @@ list/form parts) until there's spare capacity.
 These are the `soon: true` leaves in `nav_catalog.js` — **do not build them
 against ad hoc CSS and retrofit later; start on `--ds-*`/`--dgs-*` tokens.**
 
-### Armed Response — shipped (dispatch board + armoury), map still open
+### Armed Response — shipped (dispatch board, live map, armoury)
 `security_armed_response` is live: `security.response.unit` (commander,
 members, assigned `security.vehicle`, status) and `security.response.dispatch`
 (source, site, priority, state machine new → acknowledged → dispatched →
 on scene → resolved/cancelled, response-time compute). The dispatch board
 is a kanban grouped by state, styled on `--ds-*`/`--dgs-*` tokens
-(`dispatch_board.css`) — no live map yet, that leaf (`live_callout_map`)
-stays `soon: true` pending a decision on Odoo's native `web_map` vs. a
-hand-rolled Leaflet component.
+(`dispatch_board.css`).
+
+Live Callout Map uses Google Maps (JS API key set in Settings → Armed
+Response — `security_armed_response.gmaps_api_key`, no default, shows a
+clear empty state until one is added). Marker colors are read from the
+same `--ds-success/-warning/-danger/-info` tokens at runtime, not
+hardcoded, so the legend and the pins can never drift apart. Positions
+come from `security.response.unit.last_lat/last_lng`, updated either
+manually on the unit form or by POSTing to
+`/api/armed_response/units/<id>/ping` with that unit's own `gps_token`
+(rotatable per-unit, not a single shared module secret). **No GPS/fleet-
+tracking provider is wired up yet** — that endpoint is the only thing that
+changes once one is chosen; the map, the data model, and the dispatch
+workflow are already done and don't need to change.
 
 Armoury did **not** get a new model — `security_equipment` already modeled
 serialized, license-tracked items (`requires_license` on
@@ -131,7 +142,7 @@ model with live production data without a dedicated review).
 
 Not done: telephony-linked call capture (`caller_name`/`caller_number` are
 plain manual fields for now, matching the Telephony leaf's own `soon: true`
-status), and the live callout map.
+status).
 
 ### Documents — current module is certification tracking, not a document register
 `security_documents` today is guard certification/expiry tracking

@@ -5,3 +5,4 @@ access_response_unit_sup,security.response.unit.sup,model_security_response_unit
 access_response_dispatch_mgr,security.response.dispatch.mgr,model_security_response_dispatch,security_base.group_security_manager,1,1,1,1
 access_response_dispatch_commander,security.response.dispatch.commander,model_security_response_dispatch,group_response_commander,1,1,1,0
 access_response_dispatch_sup,security.response.dispatch.sup,model_security_response_dispatch,security_base.group_security_supervisor,1,1,1,0
+access_security_response_map,security.response.map,model_security_response_map,base.group_user,1,0,0,0

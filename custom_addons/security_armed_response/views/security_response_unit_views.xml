@@ -48,6 +48,26 @@
                             <field name="active_dispatch_id" invisible="not active_dispatch_id"/>
                         </group>
                     </group>
+                    <group string="Live Position">
+                        <group>
+                            <field name="last_lat"/>
+                            <field name="last_lng"/>
+                            <field name="last_position_at" readonly="1"/>
+                            <field name="position_is_stale" readonly="1" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <label for="gps_token" string="GPS Ping Token"/>
+                            <div class="o_row">
+                                <field name="gps_token" readonly="1"/>
+                                <button name="action_regenerate_gps_token" type="object" string="Regenerate" class="btn-link"/>
+                            </div>
+                            <div class="text-muted" style="font-size: 12px;">
+                                POST lat/lng + this token to
+                                /api/armed_response/units/&lt;id&gt;/ping to update this
+                                unit's position from a tracker or a manual test script.
+                            </div>
+                        </group>
+                    </group>
                 </sheet>
             </form>
         </field>

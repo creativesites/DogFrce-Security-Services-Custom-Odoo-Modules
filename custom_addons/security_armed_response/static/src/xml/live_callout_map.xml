@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="security_armed_response.LiveCalloutMap">
+        <div class="ar-map-screen">
+            <div class="ar-map-header">
+                <div class="ar-map-title">
+                    <h1>Live Callout Map</h1>
+                    <span class="ar-map-subtitle dgs-mono">
+                        <t t-esc="state.data.units.length"/> unit(s) reporting position ·
+                        <t t-esc="state.data.dispatches.length"/> open callout(s)
+                    </span>
+                </div>
+                <div class="ar-map-legend">
+                    <span class="ar-legend-item"><span class="ar-legend-dot ar-dot-available"/> Available</span>
+                    <span class="ar-legend-item"><span class="ar-legend-dot ar-dot-dispatched"/> Dispatched</span>
+                    <span class="ar-legend-item"><span class="ar-legend-dot ar-dot-on-scene"/> On scene</span>
+                    <span class="ar-legend-item"><span class="ar-legend-arrow"/> Open callout</span>
+                </div>
+            </div>
+
+            <div t-if="state.loading" class="ar-map-empty-state">
+                <p>Loading positions…</p>
+            </div>
+
+            <div t-elif="state.apiKeyMissing" class="ar-map-empty-state">
+                <h3>Google Maps API key not configured</h3>
+                <p>Add a Maps JavaScript API key in Settings to enable the live callout map.</p>
+                <button class="btn btn-primary" t-on-click="openSettings">Open Settings</button>
+            </div>
+
+            <div t-elif="state.error" class="ar-map-empty-state">
+                <h3>Couldn't load the map</h3>
+                <p><t t-esc="state.error"/></p>
+            </div>
+
+            <div t-else="" class="ar-map-container" t-ref="mapContainer"/>
+        </div>
+    </t>
+</templates>
