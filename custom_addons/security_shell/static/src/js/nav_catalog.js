@@ -49,7 +49,7 @@ export const NAV_CATALOG = [
                 label: "Planning",
                 children: [
                     { key: "demand_planning", label: "Demand planning", action: "security_operations.action_security_demand_plan", owner: true },
-                    { key: "telephony", label: "Telephony", soon: true },
+                    { key: "telephony", label: "Telephony", action: "security_telephony.action_security_telephony_call" },
                 ],
             },
             {

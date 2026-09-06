@@ -140,9 +140,41 @@ tighter row-level access is wanted; no record rule was added yet (deferred
 deliberately — see the module's own notes — to avoid touching access on a
 model with live production data without a dedicated review).
 
-Not done: telephony-linked call capture (`caller_name`/`caller_number` are
-plain manual fields for now, matching the Telephony leaf's own `soon: true`
-status).
+### Telephony — shipped (call log + webhook), no PBX connected yet
+`security_telephony` is live: `security.telephony.call` logs every
+inbound/outbound call (state machine ringing → answered →
+completed/missed/failed), resolves caller identity by reusing the
+WhatsApp bridge's own phone-matching logic (`security.whatsapp.bridge.
+_resolve_sender_identity`) rather than a second copy of it, and lets a
+controller promote a call to an Armed Response dispatch manually — not
+automatically, since not every call is a callout and that's a human
+decision.
+
+`/api/telephony/event` is the provider-agnostic inbound webhook (same
+shape as the GPS ping endpoint: auth=none, single shared token checked
+per request, idempotent on the PBX's own call id). Architecture decision,
+researched against Namibia's actual telecom landscape rather than
+assumed: **self-hosted Asterisk fed by a local Namibian SIP trunk**, not
+a hosted PBX product or an international CPaaS — Twilio and Africa's
+Talking were both checked and ruled out (neither reliably issues local
++264 numbers; Africa's Talking Voice doesn't cover Namibia at all).
+Three real, CRAN-licensed local candidates for the trunk: MTC Cirrus
+CloudPBX, Paratus Namibia, 0824 Telco/Telepassport — all standard SIP,
+so the provider choice is a Settings-page dropdown (documentation only),
+not an architecture change. **No PBX exists yet** — DogForce has none
+today; this ships the receiving end so connecting one later only means
+pointing its call-events at this URL.
+
+The webhook token is `config_parameter`-backed with a Python default,
+which means — same gotcha as any Odoo settings field like this — it
+isn't actually generated/persisted until Settings → Telephony is opened
+and saved once. Documented in the field's own help text; worth knowing
+before assuming the endpoint "isn't working."
+
+Not done: actual call origination (click-to-call) — needs real Asterisk
+ARI connection details that don't exist yet, so it's not stubbed with a
+fake button; the call log and inbound webhook are the complete, useful
+slice for now.
 
 ### Documents — current module is certification tracking, not a document register
 `security_documents` today is guard certification/expiry tracking

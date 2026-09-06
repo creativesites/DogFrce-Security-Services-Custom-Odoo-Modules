@@ -59,7 +59,8 @@
                             <label for="gps_token" string="GPS Ping Token"/>
                             <div class="o_row">
                                 <field name="gps_token" readonly="1"/>
-                                <button name="action_regenerate_gps_token" type="object" string="Regenerate" class="btn-link"/>
+                                <button name="action_regenerate_gps_token" type="object" string="Regenerate" class="btn-link"
+                                        confirm="This invalidates the current token immediately — the unit's tracker/device will need the new one before positions update again. Continue?"/>
                             </div>
                             <div class="text-muted" style="font-size: 12px;">
                                 POST lat/lng + this token to

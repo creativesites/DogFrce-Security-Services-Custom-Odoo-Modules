@@ -59,7 +59,8 @@
                     <button name="action_dispatch" type="object" string="Dispatch Unit" class="oe_highlight" invisible="state != 'acknowledged'"/>
                     <button name="action_mark_on_scene" type="object" string="Mark On Scene" class="oe_highlight" invisible="state != 'dispatched'"/>
                     <button name="action_resolve" type="object" string="Resolve" class="oe_highlight" invisible="state not in ('on_scene', 'dispatched')"/>
-                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('resolved', 'cancelled')"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state in ('resolved', 'cancelled')"
+                            confirm="Cancel this callout? This frees the assigned unit and cannot be undone from here."/>
                     <field name="state" widget="statusbar" statusbar_visible="new,acknowledged,dispatched,on_scene,resolved"/>
                 </header>
                 <sheet>

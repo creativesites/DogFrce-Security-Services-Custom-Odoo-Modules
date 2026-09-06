@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem
+        id="menu_security_telephony_root"
+        name="Telephony"
+        parent="security_operations.menu_security_operations_root"
+        sequence="45"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_telephony_call_log"
+        name="Call Log"
+        parent="menu_security_telephony_root"
+        action="action_security_telephony_call"
+        sequence="10"
+        groups="security_base.group_security_supervisor"
+    />
+</odoo>

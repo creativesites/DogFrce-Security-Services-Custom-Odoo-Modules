@@ -28,7 +28,7 @@
         parent="menu_security_armed_response_root"
         action="action_security_response_unit"
         sequence="20"
-        groups="group_response_commander"
+        groups="group_response_commander,security_base.group_security_manager"
     />
 
     <menuitem
