@@ -1,205 +1,372 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
     <t t-name="security_payroll_core.PayslipDesigner" owl="1">
-        <div class="o_payslip_designer o_content d-flex h-100 w-100 overflow-hidden bg-light">
-            <!-- LEFT PANEL: Settings &amp; Drag-and-Drop (sidebar) -->
-            <div class="pcc-designer-sidebar d-flex flex-column h-100 shadow-lg" style="width: 390px; min-width: 390px; background: #ffffff; border-right: 1px solid #e2e8f0; z-index: 10;">
-                <div class="p-3 border-bottom d-flex align-items-center justify-content-between" style="background: #0f172a; color: #ffffff;">
-                    <h5 class="m-0 fw-bold text-white" style="color: #ffffff !important;"><i class="fa fa-paint-brush me-2 text-success"/> Payslip Designer</h5>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-outline-light px-3 shadow-sm rounded-pill fw-bold" t-on-click="resetTemplate">
-                            <i class="fa fa-undo"/> Reset
-                        </button>
-                        <button class="btn btn-sm btn-success px-3 fw-bold shadow-sm rounded-pill" t-on-click="saveTemplate">
-                            <i t-att-class="state.isSaving ? 'fa fa-spinner fa-spin' : 'fa fa-save'"/> Save
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="flex-grow-1 overflow-auto p-3">
-                    
-                    <!-- Basic Info -->
-                    <div class="mb-4">
-                        <label class="form-label fw-bold small text-uppercase text-muted mb-2">Template Name</label>
-                        <input type="text" class="form-control form-control-sm designer-input" t-model="state.name" t-on-change="_triggerPreview"/>
-                    </div>
+        <div class="o_payslip_designer o_content d-flex flex-column h-100 w-100 overflow-hidden" style="background: var(--ds-bg, #F8FAFC);">
 
-                    <!-- Style Presets -->
-                    <div class="mb-4 bg-light p-2.5 rounded border border-light shadow-sm-inset">
-                        <label class="form-label fw-bold small text-uppercase text-muted mb-2"><i class="fa fa-magic text-success me-1"/> Quick Presets</label>
-                        <div class="d-flex flex-wrap gap-1.5">
-                            <button class="btn btn-xs btn-outline-secondary d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill bg-white shadow-sm" t-on-click="() => this.applyPreset('slate')">
-                                <span class="badge rounded-circle" style="background:#475569; width:10px; height:10px; padding:0;"/> Slate
-                            </button>
-                            <button class="btn btn-xs btn-outline-secondary d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill bg-white shadow-sm" t-on-click="() => this.applyPreset('emerald')">
-                                <span class="badge rounded-circle" style="background:#10b981; width:10px; height:10px; padding:0;"/> Emerald
-                            </button>
-                            <button class="btn btn-xs btn-outline-secondary d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill bg-white shadow-sm" t-on-click="() => this.applyPreset('midnight')">
-                                <span class="badge rounded-circle" style="background:#2563eb; width:10px; height:10px; padding:0;"/> Midnight
-                            </button>
-                            <button class="btn btn-xs btn-outline-secondary d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill bg-white shadow-sm" t-on-click="() => this.applyPreset('tactical')">
-                                <span class="badge rounded-circle" style="background:#1e293b; width:10px; height:10px; padding:0;"/> Tactical
-                            </button>
-                        </div>
-                    </div>
+            <!-- ═══════════════════════════════════════════════════════════
+                 TOP APPLICATION BAR — Studio Header & Flow Navigation
+                 ═══════════════════════════════════════════════════════════ -->
+            <header class="pcc-designer-header d-flex align-items-center justify-content-between px-4 py-2.5 bg-white border-bottom flex-wrap gap-3" style="z-index: 20; min-height: 56px;">
+                <!-- Left: Flow Navigation & Template Switcher -->
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5 px-3"
+                            t-on-click="onBackToPayroll"
+                            title="Return to Payroll Command Center">
+                        <i class="fa fa-arrow-left"/>
+                        <span>Back to Payroll</span>
+                    </button>
 
-                    <!-- Theme Settings -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="fa fa-sliders text-success me-1"/> Layout &amp; Styles</h6>
-                        
-                        <div class="mb-3">
-                            <label class="form-label small text-muted mb-1">Base Layout Structure</label>
-                            <select class="form-select form-select-sm designer-input" t-model="state.base_layout" t-on-change="_triggerPreview">
-                                <option value="modern">Modern (Thin lines, sleek)</option>
-                                <option value="corporate">Classic Corporate (Grids, formal)</option>
-                                <option value="minimalist">Minimalist (Subtle, elegant)</option>
-                                <option value="bold">Bold (Strong accents, cards)</option>
-                            </select>
-                        </div>
+                    <div class="vr mx-1" style="height: 24px; opacity: 0.2;"/>
 
-                        <div class="mb-3">
-                            <label class="form-label small text-muted mb-1">Font Family</label>
-                            <select class="form-select form-select-sm designer-input" t-model="state.font_family" t-on-change="_triggerPreview">
-                                <option value="Inter">Inter (Modern)</option>
-                                <option value="Roboto">Roboto (Clean)</option>
-                                <option value="system-ui">System UI (Native)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="row g-2">
-                            <div class="col-6">
-                                <label class="form-label small text-muted mb-1">Primary Color</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <input type="color" class="form-control form-control-color p-1 border rounded" style="height: 32px; width: 42px; cursor:pointer;" t-model="state.primary_color" t-on-change="_triggerPreview"/>
-                                    <span class="small text-muted font-monospace" t-esc="state.primary_color"/>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small text-muted mb-1">Secondary Color</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <input type="color" class="form-control form-control-color p-1 border rounded" style="height: 32px; width: 42px; cursor:pointer;" t-model="state.secondary_color" t-on-change="_triggerPreview"/>
-                                    <span class="small text-muted font-monospace" t-esc="state.secondary_color"/>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row g-2 mb-2">
-                            <div class="col-6">
-                                <label class="form-label small text-muted mb-1">Table Header BG</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <input type="color" class="form-control form-control-color p-1 border rounded" style="height: 32px; width: 42px; cursor:pointer;" t-model="state.header_bg_color" t-on-change="_triggerPreview"/>
-                                    <span class="small text-muted font-monospace" t-esc="state.header_bg_color"/>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small text-muted mb-1">Table Header Text</label>
-                                <div class="d-flex align-items-center gap-2">
-                                    <input type="color" class="form-control form-control-color p-1 border rounded" style="height: 32px; width: 42px; cursor:pointer;" t-model="state.header_text_color" t-on-change="_triggerPreview"/>
-                                    <span class="small text-muted font-monospace" t-esc="state.header_text_color"/>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Content Options -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="fa fa-list-ul text-success me-1"/> Content Options</h6>
-                        
-                        <div class="form-check form-switch mb-2.5">
-                            <input class="form-check-input" type="checkbox" id="tgg_attendance" t-model="state.show_attendance_metrics" t-on-change="_triggerPreview"/>
-                            <label class="form-check-label small" for="tgg_attendance">Show Attendance Summary</label>
-                        </div>
-                        <div class="form-check form-switch mb-2.5">
-                            <input class="form-check-input" type="checkbox" id="tgg_leave" t-model="state.show_leave_balances" t-on-change="_triggerPreview"/>
-                            <label class="form-check-label small" for="tgg_leave">Show Leave Balances</label>
-                        </div>
-                        <div class="form-check form-switch mb-2.5">
-                            <input class="form-check-input" type="checkbox" id="tgg_ytd" t-model="state.show_ytd" t-on-change="_triggerPreview"/>
-                            <label class="form-check-label small" for="tgg_ytd">Show Year-To-Date (YTD) Totals</label>
-                        </div>
-                        <div class="form-check form-switch mb-2.5">
-                            <input class="form-check-input" type="checkbox" id="tgg_admin_sig" t-model="state.show_admin_signature" t-on-change="_triggerPreview"/>
-                            <label class="form-check-label small" for="tgg_admin_sig">Show Admin Signature</label>
-                        </div>
-                        <div class="form-check form-switch mb-2.5">
-                            <input class="form-check-input" type="checkbox" id="tgg_guard_sig" t-model="state.show_guard_signature" t-on-change="_triggerPreview"/>
-                            <label class="form-check-label small" for="tgg_guard_sig">Show Guard Signature</label>
-                        </div>
-                        
-                        <div class="mt-3">
-                            <label class="form-label small text-muted mb-1">Override 'Payslip' Label</label>
-                            <input type="text" class="form-control form-control-sm designer-input" placeholder="e.g. Salary Statement" t-model="state.label_payslip" t-on-input="_triggerPreview"/>
-                        </div>
-
-                        <div class="mt-3">
-                            <label class="form-label small text-muted mb-1">Company Announcement Banner</label>
-                            <textarea class="form-control form-control-sm designer-input" rows="2" placeholder="e.g. Wishing all guards a safe holiday season!" t-model="state.announcement_text" t-on-input="_triggerPreview"/>
-                        </div>
-                    </div>
-
-                    <!-- Block Builder (Drag &amp; Drop) -->
-                    <div class="mb-4">
-                        <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark"><i class="fa fa-th-list text-success me-1"/> Layout Builder</h6>
-                        <p class="small text-muted mb-3">Drag to reorder sections. Use the handle on the left.</p>
-                        
-                        <div class="pcc-builder-blocks" t-ref="sortableContainer">
-                            <t t-foreach="state.blocks" t-as="block" t-key="block.id">
-                                <div class="pcc-builder-block d-flex align-items-center mb-2 p-2.5 border rounded bg-white shadow-sm" t-att-data-id="block.id">
-                                    <div class="pcc-drag-handle me-3 text-muted" style="cursor: grab; padding: 5px;">
-                                        <i class="fa fa-grip-vertical"/>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <span class="fw-bold small text-dark"><t t-esc="block.label"/></span>
-                                    </div>
-                                    <div>
-                                        <i class="fa fa-eye text-success small"/>
-                                    </div>
-                                </div>
-                            </t>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RIGHT PANEL: Live Preview -->
-            <div class="flex-grow-1 d-flex flex-column bg-white h-100 position-relative">
-                <!-- Toolbar overlay -->
-                <div class="pcc-preview-toolbar d-flex align-items-center justify-content-between p-2.5 px-4 shadow-sm" style="background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); z-index: 5; border-bottom: 1px solid #e2e8f0;">
-                    <div class="text-muted small fw-bold text-uppercase d-flex align-items-center gap-2"><i class="fa fa-desktop text-success"/> Live Canvas Preview</div>
+                    <!-- Template Selector -->
                     <div class="d-flex align-items-center gap-2">
-                        <button class="btn btn-sm btn-outline-primary px-3 shadow-sm rounded-pill fw-bold" t-on-click="openPdfPreview" title="Open PDF Report">
-                            <i class="fa fa-file-pdf-o me-1"/> PDF Preview
-                        </button>
-                        <button class="btn btn-sm btn-outline-secondary shadow-sm rounded-circle bg-white" t-on-click="_triggerPreview" title="Force Refresh">
-                            <i class="fa fa-refresh"/>
-                        </button>
+                        <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Template:</span>
+                        <select class="form-select form-select-sm pcc-template-select"
+                                style="min-width: 220px; font-weight: 600;"
+                                t-on-change="onTemplateSelect">
+                            <t t-foreach="state.availableTemplates" t-as="tmpl" t-key="tmpl.id">
+                                <option t-att-value="tmpl.id" t-att-selected="state.template_id === tmpl.id">
+                                    <t t-esc="tmpl.name"/> (<t t-esc="tmpl.base_layout"/>)
+                                </option>
+                            </t>
+                            <option value="new">+ Create New Template...</option>
+                        </select>
+                    </div>
+
+                    <!-- Template Name Field -->
+                    <div class="d-flex align-items-center">
+                        <input type="text"
+                               class="form-control form-control-sm pcc-name-input"
+                               style="width: 200px; font-size: 12.5px;"
+                               placeholder="Template Name…"
+                               t-model="state.name"
+                               t-on-change="_triggerPreview"/>
                     </div>
                 </div>
-                
-                <!-- Preview Canvas -->
-                <div class="flex-grow-1 overflow-auto d-flex justify-content-center p-4 pcc-preview-container" style="background: #ffffff;">
+
+                <!-- Center: Zoom & Viewport Scale Controls -->
+                <div class="d-flex align-items-center gap-1">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-light border" t-on-click="zoomOut" title="Zoom Out (–)">
+                            <i class="fa fa-search-minus"/>
+                        </button>
+                        <button class="btn btn-light border fw-bold text-dark px-2" style="min-width: 58px;" t-on-click="zoomReset" title="Reset Zoom to 100%">
+                            <t t-esc="state.zoomScale"/>%
+                        </button>
+                        <button class="btn btn-light border" t-on-click="zoomIn" title="Zoom In (+)">
+                            <i class="fa fa-search-plus"/>
+                        </button>
+                    </div>
+                    <button class="btn btn-sm btn-light border ms-1" t-on-click="zoomFit" title="Fit to Canvas (80%)">
+                        <i class="fa fa-arrows-alt me-1"/> Fit
+                    </button>
+                </div>
+
+                <!-- Right: Action Buttons -->
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-light border text-muted px-3" t-on-click="resetTemplate" title="Discard unsaved changes">
+                        <i class="fa fa-undo me-1"/> Reset
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary px-3" t-on-click="openPdfPreview" title="View Print Layout PDF">
+                        <i class="fa fa-file-pdf-o me-1"/> PDF Preview
+                    </button>
+                    <button class="btn btn-sm text-white px-4 fw-semibold shadow-sm"
+                            style="background: var(--ds-accent, #1B3A6B); border-color: var(--ds-accent, #1B3A6B);"
+                            t-on-click="saveTemplate"
+                            t-att-disabled="state.isSaving">
+                        <i t-att-class="state.isSaving ? 'fa fa-spinner fa-spin me-1' : 'fa fa-save me-1'"/>
+                        <t t-esc="state.isSaving ? 'Saving…' : 'Save Template'"/>
+                    </button>
+                </div>
+            </header>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 STUDIO WORKSPACE — Left Inspector + Right Live Canvas
+                 ═══════════════════════════════════════════════════════════ -->
+            <div class="d-flex flex-row flex-grow-1 overflow-hidden h-100 w-100">
+
+                <!-- LEFT PANEL: 3-Tab Studio Inspector -->
+                <div class="pcc-designer-sidebar d-flex flex-column h-100 bg-white border-end shadow-sm"
+                     style="width: 380px; min-width: 380px; z-index: 10;">
                     
-                    <!-- Loading overlay -->
-                    <div t-if="state.isPreviewLoading" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center" style="background: rgba(255,255,255,0.7); z-index: 10; top: 0; left: 0; backdrop-filter: blur(3px); transition: all 0.3s;">
-                        <div class="spinner-border text-success" role="status" style="width: 3rem; height: 3rem;">
-                            <span class="visually-hidden">Loading...</span>
+                    <!-- Segmented Inspector Tabs -->
+                    <div class="pcc-inspector-tabs d-flex border-bottom bg-light px-2 pt-2 gap-1" style="flex-shrink: 0;">
+                        <button class="pcc-tab-pill flex-fill text-center py-2 px-1 border-0 rounded-top"
+                                t-att-class="{ 'is-active bg-white text-primary fw-bold border-bottom-0 shadow-xs': state.activeDrawerTab === 'style', 'text-muted': state.activeDrawerTab !== 'style' }"
+                                t-on-click="() => this.setDrawerTab('style')">
+                            <i class="fa fa-paint-brush me-1"/> Style &amp; Theme
+                        </button>
+                        <button class="pcc-tab-pill flex-fill text-center py-2 px-1 border-0 rounded-top"
+                                t-att-class="{ 'is-active bg-white text-primary fw-bold border-bottom-0 shadow-xs': state.activeDrawerTab === 'blocks', 'text-muted': state.activeDrawerTab !== 'blocks' }"
+                                t-on-click="() => this.setDrawerTab('blocks')">
+                            <i class="fa fa-th-list me-1"/> Section Order
+                        </button>
+                        <button class="pcc-tab-pill flex-fill text-center py-2 px-1 border-0 rounded-top"
+                                t-att-class="{ 'is-active bg-white text-primary fw-bold border-bottom-0 shadow-xs': state.activeDrawerTab === 'content', 'text-muted': state.activeDrawerTab !== 'content' }"
+                                t-on-click="() => this.setDrawerTab('content')">
+                            <i class="fa fa-sliders me-1"/> Content &amp; Rules
+                        </button>
+                    </div>
+
+                    <!-- Inspector Content Container -->
+                    <div class="flex-grow-1 overflow-auto p-3">
+
+                        <!-- ── TAB 1: STYLE & THEME ── -->
+                        <div t-if="state.activeDrawerTab === 'style'">
+                            
+                            <!-- Style Presets -->
+                            <div class="mb-4 p-3 rounded border bg-light">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <label class="form-label fw-bold small text-uppercase text-muted mb-0">
+                                        <i class="fa fa-magic text-primary me-1"/> Quick Design Presets
+                                    </label>
+                                    <span t-if="state.selectedPreset" class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size: 10px;">
+                                        Active Preset
+                                    </span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-xs d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill shadow-xs"
+                                            t-att-class="state.selectedPreset === 'corporate_navy' ? 'btn-primary text-white border-primary fw-semibold' : 'btn-outline-secondary bg-white text-dark'"
+                                            t-on-click="() => this.applyPreset('corporate_navy')">
+                                        <span class="badge rounded-circle" style="background:#1B3A6B; width:10px; height:10px; padding:0;"/>
+                                        <span>Corporate Navy</span>
+                                        <i t-if="state.selectedPreset === 'corporate_navy'" class="fa fa-check small ms-1"/>
+                                    </button>
+                                    <button class="btn btn-xs d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill shadow-xs"
+                                            t-att-class="state.selectedPreset === 'emerald_guard' ? 'btn-primary text-white border-primary fw-semibold' : 'btn-outline-secondary bg-white text-dark'"
+                                            t-on-click="() => this.applyPreset('emerald_guard')">
+                                        <span class="badge rounded-circle" style="background:#0D7A4E; width:10px; height:10px; padding:0;"/>
+                                        <span>Emerald Guard</span>
+                                        <i t-if="state.selectedPreset === 'emerald_guard'" class="fa fa-check small ms-1"/>
+                                    </button>
+                                    <button class="btn btn-xs d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill shadow-xs"
+                                            t-att-class="state.selectedPreset === 'slate_minimal' ? 'btn-primary text-white border-primary fw-semibold' : 'btn-outline-secondary bg-white text-dark'"
+                                            t-on-click="() => this.applyPreset('slate_minimal')">
+                                        <span class="badge rounded-circle" style="background:#475569; width:10px; height:10px; padding:0;"/>
+                                        <span>Slate Minimal</span>
+                                        <i t-if="state.selectedPreset === 'slate_minimal'" class="fa fa-check small ms-1"/>
+                                    </button>
+                                    <button class="btn btn-xs d-flex align-items-center gap-1.5 px-2.5 py-1.5 small rounded-pill shadow-xs"
+                                            t-att-class="state.selectedPreset === 'tactical_dark' ? 'btn-primary text-white border-primary fw-semibold' : 'btn-outline-secondary bg-white text-dark'"
+                                            t-on-click="() => this.applyPreset('tactical_dark')">
+                                        <span class="badge rounded-circle" style="background:#1e293b; width:10px; height:10px; padding:0;"/>
+                                        <span>Tactical Dark</span>
+                                        <i t-if="state.selectedPreset === 'tactical_dark'" class="fa fa-check small ms-1"/>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Layout & Typography Settings -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
+                                    <i class="fa fa-sliders text-primary me-1"/> Layout &amp; Typography
+                                </h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted mb-1">Base Layout Structure</label>
+                                    <select class="form-select form-select-sm designer-input" t-model="state.base_layout" t-on-change="onLayoutChange">
+                                        <option value="modern">Modern (Crisp borders, clean spacing)</option>
+                                        <option value="corporate">Classic Corporate (Formal box grids)</option>
+                                        <option value="minimalist">Minimalist (Subtle rules, open whitespace)</option>
+                                        <option value="bold">Bold (High contrast, strong headers)</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted mb-1">Font Family</label>
+                                    <select class="form-select form-select-sm designer-input" t-model="state.font_family" t-on-change="onFontChange">
+                                        <option value="Inter">Inter (Professional SaaS)</option>
+                                        <option value="Roboto">Roboto (Clean Corporate)</option>
+                                        <option value="system-ui">System UI (Native OS Font)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Color Palette -->
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
+                                    <i class="fa fa-eyedropper text-primary me-1"/> Brand Colors
+                                </h6>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted mb-1">Primary Color</label>
+                                        <div class="d-flex align-items-center gap-1.5">
+                                            <input type="color" class="form-control form-control-color p-0.5 border rounded" style="height: 32px; width: 38px; cursor:pointer;" t-model="state.primary_color" t-on-input="(ev) => this.onColorChange('primary_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                            <input type="text" maxlength="7" class="form-control form-control-sm font-monospace text-uppercase" style="width: 82px;" t-model="state.primary_color" t-on-input="(ev) => this.onColorChange('primary_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted mb-1">Secondary Color</label>
+                                        <div class="d-flex align-items-center gap-1.5">
+                                            <input type="color" class="form-control form-control-color p-0.5 border rounded" style="height: 32px; width: 38px; cursor:pointer;" t-model="state.secondary_color" t-on-input="(ev) => this.onColorChange('secondary_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                            <input type="text" maxlength="7" class="form-control form-control-sm font-monospace text-uppercase" style="width: 82px;" t-model="state.secondary_color" t-on-input="(ev) => this.onColorChange('secondary_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted mb-1">Header BG</label>
+                                        <div class="d-flex align-items-center gap-1.5">
+                                            <input type="color" class="form-control form-control-color p-0.5 border rounded" style="height: 32px; width: 38px; cursor:pointer;" t-model="state.header_bg_color" t-on-input="(ev) => this.onColorChange('header_bg_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                            <input type="text" maxlength="7" class="form-control form-control-sm font-monospace text-uppercase" style="width: 82px;" t-model="state.header_bg_color" t-on-input="(ev) => this.onColorChange('header_bg_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small text-muted mb-1">Header Text</label>
+                                        <div class="d-flex align-items-center gap-1.5">
+                                            <input type="color" class="form-control form-control-color p-0.5 border rounded" style="height: 32px; width: 38px; cursor:pointer;" t-model="state.header_text_color" t-on-input="(ev) => this.onColorChange('header_text_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                            <input type="text" maxlength="7" class="form-control form-control-sm font-monospace text-uppercase" style="width: 82px;" t-model="state.header_text_color" t-on-input="(ev) => this.onColorChange('header_text_color', ev.target.value)" t-on-change="_triggerPreview"/>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Fast Palette Swatches -->
+                                <div class="p-2 border rounded bg-light mt-2">
+                                    <div class="small text-muted mb-1.5 fw-semibold" style="font-size: 11px;">Quick Brand Swatches</div>
+                                    <div class="d-flex gap-1.5 flex-wrap">
+                                        <button type="button" class="btn btn-xs border px-2 py-1 bg-white d-flex align-items-center gap-1 rounded shadow-xs" t-on-click="() => this.setBrandPalette('#1B3A6B', '#0D1117', '#1B3A6B', '#FFFFFF')">
+                                            <span style="width:10px;height:10px;border-radius:2px;background:#1B3A6B;display:inline-block;"/> Navy
+                                        </button>
+                                        <button type="button" class="btn btn-xs border px-2 py-1 bg-white d-flex align-items-center gap-1 rounded shadow-xs" t-on-click="() => this.setBrandPalette('#0D7A4E', '#064E3B', '#0D7A4E', '#FFFFFF')">
+                                            <span style="width:10px;height:10px;border-radius:2px;background:#0D7A4E;display:inline-block;"/> Emerald
+                                        </button>
+                                        <button type="button" class="btn btn-xs border px-2 py-1 bg-white d-flex align-items-center gap-1 rounded shadow-xs" t-on-click="() => this.setBrandPalette('#475569', '#0F172A', '#334155', '#FFFFFF')">
+                                            <span style="width:10px;height:10px;border-radius:2px;background:#475569;display:inline-block;"/> Slate
+                                        </button>
+                                        <button type="button" class="btn btn-xs border px-2 py-1 bg-white d-flex align-items-center gap-1 rounded shadow-xs" t-on-click="() => this.setBrandPalette('#0F172A', '#000000', '#1E293B', '#FFFFFF')">
+                                            <span style="width:10px;height:10px;border-radius:2px;background:#0F172A;display:inline-block;"/> Dark
+                                        </button>
+                                        <button type="button" class="btn btn-xs border px-2 py-1 bg-white d-flex align-items-center gap-1 rounded shadow-xs" t-on-click="() => this.setBrandPalette('#B91C1C', '#450A0A', '#991B1B', '#FFFFFF')">
+                                            <span style="width:10px;height:10px;border-radius:2px;background:#B91C1C;display:inline-block;"/> Red
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── TAB 2: SECTIONS & DRAG ORDER ── -->
+                        <div t-if="state.activeDrawerTab === 'blocks'">
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-1 text-dark">
+                                    <i class="fa fa-th-list text-primary me-1"/> Section Order &amp; Layout
+                                </h6>
+                                <p class="small text-muted mb-3">
+                                    Drag handles to reorder sections. Changes render instantly on the canvas.
+                                </p>
+                                
+                                <div class="pcc-builder-blocks" t-ref="sortableContainer">
+                                    <t t-foreach="state.blocks" t-as="block" t-key="block.id">
+                                        <div class="pcc-builder-block d-flex align-items-center mb-2 p-2.5 border rounded bg-white shadow-xs"
+                                             t-att-data-block-id="block.id">
+                                            <div class="pcc-drag-handle me-3 text-muted" style="cursor: grab; padding: 4px;">
+                                                <i class="fa fa-bars"/>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <span class="fw-bold small text-dark"><t t-esc="block.label"/></span>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-success-subtle text-success border px-2 py-0.5 rounded-pill" style="font-size: 10px;">
+                                                    Visible
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── TAB 3: CONTENT & RULES ── -->
+                        <div t-if="state.activeDrawerTab === 'content'">
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
+                                    <i class="fa fa-toggle-on text-primary me-1"/> Section Visibility
+                                </h6>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="tgg_attendance" t-model="state.show_attendance_metrics" t-on-change="_triggerPreview"/>
+                                    <label class="form-check-label small fw-semibold" for="tgg_attendance">Show Attendance Metrics Summary</label>
+                                    <div class="text-muted small" style="font-size: 11px;">Roster hours, shifts worked, AWOL and overtime breakdowns.</div>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="tgg_leave" t-model="state.show_leave_balances" t-on-change="_triggerPreview"/>
+                                    <label class="form-check-label small fw-semibold" for="tgg_leave">Show Leave Balances</label>
+                                    <div class="text-muted small" style="font-size: 11px;">Annual, sick, and compassionate leave accruals.</div>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="tgg_ytd" t-model="state.show_ytd" t-on-change="_triggerPreview"/>
+                                    <label class="form-check-label small fw-semibold" for="tgg_ytd">Show Year-To-Date (YTD) Totals</label>
+                                    <div class="text-muted small" style="font-size: 11px;">Cumulative gross earnings and statutory deductions.</div>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="tgg_admin_sig" t-model="state.show_admin_signature" t-on-change="_triggerPreview"/>
+                                    <label class="form-check-label small fw-semibold" for="tgg_admin_sig">Show Authorizing Signature</label>
+                                </div>
+
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="tgg_guard_sig" t-model="state.show_guard_signature" t-on-change="_triggerPreview"/>
+                                    <label class="form-check-label small fw-semibold" for="tgg_guard_sig">Show Guard Acknowledgement Line</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold mb-3 border-bottom pb-2 text-dark">
+                                    <i class="fa fa-font text-primary me-1"/> Text &amp; Messaging Overrides
+                                </h6>
+
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted mb-1">Override 'Payslip' Document Title</label>
+                                    <input type="text" class="form-control form-control-sm designer-input" placeholder="e.g. Salary Statement, Remuneration Slip" t-model="state.label_payslip" t-on-input="_triggerPreview"/>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted mb-1">Company Announcement Banner</label>
+                                    <textarea class="form-control form-control-sm designer-input" rows="3" placeholder="e.g. Wishing all security officers a safe and prosperous month!" t-model="state.announcement_text" t-on-input="_triggerPreview"/>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- RIGHT PANEL: Live Paper Canvas -->
+                <div class="flex-grow-1 d-flex flex-column h-100 position-relative overflow-hidden" style="background: #e2e8f0;">
+                    
+                    <!-- Preview Canvas Scrollport -->
+                    <div class="flex-grow-1 overflow-auto d-flex justify-content-center pcc-preview-container p-4">
+                        
+                        <!-- Loading overlay -->
+                        <div t-if="state.isPreviewLoading" class="position-absolute w-100 h-100 d-flex align-items-center justify-content-center"
+                             style="background: rgba(248, 250, 252, 0.7); z-index: 15; top: 0; left: 0; backdrop-filter: blur(2px); transition: all 0.2s;">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"/>
+                                <div class="small fw-semibold text-dark">Rendering Payslip Canvas…</div>
+                            </div>
+                        </div>
+                        
+                        <!-- The Paper Sheet (Scalable via state.zoomScale) -->
+                        <div class="pcc-paper-sheet-wrapper my-auto py-4">
+                            <div class="pcc-paper-sheet shadow-lg border bg-white position-relative"
+                                 t-att-style="'width: 21cm; min-height: 29.7cm; padding: 1.2cm 1.5cm; border-radius: 4px; transform: scale(' + (state.zoomScale / 100) + '); transform-origin: top center; transition: transform 0.2s ease;'">
+                                <t t-if="state.previewHtml">
+                                    <t t-out="state.previewHtml"/>
+                                </t>
+                                <t t-else="">
+                                    <div class="text-center text-muted mt-5 pt-5">
+                                        <i class="fa fa-file-text-o fa-3x mb-3 opacity-25"/>
+                                        <h5>Preview Unavailable</h5>
+                                        <p class="small">Adjust a setting to generate the canvas preview.</p>
+                                    </div>
+                                </t>
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- The paper sheet -->
-                    <div class="pcc-paper-sheet shadow border bg-white position-relative my-3" style="width: 21cm; min-height: 29.7cm; padding: 1.2cm 1.5cm; border-radius: 4px; transition: all 0.3s ease;">
-                        <t t-if="state.previewHtml">
-                            <t t-out="state.previewHtml"/>
-                        </t>
-                        <t t-else="">
-                            <div class="text-center text-muted mt-5 pt-5">
-                                <i class="fa fa-file-text-o fa-3x mb-3 opacity-25"/>
-                                <h5>Preview Unavailable</h5>
-                                <p class="small">Change a setting to generate the preview.</p>
-                            </div>
-                        </t>
-                    </div>
                 </div>
+
             </div>
         </div>
     </t>

@@ -7,134 +7,91 @@
     <!-- ═══════════════════════════════════════════════════════════
          LEFT SIDEBAR — Control &amp; Category Filters
          ═══════════════════════════════════════════════════════════ -->
-    <div class="eq-nav-sidebar d-flex flex-column">
-
-        <!-- Brand Header -->
-        <div class="eq-brand px-4 py-3">
-            <div class="fw-bold d-flex align-items-center gap-2" style="font-size:15px; color:#ffffff; letter-spacing:.3px;">
-                <i class="fa fa-shield text-purple" style="color:#c084fc;"/>
-                <span>DogForce Assets</span>
+    <!-- ═══════════════════════════════════════════════════════════
+         PAGE HEADER — Clean Corporate Light
+         ═══════════════════════════════════════════════════════════ -->
+    <header class="eq-page-header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+        <div class="d-flex flex-column">
+            <div class="eq-eyebrow">EQUIPMENT &amp; ASSETS</div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <i class="fa fa-shield text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                <h3 class="eq-title mb-0 fw-bold">Equipment &amp; Assets Command Center</h3>
+                <span class="badge bg-success-subtle text-success border px-2 py-1 ms-1" style="font-size: 11px;">
+                    <span class="ag-live-dot me-1"/>Live Inventory Tracking
+                </span>
             </div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.6); margin-top:2px;">Equipment &amp; Inventory Control</div>
+            <div class="eq-subtitle text-muted mt-1 small">
+                Guards equipment allocation, serial tracking, and inventory return control.
+            </div>
         </div>
 
-        <!-- Category Filter -->
-        <div class="px-3 pt-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:6px;">
-                Equipment Category
-            </div>
-            <select class="form-select form-select-sm eq-select" t-on-change="onCategoryFilterChange">
-                <option value="all">All Categories</option>
-                <t t-if="state.data and state.data.categories" t-foreach="state.data.categories" t-as="cat" t-key="cat.id">
-                    <option t-att-value="cat.id" t-esc="cat.name"/>
-                </t>
-            </select>
-        </div>
-
-        <!-- Status Filter -->
-        <div class="px-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:6px;">
-                Allocation Status
-            </div>
-            <select class="form-select form-select-sm eq-select" t-on-change="onStateFilterChange">
-                <option value="all">All Statuses</option>
-                <option value="issued">Issued</option>
-                <option value="acknowledged">Acknowledged</option>
-                <option value="returned">Returned</option>
-                <option value="damaged">Damaged / Lost</option>
-            </select>
-        </div>
-
-        <!-- Quick Action Buttons -->
-        <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
-            <button class="btn btn-sm text-white w-100 fw-bold" style="background:#a855f7; border-radius:8px;" t-on-click="openIssueModal">
-                <i class="fa fa-plus me-1"/>New Asset Allocation
+        <!-- Header Actions -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-sm btn-light border text-muted px-3" t-on-click="loadData" title="Refresh Data">
+                <i class="fa fa-refresh me-1"/> Refresh
             </button>
-            <button class="btn btn-sm btn-outline-danger w-100 fw-semibold text-white border-danger" style="border-radius:8px; font-size:12px; background:rgba(239,68,68,0.15);" t-on-click="openDamageModal">
-                <i class="fa fa-exclamation-triangle me-1"/>Report Damage / Loss
+            <button class="btn btn-sm btn-outline-secondary px-3" t-on-click="exportAllocationsCsv" title="Export Allocations to CSV">
+                <i class="fa fa-download me-1"/> Export CSV
             </button>
-            <button class="btn btn-sm eq-top-btn w-100" style="font-size:11px;" t-on-click="loadData">
-                <i class="fa fa-refresh me-1"/>Refresh Data
+            <button class="btn btn-sm btn-outline-danger px-3 fw-semibold" t-on-click="openDamageModal">
+                <i class="fa fa-exclamation-triangle me-1"/> Report Damage / Loss
+            </button>
+            <button class="btn btn-sm text-white px-3 fw-semibold" style="background: var(--ds-accent); border-color: var(--ds-accent);" t-on-click="openIssueModal">
+                <i class="fa fa-plus me-1"/> New Allocation
             </button>
         </div>
-
-        <div style="border-top:1px solid rgba(255, 255, 255, 0.1); margin:4px 0;"/>
-
-        <!-- Asset Return Compliance Gauge -->
-        <div t-if="state.data" class="px-3 py-3">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:8px;">
-                On-Time Return Rate
-            </div>
-            <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="fw-bold" style="font-size:18px; color:#ffffff;"><t t-esc="state.data.return_rate_pct"/>%</span>
-                <span class="small text-white-50"><t t-esc="state.data.returned_mtd"/> Returned MTD</span>
-            </div>
-            <div class="progress" style="height:7px; border-radius:4px; background:rgba(255,255,255,0.15);">
-                <div class="progress-bar" t-att-style="'width:' + state.data.return_rate_pct + '%; background:#a855f7;'"/>
-            </div>
-        </div>
-
-    </div>
-
+    </header>
 
     <!-- ═══════════════════════════════════════════════════════════
-         MAIN WORKSPACE — Header Banner + Main Area
+         MAIN WORKSPACE
          ═══════════════════════════════════════════════════════════ -->
     <div class="eq-main">
 
-        <!-- Executive Header Banner -->
-        <div class="eq-header">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="eq-title-icon">
-                        <i class="fa fa-shield"/>
-                    </div>
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Equipment &amp; Assets Command Center</h3>
-                            <div class="eq-live-indicator">
-                                <span class="ag-live-dot"/>Live Equipment Tracking
-                            </div>
-                        </div>
-                        <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                            Guards Equipment Allocation &amp; Inventory Return Control
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Header Action Toolbar -->
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <button class="eq-top-btn"
-                            t-on-click="exportAllocationsCsv"
-                            style="background:#a855f7;border-color:#a855f7;"
-                            title="Export Allocations to CSV">
-                        <i class="fa fa-download me-1"/>Export CSV
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls Strip (Search &amp; Tabs) -->
+        <!-- Controls Strip (Search, Filters &amp; Tabs) -->
         <div class="px-4 py-3 bg-white border-bottom d-flex align-items-center justify-content-between gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <!-- Search Input -->
-                <div class="position-relative" style="width:280px;">
+                <div class="position-relative" style="width:240px;">
                     <i class="fa fa-search position-absolute text-muted" style="left:12px;top:50%;transform:translateY(-50%);font-size:12px;"/>
                     <input type="text"
-                           class="form-control form-control-sm ps-4 border-slate-300"
-                           placeholder="Search guard, equipment, serial..."
+                           class="form-control form-control-sm ps-4"
+                           placeholder="Search guard, item, serial…"
                            t-on-input="onSearchInput"
-                           style="border-radius:8px; font-size:13px;"/>
+                           style="border-radius:var(--ds-radius-md); font-size:13px;"/>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Category:</span>
+                    <select class="form-select form-select-sm eq-select" style="min-width: 140px;" t-on-change="onCategoryFilterChange">
+                        <option value="all">All Categories</option>
+                        <t t-if="state.data and state.data.categories" t-foreach="state.data.categories" t-as="cat" t-key="cat.id">
+                            <option t-att-value="cat.id" t-esc="cat.name"/>
+                        </t>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Status:</span>
+                    <select class="form-select form-select-sm eq-select" style="min-width: 130px;" t-on-change="onStateFilterChange">
+                        <option value="all">All Statuses</option>
+                        <option value="issued">Issued</option>
+                        <option value="acknowledged">Acknowledged</option>
+                        <option value="returned">Returned</option>
+                        <option value="damaged">Damaged / Lost</option>
+                    </select>
                 </div>
 
                 <!-- Tab Switcher -->
-                <div class="btn-group btn-group-sm">
+                <div class="btn-group btn-group-sm ms-2">
                     <button t-att-class="'btn ' + (state.activeTab === 'allocations' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
-                            style="background-color: state.activeTab === 'allocations' ? '#a855f7' : ''"
+                            style="background-color: state.activeTab === 'allocations' ? 'var(--ds-accent)' : ''; border-color: state.activeTab === 'allocations' ? 'var(--ds-accent)' : '';"
                             t-on-click="() => this.setTab('allocations')">
                         <i class="fa fa-list me-1"/>Allocations (<t t-esc="filteredAllocations.length"/>)
                     </button>
                     <button t-att-class="'btn ' + (state.activeTab === 'stock' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
+                            style="background-color: state.activeTab === 'stock' ? 'var(--ds-accent)' : ''; border-color: state.activeTab === 'stock' ? 'var(--ds-accent)' : '';"
                             t-on-click="() => this.setTab('stock')">
                         <i class="fa fa-cubes me-1"/>Inventory Stock
                     </button>
@@ -146,7 +103,17 @@
             </div>
 
             <!-- KPI Cards Strip -->
-            <div t-if="state.data" class="d-flex gap-2">
+            <div t-if="state.data" class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Return Rate Gauge -->
+                <div class="eq-kpi-card text-center px-3 py-1" style="border-top:3px solid var(--ds-accent);">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <span class="text-muted x-small fw-bold text-uppercase">Return Rate</span>
+                        <span class="fs-6 fw-bold" style="color: var(--ds-accent);"><t t-esc="state.data.return_rate_pct"/>%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px; width: 85px; background: var(--ds-border);">
+                        <div class="progress-bar" t-att-style="'width:' + state.data.return_rate_pct + '%; background: var(--ds-accent);'"/>
+                    </div>
+                </div>
                 <div class="eq-kpi-card text-center" style="border-top:3px solid #3b82f6;">
                     <div class="text-muted x-small fw-bold text-uppercase">Active Issued</div>
                     <div class="fs-5 fw-extrabold text-primary"><t t-esc="state.data.allocated"/></div>

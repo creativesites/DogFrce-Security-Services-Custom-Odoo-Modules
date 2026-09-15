@@ -1,138 +1,197 @@
-/* Document Designer Premium Styling */
+/* ==========================================================================
+   DEPLOYGUARD DOCUMENT DESIGNER — Clean Corporate Light Studio
+   Design tokens: --ds-accent (#1B3A6B), --ds-bg (#F8FAFC), --ds-surface (#FFFFFF)
+   ========================================================================== */
 
 .doc-designer-container {
-    font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background-color: #F1F4F8;
+    font-family: var(--ds-font-base, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+    background-color: var(--ds-bg, #F8FAFC);
+    color: var(--ds-text, #1E293B);
 }
 
-.designer-tab {
-    transition: all 0.2s ease-in-out;
+/* ── Studio Header ────────────────────────────────────────────────────────── */
+.doc-designer-header {
+    background-color: var(--ds-surface, #FFFFFF) !important;
+    border-bottom: 1px solid var(--ds-border, #E2E8F0) !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
 }
 
-.designer-tab.active {
-    color: #0D1117 !important;
-    background-color: #ffffff !important;
+.doc-type-group .btn {
+    font-size: 12.5px;
+    padding: 0.35rem 0.85rem;
+    transition: all 0.15s ease-in-out;
 }
 
-.designer-tab:not(.active):hover {
+.doc-type-group .btn-primary {
+    background-color: var(--ds-accent, #1B3A6B) !important;
+    border-color: var(--ds-accent, #1B3A6B) !important;
     color: #ffffff !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.designer-sidebar {
-    background: #ffffff;
-    border-right: 1px solid #E2E8F0;
-    box-shadow: 2px 0 10px rgba(0,0,0,0.02);
-    overflow-y: auto;
-    font-size: 13.5px;
+.doc-template-select,
+.doc-name-input {
+    border-radius: 6px;
+    border-color: var(--ds-border, #CBD5E1);
+    color: var(--ds-text, #1E293B);
+    background-color: #FFFFFF;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.doc-template-select:focus,
+.doc-name-input:focus {
+    border-color: var(--ds-accent, #1B3A6B);
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15);
+}
+
+/* ── Studio Inspector Sidebar ─────────────────────────────────────────────── */
+.doc-designer-sidebar {
+    background-color: var(--ds-surface, #FFFFFF);
+    border-right: 1px solid var(--ds-border, #E2E8F0);
+    box-shadow: 2px 0 12px rgba(15, 23, 42, 0.03);
+    font-size: 13px;
     letter-spacing: -0.1px;
 }
 
-/* Custom inputs, color-pickers, sliders, and selects */
+.doc-inspector-tabs {
+    background-color: #F8FAFC;
+}
+
+.doc-tab-pill {
+    font-size: 12px;
+    font-weight: 500;
+    color: #64748B;
+    background: transparent;
+    transition: all 0.18s ease;
+    cursor: pointer;
+    border-bottom: 2px solid transparent !important;
+}
+
+.doc-tab-pill:hover {
+    color: var(--ds-accent, #1B3A6B);
+    background-color: rgba(241, 245, 249, 0.8);
+}
+
+.doc-tab-pill.is-active {
+    color: var(--ds-accent, #1B3A6B) !important;
+    background-color: #FFFFFF !important;
+    border-bottom: 2px solid var(--ds-accent, #1B3A6B) !important;
+    font-weight: 600 !important;
+}
+
+/* ── Inputs & Form Controls ───────────────────────────────────────────────── */
 .designer-input {
-    border-radius: 8px !important;
+    border-radius: 6px !important;
     border: 1px solid #CBD5E1 !important;
     padding: 0.45rem 0.75rem !important;
     font-size: 13px !important;
-    color: #374151 !important;
+    color: #1E293B !important;
     background-color: #F8FAFC !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: all 0.2s ease !important;
 }
 
 .designer-input:focus {
-    border-color: #0D7A4E !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    border-color: var(--ds-accent, #1B3A6B) !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.12) !important;
 }
 
-/* Range slider design */
+/* Range slider styling */
 .form-range::-webkit-slider-thumb {
-    background: #0D7A4E !important;
+    background: var(--ds-accent, #1B3A6B) !important;
 }
 .form-range::-moz-range-thumb {
-    background: #0D7A4E !important;
+    background: var(--ds-accent, #1B3A6B) !important;
 }
 .form-range::-ms-thumb {
-    background: #0D7A4E !important;
+    background: var(--ds-accent, #1B3A6B) !important;
 }
 
-/* Styled Form Switches */
+/* Custom switch design */
 .form-switch .form-check-input {
     height: 1.35em;
-    width: 2.4em;
+    width: 2.35em;
     cursor: pointer;
     background-color: #E2E8F0;
     border-color: #CBD5E1;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%2394a3b8'/%3e%3c/svg%3e");
-    transition: background-position 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    transition: background-position 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-switch .form-check-input:checked {
-    background-color: #0D7A4E !important;
-    border-color: #0D7A4E !important;
+    background-color: var(--ds-accent, #1B3A6B) !important;
+    border-color: var(--ds-accent, #1B3A6B) !important;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
 }
 
 .form-switch .form-check-input:focus {
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
 }
 
-/* Draggable builder blocks */
-.pcc-builder-block {
-    background: #ffffff;
-    border: 1px solid #E2E8F0;
+/* ── Section Builder Blocks ───────────────────────────────────────────────── */
+.doc-builder-block {
+    background: #FFFFFF;
+    border: 1px solid var(--ds-border, #E2E8F0);
     border-radius: 8px !important;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.pcc-builder-block:hover {
-    border-color: #0D7A4E !important;
-    transform: translateY(-2px) scale(1.01);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05) !important;
+.doc-builder-block:hover {
+    border-color: var(--ds-accent, #1B3A6B) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06) !important;
 }
 
-.pcc-drag-handle {
+.doc-drag-handle {
     cursor: grab;
-    opacity: 0.4;
-    transition: opacity 0.2s ease;
+    opacity: 0.45;
+    transition: opacity 0.2s ease, color 0.2s ease;
 }
 
-.pcc-builder-block:hover .pcc-drag-handle {
-    opacity: 0.9;
-    color: #0D7A4E;
+.doc-builder-block:hover .doc-drag-handle {
+    opacity: 1;
+    color: var(--ds-accent, #1B3A6B);
 }
 
-/* Premium A4 Preview frames and background */
+/* ── Live Canvas Preview & Paper Sheet ────────────────────────────────────── */
+.doc-preview-container,
 .pcc-preview-container {
-    background-color: #E2E8F0 !important;
-    background-image: 
-        radial-gradient(#94A3B8 1px, transparent 1px), 
-        radial-gradient(#94A3B8 1px, #E2E8F0 1px);
+    background-color: #EDF2F7 !important;
+    background-image:
+        radial-gradient(#CBD5E1 1px, transparent 1px),
+        radial-gradient(#CBD5E1 1px, #EDF2F7 1px);
     background-size: 24px 24px;
     background-position: 0 0, 12px 12px;
 }
 
+.doc-paper-sheet,
 .pcc-paper-sheet {
-    box-shadow: 
-        0 20px 25px -5px rgba(15, 23, 42, 0.15), 
-        0 8px 10px -6px rgba(15, 23, 42, 0.15),
+    box-shadow:
+        0 20px 25px -5px rgba(15, 23, 42, 0.12),
+        0 8px 10px -6px rgba(15, 23, 42, 0.08),
         0 0 0 1px rgba(15, 23, 42, 0.05) !important;
-    border: 1px solid rgba(255,255,255,0.8);
+    border: 1px solid rgba(255, 255, 255, 0.8);
     transform-origin: top center;
 }
 
-/* Custom scrollbars for side navigation */
+/* ── Custom Scrollbars ────────────────────────────────────────────────────── */
+.doc-designer-sidebar::-webkit-scrollbar,
 .designer-sidebar::-webkit-scrollbar {
     width: 6px;
 }
+
+.doc-designer-sidebar::-webkit-scrollbar-track,
 .designer-sidebar::-webkit-scrollbar-track {
     background: transparent;
 }
+
+.doc-designer-sidebar::-webkit-scrollbar-thumb,
 .designer-sidebar::-webkit-scrollbar-thumb {
     background: #CBD5E1;
     border-radius: 100px;
 }
+
+.doc-designer-sidebar::-webkit-scrollbar-thumb:hover,
 .designer-sidebar::-webkit-scrollbar-thumb:hover {
     background: #94A3B8;
 }

@@ -12,6 +12,7 @@ class SecurityPayslipTemplate(models.Model):
             ("modern", "Modern"),
             ("corporate", "Corporate"),
             ("minimalist", "Minimalist"),
+            ("bold", "Bold"),
         ],
         default="modern",
         required=True,

@@ -203,6 +203,13 @@ export class PayrollCommandCenter extends Component {
 
     // ── Actions ─────────────────────────────────────────────────────────────
 
+    async onPeriodDropdownChange(ev) {
+        const id = parseInt(ev.target.value, 10);
+        if (id) {
+            await this.selectPeriod(id);
+        }
+    }
+
     async selectPeriod(id) {
         this.state.selectedPeriodId = id;
         this.state.loading = true;

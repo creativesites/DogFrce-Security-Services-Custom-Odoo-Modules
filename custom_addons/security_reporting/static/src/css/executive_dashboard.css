@@ -99,240 +99,67 @@
    SHELL (sidebar + main grid)
 ══════════════════════════════════ */
 .dg-shell {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-    /* flex: 1 + min-height: 0 lets the shell fill o_df_dashboard while
-       staying height-constrained so dg-content can scroll */
+    display: flex !important;
+    flex-direction: column !important;
     flex: 1;
     min-height: 0;
     overflow: hidden;
 }
 
-/* ══════════════════════════════════
-   SIDEBAR
-══════════════════════════════════ */
-.dg-sidebar {
-    display: flex;
-    flex-direction: column;
-    background: #1a2332 !important;
-    color: #dce4f0 !important;
-    /* min-height: 0 required — grid child must shrink below content size */
-    min-height: 0;
-    overflow: hidden;
-    box-shadow: 2px 0 16px rgba(0, 0, 0, .22);
+/* ── Page Header ────────────────────────────────────────── */
+.dg-page-header {
+    background: var(--surface) !important;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 5;
 }
 
-/* Brand / logo row */
-.dg-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 18px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, .06);
-}
-
-.dg-brand-icon {
-    width: 38px;
-    height: 38px;
-    background: rgba(255, 255, 255, .1);
-    border: 1.5px solid rgba(255, 255, 255, .18);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex: 0 0 auto;
-    color: #fff;
-    overflow: hidden;
-    box-shadow: 0 0 0 4px rgba(255, 255, 255, .04);
-}
-
-.dg-brand-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.dg-brand-name {
-    font-weight: 700;
-    font-size: 15px;
-    color: #fff;
-    line-height: 1.1;
-    letter-spacing: -.3px;
-}
-
-.dg-brand-subtitle {
-    font-size: 9.5px;
-    color: rgba(255, 255, 255, .3);
-    font-weight: 600;
-    letter-spacing: .08em;
-    margin-top: 2px;
-    text-transform: uppercase;
-}
-
-/* System status strip */
-.dg-sys-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 18px;
-    background: rgba(74, 222, 128, .05);
-    border-bottom: 1px solid rgba(255, 255, 255, .05);
-}
-
-.dg-sys-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #4ade80;
-    box-shadow: 0 0 8px rgba(74, 222, 128, .8);
-    flex: 0 0 auto;
-    animation: dg-pulse 2.5s ease-in-out infinite;
-}
-
-@keyframes dg-pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: .45;
-    }
-}
-
-.dg-sys-label {
+.dg-eyebrow {
     font-size: 10px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, .55);
-    letter-spacing: .03em;
-}
-
-.dg-sys-time {
-    font-size: 9px;
-    color: rgba(255, 255, 255, .28);
-    margin-left: auto;
-    font-weight: 500;
-}
-
-/* Nav section label */
-.dg-nav-section-label {
-    padding: 10px 18px 4px;
-    font-size: 9px;
-    color: rgba(255, 255, 255, .28);
-    text-transform: uppercase;
-    letter-spacing: .14em;
     font-weight: 700;
-}
-
-/* Nav list (also exposes dg-nav-label for the XML's inline label) */
-.dg-nav {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    padding: 8px 10px;
-    flex: 1;
-    overflow: auto;
-}
-
-/* The XML uses .dg-nav-label as a div inside the nav */
-.dg-nav>.dg-nav-label {
-    font-size: 9px;
-    color: rgba(255, 255, 255, .28);
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: .14em;
-    font-weight: 700;
-    padding: 6px 10px 2px;
+    color: var(--ink-3);
 }
 
-.dg-nav-button {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 8px 10px;
-    color: rgba(255, 255, 255, .42);
-    border-radius: 7px;
-    font-size: 12.5px;
-    font-weight: 500;
-    text-align: left;
+.dg-title {
+    color: var(--ink);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.dg-subtitle {
+    color: var(--ink-2);
+}
+
+/* ── Top Secondary Tabs Bar ─────────────────────────────── */
+.dg-nav-tabs-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    z-index: 4;
+}
+
+.dg-tabs-clean .nav-link {
+    color: var(--ink-2);
     border: none;
-    background: transparent;
-    transition: all .15s ease;
-    border-left: 2px solid transparent;
-}
-
-.dg-nav-button:hover {
-    color: rgba(255, 255, 255, .85);
-    background: rgba(255, 255, 255, .07);
-    border-left-color: rgba(96, 165, 250, .35);
-}
-
-.dg-nav-button.is-active {
-    color: #fff;
-    background: rgba(96, 165, 250, .14);
-    border-left-color: #60a5fa;
-    font-weight: 700;
-}
-
-.dg-nav-button i {
-    width: 15px;
-    text-align: center;
-    font-size: 13px;
-    color: rgba(255, 255, 255, .38);
-    transition: color .15s;
-}
-
-.dg-nav-button:hover i {
-    color: rgba(255, 255, 255, .7);
-}
-
-.dg-nav-button.is-active i {
-    color: #93c5fd;
-    opacity: 1;
-}
-
-/* Sidebar footer */
-.dg-sidebar-foot {
-    padding: 14px 16px;
-    border-top: 1px solid rgba(255, 255, 255, .07);
-    background: rgba(0, 0, 0, .12);
-}
-
-.dg-coverage-lbl {
-    font-size: 9px;
-    color: rgba(255, 255, 255, .32);
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    margin-bottom: 4px;
-}
-
-.dg-coverage-box {
-    /* container, no extra style needed */
-}
-
-.dg-sidebar-label {
-    font-size: 10px;
-    color: rgba(255, 255, 255, .38);
+    padding: 0.75rem 1.25rem;
+    font-size: 0.875rem;
     font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: .06em;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    background: transparent;
 }
 
-.dg-sidebar-value {
-    font-size: 16px;
-    font-weight: 800;
-    color: #fff;
-    margin-top: 2px;
-    letter-spacing: -1px;
-    line-height: 1;
+.dg-tabs-clean .nav-link:hover {
+    color: var(--navy);
 }
 
-.dg-sidebar-sub {
-    font-size: 11px;
-    color: rgba(255, 255, 255, .38);
-    margin-top: 2px;
+.dg-tabs-clean .nav-link.active {
+    color: var(--navy);
+    border-bottom: 2px solid var(--navy);
+    font-weight: 600;
+    background: transparent;
 }
 
 /* ══════════════════════════════════
@@ -340,8 +167,8 @@
 ══════════════════════════════════ */
 .dg-main {
     min-width: 0;
-    /* min-height: 0 required so this grid child can shrink and dg-content can scroll */
     min-height: 0;
+    flex: 1;
     display: flex;
     flex-direction: column;
     background: var(--bg);

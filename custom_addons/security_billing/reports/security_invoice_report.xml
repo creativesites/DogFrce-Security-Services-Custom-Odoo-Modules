@@ -213,8 +213,10 @@
                     }"/>
 
                     <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto:wght@300;400;500;700&amp;display=swap');
+
                         .doc-page {
-                            font-family: '<t t-esc="tmpl_settings.get('font_family')"/>', Helvetica, Arial, sans-serif;
+                            font-family: '<t t-esc="tmpl_settings.get('font_family')"/>', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
                             color: #334155;
                             font-size: 14px;
                             line-height: 1.5;
@@ -232,20 +234,21 @@
                             cursor: pointer;
                         }
                         .preview-block-wrapper:hover {
-                            border-color: rgba(16, 185, 129, 0.4) !important;
-                            background: rgba(16, 185, 129, 0.01);
+                            border-color: rgba(27, 58, 107, 0.4) !important;
+                            background: rgba(27, 58, 107, 0.02);
                         }
                         
                         /* Base layout variants */
-                        .layout-corporate .table {
+                        .layout-corporate .table, .layout-classic .table {
                             border: 1px solid #94a3b8 !important;
                         }
-                        .layout-corporate th {
+                        .layout-corporate th, .layout-classic th {
                             border: 1px solid #cbd5e1 !important;
                             background-color: <t t-esc="tmpl_settings.get('header_bg_color')"/> !important;
                             color: <t t-esc="tmpl_settings.get('header_text_color')"/> !important;
                         }
-                        .layout-corporate .card, .layout-corporate .border {
+                        .layout-corporate .card, .layout-corporate .border,
+                        .layout-classic .card, .layout-classic .border {
                             border: 1px solid #cbd5e1 !important;
                             border-radius: 4px !important;
                         }
@@ -285,7 +288,7 @@
 
                     <div t-attf-class="page doc-page position-relative layout-{{ tmpl_settings.get('base_layout') }}">
                         <t t-if="tmpl_settings.get('show_watermark')">
-                            <div class="position-absolute w-100 h-100 d-flex justify-content-center align-items-center" style="z-index:-1; opacity:0.04; font-size:120px; font-weight:bold; transform:rotate(-45deg);">
+                            <div class="position-absolute top-50 start-50 translate-middle text-center" style="z-index: 2; opacity: 0.12; font-size: 110px; font-weight: 900; letter-spacing: 12px; color: #DC2626; transform: translate(-50%, -50%) rotate(-30deg); pointer-events: none; user-select: none;">
                                 DRAFT
                             </div>
                         </t>

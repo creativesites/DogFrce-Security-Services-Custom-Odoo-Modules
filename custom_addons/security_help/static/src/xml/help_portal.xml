@@ -2,59 +2,75 @@
 <templates xml:space="preserve">
 
 <t t-name="security_help.HelpPortal">
-    <div class="dg-help-portal">
-        <!-- Sidebar -->
-        <aside class="dg-help-sidebar">
-            <div class="dg-help-sidebar-header">
-                <h1 t-on-click="resetToWelcome" style="cursor: pointer; transition: opacity 0.15s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'" title="Go back to Home/Flows">
-                    <i class="fa fa-question-circle text-primary me-1"/> Help Centre
-                </h1>
-                <div class="dg-help-search">
-                    <i class="fa fa-search dg-help-search-icon"/>
+    <div class="dg-help-portal d-flex flex-column h-100 overflow-hidden">
+        <!-- ═══════════════════════════════════════════════════════════
+             PAGE HEADER — Clean Corporate Light
+             ═══════════════════════════════════════════════════════════ -->
+        <header class="dg-help-page-header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+            <div class="d-flex flex-column">
+                <div class="dg-help-eyebrow">KNOWLEDGE &amp; SUPPORT</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <i class="fa fa-question-circle text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                    <h3 class="dg-help-title mb-0 fw-bold">DeployGuard Help Centre</h3>
+                    <span class="badge bg-primary-subtle text-primary border px-2 py-1 ms-1" style="font-size: 11px;">
+                        Interactive SOPs
+                    </span>
+                </div>
+                <div class="dg-help-subtitle text-muted mt-1 small">
+                    Operational procedures, system workflows, and administrative playbooks.
+                </div>
+            </div>
+
+            <!-- Search & Actions -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="position-relative" style="width: 260px;">
+                    <i class="fa fa-search position-absolute top-50 translate-middle-y text-muted" style="left: 10px; font-size: 12px;"/>
                     <input
                         type="text"
-                        placeholder="Search articles…"
+                        class="form-control form-control-sm ps-4 dg-help-search-input"
+                        placeholder="Search articles &amp; SOPs…"
                         t-model="state.searchQuery"
                         t-on-input="onSearchInput"
                         t-on-keydown="onSearchKeydown"
                     />
                 </div>
-            </div>
-            <nav class="dg-help-cat-list">
-                <!-- Home button to return to flow diagrams -->
                 <button
-                    class="dg-help-cat-item"
-                    t-att-class="{ active: !state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId }"
+                    class="btn btn-sm btn-outline-secondary px-3"
+                    t-att-class="{ 'btn-primary text-white fw-semibold': !state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId }"
+                    style="background-color: (!state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId) ? 'var(--ds-accent)' : '';"
                     t-on-click="resetToWelcome"
                 >
-                    <span class="dg-help-cat-icon" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6)">
-                        <i class="fa fa-map-o"/>
-                    </span>
-                    <span>Workflows &amp; Diagrams</span>
+                    <i class="fa fa-map-o me-1"/> Workflows &amp; Flows
                 </button>
+            </div>
+        </header>
 
+        <!-- Top Category Navigation Bar -->
+        <div class="dg-help-cat-nav bg-white px-4 py-2 border-bottom d-flex align-items-center gap-2 overflow-auto" style="scrollbar-width: none;">
+            <button
+                class="btn btn-sm btn-light border d-flex align-items-center gap-2 rounded-pill px-3 text-nowrap"
+                t-att-class="{ 'active fw-bold text-dark border-primary bg-light': !state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId }"
+                t-on-click="resetToWelcome"
+            >
+                <i class="fa fa-map-o text-primary"/>
+                <span>Workflows &amp; Diagrams</span>
+            </button>
+
+            <t t-foreach="state.categories" t-as="cat" t-key="cat.id">
                 <button
-                    t-foreach="state.categories"
-                    t-as="cat"
-                    t-key="cat.id"
-                    class="dg-help-cat-item"
-                    t-att-class="{ active: state.activeCatId === cat.id }"
+                    class="btn btn-sm btn-light border d-flex align-items-center gap-2 rounded-pill px-3 text-nowrap"
+                    t-att-class="{ 'active fw-bold text-dark border-primary bg-light': state.activeCatId === cat.id }"
                     t-on-click="() => this.selectCategory(cat.id)"
                 >
-                    <span
-                        class="dg-help-cat-icon"
-                        t-att-style="'background:' + cat.color"
-                    >
-                        <i t-att-class="'fa ' + cat.icon"/>
-                    </span>
+                    <i t-att-class="'fa ' + cat.icon" t-att-style="'color:' + cat.color"/>
                     <span t-esc="cat.name"/>
-                    <span class="dg-help-cat-count" t-esc="cat.article_count"/>
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill ms-1" t-esc="cat.article_count"/>
                 </button>
-            </nav>
-        </aside>
+            </t>
+        </div>
 
         <!-- Main -->
-        <main class="dg-help-main">
+        <main class="dg-help-main flex-grow-1 overflow-auto">
 
             <!-- Welcome screen (no category, no search) -->
             <t t-if="!state.activeCatId &amp;&amp; !state.searching &amp;&amp; !state.activeArticleId">
@@ -66,7 +82,7 @@
                             <i class="fa fa-shield"/>
                         </div>
                         <h2>How can we help you?</h2>
-                        <p>Search for specific guides on the left, browse core categories below, or explore our interactive operational flows.</p>
+                        <p>Search for specific guides above, browse core categories, or explore our interactive operational flows.</p>
                     </div>
 
                     <!-- Interactive Lifecycles &amp; Operational Flows -->

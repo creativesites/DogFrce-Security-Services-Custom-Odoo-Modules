@@ -13,30 +13,31 @@
     <t t-elif="state.data">
         <t t-set="d" t-value="state.data"/>
 
-        <!-- Header Banner -->
-        <div class="ag-header">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="ag-title-icon">
-                        <i class="fa fa-calendar-check-o"/>
-                    </div>
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Attendance Summary Grid</h3>
-                            <div class="ag-live-indicator">
-                                <span class="ag-live-dot"/>Live Sync
-                            </div>
-                        </div>
-                        <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                            Operational Attendance &amp; Guard Compliance Matrix for <strong class="text-white"><t t-esc="d.month_label"/></strong>
-                        </span>
-                    </div>
+        <!-- ═══════════════════════════════════════════════════════════
+             PAGE HEADER — Clean Corporate Light
+             ═══════════════════════════════════════════════════════════ -->
+        <header class="ag-page-header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+            <div class="d-flex flex-column">
+                <div class="ag-eyebrow">OPERATIONS &amp; COMPLIANCE</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <i class="fa fa-calendar-check-o text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                    <h3 class="ag-title mb-0 fw-bold">Attendance Summary Grid</h3>
+                    <span class="badge bg-success-subtle text-success border px-2 py-1 ms-1" style="font-size: 11px;">
+                        <span class="ag-live-dot me-1"/>Live Sync
+                    </span>
                 </div>
+                <div class="ag-subtitle text-muted mt-1 small">
+                    Operational Attendance &amp; Guard Compliance Matrix for <strong class="text-dark"><t t-esc="d.month_label"/></strong>
+                </div>
+            </div>
 
-                <!-- Controls &amp; Filters -->
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <!-- Site selector -->
-                    <select class="ag-select-site"
+            <!-- Controls &amp; Month Nav Bar -->
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <!-- Site selector -->
+                <div class="d-flex align-items-center gap-1 me-2">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Site:</span>
+                    <select class="form-select form-select-sm ag-select-site"
+                            style="min-width: 200px;"
                             t-on-change="(e) => this.setSite(e.target.value)">
                         <option value="">🏢 All Security Sites</option>
                         <t t-foreach="d.sites" t-as="site" t-key="site.id">
@@ -46,32 +47,32 @@
                             </option>
                         </t>
                     </select>
+                </div>
 
-                    <!-- Month Nav Bar -->
-                    <div class="d-flex align-items-center rounded-3 p-1" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);">
-                        <button class="ag-control-btn py-1 px-2 border-0" t-on-click="prevMonth" title="Previous Month">
-                            <i class="fa fa-chevron-left"/>
-                        </button>
-                        <span class="text-white fw-bold px-3" style="font-size:13px;min-width:110px;text-align:center;">
-                            <t t-esc="d.month_label"/>
-                        </span>
-                        <button class="ag-control-btn py-1 px-2 border-0" t-on-click="nextMonth" title="Next Month">
-                            <i class="fa fa-chevron-right"/>
-                        </button>
-                    </div>
-
-                    <!-- Today / Reset button -->
-                    <button class="ag-control-btn" t-on-click="goToday" title="Current Month">
-                        <i class="fa fa-calendar me-1"/>Current
+                <!-- Month Nav Bar -->
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" t-on-click="prevMonth" title="Previous Month">
+                        <i class="fa fa-chevron-left"/>
                     </button>
-
-                    <!-- Export button -->
-                    <button class="ag-control-btn" style="background:#10b981;border-color:#10b981;" t-on-click="exportCsv" title="Export CSV Report">
-                        <i class="fa fa-download me-1"/>Export CSV
+                    <button class="btn btn-light border fw-bold text-dark px-3" disabled="disabled" style="min-width: 120px;">
+                        <t t-esc="d.month_label"/>
+                    </button>
+                    <button class="btn btn-outline-secondary" t-on-click="nextMonth" title="Next Month">
+                        <i class="fa fa-chevron-right"/>
                     </button>
                 </div>
+
+                <!-- Today / Reset button -->
+                <button class="btn btn-sm btn-outline-secondary px-3" t-on-click="goToday" title="Current Month">
+                    <i class="fa fa-calendar me-1"/> Current
+                </button>
+
+                <!-- Export button -->
+                <button class="btn btn-sm text-white px-3 fw-semibold" style="background: var(--ds-accent); border-color: var(--ds-accent);" t-on-click="exportCsv" title="Export CSV Report">
+                    <i class="fa fa-download me-1"/> Export CSV
+                </button>
             </div>
-        </div>
+        </header>
 
         <div class="p-4">
             <!-- Executive KPI Cards -->

@@ -71,166 +71,158 @@
     <DemandPlanningModal closeModal="closeDemandPlanning"/>
   </t>
 
-  <!-- ───────────────────────────────────────────────────────────────────────
-       LEFT SIDEBAR  (hidden on mobile — shown md+)
-       ─────────────────────────────────────────────────────────────────────── -->
-  <aside class="rh-sidebar">
-    <!-- Brand -->
-    <div class="rh-brand d-flex align-items-center justify-content-between">
-      <div>
-        <div class="rh-brand-logo"><i class="fa fa-shield rh-brand-icon"/><t t-esc="companyName"/></div>
-        <div class="rh-brand-sub">Rostering Hub</div>
+  <!-- ═══════════════════════════════════════════════════════════
+       PAGE HEADER — Clean Corporate Light
+       ═══════════════════════════════════════════════════════════ -->
+  <header class="rh-page-header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+    <div class="d-flex flex-column">
+      <div class="rh-eyebrow">ROSTERING HUB</div>
+      <div class="d-flex align-items-center gap-2 mt-1">
+        <i class="fa fa-shield text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+        <h3 class="rh-title mb-0 fw-bold"><t t-esc="companyName"/> Rostering Hub</h3>
+        <t t-if="state.batch">
+          <span class="text-muted mx-1">·</span>
+          <span class="fw-semibold text-dark fs-6" t-esc="state.batch.name"/>
+          <span class="rh-top-state-pill ms-1"
+                t-att-style="'background:' + batchStateColor(state.batch.state) + ';'">
+            <t t-esc="(state.batch.state || '').toUpperCase()"/>
+          </span>
+        </t>
       </div>
-      <button class="rh-btn rh-btn-ghost px-2 py-1 text-info"
+      <div class="rh-subtitle text-muted mt-1 small">
+        <t t-if="state.batch and state.batch.date_from">
+          <i class="fa fa-calendar-o me-1 text-muted"/>
+          <t t-esc="fmtDateFull(state.batch.date_from)"/>
+          <span class="mx-1">–</span>
+          <t t-esc="fmtDateFull(state.batch.date_to)"/>
+        </t>
+        <t t-else="">
+          Shift generation, constraint compliance, and multi-site roster deployment.
+        </t>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <button class="btn btn-sm btn-outline-info px-2 py-1"
               t-on-click="openMegaMenu"
               title="Open Rostering Mega Menu">
         <i class="fa fa-th-large me-1"/>
         <small class="fw-bold">Menu</small>
       </button>
-    </div>
-
-    <!-- Batch selector -->
-    <div class="rh-sidebar-section">
-      <div class="rh-sidebar-label">Roster Batch</div>
-      <select class="rh-select" t-on-change="onBatchChange">
-        <option value="">— Select Batch —</option>
-        <t t-foreach="state.batches" t-as="b" t-key="b.id">
-          <option t-att-value="b.id" t-att-selected="b.id === state.batchId">
-            <t t-esc="b.name"/>
-          </option>
-        </t>
-      </select>
-
-      <!-- Batch state pill -->
-      <t t-if="state.batch">
-        <div class="rh-state-pill mt-2"
-             t-att-style="'background:' + batchStateBg(state.batch.state) + '; color:' + batchStateColor(state.batch.state) + '; border:1px solid ' + batchStateColor(state.batch.state) + '22;'">
-          <span class="rh-state-dot" t-att-style="'background:' + batchStateColor(state.batch.state)"/>
-          <t t-esc="(state.batch.state || '').toUpperCase()"/>
-        </div>
-      </t>
-    </div>
-
-    <!-- Site filter (only when batch loaded) -->
-    <t t-if="state.batchId and state.sites.length">
-      <div class="rh-sidebar-section">
-        <div class="rh-sidebar-label">Filter Site</div>
-        <select class="rh-select" t-on-change="onSiteFilter">
-          <option value="">All Sites</option>
-          <t t-foreach="state.sites" t-as="site" t-key="site.id">
-            <option t-att-value="site.id" t-att-selected="site.id === state.filterSiteId"
-                    t-esc="site.name"/>
-          </t>
-        </select>
-      </div>
-    </t>
-
-    <!-- Coverage stats -->
-    <t t-if="state.batchId and state.stats.total">
-      <div class="rh-sidebar-section">
-        <div class="rh-sidebar-label">Coverage</div>
-        <div class="rh-progress-bar">
-          <div class="rh-progress-fill" t-att-style="'width:' + coveragePercent + '%'"/>
-        </div>
-        <div class="rh-stat-row"><span class="rh-stat-dot rh-dot-green"/>Assigned
-          <strong t-esc="state.stats.assigned"/>
-        </div>
-        <div class="rh-stat-row"><span class="rh-stat-dot rh-dot-amber"/>Unassigned
-          <strong t-esc="state.stats.unassigned"/>
-        </div>
-        <div class="rh-stat-row"><span class="rh-stat-dot rh-dot-red"/>Conflicts
-          <strong t-esc="state.stats.conflicts"/>
-        </div>
-        <div class="rh-coverage-big" t-esc="coveragePercent + '%'"/>
-      </div>
-    </t>
-
-    <div style="flex:1"/>
-
-    <!-- Sidebar nav links -->
-    <div class="rh-sidebar-nav">
-      <button t-att-class="'rh-nav-btn' + (state.view === 'dashboard' ? ' rh-nav-active' : '')"
-              t-on-click="() => this.setView('dashboard')">
-        <i class="fa fa-tachometer rh-nav-icon"/>Dashboard
+      <button class="btn btn-sm btn-light border text-purple px-3"
+              style="color: #8b5cf6;"
+              t-on-click="openDemandPlanning"
+              title="Executive Demand Planning &amp; Sizing Estimator">
+        <i class="fa fa-calculator me-1"/> Demand Sizing
       </button>
-      <button t-att-class="'rh-nav-btn' + (state.view === 'roster' ? ' rh-nav-active' : '')"
-              t-on-click="() => this.setView('roster')">
-        <i class="fa fa-calendar rh-nav-icon"/>Monthly Roster
+      <button class="btn btn-sm btn-outline-primary px-3"
+              style="color: var(--ds-accent); border-color: var(--ds-accent-mid);"
+              t-on-click="openCreateModal">
+        <i class="fa fa-plus me-1"/> New Batch
       </button>
-      <button t-att-class="'rh-nav-btn' + (state.view === 'setup' ? ' rh-nav-active' : '')"
-              t-on-click="() => this.setView('setup')">
-        <i class="fa fa-cog rh-nav-icon"/>Setup
-      </button>
-    </div>
-  </aside>
 
-  <!-- ───────────────────────────────────────────────────────────────────────
-       MAIN AREA
-       ─────────────────────────────────────────────────────────────────────── -->
-  <div class="rh-main">
-
-    <!-- ── Top bar ── -->
-    <div class="rh-topbar">
-      <div class="rh-topbar-left">
-        <!-- Mobile batch selector -->
-        <select class="rh-select rh-mobile-batch-select d-md-none" t-on-change="onBatchChange">
-          <option value="">— Select Batch —</option>
-          <t t-foreach="state.batches" t-as="b" t-key="b.id">
-            <option t-att-value="b.id" t-att-selected="b.id === state.batchId"
-                    t-esc="b.name"/>
-          </t>
-        </select>
-        <!-- Desktop batch title -->
-        <div class="d-none d-md-block">
-          <div class="rh-topbar-title">
-            <t t-if="state.batch" t-esc="state.batch.name"/>
-            <span t-else="" class="text-muted">Select a Roster Batch</span>
-            <t t-if="state.batch">
-              <span class="rh-top-state-pill ms-2"
-                    t-att-style="'background:' + batchStateColor(state.batch.state) + ';'">
-                <t t-esc="(state.batch.state || '').toUpperCase()"/>
-              </span>
-            </t>
-          </div>
-          <div t-if="state.batch" class="rh-topbar-sub">
-            <t t-esc="fmtDateFull(state.batch.date_from)"/>
-            <span class="mx-1">–</span>
-            <t t-esc="fmtDateFull(state.batch.date_to)"/>
-          </div>
-        </div>
-      </div>
-
-      <div class="rh-topbar-actions">
-        <button class="rh-btn rh-btn-ghost rh-btn-sm"
-                t-on-click="openDemandPlanning"
-                title="Executive Demand Planning &amp; Sizing Estimator">
-          <i class="fa fa-calculator text-purple me-1" style="color:#8b5cf6;"/>
-          <span class="d-none d-sm-inline fw-semibold">Demand Sizing</span>
+      <t t-if="state.batchId">
+        <button class="btn btn-sm btn-light border text-muted px-3"
+                t-on-click="loadBoardData"
+                t-att-disabled="state.loading">
+          <i t-att-class="state.loading ? 'fa fa-spinner fa-spin me-1' : 'fa fa-refresh me-1'"/> Refresh
         </button>
-        <button class="rh-btn rh-btn-ghost rh-btn-sm"
-                t-on-click="openCreateModal">
-          <i class="fa fa-plus me-1"/>
-          <span class="d-none d-sm-inline">New Batch</span>
-        </button>
-        <t t-if="state.batchId and unassignedCount > 0">
-          <button class="rh-btn rh-btn-success rh-btn-sm"
+        <t t-if="unassignedCount > 0">
+          <button class="btn btn-sm text-white px-3 fw-semibold"
+                  style="background: var(--ds-accent); border-color: var(--ds-accent);"
                   t-on-click="autoAssignAll"
                   t-att-disabled="state.autoAssigning or state.loading">
             <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin me-1' : 'fa fa-bolt me-1'"/>
             <t t-if="state.autoAssigning">Assigning…</t>
-            <t t-else="">
-              Auto-Assign
-              <span class="rh-count-badge" t-esc="unassignedCount"/>
-            </t>
+            <t t-else="">Auto-Assign (<t t-esc="unassignedCount"/>)</t>
           </button>
         </t>
-        <button class="rh-btn rh-btn-ghost rh-btn-sm"
-                t-on-click="loadBoardData"
-                t-att-disabled="state.loading">
-          <i t-att-class="state.loading ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
-        </button>
-      </div>
+      </t>
     </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       TABS & FILTER CONTROL BAR
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="rh-nav-tabs-bar px-4 bg-white border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <!-- View Switcher Tabs -->
+    <div class="nav nav-tabs border-bottom-0 rh-tabs-clean">
+      <button class="nav-link" t-att-class="state.view === 'dashboard' ? 'active' : ''"
+              t-on-click="() => this.setView('dashboard')">
+        <i class="fa fa-tachometer me-1"/> Dashboard
+      </button>
+      <button class="nav-link" t-att-class="state.view === 'roster' ? 'active' : ''"
+              t-on-click="() => this.setView('roster')">
+        <i class="fa fa-calendar me-1"/> Monthly Roster
+      </button>
+      <button class="nav-link" t-att-class="state.view === 'setup' ? 'active' : ''"
+              t-on-click="() => this.setView('setup')">
+        <i class="fa fa-cog me-1"/> Setup &amp; Rules
+      </button>
+    </div>
+
+    <!-- Batch & Site Filters + Coverage KPIs -->
+    <div class="d-flex align-items-center gap-3 py-2 flex-wrap">
+      <!-- Batch select -->
+      <div class="d-flex align-items-center gap-1">
+        <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Batch:</span>
+        <select class="form-select form-select-sm rh-select-clean" style="min-width: 190px;" t-on-change="onBatchChange">
+          <option value="">— Select Batch —</option>
+          <t t-foreach="state.batches" t-as="b" t-key="b.id">
+            <option t-att-value="b.id" t-att-selected="b.id === state.batchId">
+              <t t-esc="b.name"/>
+            </option>
+          </t>
+        </select>
+      </div>
+
+      <!-- Site select -->
+      <t t-if="state.batchId and state.sites.length">
+        <div class="d-flex align-items-center gap-1">
+          <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Site:</span>
+          <select class="form-select form-select-sm rh-select-clean" style="min-width: 150px;" t-on-change="onSiteFilter">
+            <option value="">All Sites</option>
+            <t t-foreach="state.sites" t-as="site" t-key="site.id">
+              <option t-att-value="site.id" t-att-selected="site.id === state.filterSiteId"
+                      t-esc="site.name"/>
+            </t>
+          </select>
+        </div>
+      </t>
+
+      <!-- Coverage Meter & Stats -->
+      <t t-if="state.batchId and state.stats.total">
+        <div class="d-flex align-items-center gap-2">
+          <div class="rh-meter-pill d-flex align-items-center gap-2 px-3 py-1 bg-light border rounded-3">
+            <div class="d-flex flex-column">
+              <div class="d-flex align-items-center justify-content-between gap-2">
+                <span class="text-muted text-uppercase fw-bold" style="font-size: 10px;">Coverage</span>
+                <span class="fw-bold rh-kpi-mono" style="font-size: 13px; color: var(--ds-accent);"><t t-esc="coveragePercent"/>%</span>
+              </div>
+              <div class="progress mt-1" style="height: 5px; width: 80px; background: var(--ds-border);">
+                <div class="progress-bar" t-att-style="'width:' + coveragePercent + '%; background: var(--ds-success);'"/>
+              </div>
+            </div>
+          </div>
+          <span class="badge bg-success-subtle text-success border px-2 py-1" style="font-size: 11px;">
+            <t t-esc="state.stats.assigned"/> Assigned
+          </span>
+          <span class="badge bg-warning-subtle text-warning border px-2 py-1" style="font-size: 11px;">
+            <t t-esc="state.stats.unassigned"/> Open
+          </span>
+          <span t-if="state.stats.conflicts" class="badge bg-danger-subtle text-danger border px-2 py-1" style="font-size: 11px;">
+            <t t-esc="state.stats.conflicts"/> Conflicts
+          </span>
+        </div>
+      </t>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       MAIN AREA
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="rh-main">
 
     <!-- ── Alerts strip ── -->
     <t t-if="state.alerts.length and state.batchId">

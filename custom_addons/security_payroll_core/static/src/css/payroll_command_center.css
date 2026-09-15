@@ -56,59 +56,60 @@
     overflow-x: hidden;
 }
 
-/* Sidebar */
-.o_pcc_sidebar {
-    background: #1a2332 !important;
-    color: #dce4f0 !important;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
-    z-index: 10;
-    height: 100%;
-    min-height: 0;
-    overflow-y: auto;
+/* ── Page Header ────────────────────────────────────────── */
+.o_pcc_page_header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
 }
 
-.pcc-sidebar-search {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #ffffff !important;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 12px;
-    width: 100%;
-}
-
-.pcc-sidebar-search::placeholder {
-    color: rgba(255, 255, 255, 0.4);
-}
-
-.pcc-sidebar-search:focus {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.3);
-    outline: none;
-}
-
-.o_period_item {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border-left: 3px solid transparent;
-    padding: 12px 16px;
-    margin: 3px 8px;
-    border-radius: 10px;
-    color: rgba(255, 255, 255, 0.6) !important;
-    cursor: pointer;
-}
-
-.o_period_item:hover:not(.is-active) {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #ffffff !important;
-    transform: translateX(2px);
-}
-
-.o_period_item.is-active {
-    background: rgba(16, 185, 129, 0.18) !important;
-    border-left-color: #0D7A4E;
-    color: #ffffff !important;
+.pcc-eyebrow {
+    font-size: 10px;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
+}
+
+.pcc-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.pcc-subtitle {
+    color: var(--ds-text-muted);
+}
+
+/* ── Period Selector & Control Bar ──────────────────────── */
+.o_pcc_control_bar {
+    background: var(--ds-surface);
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 4;
+}
+
+.pcc-period-select {
+    background-color: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    color: var(--ds-text) !important;
+    font-size: 12px !important;
+    border-radius: var(--ds-radius-md) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pcc-period-select:focus {
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
+    outline: none !important;
+}
+
+.pcc-kpi-pill {
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
+    box-shadow: var(--ds-shadow-sm);
 }
 
 /* Header */

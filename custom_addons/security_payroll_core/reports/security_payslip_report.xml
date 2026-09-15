@@ -133,13 +133,13 @@
     <template id="report_payslip_earnings">
         <div class="border rounded p-3 bg-white mb-4 block-card" style="min-height: 220px;">
             <h6 class="fw-bold pcc-secondary mb-2"><i class="fa fa-plus-circle text-success me-1"/> Earnings</h6>
-            <table class="table table-sm table-borderless small w-100 earnings-table">
-                <thead t-attf-style="border-bottom: 2px solid {{ tmpl_settings.get('primary_color') }} !important;">
+            <table class="table table-sm small w-100 earnings-table">
+                <thead class="pcc-thead" t-attf-style="background-color: {{ tmpl_settings.get('header_bg_color') }} !important; color: {{ tmpl_settings.get('header_text_color') }} !important;">
                     <tr>
-                        <th class="pb-2">Description</th>
-                        <th class="text-end pb-2">Qty</th>
-                        <th class="text-end pb-2">Rate</th>
-                        <th class="text-end pb-2">Amount</th>
+                        <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Description</th>
+                        <th class="text-end py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Qty</th>
+                        <th class="text-end py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Rate</th>
+                        <th class="text-end py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -157,13 +157,13 @@
     <template id="report_payslip_deductions">
         <div class="border rounded p-3 bg-white mb-4 block-card" style="min-height: 220px;">
             <h6 class="fw-bold pcc-secondary mb-2"><i class="fa fa-minus-circle text-danger me-1"/> Deductions</h6>
-            <table class="table table-sm table-borderless small w-100 deductions-table">
-                <thead t-attf-style="border-bottom: 2px solid {{ tmpl_settings.get('secondary_color') }} !important;">
+            <table class="table table-sm small w-100 deductions-table">
+                <thead class="pcc-thead" t-attf-style="background-color: {{ tmpl_settings.get('header_bg_color') }} !important; color: {{ tmpl_settings.get('header_text_color') }} !important;">
                     <tr>
-                        <th class="pb-2">Description</th>
-                        <th class="text-end pb-2">Qty</th>
-                        <th class="text-end pb-2">Rate</th>
-                        <th class="text-end pb-2">Amount</th>
+                        <th class="py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Description</th>
+                        <th class="text-end py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Qty</th>
+                        <th class="text-end py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Rate</th>
+                        <th class="text-end py-2" t-attf-style="color: {{ tmpl_settings.get('header_text_color') }} !important; background-color: {{ tmpl_settings.get('header_bg_color') }} !important;">Amount</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -294,8 +294,10 @@
                     }"/>
                     
                     <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Roboto:wght@300;400;500;700&amp;display=swap');
+
                         .pcc-payslip-page {
-                            font-family: '<t t-esc="tmpl_settings.get('font_family')"/>', Helvetica, Arial, sans-serif;
+                            font-family: '<t t-esc="tmpl_settings.get('font_family')"/>', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
                             color: #334155;
                             font-size: 13px;
                             line-height: 1.45;
@@ -313,18 +315,18 @@
                             cursor: pointer;
                         }
                         .preview-block-wrapper:hover {
-                            border-color: rgba(16, 185, 129, 0.4) !important;
-                            background: rgba(16, 185, 129, 0.01);
+                            border-color: rgba(27, 58, 107, 0.4) !important;
+                            background: rgba(27, 58, 107, 0.02);
                         }
                         
                         /* Base layout variants */
                         .layout-corporate .table {
-                            border: 1px solid #94a3b8 !important;
-                        }
-                        .layout-corporate th {
                             border: 1px solid #cbd5e1 !important;
-                            background-color: <t t-esc="tmpl_settings.get('secondary_color')"/> !important;
-                            color: white !important;
+                        }
+                        .layout-corporate thead, .layout-corporate thead th {
+                            border: 1px solid #94a3b8 !important;
+                            background-color: <t t-esc="tmpl_settings.get('header_bg_color')"/> !important;
+                            color: <t t-esc="tmpl_settings.get('header_text_color')"/> !important;
                         }
                         .layout-corporate .card, .layout-corporate .border {
                             border: 1px solid #cbd5e1 !important;
@@ -345,15 +347,15 @@
                             border: none !important;
                             border-bottom: 1px solid #e2e8f0 !important;
                         }
-                        .layout-minimalist th {
+                        .layout-minimalist thead, .layout-minimalist thead th {
                             background: transparent !important;
                             color: #0f172a !important;
                             font-weight: bold !important;
                         }
                         
-                        .layout-bold th {
-                            background-color: <t t-esc="tmpl_settings.get('primary_color')"/> !important;
-                            color: white !important;
+                        .layout-bold thead, .layout-bold thead th {
+                            background-color: <t t-esc="tmpl_settings.get('header_bg_color')"/> !important;
+                            color: <t t-esc="tmpl_settings.get('header_text_color')"/> !important;
                         }
                         .layout-bold .info-card {
                             border-left: 5px solid <t t-esc="tmpl_settings.get('primary_color')"/> !important;
@@ -365,7 +367,7 @@
                             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
                         }
                         .layout-bold .net-pay-box {
-                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.15) !important;
                         }
                     </style>
 

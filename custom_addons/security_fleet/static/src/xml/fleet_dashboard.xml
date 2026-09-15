@@ -7,129 +7,85 @@
     <!-- ═══════════════════════════════════════════════════════════
          LEFT SIDEBAR — Control &amp; Navigation Panel
          ═══════════════════════════════════════════════════════════ -->
-    <div class="fd-nav-sidebar d-flex flex-column">
-
-        <!-- Brand Header -->
-        <div class="fd-brand px-4 py-3">
-            <div class="fw-bold d-flex align-items-center gap-2" style="font-size:15px; color:#ffffff; letter-spacing:.3px;">
-                <i class="fa fa-car" style="color:#10b981;"/>
-                <span>DogForce Fleet</span>
+    <!-- ═══════════════════════════════════════════════════════════
+         PAGE HEADER — Clean Corporate Light
+         ═══════════════════════════════════════════════════════════ -->
+    <header class="fd-page-header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+        <div class="d-flex flex-column">
+            <div class="fd-eyebrow">FLEET &amp; TRANSPORT</div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <i class="fa fa-car text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                <h3 class="fd-title mb-0 fw-bold">Fleet Operations &amp; Shuttle Command</h3>
+                <span class="badge bg-success-subtle text-success border px-2 py-1 ms-1" style="font-size: 11px;">
+                    <span class="ag-live-dot me-1"/>Live Fleet Tracking
+                </span>
             </div>
-            <div style="font-size:11px; color:rgba(255,255,255,0.6); margin-top:2px;">Vehicle &amp; Transport Control</div>
+            <div class="fd-subtitle text-muted mt-1 small">
+                Guards shuttle transportation, vehicle dispatch, and fleet logistics management.
+            </div>
         </div>
 
-        <!-- Vehicle State Filter -->
-        <div class="px-3 pt-3 pb-2">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:6px;">
-                Vehicle Status
-            </div>
-            <select class="form-select form-select-sm fd-select" t-on-change="onStateFilterChange">
-                <option value="all">All Vehicles</option>
-                <option value="available">Available</option>
-                <option value="in_transit">In Transit</option>
-                <option value="in_service">In Service / Maintenance</option>
-                <option value="scrapped">Decommissioned</option>
-            </select>
-        </div>
-
-        <!-- Quick Action Buttons -->
-        <div class="px-3 pb-3 d-flex flex-column gap-2 mt-2">
-            <button class="btn btn-sm text-white w-100 fw-bold" style="background:#10b981; border-radius:8px;" t-on-click="openRunModal">
-                <i class="fa fa-plus me-1"/>Schedule Shuttle Run
+        <!-- Header Actions -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button class="btn btn-sm btn-light border text-muted px-3" t-on-click="loadData" title="Refresh Data">
+                <i class="fa fa-refresh me-1"/> Refresh
             </button>
-            <button class="btn btn-sm btn-outline-secondary w-100 fw-semibold text-white border-secondary" style="border-radius:8px; font-size:12px; background:rgba(255,255,255,0.1);" t-on-click="openFuelModal">
-                <i class="fa fa-tint me-1"/>Register Fuel Slip
+            <button class="btn btn-sm btn-outline-secondary px-3" t-on-click="exportRunsCsv" title="Export Shuttle Runs to CSV">
+                <i class="fa fa-download me-1"/> Export CSV
             </button>
-            <button class="btn btn-sm fd-top-btn w-100" style="font-size:11px;" t-on-click="loadData">
-                <i class="fa fa-refresh me-1"/>Refresh Data
+            <button class="btn btn-sm btn-outline-secondary px-3" t-on-click="openFuelModal">
+                <i class="fa fa-tint me-1"/> Register Fuel Slip
+            </button>
+            <button class="btn btn-sm text-white px-3 fw-semibold" style="background: var(--ds-accent); border-color: var(--ds-accent);" t-on-click="openRunModal">
+                <i class="fa fa-plus me-1"/> Schedule Shuttle Run
             </button>
         </div>
-
-        <div style="border-top:1px solid rgba(255, 255, 255, 0.1); margin:4px 0;"/>
-
-        <!-- Operational Readiness Gauge -->
-        <div t-if="state.data" class="px-3 py-3">
-            <div style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:rgba(255,255,255,0.6); margin-bottom:8px;">
-                Fleet Readiness
-            </div>
-            <div class="d-flex align-items-center justify-content-between mb-1">
-                <span class="fw-bold" style="font-size:18px; color:#ffffff;"><t t-esc="state.data.readiness_pct"/>%</span>
-                <span class="small text-white-50"><t t-esc="state.data.active_count + state.data.in_transit_count"/> / <t t-esc="state.data.total_vehicles"/> Operational</span>
-            </div>
-            <div class="progress" style="height:7px; border-radius:4px; background:rgba(255,255,255,0.15);">
-                <div class="progress-bar bg-emerald" t-att-style="'width:' + state.data.readiness_pct + '%; background:#10b981;'"/>
-            </div>
-        </div>
-
-        <!-- Fuel MTD Counter -->
-        <div t-if="state.data" class="px-3 py-3 mt-auto border-top" style="background:rgba(0,0,0,0.2);">
-            <div class="text-white-50 x-small uppercase fw-semibold">Fuel Spent MTD</div>
-            <div class="fw-bold fs-6 text-white">ZMW <t t-esc="fmt(state.data.fuel_cost_mtd)"/></div>
-        </div>
-    </div>
-
+    </header>
 
     <!-- ═══════════════════════════════════════════════════════════
-         MAIN WORKSPACE — Header Banner + Main Area
+         MAIN WORKSPACE
          ═══════════════════════════════════════════════════════════ -->
     <div class="fd-main">
 
-        <!-- Executive Header Banner -->
-        <div class="fd-header">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="fd-title-icon">
-                        <i class="fa fa-car"/>
-                    </div>
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Fleet Operations &amp; Shuttle Command</h3>
-                            <div class="fd-live-indicator">
-                                <span class="ag-live-dot"/>Live Fleet Tracking
-                            </div>
-                        </div>
-                        <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                            Guards Shuttle Transportation &amp; Fleet Logistics Management
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Header Action Toolbar -->
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <button class="fd-top-btn"
-                            t-on-click="exportRunsCsv"
-                            style="background:#10b981;border-color:#10b981;"
-                            title="Export Shuttle Runs to CSV">
-                        <i class="fa fa-download me-1"/>Export CSV
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Controls Strip (Search &amp; Tabs) -->
+        <!-- Controls Strip (Search, Status Filter &amp; Tabs) -->
         <div class="px-4 py-3 bg-white border-bottom d-flex align-items-center justify-content-between gap-3 flex-wrap">
-            <div class="d-flex align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
                 <!-- Search Input -->
-                <div class="position-relative" style="width:280px;">
+                <div class="position-relative" style="width:240px;">
                     <i class="fa fa-search position-absolute text-muted" style="left:12px;top:50%;transform:translateY(-50%);font-size:12px;"/>
                     <input type="text"
-                           class="form-control form-control-sm ps-4 border-slate-300"
-                           placeholder="Search vehicles, runs, drivers..."
+                           class="form-control form-control-sm ps-4"
+                           placeholder="Search vehicles, runs, drivers…"
                            t-on-input="onSearchInput"
-                           style="border-radius:8px; font-size:13px;"/>
+                           style="border-radius:var(--ds-radius-md); font-size:13px;"/>
+                </div>
+
+                <!-- Vehicle Status Filter -->
+                <div class="d-flex align-items-center gap-1">
+                    <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Status:</span>
+                    <select class="form-select form-select-sm fd-select" style="min-width: 140px;" t-on-change="onStateFilterChange">
+                        <option value="all">All Vehicles</option>
+                        <option value="available">Available</option>
+                        <option value="in_transit">In Transit</option>
+                        <option value="in_service">In Service / Maintenance</option>
+                        <option value="scrapped">Decommissioned</option>
+                    </select>
                 </div>
 
                 <!-- Tab Switcher -->
-                <div class="btn-group btn-group-sm">
-                    <button t-att-class="'btn ' + (state.activeTab === 'vehicles' ? 'btn-success text-white fw-bold' : 'btn-outline-secondary')"
+                <div class="btn-group btn-group-sm ms-2">
+                    <button t-att-class="'btn ' + (state.activeTab === 'vehicles' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
+                            style="background-color: state.activeTab === 'vehicles' ? 'var(--ds-accent)' : ''; border-color: state.activeTab === 'vehicles' ? 'var(--ds-accent)' : '';"
                             t-on-click="() => this.setTab('vehicles')">
                         <i class="fa fa-car me-1"/>Vehicles (<t t-esc="filteredVehicles.length"/>)
                     </button>
-                    <button t-att-class="'btn ' + (state.activeTab === 'runs' ? 'btn-success text-white fw-bold' : 'btn-outline-secondary')"
+                    <button t-att-class="'btn ' + (state.activeTab === 'runs' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
+                            style="background-color: state.activeTab === 'runs' ? 'var(--ds-accent)' : ''; border-color: state.activeTab === 'runs' ? 'var(--ds-accent)' : '';"
                             t-on-click="() => this.setTab('runs')">
                         <i class="fa fa-road me-1"/>Today's Runs (<t t-esc="filteredRuns.length"/>)
                     </button>
-                    <button t-att-class="'btn ' + (state.activeTab === 'fuel' ? 'btn-success text-white fw-bold' : 'btn-outline-secondary')"
+                    <button t-att-class="'btn ' + (state.activeTab === 'fuel' ? 'btn-primary text-white fw-bold' : 'btn-outline-secondary')"
+                            style="background-color: state.activeTab === 'fuel' ? 'var(--ds-accent)' : ''; border-color: state.activeTab === 'fuel' ? 'var(--ds-accent)' : '';"
                             t-on-click="() => this.setTab('fuel')">
                         <i class="fa fa-tint me-1"/>Fuel Logs
                     </button>
@@ -137,7 +93,17 @@
             </div>
 
             <!-- KPI Cards Strip -->
-            <div t-if="state.data" class="d-flex gap-2">
+            <div t-if="state.data" class="d-flex align-items-center gap-2 flex-wrap">
+                <!-- Fleet Readiness Meter -->
+                <div class="fd-kpi-card text-center px-3 py-1" style="border-top:3px solid var(--ds-accent);">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <span class="text-muted x-small fw-bold text-uppercase">Readiness</span>
+                        <span class="fs-6 fw-bold" style="color: var(--ds-accent);"><t t-esc="state.data.readiness_pct"/>%</span>
+                    </div>
+                    <div class="progress mt-1" style="height: 4px; width: 85px; background: var(--ds-border);">
+                        <div class="progress-bar" t-att-style="'width:' + state.data.readiness_pct + '%; background: var(--ds-accent);'"/>
+                    </div>
+                </div>
                 <div class="fd-kpi-card text-center" style="border-top:3px solid #64748b;">
                     <div class="text-muted x-small fw-bold text-uppercase">Total Fleet</div>
                     <div class="fs-5 fw-extrabold text-dark"><t t-esc="state.data.total_vehicles"/></div>
@@ -151,8 +117,8 @@
                     <div class="fs-5 fw-extrabold text-primary"><t t-esc="state.data.in_transit_count"/></div>
                 </div>
                 <div class="fd-kpi-card text-center" style="border-top:3px solid #f59e0b;">
-                    <div class="text-muted x-small fw-bold text-uppercase">In Service</div>
-                    <div class="fs-5 fw-extrabold text-warning"><t t-esc="state.data.in_service_count"/></div>
+                    <div class="text-muted x-small fw-bold text-uppercase">Fuel MTD</div>
+                    <div class="fs-6 fw-extrabold text-warning">ZMW <t t-esc="fmt(state.data.fuel_cost_mtd)"/></div>
                 </div>
             </div>
         </div>

@@ -3,117 +3,95 @@
 
 <t t-name="security_payroll_core.PayrollCommandCenter">
 
-    <div class="o_payroll_command_center d-flex h-100 overflow-hidden">
+    <div class="o_payroll_command_center d-flex flex-column h-100 overflow-hidden">
 
-        <!-- ===== LEFT SIDEBAR — PERIOD LIST ===== -->
-        <div class="o_pcc_sidebar d-flex flex-column" style="width:280px; min-width:280px; overflow-y:auto;">
-
-            <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fa fa-calendar text-emerald" style="color:#10b981;"/>
-                        <strong class="text-white text-uppercase" style="font-size:12px;letter-spacing:0.05em;">Payroll Periods</strong>
-                    </div>
-                    <span class="badge bg-dark border border-secondary text-white-50 px-2 py-1" style="font-size:10px;">
-                        <t t-esc="state.periods.length"/> Periods
+        <!-- ═══════════════════════════════════════════════════════════
+             PAGE HEADER — Clean Corporate Light
+             ═══════════════════════════════════════════════════════════ -->
+        <header class="o_pcc_page_header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+            <div class="d-flex flex-column">
+                <div class="pcc-eyebrow">FINANCE &amp; PAYROLL</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <i class="fa fa-money text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                    <h3 class="pcc-title mb-0 fw-bold">Payroll Command Center</h3>
+                    <span class="badge bg-success-subtle text-success border px-2 py-1 ms-1" style="font-size: 11px;">
+                        <span class="ag-live-dot me-1"/>ZRA Statutory 2026 Compliant
                     </span>
                 </div>
-                
-                <!-- Period Search Box -->
-                <div class="position-relative mt-2">
-                    <input type="text"
-                           class="pcc-sidebar-search"
-                           placeholder="Filter period name…"
-                           t-model="state.periodSearchTerm"/>
+                <div class="pcc-subtitle text-muted mt-1 small">
+                    <t t-if="selectedPeriod">
+                        Active Period: <strong class="text-dark"><t t-esc="selectedPeriod.name"/></strong> 
+                        (<t t-esc="selectedPeriod.date_from"/> to <t t-esc="selectedPeriod.date_to"/>)
+                    </t>
+                    <t t-else="">
+                        Select a payroll period from the selector below.
+                    </t>
                 </div>
             </div>
 
-            <t t-if="filteredPeriods.length === 0">
-                <div class="text-center text-muted p-4 small" style="color:rgba(255,255,255,0.5) !important;">
-                    <i class="fa fa-calendar-times-o fa-2x mb-2 d-block"/>
-                    No matching payroll periods found.
-                </div>
-            </t>
+            <!-- Header Action Toolbar -->
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <button class="btn btn-sm btn-outline-secondary px-3"
+                        t-on-click="openPayslipDesigner"
+                        title="Open Visual Payslip Designer">
+                    <i class="fa fa-paint-brush me-1"/> Payslip Designer
+                </button>
+                <t t-if="selectedPeriod">
+                    <button class="btn btn-sm btn-outline-secondary px-3"
+                            t-on-click="() => this.openPeriod(state.selectedPeriodId)"
+                            title="Open Period Form">
+                        <i class="fa fa-external-link me-1"/> Period Form
+                    </button>
+                    <button class="btn btn-sm text-white px-3 fw-semibold"
+                            style="background: var(--ds-accent); border-color: var(--ds-accent);"
+                            t-on-click="exportCsv"
+                            title="Export Payslips to CSV">
+                        <i class="fa fa-download me-1"/> Export CSV
+                    </button>
+                </t>
+            </div>
+        </header>
 
-            <div class="p-2">
-                <t t-foreach="filteredPeriods" t-as="period" t-key="period.id">
-                    <div t-att-class="'o_period_item ' + (state.selectedPeriodId === period.id ? 'is-active' : '')"
-                         t-on-click="() => this.selectPeriod(period.id)">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <span class="fw-bold text-white" style="font-size: 14px;"><t t-esc="period.name"/></span>
-                            <span t-att-class="'badge pcc-badge ' + periodStateBadgeClass(period.state)">
-                                <t t-esc="period.state"/>
-                            </span>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between mt-2" style="font-size:12px;color:rgba(255,255,255,0.7);">
-                            <span style="font-size:11px;">
-                                <i class="fa fa-users me-1"/>
-                                <t t-esc="period.payslip_count || 0"/> Payslips
-                            </span>
-                            <span class="fw-bold text-white">
-                                <t t-esc="formatCurrency(period.total_net_pay)"/>
-                            </span>
-                        </div>
-                    </div>
+        <!-- ═══════════════════════════════════════════════════════════
+             PERIOD SELECTOR & KPI CONTROL BAR
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="o_pcc_control_bar px-4 py-2 bg-white border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Payroll Period:</span>
+                <select class="form-select form-select-sm pcc-period-select" style="min-width: 260px;" t-on-change="onPeriodDropdownChange">
+                    <option value="">— Select Payroll Period —</option>
+                    <t t-foreach="state.periods" t-as="p" t-key="p.id">
+                        <option t-att-value="p.id" t-att-selected="p.id === state.selectedPeriodId">
+                            <t t-esc="p.name"/> (<t t-esc="p.state"/>)
+                        </option>
+                    </t>
+                </select>
+                <t t-if="selectedPeriod">
+                    <span t-att-class="'badge pcc-badge ' + periodStateBadgeClass(selectedPeriod.state)">
+                        <t t-esc="selectedPeriod.state"/>
+                    </span>
                 </t>
             </div>
 
+            <!-- Summary KPIs for Active Period -->
+            <t t-if="selectedPeriod">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <div class="pcc-kpi-pill px-3 py-1 bg-light border rounded-3 d-flex align-items-center gap-2">
+                        <i class="fa fa-users text-muted"/>
+                        <span class="text-muted small">Payslips:</span>
+                        <strong class="text-dark"><t t-esc="selectedPeriod.payslip_count || 0"/></strong>
+                    </div>
+                    <div class="pcc-kpi-pill px-3 py-1 bg-light border rounded-3 d-flex align-items-center gap-2">
+                        <i class="fa fa-money text-muted"/>
+                        <span class="text-muted small">Total Net Pay:</span>
+                        <strong style="color: var(--ds-accent);"><t t-esc="formatCurrency(selectedPeriod.total_net_pay)"/></strong>
+                    </div>
+                </div>
+            </t>
         </div>
-        <!-- END SIDEBAR -->
 
         <!-- ===== MAIN CONTENT AREA ===== -->
         <div class="o_pcc_main flex-grow-1 d-flex flex-column overflow-hidden">
-
-            <!-- Executive Header Banner -->
-            <div class="o_pcc_header">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="ag-title-icon">
-                            <i class="fa fa-money"/>
-                        </div>
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Payroll Command Center</h3>
-                                <div class="ag-live-indicator">
-                                    <span class="ag-live-dot"/>ZRA Statutory 2026 Compliant
-                                </div>
-                            </div>
-                            <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                                <t t-if="selectedPeriod">
-                                    Active Execution Period: <strong class="text-white"><t t-esc="selectedPeriod.name"/></strong> 
-                                    (<t t-esc="selectedPeriod.date_from"/> to <t t-esc="selectedPeriod.date_to"/>)
-                                </t>
-                                <t t-else="">
-                                    Select a payroll period from the left panel
-                                </t>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Header Action Toolbar -->
-                    <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <button class="pcc-top-btn"
-                                t-on-click="openPayslipDesigner"
-                                style="background:#8b5cf6;border-color:#8b5cf6;"
-                                title="Open Visual Payslip Designer">
-                            <i class="fa fa-paint-brush me-1"/>Payslip Designer
-                        </button>
-                        <t t-if="selectedPeriod">
-                            <button class="pcc-top-btn"
-                                    t-on-click="() => this.openPeriod(state.selectedPeriodId)"
-                                    title="Open Period Form">
-                                <i class="fa fa-external-link me-1"/>Period Form
-                            </button>
-                            <button class="pcc-top-btn"
-                                    t-on-click="exportCsv"
-                                    style="background:#10b981;border-color:#10b981;"
-                                    title="Export Payslips to CSV">
-                                <i class="fa fa-download me-1"/>Export CSV
-                            </button>
-                        </t>
-                    </div>
-                </div>
-            </div>
 
             <!-- Loading spinner -->
             <t t-if="state.loading">

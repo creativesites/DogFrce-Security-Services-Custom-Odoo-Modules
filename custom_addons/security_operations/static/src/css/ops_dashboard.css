@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Operations Dashboard — Roster Board Style Design System
+   Operations Dashboard — DeployGuard Clean Corporate Light
    Scoped CSS
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .o_ops_dashboard.od-shell {
-    display: grid !important;
-    grid-template-columns: clamp(230px, 18vw, 280px) minmax(0, 1fr);
+    display: flex !important;
+    flex-direction: column !important;
     height: 100%;
     min-height: 0;
     overflow: hidden;
@@ -14,86 +14,103 @@
     font-family: var(--ds-font);
 }
 
-/* Sidebar */
-.od-nav-sidebar {
-    background: #101724 !important; /* --dgs-rail's tone — this dashboard's internal sidebar plays the same role as the shell rail, so it shares its dark surface rather than a second, slightly-different navy. */
-    color: #DCE4F0 !important;
-    min-height: 0;
-    overflow-y: auto;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 10;
+/* ── Page Header ────────────────────────────────────────── */
+.od-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
 }
 
-.od-brand {
-    border-bottom: 1px solid #263347;
+.od-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
+}
+
+.od-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.od-subtitle {
+    color: var(--ds-text-muted);
+}
+
+/* ── Filter & KPI Control Bar ──────────────────────────── */
+.od-control-bar {
+    background: var(--ds-surface);
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 4;
 }
 
 .od-select {
-    background-color: #263347 !important;
-    border: 1px solid #364b66 !important;
-    color: #dce4f0 !important;
+    background-color: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    color: var(--ds-text) !important;
     font-size: 12px !important;
     border-radius: var(--ds-radius-md) !important;
-}
-
-.od-select option {
-    background-color: #1a2332 !important;
-    color: #dce4f0 !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .od-select:focus {
-    background-color: #2d3b55 !important;
-    border-color: var(--ds-accent) !important;
-    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.25) !important;
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
+    outline: none !important;
 }
 
-/* Main Area Flex Constraints */
-.od-main {
-    min-width: 0;
-    min-height: 0;
+.od-search-group {
+    background: var(--ds-slate) !important;
+    border: 1px solid var(--ds-border) !important;
+    border-radius: var(--ds-radius-md) !important;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    transition: all 0.15s ease;
 }
 
-/* Header banner — flat, matching the rail tone (no decorative gradients per
-   the design system: the only gradient allowed anywhere is the coverage/
-   metric ramp). */
-.od-header {
-    background: #101724 !important;
-    border-bottom: 3px solid var(--ds-accent);
-    padding: 16px 28px !important;
-    box-shadow: 0 10px 25px -5px rgba(16, 23, 36, 0.25);
-    flex-shrink: 0;
+.od-search-group:focus-within {
+    background: var(--ds-surface) !important;
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
 }
 
-.od-kpi-pills {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 2px;
+.od-search-group .form-control {
+    background: transparent !important;
+    border: none !important;
+    color: var(--ds-text) !important;
+    font-size: 13px !important;
 }
 
-.od-kpi-card {
+.od-search-group .form-control:focus {
+    box-shadow: none !important;
+}
+
+/* KPI Pills & Meter */
+.od-meter-pill,
+.od-kpi-pill {
     background: var(--ds-surface);
     border: 1px solid var(--ds-border);
-    border-radius: var(--ds-radius-lg);
-    padding: 10px 16px;
-    min-width: 130px;
+    border-radius: var(--ds-radius-md);
     box-shadow: var(--ds-shadow-sm);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 90px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.od-kpi-card:hover {
-    transform: translateY(-2px);
+.od-meter-pill:hover,
+.od-kpi-pill:hover {
+    transform: translateY(-1px);
     box-shadow: var(--ds-shadow);
 }
 
-.od-kpi-value {
+.od-kpi-mono {
     font-family: var(--ds-mono);
     font-variant-numeric: tabular-nums;
 }
 
+/* ── Main Workspace ────────────────────────────────────── */
 .od-workspace {
     flex: 1;
     min-width: 0;
@@ -101,7 +118,7 @@
     display: grid !important;
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
-    padding: 16px;
+    padding: 20px 24px;
     overflow: hidden;
 }
 
@@ -116,10 +133,11 @@
     padding-right: 4px;
 }
 
+/* Cards */
 .od-card {
     background: var(--ds-surface);
     border: 1px solid var(--ds-border);
-    border-radius: var(--ds-radius-lg);
+    border-radius: var(--ds-radius-md);
     box-shadow: var(--ds-shadow-sm);
     transition: all 0.2s ease;
 }
@@ -131,7 +149,7 @@
 
 .od-card-active {
     border-color: var(--ds-accent) !important;
-    box-shadow: 0 0 0 2px rgba(27, 58, 107, 0.3) !important;
+    box-shadow: 0 0 0 2px rgba(27, 58, 107, 0.25) !important;
 }
 
 /* Inspector Drawer */
@@ -145,77 +163,51 @@
     border: 1px solid var(--ds-border);
     border-radius: var(--ds-radius-lg);
     box-shadow: var(--ds-shadow-md);
+    animation: odSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.od-badge {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 20px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+@keyframes odSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
-.od-modal-backdrop {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(4px);
-    z-index: 1050;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.cursor-pointer {
+    cursor: pointer;
 }
 
-.od-modal-content {
-    background: var(--ds-surface);
-    border-radius: var(--ds-radius-lg);
-    box-shadow: var(--ds-shadow-md);
-    width: 100%;
-    max-width: 540px;
-    overflow: hidden;
+.hover-shadow:hover {
+    box-shadow: var(--ds-shadow-sm);
 }
 
-/* ── Top Header Custom Search Styling (white-on-dark — header stays the rail
-     tone, so this is correctly a light-on-dark treatment, not --ds-* tokens) ── */
-.od-search-group {
-    background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-radius: var(--ds-radius-md) !important;
-    overflow: hidden;
-    transition: all 0.2s ease;
+/* ── Responsive Behavior ───────────────────────────────── */
+@media (max-width: 992px) {
+    .od-workspace.has-inspector {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .od-inspector {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        top: 80px;
+        width: 380px;
+        max-width: calc(100vw - 32px);
+        z-index: 100;
+    }
 }
 
-.od-search-group:focus-within {
-    background: rgba(255, 255, 255, 0.18) !important;
-    border-color: var(--ds-accent-mid) !important;
-    box-shadow: 0 0 0 3px rgba(199, 217, 244, 0.35) !important;
+@media (max-width: 768px) {
+    .od-page-header,
+    .od-control-bar {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+    .od-workspace {
+        padding: 12px 16px;
+    }
 }
-
-.od-search-addon {
-    background: transparent !important;
-    border: none !important;
-    color: rgba(255, 255, 255, 0.6) !important;
-    padding-right: 6px !important;
-}
-
-.od-search-input {
-    background: transparent !important;
-    border: none !important;
-    color: #ffffff !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    padding-left: 4px !important;
-}
-
-.od-search-input::placeholder {
-    color: rgba(255, 255, 255, 0.5) !important;
-    font-weight: 400 !important;
-}
-
-.od-search-input:focus {
-    outline: none !important;
-    box-shadow: none !important;
-}
-

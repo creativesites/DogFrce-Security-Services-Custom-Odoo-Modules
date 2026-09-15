@@ -7,88 +7,50 @@
     min-height: 100%;
 }
 
-/* Header */
-.ag-header {
-    background: #101724;
-    border-bottom: 3px solid #0D7A4E;
-    padding: 20px 28px;
-    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+/* ── Page Header ────────────────────────────────────────── */
+.ag-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
 }
 
-.ag-title-icon {
-    width: 44px;
-    height: 44px;
-    background: rgba(16, 185, 129, 0.15);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #0D7A4E;
-    font-size: 20px;
-}
-
-.ag-live-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(16, 185, 129, 0.15);
-    color: #0D7A4E;
-    border: 1px solid rgba(52, 211, 153, 0.3);
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
+.ag-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: var(--ds-text-subtle);
 }
 
-.ag-live-dot {
-    width: 7px;
-    height: 7px;
-    background-color: #0D7A4E;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #0D7A4E;
-    animation: ag-pulse 2s infinite;
+.ag-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
 }
 
-@keyframes ag-pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
-    70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
-}
-
-.ag-control-btn {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    color: #ffffff;
-    transition: all 0.2s ease;
-    border-radius: 8px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 500;
-}
-
-.ag-control-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
+.ag-subtitle {
+    color: var(--ds-text-muted);
 }
 
 .ag-select-site {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #ffffff !important;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 13px;
-    outline: none;
+    background-color: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    color: var(--ds-text) !important;
+    font-size: 12px !important;
+    border-radius: var(--ds-radius-md) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ag-select-site:focus {
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
+    outline: none !important;
 }
 
 .ag-select-site option {
-    background: #101724;
-    color: #ffffff;
+    background-color: var(--ds-surface) !important;
+    color: var(--ds-text) !important;
 }
 
 /* KPI Cards */

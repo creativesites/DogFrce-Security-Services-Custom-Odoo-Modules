@@ -18,6 +18,7 @@ class SecurityDocumentTemplate(models.Model):
     base_layout = fields.Selection(
         [
             ("modern", "Modern"),
+            ("corporate", "Corporate"),
             ("classic", "Classic"),
             ("minimalist", "Minimalist"),
             ("bold", "Bold"),

@@ -7,42 +7,30 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* ── Header ── */
-.rd-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #1B3A6B;
-    padding: 14px 28px;
-    gap: 12px;
+/* ── Page Header ────────────────────────────────────────── */
+.rd-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
 }
 
-.rd-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.rd-logo-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #F5A20B;
+.rd-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
 }
 
 .rd-title {
-    color: #fff;
+    color: var(--ds-text);
     font-size: 1.25rem;
-    font-weight: 700;
-    margin: 0;
     letter-spacing: -0.01em;
 }
 
-.rd-header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.rd-subtitle {
+    color: var(--ds-text-muted);
 }
 
 .rd-btn {

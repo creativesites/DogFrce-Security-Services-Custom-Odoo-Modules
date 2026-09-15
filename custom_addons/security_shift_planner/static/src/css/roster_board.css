@@ -4,38 +4,95 @@
    ================================================================= */
 
 /* ── Shell layout ── */
+/* ── Shell layout ── */
 .o_roster_board.rb-shell {
-    display: grid !important;
-    grid-template-columns: clamp(220px, 18vw, 280px) minmax(0, 1fr);
+    display: flex !important;
+    flex-direction: column !important;
     height: 100%;
     min-height: 0;
     overflow: hidden;
-    background: #F8FAFC;
-    color: #0D1117;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--ds-bg);
+    color: var(--ds-text);
+    font-family: var(--ds-font);
 }
 
-.rb-nav-sidebar {
-    min-height: 0;
-    overflow-y: auto;
-    background: #FFFFFF !important;
-    color: #1B3A6B !important;
-    border-right: 1px solid #E2E8F0;
-    box-shadow: 8px 0 30px rgba(15, 31, 54, 0.07);
+/* ── Page Header ────────────────────────────────────────── */
+.rb-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
+}
+
+.rb-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
+}
+
+.rb-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.rb-subtitle {
+    color: var(--ds-text-muted);
+}
+
+/* ── Filter & Control Bar ───────────────────────────────── */
+.rb-control-bar {
+    background: var(--ds-surface);
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 4;
+}
+
+.rb-select {
+    background-color: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    color: var(--ds-text) !important;
+    font-size: 12px !important;
+    border-radius: var(--ds-radius-md) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rb-select:focus {
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
+    outline: none !important;
+}
+
+.rb-meter-pill,
+.rb-kpi-pill {
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-md);
+    box-shadow: var(--ds-shadow-sm);
+    min-width: 80px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rb-meter-pill:hover,
+.rb-kpi-pill:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--ds-shadow);
+}
+
+.rb-kpi-mono {
+    font-family: var(--ds-mono);
+    font-variant-numeric: tabular-nums;
 }
 
 .rb-main {
+    flex: 1;
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-}
-
-.rb-header {
-    flex-shrink: 0;
-    min-height: 56px;
-    background: rgba(255, 255, 255, 0.92) !important;
-    border-bottom: 1px solid rgba(15, 31, 54, 0.08) !important;
-    box-shadow: 0 8px 28px rgba(15, 31, 54, 0.06);
+    display: flex;
+    flex-direction: column;
 }
 
 .rb-workspace {
@@ -57,10 +114,10 @@
     min-width: 0;
     min-height: 0;
     overflow: auto;
-    background: rgba(255, 255, 255, 0.78);
-    border: 1px solid rgba(15, 31, 54, 0.08);
-    border-radius: 12px;
-    box-shadow: 0 18px 42px rgba(30, 58, 95, 0.1);
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-sm);
 }
 
 .rb-guard-pool {
@@ -69,39 +126,15 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.94) !important;
-    border: 1px solid rgba(15, 31, 54, 0.08);
-    border-radius: 12px;
-    box-shadow: 0 18px 42px rgba(30, 58, 95, 0.11);
-}
-
-/* ── Sidebar polish ── */
-.rb-nav-sidebar .rb-brand {
-    border-color: rgba(15, 31, 54, 0.08) !important;
-}
-
-.rb-nav-sidebar .rb-brand .fw-bold,
-.rb-nav-sidebar .fw-bold,
-.rb-nav-sidebar .fw-semibold {
-    color: #1B3A6B !important;
-}
-
-.rb-nav-sidebar [style*="color:#94a3b8"],
-.rb-nav-sidebar [style*="color:#64748B"] {
-    color: #64748B !important;
-}
-
-.rb-nav-sidebar [style*="border-top:1px solid #2d5490"] {
-    border-top-color: rgba(15, 31, 54, 0.08) !important;
-}
-
-.rb-nav-sidebar [style*="background:#152d4a"] {
-    background: rgba(30, 58, 95, 0.08) !important;
+    background: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    box-shadow: var(--ds-shadow-md);
 }
 
 .rb-select option {
-    background: #fff;
-    color: #1B3A6B;
+    background: var(--ds-surface);
+    color: var(--ds-text);
 }
 
 /* ── Button base ── */
@@ -434,29 +467,30 @@
     min-height: 100%;
 }
 
-/* ── Header ── */
-.wc-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-    gap: 12px;
+/* ── Page Header ────────────────────────────────────────── */
+.wc-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    margin-bottom: 20px;
 }
-.wc-title {
-    font-size: 20px;
+
+.wc-eyebrow {
+    font-size: 10px;
     font-weight: 700;
-    color: #0D1117;
-    margin: 0 0 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
 }
-.wc-week-range {
-    font-size: 13px;
-    color: #64748B;
+
+.wc-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
 }
-.wc-header-right {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+
+.wc-subtitle {
+    color: var(--ds-text-muted);
 }
 .wc-confirmed-badge {
     display: inline-flex;

@@ -71,7 +71,7 @@ STEP3_SUCCESS=0
 for i in {1..3}; do
     echo "Attempt $i to upgrade zambia-demo..."
     if ssh -i ${SSH_KEY_PATH} -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=10 ${SERVER_USER}@${SERVER_IP} \
-      "docker exec -i ${CONTAINER_NAME} odoo -d zambia-demo -i security_demo_zambia_site -u security_demo_zambia_site,security_theme,security_base,security_operations,security_equipment,security_fleet,security_shift_planner,security_ai_whatsapp_bridge --stop-after-init"; then
+      "docker exec -i ${CONTAINER_NAME} odoo -d zambia-demo -i security_demo_zambia_site -u security_demo_zambia_site,security_reconciliation_core,security_reconciliation_billing_account,security_theme,security_base,security_operations,security_equipment,security_fleet,security_shift_planner,security_ai_whatsapp_bridge --stop-after-init"; then
         STEP3_SUCCESS=1
         break
     else
@@ -94,7 +94,7 @@ STEP4_SUCCESS=0
 for i in {1..3}; do
     echo "Attempt $i to upgrade dogforce_dev..."
     if ssh -i ${SSH_KEY_PATH} -o ConnectTimeout=30 -o ServerAliveInterval=10 -o ServerAliveCountMax=10 ${SERVER_USER}@${SERVER_IP} \
-      "docker exec -i ${CONTAINER_NAME} odoo -d dogforce_dev -i security_demo_zambia_site -u security_demo_zambia_site,security_theme,security_base,security_operations,security_equipment,security_fleet,security_shift_planner,security_ai_whatsapp_bridge --stop-after-init"; then
+      "docker exec -i ${CONTAINER_NAME} odoo -d dogforce_dev -i security_demo_zambia_site -u security_demo_zambia_site,security_reconciliation_core,security_reconciliation_billing_account,security_theme,security_base,security_operations,security_equipment,security_fleet,security_shift_planner,security_ai_whatsapp_bridge --stop-after-init"; then
         STEP4_SUCCESS=1
         break
     else

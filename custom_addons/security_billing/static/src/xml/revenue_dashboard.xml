@@ -3,24 +3,39 @@
     <t t-name="security_billing.RevenueDashboard">
         <div class="rd-root o_action">
 
-            <!-- Header bar -->
-            <div class="rd-header">
-                <div class="rd-header-left">
-                    <span class="rd-logo-dot"/>
-                    <h1 class="rd-title">Revenue Dashboard</h1>
+            <!-- ═══════════════════════════════════════════════════════════
+                 PAGE HEADER — Clean Corporate Light
+                 ═══════════════════════════════════════════════════════════ -->
+            <header class="rd-page-header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+                <div class="d-flex flex-column">
+                    <div class="rd-eyebrow">FINANCE &amp; BILLING</div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <i class="fa fa-line-chart text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                        <h3 class="rd-title mb-0 fw-bold">Revenue &amp; Invoicing Intelligence</h3>
+                        <span class="badge bg-success-subtle text-success border px-2 py-1 ms-1" style="font-size: 11px;">
+                            Live Collections
+                        </span>
+                    </div>
+                    <div class="rd-subtitle text-muted mt-1 small">
+                        Invoice dispatch, revenue streams, and contract collection performance.
+                    </div>
                 </div>
-                <div class="rd-header-right">
-                    <button class="rd-btn rd-btn-outline" t-on-click="() => this.onNavigate('generate')">
-                        <i class="fa fa-plus"/> Generate Invoice
+
+                <!-- Header Actions -->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button class="btn btn-sm btn-light border text-muted px-3" t-on-click="refresh" title="Refresh">
+                        <i class="fa fa-refresh me-1"/> Refresh
                     </button>
-                    <button class="rd-btn rd-btn-outline" t-on-click="() => this.onNavigate('invoices')">
-                        <i class="fa fa-list"/> All Invoices
+                    <button class="btn btn-sm btn-outline-secondary px-3" t-on-click="() => this.onNavigate('invoices')">
+                        <i class="fa fa-list me-1"/> All Invoices
                     </button>
-                    <button class="rd-btn rd-btn-ghost" t-on-click="refresh" title="Refresh">
-                        <i class="fa fa-refresh"/>
+                    <button class="btn btn-sm text-white px-3 fw-semibold"
+                            style="background: var(--ds-accent); border-color: var(--ds-accent);"
+                            t-on-click="() => this.onNavigate('generate')">
+                        <i class="fa fa-plus me-1"/> Generate Invoice
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- Loading state -->
             <div t-if="state.loading" class="rd-loading">

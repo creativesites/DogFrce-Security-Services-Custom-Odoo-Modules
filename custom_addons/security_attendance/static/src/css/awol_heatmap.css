@@ -1,6 +1,43 @@
-/* AWOL Heatmap — responsive overrides
-   The 30-day table is inherently wide; horizontal scroll in .awh-grid is the
-   correct mobile pattern. These rules fix the header and legend on narrow viewports. */
+/* ── Page Header ────────────────────────────────────────── */
+.awh-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
+}
+
+.awh-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
+}
+
+.awh-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
+}
+
+.awh-subtitle {
+    color: var(--ds-text-muted);
+}
+
+.awh-select-site {
+    background-color: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    color: var(--ds-text) !important;
+    font-size: 12px !important;
+    border-radius: var(--ds-radius-md) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.awh-select-site:focus {
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
+    outline: none !important;
+}
 
 @media (max-width: 640px) {
     .awh-header {

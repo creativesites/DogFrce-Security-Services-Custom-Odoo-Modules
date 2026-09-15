@@ -2,108 +2,87 @@
 <templates xml:space="preserve">
 
 <t t-name="security_payroll_core.PayrollExpenditure">
-    <div class="o_payroll_command_center d-flex h-100 overflow-hidden">
+    <div class="o_payroll_command_center d-flex flex-column h-100 overflow-hidden" style="background: var(--ds-bg, #F8FAFC);">
 
-        <!-- ===== LEFT SIDEBAR — PERIOD LIST ===== -->
-        <div class="o_pcc_sidebar d-flex flex-column" style="width:280px; min-width:280px; overflow-y:auto;">
-
-            <div class="p-4 border-bottom" style="border-color: rgba(255,255,255,0.1) !important;">
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="fa fa-calendar text-emerald" style="color:#10b981;"/>
-                        <strong class="text-white text-uppercase" style="font-size:12px;letter-spacing:0.05em;">Expenditure Periods</strong>
-                    </div>
-                    <span class="badge bg-dark border border-secondary text-white-50 px-2 py-1" style="font-size:10px;">
-                        <t t-esc="state.periods.length"/> Periods
+        <!-- ═══════════════════════════════════════════════════════════
+             PAGE HEADER — Clean Corporate Light
+             ═══════════════════════════════════════════════════════════ -->
+        <header class="o_pcc_page_header d-flex align-items-center justify-content-between px-4 py-3 bg-white border-bottom flex-wrap gap-3">
+            <div class="d-flex flex-column">
+                <div class="pcc-eyebrow">FINANCIAL INTELLIGENCE &amp; AUDIT</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                    <i class="fa fa-line-chart text-primary fs-5" style="color: var(--ds-accent) !important;"/>
+                    <h3 class="pcc-title mb-0 fw-bold">Payroll Expenditure &amp; Analytics</h3>
+                    <span class="badge bg-success-subtle text-success border px-2 py-1 ms-1" style="font-size: 11px;">
+                        Live Expenditure Audit
                     </span>
                 </div>
-                
-                <!-- Period Search Box -->
-                <div class="position-relative mt-2">
-                    <input type="text"
-                           class="pcc-sidebar-search"
-                           placeholder="Filter period name…"
-                           t-model="state.periodSearchTerm"/>
+                <div class="pcc-subtitle text-muted mt-1 small">
+                    Comprehensive wage cost audit, variance breakdown, and workforce disbursement metrics.
                 </div>
             </div>
 
-            <t t-if="filteredPeriods.length === 0">
-                <div class="text-center text-muted p-4 small" style="color:rgba(255,255,255,0.5) !important;">
-                    <i class="fa fa-calendar-times-o fa-2x mb-2 d-block"/>
-                    No matching payroll periods found.
-                </div>
-            </t>
+            <!-- Header Actions -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <t t-if="selectedPeriod">
+                    <button class="btn btn-sm btn-outline-secondary px-3"
+                            t-on-click="openPeriod"
+                            title="Open Period Form">
+                        <i class="fa fa-external-link me-1"/> Period Form
+                    </button>
+                    <button class="btn btn-sm text-white px-3 fw-semibold"
+                            style="background: var(--ds-accent); border-color: var(--ds-accent);"
+                            t-on-click="exportExpenditureCsv"
+                            title="Export Expenditure CSV">
+                        <i class="fa fa-download me-1"/> Export CSV
+                    </button>
+                </t>
+            </div>
+        </header>
 
-            <div class="p-2">
-                <t t-foreach="filteredPeriods" t-as="period" t-key="period.id">
-                    <div t-att-class="'o_period_item ' + (state.selectedPeriodId === period.id ? 'is-active' : '')"
-                         t-on-click="() => this.selectPeriod(period.id)">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <span class="fw-bold text-white" style="font-size: 14px;"><t t-esc="period.name"/></span>
-                            <span t-att-class="'badge pcc-badge ' + periodStateBadgeClass(period.state)">
-                                <t t-esc="period.state"/>
-                            </span>
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between mt-2" style="font-size:12px;color:rgba(255,255,255,0.7);">
-                            <span style="font-size:11px;color:rgba(255,255,255,0.5);">Total Net</span>
-                            <span class="fw-bold text-white">
-                                <t t-esc="formatCurrency(period.total_net_pay)"/>
-                            </span>
-                        </div>
-                    </div>
+        <!-- ═══════════════════════════════════════════════════════════
+             TOP CONTROL STRIP — Period Selector & Summary
+             ═══════════════════════════════════════════════════════════ -->
+        <div class="o_pcc_control_bar bg-white px-4 py-2 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Payroll Period:</span>
+                <select class="form-select form-select-sm pcc-period-select"
+                        style="min-width: 240px;"
+                        t-on-change="onPeriodDropdownChange">
+                    <t t-foreach="state.periods" t-as="period" t-key="period.id">
+                        <option t-att-value="period.id"
+                                t-att-selected="state.selectedPeriodId === period.id">
+                            <t t-esc="period.name"/> (<t t-esc="period.state"/>)
+                        </option>
+                    </t>
+                </select>
+
+                <t t-if="selectedPeriod">
+                    <span class="badge bg-light text-secondary border px-2 py-1" style="font-size: 12px;">
+                        <i class="fa fa-calendar-o me-1"/>
+                        <t t-esc="selectedPeriod.date_from"/> to <t t-esc="selectedPeriod.date_to"/>
+                    </span>
+                    <span t-att-class="'badge ' + periodStateBadgeClass(selectedPeriod.state)">
+                        <t t-esc="selectedPeriod.state"/>
+                    </span>
                 </t>
             </div>
 
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small">Total Net Pay:</span>
+                    <span class="fw-bold text-dark font-monospace" style="font-size: 14px;">
+                        <t t-if="selectedPeriod">
+                            <t t-esc="formatCurrency(selectedPeriod.total_net_pay)"/>
+                        </t>
+                        <t t-else="">-</t>
+                    </span>
+                </div>
+            </div>
         </div>
-        <!-- END SIDEBAR -->
 
         <!-- ===== MAIN CONTENT AREA ===== -->
         <div class="o_pcc_main flex-grow-1 d-flex flex-column overflow-hidden">
-
-            <!-- Executive Header Banner -->
-            <div class="o_pcc_header">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="ag-title-icon">
-                            <i class="fa fa-line-chart"/>
-                        </div>
-                        <div>
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <h3 class="m-0 text-white fw-bold" style="letter-spacing:-0.02em;">Payroll Expenditure &amp; Analytics</h3>
-                                <div class="ag-live-indicator">
-                                    <span class="ag-live-dot"/>Live Expenditure Audit
-                                </div>
-                            </div>
-                            <span style="color:rgba(255,255,255,0.7);font-size:13px;">
-                                <t t-if="selectedPeriod">
-                                    Expenditure Analysis Period: <strong class="text-white"><t t-esc="selectedPeriod.name"/></strong>
-                                    (<t t-esc="selectedPeriod.date_from"/> to <t t-esc="selectedPeriod.date_to"/>)
-                                </t>
-                                <t t-else="">
-                                    Select a payroll period from the left panel
-                                </t>
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex gap-2 align-items-center flex-wrap">
-                        <t t-if="selectedPeriod">
-                            <button class="pcc-top-btn"
-                                    t-on-click="openPeriod"
-                                    title="Open Period Form">
-                                <i class="fa fa-external-link me-1"/>Period Form
-                            </button>
-                            <button class="pcc-top-btn"
-                                    t-on-click="exportExpenditureCsv"
-                                    style="background:#10b981;border-color:#10b981;"
-                                    title="Export Expenditure CSV">
-                                <i class="fa fa-download me-1"/>Export CSV
-                            </button>
-                        </t>
-                    </div>
-                </div>
-            </div>
 
             <!-- Loading Spinner -->
             <t t-if="state.loading">

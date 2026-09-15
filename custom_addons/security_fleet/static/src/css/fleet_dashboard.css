@@ -4,111 +4,67 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .o_fleet_dashboard.fd-shell {
-    display: grid !important;
-    grid-template-columns: 280px minmax(0, 1fr);
+    display: flex !important;
+    flex-direction: column !important;
     height: 100%;
     min-height: 0;
-    max-height: 100vh;
     overflow: hidden;
-    background: #F8FAFC;
-    color: #0D1117;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--ds-bg);
+    color: var(--ds-text);
+    font-family: var(--ds-font);
 }
 
 .o_fleet_dashboard * { box-sizing: border-box; }
 
-/* Sidebar Premium Light Styling */
-.fd-nav-sidebar {
-    background: #ffffff !important;
-    color: #475569 !important;
-    min-height: 0;
-    overflow-y: auto;
-    box-shadow: 2px 0 10px rgba(15, 23, 42, 0.04);
-    border-right: 1px solid #E2E8F0;
-    z-index: 10;
+/* ── Page Header ────────────────────────────────────────── */
+.fd-page-header {
+    background: var(--ds-surface) !important;
+    border-bottom: 1px solid var(--ds-border);
+    flex-shrink: 0;
+    z-index: 5;
 }
 
-/* Sidebar overrides for inline templates white colors */
-.fd-brand div {
-    color: #0D1117 !important;
+.fd-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ds-text-subtle);
 }
 
-.fd-brand div[style*="rgba(255,255,255,0.6)"] {
-    color: #64748B !important;
+.fd-title {
+    color: var(--ds-text);
+    font-size: 1.25rem;
+    letter-spacing: -0.01em;
 }
 
-.fd-nav-sidebar div[style*="color:rgba(255,255,255"] {
-    color: #64748B !important;
-}
-
-.fd-nav-sidebar .text-white,
-.fd-nav-sidebar .text-white-50,
-.fd-nav-sidebar .small.text-white-50 {
-    color: #64748B !important;
-}
-
-.fd-nav-sidebar span[style*="color:#ffffff"] {
-    color: #0D1117 !important;
-}
-
-/* Sidebar progress bars override */
-.fd-nav-sidebar .progress {
-    background-color: #F1F4F8 !important;
-    border: 1px solid #E2E8F0 !important;
-}
-
-/* Sidebar bottom Spend MTD card */
-.fd-nav-sidebar .mt-auto {
-    background: #F8FAFC !important;
-    border-top: 1px solid #E2E8F0 !important;
-}
-
-.fd-nav-sidebar .mt-auto .text-white-50 {
-    color: #64748B !important;
-}
-
-.fd-nav-sidebar .mt-auto .text-white {
-    color: #0D1117 !important;
-}
-
-/* Override default outline action buttons in sidebar */
-.fd-nav-sidebar button.btn-outline-secondary {
-    border-color: #CBD5E1 !important;
-    color: #475569 !important;
-    background-color: #ffffff !important;
-}
-
-.fd-nav-sidebar button.btn-outline-secondary:hover {
-    background-color: #F8FAFC !important;
-    border-color: #94A3B8 !important;
-    color: #0D1117 !important;
-}
-
-.fd-brand {
-    border-bottom: 1px solid #E2E8F0;
+.fd-subtitle {
+    color: var(--ds-text-muted);
 }
 
 .fd-select {
-    background-color: #ffffff !important;
-    border: 1px solid #CBD5E1 !important;
-    color: #0D1117 !important;
+    background-color: var(--ds-surface) !important;
+    border: 1px solid var(--ds-border) !important;
+    color: var(--ds-text) !important;
     font-size: 12px !important;
-    border-radius: 8px !important;
-}
-
-.fd-select option {
-    background-color: #ffffff !important;
-    color: #0D1117 !important;
+    border-radius: var(--ds-radius-md) !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .fd-select:focus {
-    background-color: #ffffff !important;
-    border-color: #0D7A4E !important;
-    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+    border-color: var(--ds-accent-mid) !important;
+    box-shadow: 0 0 0 3px rgba(27, 58, 107, 0.15) !important;
+    outline: none !important;
+}
+
+.fd-select option {
+    background-color: var(--ds-surface) !important;
+    color: var(--ds-text) !important;
 }
 
 /* Main Area Flex Constraints */
 .fd-main {
+    flex: 1;
     min-width: 0;
     min-height: 0;
     overflow: hidden;
