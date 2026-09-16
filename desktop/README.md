@@ -5,23 +5,29 @@ Windows desktop pilot shell for DogForce Security Services. Tauri v2 + Rust
 and `docs/deployguard/05-ux-principles.md`.
 
 **This is the P2A pilot slice**, not the full DeployGuard Platform desktop
-client. It authenticates directly against DeployGuard ERP (Odoo) and opens
-it in an isolated window — see [`DEVIATIONS.md`](./DEVIATIONS.md) for
-exactly what's deferred until the Platform backend (BUILD-ORDER P1+) ships,
-and why.
+client. It authenticates via DeployGuard ERP's (Odoo's) own login page and
+embeds Odoo directly in the window — see [`DEVIATIONS.md`](./DEVIATIONS.md)
+for exactly what's deferred until the Platform backend (BUILD-ORDER P1+)
+ships, and why.
 
 ## What it does today
 
-- Single login with your existing DogForce Odoo username and password.
-- A real DeployGuard shell (rail, canvas, status) built from the same
-  design tokens as `security_shell` — see `src/styles/ds.css` / `dgs.css`.
-- One click ("Open DeployGuard ERP") into your production Odoo, already
-  signed in — no second login.
-- Honest connection status (online / Odoo unreachable / offline) instead
-  of silent failures.
-- Secure session storage in your OS keychain — never a plaintext file.
-- Home shows only real information; features that don't exist yet (My
-  Work, Training) say so plainly instead of showing fake data.
+- **Single login, on Odoo's own page.** No DeployGuard-branded login form:
+  the app loads Odoo's real `/web/login` directly, and once you're signed
+  in there, the app knows who you are (read from the session cookie).
+- **A persistent toolbar** docked to the top of the window — real Back /
+  Forward / Reload controls for Odoo (driving its own browser history),
+  a Home button, connection status, and your name — always visible, not
+  hidden behind a hover gesture.
+- **A DeployGuard mega menu** — click the brand button to drop down a
+  panel with your DeployGuard home content, overlaying the top of Odoo
+  without resizing it. Closes on click-again, click-outside, or Escape.
+- Odoo fills the rest of the window below the toolbar — it's the primary
+  surface, not something hidden behind DeployGuard's own chrome.
+- Honest connection status (online / DeployGuard System unavailable) —
+  never a silent failure.
+- Home content shows only real information; features that don't exist yet
+  (My Work, Training) say so plainly instead of showing fake data.
 
 ## Prerequisites
 
@@ -73,14 +79,41 @@ npm run typecheck   # tsc --noEmit
 npm run lint        # eslint
 ```
 
+## Running tests
+
+```bash
+# Rust unit tests (odoo::is_unauthenticated_path, windowing::shell_bounds
+# + odoo_bounds, config::odoo_base_url)
+cd desktop/src-tauri
+cargo test
+
+# Frontend unit tests (extractErrorMessage, config/env)
+cd desktop
+npm install   # first time only
+npm test
+```
+
 ## Building a Windows installer
 
-### Via CI (recommended)
+### Via CI
 
 Push to `main` (paths under `desktop/`), or run the workflow manually from
 the Actions tab (`DeployGuard Desktop — Windows build`, with
-`workflow_dispatch`). The signed... **unsigned** (see below) `.exe` (NSIS)
-and `.msi` installers are uploaded as build artifacts.
+`workflow_dispatch`). The unsigned (see below) `.exe` (NSIS) and `.msi`
+installers are uploaded as build artifacts.
+
+**⚠️ Currently blocked:** the repository's GitHub account has a billing
+lockout ("The job was not started because your account is locked due to a
+billing issue"), confirmed via a real triggered run
+([PR #1](https://github.com/creativesites/DogFrce-Security-Services-Custom-Odoo-Modules/pull/1))
+that failed in ~3 seconds before any build step ran. This affects **every**
+workflow on this repo, not something specific to the desktop build — it
+predates this app (checked `main`'s CI history back to 2026-09-02, same
+failure on unrelated commits). **A human needs to resolve billing on the
+account before any CI can run.** The workflow YAML itself has been
+statically verified against the real `tauri-apps/tauri-action` inputs and
+this project's actual scripts/config — no known bugs are blocking it once
+billing is fixed.
 
 ### Locally, cross-compiling isn't supported
 
@@ -133,13 +166,17 @@ The same env vars exist on the Rust side under different names
 
 ## Security notes
 
-- Passwords are **never** stored — only the Odoo session cookie, and only
-  in the OS keychain (`src-tauri/src/keychain.rs`), via the `keyring`
-  crate (Windows Credential Manager / macOS Keychain).
-- The "Open DeployGuard ERP" window (`src-tauri/src/odoo_window.rs`) has
-  **zero** Tauri IPC capabilities — see
-  `src-tauri/capabilities/main.json`, scoped to `"windows": ["main"]`
-  only. Nothing in Odoo's page JavaScript can call back into this app.
+- Passwords are **never** stored anywhere in this app — they go straight
+  from Odoo's own login form to Odoo. The app only reads back the
+  resulting session cookie (`src-tauri/src/odoo.rs`) to know who's signed
+  in; it never persists it beyond in-memory app state.
+- The "odoo" webview has **zero** Tauri IPC capabilities — see
+  `src-tauri/capabilities/main.json`, scoped by `"webviews": ["shell"]`
+  (not by window — both webviews share the "main" window). Nothing in
+  Odoo's page JavaScript can call back into this app. Back/Forward/Reload
+  are one-off `Webview::eval()` calls from Rust (`history.back()` etc.),
+  the same effect a real browser's own buttons have — not a persistent
+  injected bridge.
 - No credential, token or session value is ever logged, included in
   diagnostics (`src-tauri/src/diagnostics.rs`), or sent to the frontend.
 - Before touching production credentials, read
@@ -152,21 +189,20 @@ The same env vars exist on the Rust side under different names
 ```
 desktop/
 ├── src/                    React/TypeScript app
-│   ├── auth/                AuthProvider abstraction + Odoo implementation
-│   ├── shell/                Rail, icons, AppShell, StatusBar
-│   ├── home/                  Home screen
-│   ├── odoo/                   "Open Odoo" trigger
+│   ├── session/              Session context (mirrors Rust's AppState.session)
+│   ├── shell/                 Toolbar + mega menu, icons, status
 │   ├── config/                  env.ts — the only place URLs are read from
 │   └── styles/                   ds.css / dgs.css (verbatim token ports) + shell.css
 └── src-tauri/               Rust core
     ├── src/
-    │   ├── odoo.rs            Direct Odoo auth (MVP deviation — see DEVIATIONS.md)
-    │   ├── odoo_window.rs        Isolated Odoo webview + cookie seeding
-    │   ├── keychain.rs             OS-native secure storage
-    │   ├── commands.rs               IPC command surface
-    │   ├── connectivity.rs             Honest online/offline/degraded reporting
+    │   ├── windowing.rs        Window + two-webview layout, toolbar/menu bounds,
+    │   │                        session sync, Odoo history control
+    │   ├── odoo.rs               Session-cookie readback + Odoo HTTP calls
+    │   ├── state.rs                Shared in-process AppState
+    │   ├── commands.rs               IPC command surface ("shell" webview only)
+    │   ├── connectivity.rs             Honest online/unavailable reporting
     │   └── diagnostics.rs                Non-sensitive diagnostics bundle
-    └── capabilities/main.json    IPC scoped to the "main" window only
+    └── capabilities/main.json    IPC scoped to the "shell" webview only
 ```
 
 ## Testing checklist (before handing to a pilot user)
@@ -174,18 +210,46 @@ desktop/
 See the desktop build mission §23 for the full list. Minimum before any
 install goes to a real DogForce employee:
 
-- [ ] Fresh Windows VM: install → launch → sign in with real Odoo
-      credentials → Home loads → Open DeployGuard ERP lands on a real,
-      authenticated Odoo screen.
-- [ ] Wrong password shows a clear error, not a stack trace.
-- [ ] Quit and relaunch: session restores without re-entering credentials.
-- [ ] Sign out, then relaunch: back at the login screen.
-- [ ] Turn off Wi-Fi mid-session: status bar shows "DeployGuard ERP is
-      unavailable", not a frozen or blank screen.
-- [ ] Uninstall, reinstall: clean state, no leftover keychain entry
-      causing a confusing auto-login.
-- [ ] Window resizes down to 1024×700 without breaking layout.
-- [ ] Full keyboard navigation through the login form and rail.
+- [ ] Fresh Windows VM: install → launch → Odoo's own login page loads
+      below the toolbar → sign in with real Odoo credentials → mega menu
+      auto-opens once, showing your name.
+- [ ] Wrong password shows Odoo's own error on its login page (not a
+      DeployGuard-branded one) — confirm it's legible and not broken by
+      the toolbar's presence.
+- [ ] Quit and relaunch: still signed in (Odoo's own persistent cookie),
+      no re-entry of credentials needed.
+- [ ] Sign out from the mega menu: lands back on Odoo's login page.
+- [ ] Turn off Wi-Fi mid-session: toolbar status dot shows "DeployGuard
+      System is unavailable", not a frozen or blank screen.
+- [ ] Back / Forward / Reload actually control Odoo's page history after
+      navigating within Odoo.
+- [ ] Window resizes down to 1024×700 without breaking the toolbar or
+      mega menu layout.
+- [ ] Full keyboard navigation: Tab to the brand button, Enter opens the
+      mega menu, Escape closes it and — check this specifically — returns
+      focus to the brand button (see `AGENT-FINDINGS.md` §1, this was
+      found broken and needs a fix).
+- [x] Automated coverage for `odoo::is_unauthenticated_path` (many cases,
+      `src-tauri/src/odoo.rs`).
+- [x] Automated coverage for `windowing::shell_bounds` and `odoo_bounds` —
+      toolbar/menu geometry and Odoo's bounds below it, at default and
+      edge-case window sizes (`src-tauri/src/windowing.rs`).
+- [x] Automated coverage for `config::odoo_base_url` — env var precedence,
+      trailing-slash stripping, whitespace handling
+      (`src-tauri/src/config.rs`).
+- [x] Automated coverage for `extractErrorMessage` — all input shapes,
+      including a regression test for a real bug found during this pass
+      (`src/lib/extractErrorMessage.test.ts`).
+- [x] Automated coverage for `config/env.ts` — env var precedence and
+      defaults for every field (`src/config/env.test.ts`).
+- [ ] Manual accessibility pass against
+      `docs/deployguard/05-ux-principles.md` §9 — see
+      [`AGENT-FINDINGS.md`](./AGENT-FINDINGS.md) for a computed WCAG
+      contrast audit; the findings there were written against the
+      earlier hover-handle design and need re-checking against the
+      current toolbar, but the same token-level issues (focus ring
+      contrast, chip opacity) likely still apply since the tokens
+      haven't changed.
 
 ## Relationship to the planning docs
 
@@ -198,3 +262,39 @@ Read in this order if you're new to this codebase:
 4. `docs/deployguard/adr/DG-ADR-007-authentication.md`
 5. [`DEVIATIONS.md`](./DEVIATIONS.md) — every place this code differs from
    those documents, and why.
+
+## Agent verification log (background CI/test hardening pass)
+
+**2026-09-16, background agent pass** (scope: CI/build verification, Rust
+and frontend unit test coverage, WCAG contrast audit — against the
+hover-handle overlay design that was live when the pass started; the main
+session subsequently redesigned the chrome into the toolbar + mega menu
+described above, so file/line references below are historical):
+
+- **CI (`.github/workflows/desktop-build.yml`):** static review against
+  `package.json`'s real scripts, `tauri.conf.json`, `Cargo.toml`, and
+  `tauri-apps/tauri-action`'s actual `action.yml` inputs (fetched live).
+  No concrete bugs found. A real Windows Actions run was triggered via a
+  pushed branch + PR to close the loop on what static review can't
+  confirm — **it failed immediately on a repository-wide GitHub billing
+  lockout**, unrelated to this code (see "Building a Windows installer"
+  above).
+- **Rust unit tests added:** `src-tauri/src/odoo.rs` (`is_unauthenticated_
+  path`, 12 cases), `src-tauri/src/config.rs` (`odoo_base_url`, 7 cases).
+  (`windowing.rs`'s tests from this pass targeted the pre-toolbar geometry
+  and were superseded by new tests for the toolbar/mega-menu geometry
+  written during the redesign.)
+- **Frontend tests added:** Vitest 1.6.1 (pinned to match the existing
+  Vite 5 devDependency — `vitest@latest` requires Vite 6/7).
+  `src/lib/extractErrorMessage.test.ts` (15 cases) and
+  `src/config/env.test.ts` (13 cases).
+- **Bug found + fixed:** `src/lib/extractErrorMessage.ts` returned an
+  empty string instead of its fallback message for an `Error` with an
+  empty `.message` — fixed, with a regression test.
+- **Accessibility audit:** computed real WCAG contrast ratios against the
+  design existing at the time (see [`AGENT-FINDINGS.md`](./AGENT-FINDINGS.md)
+  §1 for full numbers). Findings worth re-checking against the current
+  toolbar since the same tokens are reused: focus-ring contrast
+  (`--ds-accent-mid` ≈1.4:1 vs. required 3:1), the "Coming soon" chip's
+  effective contrast once `opacity: .6` is accounted for (≈2.16:1 vs.
+  required 4.5:1), and Escape not returning focus to its trigger.

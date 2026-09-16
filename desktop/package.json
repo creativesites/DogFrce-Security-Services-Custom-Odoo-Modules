@@ -10,15 +10,16 @@
     "tauri": "tauri",
     "tauri:dev": "bash scripts/dev.sh",
     "lint": "eslint src --ext ts,tsx",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.1.1",
     "@tauri-apps/plugin-notification": "^2.2.1",
     "@tauri-apps/plugin-os": "^2.2.0",
-    "@tauri-apps/plugin-updater": "^2.3.0",
     "@tauri-apps/plugin-process": "^2.2.0",
     "@tauri-apps/plugin-shell": "^2.2.0",
+    "@tauri-apps/plugin-updater": "^2.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.5"
@@ -33,6 +34,7 @@
     "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^4.6.2",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^1.6.1"
   }
 }

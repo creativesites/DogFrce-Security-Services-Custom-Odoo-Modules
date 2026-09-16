@@ -7,14 +7,17 @@
  * raw object into the UI.
  */
 export function extractErrorMessage(err: unknown, fallback = "Something went wrong. Try again."): string {
-  if (err instanceof Error && err.message) return err.message;
+  if (err instanceof Error) {
+    return err.message.trim().length > 0 ? err.message : fallback;
+  }
   if (
     err &&
     typeof err === "object" &&
     "message" in err &&
     typeof (err as { message: unknown }).message === "string"
   ) {
-    return (err as { message: string }).message;
+    const message = (err as { message: string }).message;
+    return message.trim().length > 0 ? message : fallback;
   }
   if (typeof err === "string" && err.trim().length > 0) return err;
   return fallback;

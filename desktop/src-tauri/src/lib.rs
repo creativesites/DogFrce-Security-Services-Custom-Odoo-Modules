@@ -28,11 +28,14 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_current_session,
-            commands::get_overlay_expanded,
+            commands::get_menu_open,
             commands::auth_sign_out,
-            commands::overlay_expand,
-            commands::overlay_collapse,
+            commands::menu_open,
+            commands::menu_close,
             commands::navigate_odoo,
+            commands::odoo_back,
+            commands::odoo_forward,
+            commands::odoo_reload,
             commands::connectivity_check,
             commands::diagnostics_get,
         ])

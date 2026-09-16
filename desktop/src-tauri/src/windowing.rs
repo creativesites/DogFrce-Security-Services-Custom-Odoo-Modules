@@ -1,27 +1,32 @@
 //! Builds the single application window and its two child webviews.
 //!
-//! Architecture (per user direction, 2026-09-15 — supersedes the earlier
-//! separate-window design; see DEVIATIONS.md D-2):
+//! Architecture (revised 2026-09-16 — persistent toolbar + mega menu,
+//! superseding the earlier hover-handle sidebar design; see DEVIATIONS.md
+//! D-2 and D-3):
 //!
-//!   ┌────────────────────────────────────────────────────────┐
-//!   │ window "main"                                           │
-//!   │ ┌────┐                                                  │
-//!   │ │[DG]│  ← "shell" webview: DeployGuard overlay.          │
-//!   │ └────┘    Collapsed to a small corner handle by default; │
-//!   │           expands to a full sidebar on hover/click.      │
-//!   │                                                          │
-//!   │   (rest of the window: "odoo" webview, Odoo's own UI,    │
-//!   │    filling the entire window underneath/behind the       │
-//!   │    handle — this is the PRIMARY content the user works   │
-//!   │    in all day.)                                          │
-//!   └────────────────────────────────────────────────────────┘
+//!   ┌──────────────────────────────────────────────────────────┐
+//!   │ "shell" webview: toolbar (always visible, full width)      │
+//!   │  ⟨ ⟩ ⟳  DG DeployGuard          status ······ name  ⏻     │
+//!   ├──────────────────────────────────────────────────────────┤
+//!   │ ┌ mega menu (only while open — overlays the top of Odoo) ┐│
+//!   │ │  Home content: greeting, work, training …              ││
+//!   │ └──────────────────────────────────────────────────────┘ │
+//!   │                                                            │
+//!   │   "odoo" webview: Odoo's own UI, filling the window below  │
+//!   │   the toolbar — this is the PRIMARY content the user       │
+//!   │   works in all day. Never resizes when the menu opens;     │
+//!   │   the menu floats over it instead of pushing it down.      │
+//!   └──────────────────────────────────────────────────────────┘
 //!
-//! Security model (unchanged in spirit from the previous design,
-//! docs/deployguard/16-security-architecture.md §7): the "odoo" webview
-//! gets ZERO Tauri IPC capabilities (see capabilities/main.json, scoped by
-//! `"webviews": ["shell"]`, not by window). No script is injected into it.
-//! We only ever READ its cookies (`Webview::cookies()`) after it navigates
-//! somewhere that isn't a login/signup page — we never write to it.
+//! Security model (unchanged): the "odoo" webview gets ZERO Tauri IPC
+//! capabilities (see capabilities/main.json, scoped by
+//! `"webviews": ["shell"]`, not by window). No script is injected into it
+//! persistently. Back/forward/reload use `Webview::eval()` for one-off,
+//! Rust-initiated calls (`history.back()` etc.) — the same thing a native
+//! browser chrome's back button does; this exposes no API *to* the page
+//! and the page cannot call back into us. We separately READ the "odoo"
+//! webview's cookies (`Webview::cookies()`) after navigation to detect
+//! sign-in; we never write to them.
 
 use crate::state::{AppState, SessionInfo};
 use crate::{errors::AppError, odoo};
@@ -35,28 +40,28 @@ pub const ODOO_LABEL: &str = "odoo";
 pub const SHELL_LABEL: &str = "shell";
 pub const WINDOW_LABEL: &str = "main";
 
-/// A floating, always-visible round button — not a flush-corner sliver —
-/// per user direction (2026-09-16): it needs to read as a permanent,
-/// identifiable control, not something you have to know to hunt for.
-const HANDLE_SIZE: f64 = 44.0;
-const HANDLE_MARGIN: f64 = 14.0;
-const EXPANDED_WIDTH: f64 = 340.0;
+pub const TOOLBAR_HEIGHT: f64 = 48.0;
+const MEGA_MENU_HEIGHT: f64 = 480.0;
 
-/// Both states anchor to the **top-right** corner (per user direction) and
-/// are recomputed from the current window size, so the overlay stays
-/// pinned there through resizes without drifting.
-fn shell_bounds(window_width: f64, window_height: f64, expanded: bool) -> (LogicalPosition<f64>, LogicalSize<f64>) {
-    if expanded {
-        (
-            LogicalPosition::new((window_width - EXPANDED_WIDTH).max(0.0), 0.0),
-            LogicalSize::new(EXPANDED_WIDTH.min(window_width), window_height),
-        )
+/// The "shell" webview is always at least the toolbar strip, full width,
+/// docked to the top. With the mega menu open it grows downward to also
+/// cover a menu panel — but never past the window, and it always
+/// overlays "odoo" rather than resizing it (odoo's own bounds are
+/// independent, see `odoo_bounds`).
+fn shell_bounds(window_width: f64, window_height: f64, menu_open: bool) -> (LogicalPosition<f64>, LogicalSize<f64>) {
+    let height = if menu_open {
+        (TOOLBAR_HEIGHT + MEGA_MENU_HEIGHT).min(window_height)
     } else {
-        (
-            LogicalPosition::new((window_width - HANDLE_SIZE - HANDLE_MARGIN).max(0.0), HANDLE_MARGIN),
-            LogicalSize::new(HANDLE_SIZE, HANDLE_SIZE),
-        )
-    }
+        TOOLBAR_HEIGHT.min(window_height)
+    };
+    (LogicalPosition::new(0.0, 0.0), LogicalSize::new(window_width, height))
+}
+
+fn odoo_bounds(window_width: f64, window_height: f64) -> (LogicalPosition<f64>, LogicalSize<f64>) {
+    (
+        LogicalPosition::new(0.0, TOOLBAR_HEIGHT),
+        LogicalSize::new(window_width, (window_height - TOOLBAR_HEIGHT).max(0.0)),
+    )
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -77,7 +82,8 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let inner_size = window.inner_size()?;
     let logical: tauri::LogicalSize<f64> = inner_size.to_logical(window.scale_factor()?);
 
-    // "odoo" — fills the entire window. No IPC (see capabilities/main.json).
+    // "odoo" — fills the window below the toolbar. No IPC (see capabilities/main.json).
+    let (odoo_pos, odoo_size) = odoo_bounds(logical.width, logical.height);
     let odoo_builder = WebviewBuilder::new(ODOO_LABEL, WebviewUrl::External(odoo::initial_url().parse().unwrap()))
         .on_navigation(|_url| true)
         .on_page_load(|webview, payload| {
@@ -90,20 +96,16 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
                 sync_session_from_odoo(&app, &url).await;
             });
         });
+    window.add_child(odoo_builder, odoo_pos, odoo_size)?;
 
-    window.add_child(
-        odoo_builder,
-        LogicalPosition::new(0.0, 0.0),
-        LogicalSize::new(logical.width, logical.height),
-    )?;
-
-    // "shell" — the DeployGuard overlay. Full IPC (see capabilities/main.json).
+    // "shell" — toolbar (+ mega menu when open). Full IPC. Added AFTER
+    // "odoo" so it stacks on top when the menu overlays Odoo's content.
     let (shell_pos, shell_size) = shell_bounds(logical.width, logical.height, false);
     let shell_builder = WebviewBuilder::new(SHELL_LABEL, WebviewUrl::App("index.html".into()));
     window.add_child(shell_builder, shell_pos, shell_size)?;
 
-    // Keep both children sized (and the overlay re-anchored to the
-    // top-right corner) as the window is resized.
+    // Keep both children sized to the window as it's resized; re-derive
+    // from current state rather than assuming anything about prior bounds.
     let app_handle = app.clone();
     window.on_window_event(move |event| {
         if let tauri::WindowEvent::Resized(size) = event {
@@ -111,11 +113,13 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             let Ok(scale) = win.scale_factor() else { return };
             let logical: tauri::LogicalSize<f64> = size.to_logical(scale);
             if let Some(odoo_wv) = app_handle.get_webview(ODOO_LABEL) {
-                let _ = odoo_wv.set_size(LogicalSize::new(logical.width, logical.height));
+                let (pos, size) = odoo_bounds(logical.width, logical.height);
+                let _ = odoo_wv.set_position(pos);
+                let _ = odoo_wv.set_size(size);
             }
             if let Some(shell_wv) = app_handle.get_webview(SHELL_LABEL) {
-                let expanded = *app_handle.state::<AppState>().overlay_expanded.lock().unwrap();
-                let (pos, size) = shell_bounds(logical.width, logical.height, expanded);
+                let menu_open = *app_handle.state::<AppState>().overlay_expanded.lock().unwrap();
+                let (pos, size) = shell_bounds(logical.width, logical.height, menu_open);
                 let _ = shell_wv.set_position(pos);
                 let _ = shell_wv.set_size(size);
             }
@@ -166,7 +170,7 @@ async fn sync_session_from_odoo(app: &AppHandle, url: &tauri::Url) {
     drop(revealed);
 
     if auto_reveal {
-        expand_overlay(app);
+        open_menu(app);
     }
 
     let _ = app.emit_to(
@@ -188,26 +192,24 @@ fn set_signed_out(app: &AppHandle) {
     }
 }
 
-fn apply_shell_bounds(app: &AppHandle, expanded: bool) {
+fn apply_shell_bounds(app: &AppHandle, menu_open: bool) {
     let Some(window) = app.get_window(WINDOW_LABEL) else { return };
     let Ok(size) = window.inner_size() else { return };
     let Ok(scale) = window.scale_factor() else { return };
     let logical: tauri::LogicalSize<f64> = size.to_logical(scale);
-    let (pos, size) = shell_bounds(logical.width, logical.height, expanded);
+    let (pos, size) = shell_bounds(logical.width, logical.height, menu_open);
     if let Some(shell_wv) = app.get_webview(SHELL_LABEL) {
-        // Order matters when growing: position before size, so the panel
-        // never briefly renders at the old (wrong) x while already wide.
         let _ = shell_wv.set_position(pos);
         let _ = shell_wv.set_size(size);
     }
-    *app.state::<AppState>().overlay_expanded.lock().unwrap() = expanded;
+    *app.state::<AppState>().overlay_expanded.lock().unwrap() = menu_open;
 }
 
-pub fn expand_overlay(app: &AppHandle) {
+pub fn open_menu(app: &AppHandle) {
     apply_shell_bounds(app, true);
 }
 
-pub fn collapse_overlay(app: &AppHandle) {
+pub fn close_menu(app: &AppHandle) {
     apply_shell_bounds(app, false);
 }
 
@@ -221,6 +223,29 @@ pub fn navigate_odoo(app: &AppHandle, path: &str) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Drives Odoo's own browser history — the same effect a real browser's
+/// back/forward/reload buttons would have. One-off `eval()` calls, not a
+/// persistent injected script; see the module doc for why this doesn't
+/// weaken the isolation between "shell" and "odoo".
+pub fn odoo_history_back(app: &AppHandle) -> Result<(), AppError> {
+    eval_in_odoo(app, "history.back();")
+}
+
+pub fn odoo_history_forward(app: &AppHandle) -> Result<(), AppError> {
+    eval_in_odoo(app, "history.forward();")
+}
+
+pub fn odoo_reload(app: &AppHandle) -> Result<(), AppError> {
+    eval_in_odoo(app, "location.reload();")
+}
+
+fn eval_in_odoo(app: &AppHandle, js: &str) -> Result<(), AppError> {
+    if let Some(odoo_wv) = app.get_webview(ODOO_LABEL) {
+        odoo_wv.eval(js).map_err(|_| AppError::Unknown)?;
+    }
+    Ok(())
+}
+
 pub async fn sign_out(app: &AppHandle) {
     let state: State<AppState> = app.state();
     let cookie = state.session_cookie.lock().unwrap().clone();
@@ -229,4 +254,40 @@ pub async fn sign_out(app: &AppHandle) {
     }
     set_signed_out(app);
     let _ = navigate_odoo(app, "/web/login");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn shell_bounds_collapsed_is_full_width_toolbar_strip() {
+        let (pos, size) = shell_bounds(1280.0, 860.0, false);
+        assert_eq!(pos, LogicalPosition::new(0.0, 0.0));
+        assert_eq!(size, LogicalSize::new(1280.0, TOOLBAR_HEIGHT));
+    }
+
+    #[test]
+    fn shell_bounds_menu_open_grows_downward_capped_to_window() {
+        let (pos, size) = shell_bounds(1280.0, 860.0, true);
+        assert_eq!(pos, LogicalPosition::new(0.0, 0.0));
+        assert_eq!(size, LogicalSize::new(1280.0, TOOLBAR_HEIGHT + MEGA_MENU_HEIGHT));
+
+        // A short window: the menu must never exceed the window height.
+        let (_, short_size) = shell_bounds(1280.0, 300.0, true);
+        assert_eq!(short_size.height, 300.0);
+    }
+
+    #[test]
+    fn odoo_bounds_sits_below_the_toolbar() {
+        let (pos, size) = odoo_bounds(1280.0, 860.0);
+        assert_eq!(pos, LogicalPosition::new(0.0, TOOLBAR_HEIGHT));
+        assert_eq!(size, LogicalSize::new(1280.0, 860.0 - TOOLBAR_HEIGHT));
+    }
+
+    #[test]
+    fn odoo_bounds_never_negative_height_when_window_shorter_than_toolbar() {
+        let (_, size) = odoo_bounds(1280.0, 20.0);
+        assert_eq!(size.height, 0.0);
+    }
 }

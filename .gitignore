@@ -19,3 +19,6 @@ mobile/.expo/
 
 # DogForce Raw Data Spreadsheets
 dogforce_data/
+
+# Claude Code local tool config / agent worktree metadata — never commit
+.claude/
