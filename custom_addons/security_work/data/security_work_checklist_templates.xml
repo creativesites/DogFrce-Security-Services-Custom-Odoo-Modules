@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="template_site_visit" model="security.work.checklist.template">
+        <field name="name">Site Visit Inspection</field>
+        <field name="code">site.visit</field>
+        <field name="description">Supervisor site visit — physical checks and guard readiness.</field>
+    </record>
+    <record id="item_site_visit_1" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_site_visit"/>
+        <field name="sequence">10</field>
+        <field name="label">Guard present and in correct uniform</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_site_visit_2" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_site_visit"/>
+        <field name="sequence">20</field>
+        <field name="label">Occurrence book up to date</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_site_visit_3" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_site_visit"/>
+        <field name="sequence">30</field>
+        <field name="label">Equipment issued and functional (radio, torch, etc.)</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_site_visit_4" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_site_visit"/>
+        <field name="sequence">40</field>
+        <field name="label">Site condition photo</field>
+        <field name="item_type">photo</field>
+        <field name="required">0</field>
+    </record>
+    <record id="item_site_visit_5" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_site_visit"/>
+        <field name="sequence">50</field>
+        <field name="label">Notes / follow-up required</field>
+        <field name="item_type">text</field>
+        <field name="required">0</field>
+    </record>
+
+    <record id="template_shift_handover" model="security.work.checklist.template">
+        <field name="name">Shift Handover</field>
+        <field name="code">shift.handover</field>
+        <field name="description">Outgoing guard hands over to the incoming guard.</field>
+    </record>
+    <record id="item_handover_1" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_shift_handover"/>
+        <field name="sequence">10</field>
+        <field name="label">Incoming guard briefed on open issues</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_handover_2" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_shift_handover"/>
+        <field name="sequence">20</field>
+        <field name="label">Equipment count matches handover register</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_handover_3" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_shift_handover"/>
+        <field name="sequence">30</field>
+        <field name="label">Handover notes</field>
+        <field name="item_type">text</field>
+        <field name="required">0</field>
+    </record>
+
+    <record id="template_incident_review" model="security.work.checklist.template">
+        <field name="name">Incident Review</field>
+        <field name="code">incident.review</field>
+        <field name="description">Ops officer review of a logged incident before close-out.</field>
+    </record>
+    <record id="item_incident_1" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_incident_review"/>
+        <field name="sequence">10</field>
+        <field name="label">Incident report is complete and legible</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_incident_2" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_incident_review"/>
+        <field name="sequence">20</field>
+        <field name="label">Client notified if required</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_incident_3" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_incident_review"/>
+        <field name="sequence">30</field>
+        <field name="label">Follow-up actions</field>
+        <field name="item_type">text</field>
+        <field name="required">0</field>
+    </record>
+</odoo>

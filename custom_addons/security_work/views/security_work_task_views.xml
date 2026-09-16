@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_work_task_list" model="ir.ui.view">
+        <field name="name">security.work.task.list</field>
+        <field name="model">security.work.task</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="is_overdue" decoration-success="state == 'verified'" decoration-muted="state in ('cancelled',)">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="site_id"/>
+                <field name="due_at"/>
+                <field name="state" widget="badge"/>
+                <field name="is_overdue" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_work_task_form" model="ir.ui.view">
+        <field name="name">security.work.task.form</field>
+        <field name="model">security.work.task</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" type="object" string="Start" invisible="state != 'open'" class="btn-primary"/>
+                    <button name="action_submit" type="object" string="Submit" invisible="state not in ('open', 'in_progress')" class="btn-primary"/>
+                    <button name="action_verify" type="object" string="Verify" invisible="state != 'submitted'" class="btn-primary" groups="security_work.group_work_supervisor"/>
+                    <button name="action_reject" type="object" string="Reject" invisible="state != 'submitted'" groups="security_work.group_work_supervisor"/>
+                    <button name="action_cancel" type="object" string="Cancel" invisible="state not in ('open', 'in_progress', 'could_not_complete')"/>
+                    <button name="action_reopen" type="object" string="Reopen" invisible="state not in ('could_not_complete', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="open,in_progress,submitted,verified"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" placeholder="e.g. Post attendance for Monday shift"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="site_id"/>
+                            <field name="due_at"/>
+                            <field name="checklist_template_id"/>
+                        </group>
+                        <group>
+                            <field name="created_by_id" readonly="1"/>
+                            <field name="submitted_at" readonly="1" invisible="not submitted_at"/>
+                            <field name="verified_by_id" readonly="1" invisible="not verified_by_id"/>
+                            <field name="verified_at" readonly="1" invisible="not verified_at"/>
+                            <field name="cnc_reason" invisible="state != 'could_not_complete'"/>
+                            <field name="cnc_note" invisible="state != 'could_not_complete'"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                    <group string="Checklist" invisible="not checklist_template_id">
+                        <field name="response_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="label" readonly="1"/>
+                                <field name="item_type" column_invisible="1"/>
+                                <field name="value_bool" invisible="item_type != 'boolean'"/>
+                                <field name="value_text" invisible="item_type != 'text'"/>
+                                <field name="value_number" invisible="item_type != 'number'"/>
+                                <field name="photo" widget="image" invisible="item_type != 'photo'"/>
+                                <field name="note"/>
+                            </list>
+                        </field>
+                    </group>
+                    <group string="Notes">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_work_task_search" model="ir.ui.view">
+        <field name="name">security.work.task.search</field>
+        <field name="model">security.work.task</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="site_id"/>
+                <filter name="filter_mine" string="My Work" domain="[('employee_id.user_id', '=', uid)]"/>
+                <filter name="filter_overdue" string="Overdue" domain="[('is_overdue', '=', True)]"/>
+                <filter name="filter_open" string="Open" domain="[('state', 'in', ('open', 'in_progress'))]"/>
+                <filter name="filter_submitted" string="Awaiting verification" domain="[('state', '=', 'submitted')]"/>
+                <group name="group_by">
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_employee" string="Employee" context="{'group_by': 'employee_id'}"/>
+                    <filter name="group_by_site" string="Site" context="{'group_by': 'site_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_work_task" model="ir.actions.act_window">
+        <field name="name">Work Tasks</field>
+        <field name="res_model">security.work.task</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_open': 1}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Assign your first task.</p></field>
+    </record>
+
+    <record id="action_security_work_task_my" model="ir.actions.act_window">
+        <field name="name">My Work</field>
+        <field name="res_model">security.work.task</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_mine': 1, 'search_default_filter_open': 1}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Nothing assigned to you right now.</p></field>
+    </record>
+</odoo>
