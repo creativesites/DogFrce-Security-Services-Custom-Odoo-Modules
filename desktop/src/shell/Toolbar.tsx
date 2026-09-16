@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback, useEffect, useMemo, useRef, useState, type ReactNode,
+} from "react";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "../lib/tauri";
@@ -10,12 +12,29 @@ import {
 } from "./icons";
 import { MyWork } from "./pages/MyWork";
 import type { SessionEvent } from "../session/types";
+import "./toolbar.css";
 
 function greeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";
   return "Good evening";
+}
+
+function initialsOf(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+/** Deterministic hue so a given name always gets the same avatar gradient. */
+function hueOf(seed: string): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
+  return h;
 }
 
 /** The app's own pages, reachable from the left nav once the app view is
@@ -29,39 +48,40 @@ const NAV_ITEMS: { key: AppPage; label: string; icon: () => JSX.Element; availab
 ];
 const COMING_SOON_ITEMS = ["Training", "Adoption"];
 
-/**
- * The DeployGuard chrome around Odoo, revised 2026-09-16 (three times):
- * hover-corner-handle → toolbar + dropdown mega menu → **toolbar + full
- * app view** (see DEVIATIONS.md D-2/D-3). The DeployGuard side is a real,
- * growing application — a Home today, more pages later (My Work,
- * Training, Adoption, …) — so it gets real screen space when open, with
- * its own left navigation, rather than a glance-only dropdown.
- *
- *  - Toolbar: always visible, docked to the top (native "shell" webview
- *    bounds are exactly this strip — see windowing.rs). Real Odoo
- *    navigation controls (back/forward/reload) drive Odoo's own browser
- *    history via a one-off `history.back()`-style eval, not a bridge.
- *  - App view: clicking the DeployGuard brand switches the "shell"
- *    webview to cover the *entire* window (Odoo is still running
- *    underneath, just fully covered — not resized or reloaded). Clicking
- *    the brand again, Escape, or clicking a link into Odoo switches back.
- *
- * There is no DeployGuard-branded login screen: Odoo's own login page is
- * what's visible underneath when signed out.
- */
+/** Small local icon button with a CSS tooltip. */
+function IconButton({
+  label, onClick, children, tone = "default",
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+  tone?: "default" | "close";
+}) {
+  return (
+    <button
+      type="button"
+      className={`dg-toolbar__btn${tone === "close" ? " dg-toolbar__btn--close" : ""}`}
+      aria-label={label}
+      data-tip={label}
+      onClick={onClick}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function Toolbar() {
   const { status, session, signOut } = useSession();
   const [appViewOpen, setAppViewOpen] = useState(false);
   const [page, setPage] = useState<AppPage>("home");
   const [isMaximized, setIsMaximized] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState("");
+  const [paletteIndex, setPaletteIndex] = useState(0);
   const brandButtonRef = useRef<HTMLButtonElement | null>(null);
+  const paletteInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Decorations are off (windowing.rs), so this toolbar is the only way
-  // to minimize/maximize/close — and the only source of window-state
-  // truth, since Tauri's own drag region also maximizes on double-click
-  // (see the drag.js comment in the Tauri source) without going through
-  // our commands. Query real state rather than assuming our last click
-  // is still accurate.
+  // ---- Window state (unchanged behavior) ---------------------------------
   useEffect(() => {
     const win = getCurrentWindow();
     let cancelled = false;
@@ -79,6 +99,7 @@ export function Toolbar() {
   const toggleMaximizeWindow = useCallback(() => void invoke("window_toggle_maximize"), []);
   const closeWindow = useCallback(() => void invoke("window_close"), []);
 
+  // ---- App view (unchanged behavior) -------------------------------------
   const openAppView = useCallback(() => {
     setAppViewOpen(true);
     void invoke("app_view_open");
@@ -94,46 +115,54 @@ export function Toolbar() {
     else openAppView();
   }, [appViewOpen, openAppView, closeAppView]);
 
-  // Resync with the *actual* native webview size on mount — Rust is the
-  // source of truth (see get_app_view_open's doc comment on the Rust
-  // side for why this matters, e.g. after a dev-server HMR reload).
   useEffect(() => {
     let cancelled = false;
     invoke<boolean>("get_app_view_open")
-      .then((isOpen) => {
-        if (!cancelled && isOpen) setAppViewOpen(true);
-      })
+      .then((isOpen) => { if (!cancelled && isOpen) setAppViewOpen(true); })
       .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
-  // Rust auto-opens the app view the first time a session is detected.
   useEffect(() => {
     const unlistenPromise = listen<SessionEvent>("deployguard://session-changed", (event) => {
       if (event.payload.status === "signed_in" && event.payload.auto_reveal) {
         setAppViewOpen(true);
       }
     });
-    return () => {
-      unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
-    };
+    return () => { unlistenPromise.then((unlisten) => unlisten()).catch(() => {}); };
   }, []);
 
+  // ---- Keyboard: Escape (existing) + ⌘K/Ctrl+K (new) ---------------------
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && appViewOpen) {
-        closeAppView();
-        // Keyboard-initiated close returns focus to the control that
-        // opened it (docs/deployguard/05-ux-principles.md §9).
-        brandButtonRef.current?.focus();
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setCommandOpen((v) => !v);
+        return;
+      }
+      if (e.key === "Escape") {
+        if (commandOpen) { setCommandOpen(false); return; }
+        if (appViewOpen) {
+          closeAppView();
+          brandButtonRef.current?.focus();
+        }
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [appViewOpen, closeAppView]);
+  }, [appViewOpen, commandOpen, closeAppView]);
 
+  // Reset + focus the palette each time it opens.
+  useEffect(() => {
+    if (!commandOpen) return;
+    setPaletteQuery("");
+    setPaletteIndex(0);
+    const id = requestAnimationFrame(() => paletteInputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [commandOpen]);
+
+  // ---- Odoo nav (unchanged behavior) -------------------------------------
   const goToOdoo = useCallback((path?: string) => {
     void invoke("navigate_odoo", { path });
     closeAppView();
@@ -143,42 +172,117 @@ export function Toolbar() {
   const goForward = useCallback(() => void invoke("odoo_forward"), []);
   const reload = useCallback(() => void invoke("odoo_reload"), []);
 
+  // ---- Command palette ---------------------------------------------------
+  type Command = {
+    id: string; label: string; group: string; icon: ReactNode; shortcut?: string; run: () => void;
+  };
+
+  const commands = useMemo<Command[]>(() => {
+    const list: Command[] = [
+      {
+        id: "home", group: "Navigate", label: "Go to Home",
+        icon: <HomeIcon size={16} />,
+        run: () => { openAppView(); setPage("home"); },
+      },
+      {
+        id: "odoo", group: "Navigate", label: "Open DeployGuard System",
+        icon: <OdooIcon size={16} />,
+        run: () => goToOdoo(),
+      },
+      {
+        id: "back", group: "Odoo", label: "Back",
+        icon: <BackIcon size={16} />, shortcut: "⌘[",
+        run: () => goBack(),
+      },
+      {
+        id: "forward", group: "Odoo", label: "Forward",
+        icon: <ForwardIcon size={16} />, shortcut: "⌘]",
+        run: () => goForward(),
+      },
+      {
+        id: "reload", group: "Odoo", label: "Reload",
+        icon: <ReloadIcon size={16} />, shortcut: "⌘R",
+        run: () => reload(),
+      },
+      {
+        id: "toggle-appview", group: "View", label: appViewOpen ? "Close DeployGuard" : "Open DeployGuard",
+        icon: <ChevronDownIcon size={16} />,
+        run: () => toggleAppView(),
+      },
+      {
+        id: "minimize", group: "Window", label: "Minimize",
+        icon: <WindowMinimizeIcon size={16} />,
+        run: () => minimizeWindow(),
+      },
+      {
+        id: "maximize", group: "Window", label: isMaximized ? "Restore" : "Maximize",
+        icon: isMaximized ? <WindowRestoreIcon size={16} /> : <WindowMaximizeIcon size={16} />,
+        run: () => toggleMaximizeWindow(),
+      },
+      {
+        id: "close", group: "Window", label: "Close window",
+        icon: <WindowCloseIcon size={16} />,
+        run: () => closeWindow(),
+      },
+    ];
+    if (status === "signed_in") {
+      list.push({
+        id: "signout", group: "Account", label: "Sign out",
+        icon: <HelpIcon size={16} />,
+        run: () => void signOut(),
+      });
+    }
+    return list;
+  }, [
+    appViewOpen, isMaximized, status, openAppView, goToOdoo, goBack, goForward,
+    reload, toggleAppView, minimizeWindow, toggleMaximizeWindow, closeWindow, signOut,
+  ]);
+
+  const filtered = useMemo(() => {
+    const q = paletteQuery.trim().toLowerCase();
+    if (!q) return commands;
+    return commands.filter(
+      (c) => c.label.toLowerCase().includes(q) || c.group.toLowerCase().includes(q),
+    );
+  }, [commands, paletteQuery]);
+
+  useEffect(() => { setPaletteIndex(0); }, [paletteQuery]);
+
+  const runCommand = useCallback((c: Command) => {
+    setCommandOpen(false);
+    // Defer so the palette can unmount before any focus-stealing work runs.
+    requestAnimationFrame(() => c.run());
+  }, []);
+
+  const avatarHue = session ? hueOf(session.name) : 0;
+
   return (
     <div className="dg-shell">
       <div className="dg-toolbar">
-        <div className="dg-toolbar__nav">
-          <button type="button" className="dg-toolbar__btn" aria-label="Back" title="Back" onClick={goBack}>
-            <BackIcon size={17} />
-          </button>
-          <button type="button" className="dg-toolbar__btn" aria-label="Forward" title="Forward" onClick={goForward}>
-            <ForwardIcon size={17} />
-          </button>
-          <button type="button" className="dg-toolbar__btn" aria-label="Reload" title="Reload" onClick={reload}>
-            <ReloadIcon size={16} />
-          </button>
-          <button type="button" className="dg-toolbar__btn" aria-label="Go to DeployGuard System home" title="DeployGuard System home" onClick={() => goToOdoo()}>
+        <div className="dg-toolbar__nav" role="group" aria-label="Odoo navigation">
+          <IconButton label="Back" onClick={goBack}><BackIcon size={16} /></IconButton>
+          <IconButton label="Forward" onClick={goForward}><ForwardIcon size={16} /></IconButton>
+          <IconButton label="Reload" onClick={reload}><ReloadIcon size={15} /></IconButton>
+          <span className="dg-toolbar__divider" aria-hidden="true" />
+          <IconButton label="DeployGuard System home" onClick={() => goToOdoo()}>
             <OdooIcon size={16} />
-          </button>
+          </IconButton>
         </div>
 
         <button
           ref={brandButtonRef}
           type="button"
-          className="dg-toolbar__brand"
+          className={`dg-toolbar__brand${appViewOpen ? " is-open" : ""}`}
           aria-expanded={appViewOpen}
           aria-label={appViewOpen ? "Close DeployGuard" : "Open DeployGuard"}
           onClick={toggleAppView}
         >
           <span className="dg-toolbar__brand-mark" aria-hidden="true">DG</span>
           <span className="dg-toolbar__brand-label">DeployGuard</span>
-          <ChevronDownIcon size={14} />
+          <ChevronDownIcon size={14}  />
         </button>
 
-        {/* Empty space doubles as the window's drag handle — decorations
-            are off (windowing.rs), so nothing else provides one. Tauri's
-            built-in drag.js excludes buttons/links automatically, and
-            also maximizes on double-click, which is why isMaximized is
-            tracked via onResized above rather than only our own toggle. */}
+        {/* Empty space doubles as the window's drag handle. */}
         <div className="dg-toolbar__spacer" data-tauri-drag-region />
 
         <div className="dg-toolbar__status">
@@ -187,116 +291,260 @@ export function Toolbar() {
 
         {status === "signed_in" && session ? (
           <div className="dg-toolbar__profile" title={session.name}>
+            <span
+              className="dg-toolbar__avatar"
+              aria-hidden="true"
+              style={{
+                background: `linear-gradient(135deg, hsl(${avatarHue} 62% 46%), hsl(${(avatarHue + 40) % 360} 68% 38%))`,
+              }}
+            >
+              {initialsOf(session.name)}
+            </span>
             <span className="dg-toolbar__profile-name">{session.name}</span>
+            <span className="dg-toolbar__presence" aria-label="Signed in" />
           </div>
         ) : (
           <span className="dg-toolbar__signedout">Not signed in</span>
         )}
 
-        <div className="dg-toolbar__winctl">
-          <button type="button" className="dg-toolbar__winbtn" aria-label="Minimize" title="Minimize" onClick={minimizeWindow}>
+        <div className="dg-toolbar__winctl" role="group" aria-label="Window controls">
+          <button
+            type="button" className="dg-toolbar__winbtn"
+            aria-label="Minimize" data-tip="Minimize" onClick={minimizeWindow}
+          >
             <WindowMinimizeIcon size={14} />
           </button>
           <button
-            type="button"
-            className="dg-toolbar__winbtn"
+            type="button" className="dg-toolbar__winbtn"
             aria-label={isMaximized ? "Restore" : "Maximize"}
-            title={isMaximized ? "Restore" : "Maximize"}
+            data-tip={isMaximized ? "Restore" : "Maximize"}
             onClick={toggleMaximizeWindow}
           >
             {isMaximized ? <WindowRestoreIcon size={13} /> : <WindowMaximizeIcon size={13} />}
           </button>
-          <button type="button" className="dg-toolbar__winbtn dg-toolbar__winbtn--close" aria-label="Close" title="Close" onClick={closeWindow}>
+          <button
+            type="button" className="dg-toolbar__winbtn dg-toolbar__winbtn--close"
+            aria-label="Close" data-tip="Close" onClick={closeWindow}
+          >
             <WindowCloseIcon size={14} />
           </button>
         </div>
       </div>
 
       {appViewOpen && (
-        <div className="dg-appview">
+        <div className="dg-appview" role="dialog" aria-modal="false" aria-label="DeployGuard">
           <nav className="dg-appview__nav" aria-label="DeployGuard sections">
+            <div className="dg-appview__nav-group">Workspace</div>
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.key}
                 type="button"
-                className="dg-appview__navitem"
+                className={`dg-appview__navitem${page === item.key ? " is-active" : ""}`}
                 aria-current={page === item.key ? "page" : undefined}
                 onClick={() => setPage(item.key)}
               >
-                {item.icon()}
-                <span>{item.label}</span>
+                <span className="dg-appview__navitem-icon">{item.icon()}</span>
+                <span className="dg-appview__navitem-label">{item.label}</span>
               </button>
             ))}
+
+            <div className="dg-appview__nav-group">Upcoming</div>
             {COMING_SOON_ITEMS.map((label) => (
-              <div key={label} className="dg-appview__navitem dg-appview__navitem--soon" aria-disabled="true">
+              <div
+                key={label}
+                className="dg-appview__navitem dg-appview__navitem--soon"
+                aria-disabled="true"
+              >
                 <span className="dg-appview__navitem-dot" aria-hidden="true" />
-                <span>{label}</span>
+                <span className="dg-appview__navitem-label">{label}</span>
                 <span className="dg-chip">Soon</span>
               </div>
             ))}
+
+            <div className="dg-appview__nav-foot">
+              <button
+                type="button"
+                className="dg-palette-hint"
+                onClick={() => setCommandOpen(true)}
+              >
+                <span>Quick actions</span>
+                <kbd>⌘K</kbd>
+              </button>
+            </div>
           </nav>
 
           <div className="dg-appview__content">
-            <StatusBar />
+            <header className="dg-appview__topbar">
+              <StatusBar />
+            </header>
 
-            {status === "checking" && <p className="dg-empty">Checking your session…</p>}
+            {status === "checking" && (
+              <div className="dg-appview__body">
+                <div className="dg-skeleton dg-skeleton--title" />
+                <div className="dg-appview__grid">
+                  <div className="dg-skeleton dg-skeleton--tile" />
+                  <div className="dg-skeleton dg-skeleton--card" />
+                  <div className="dg-skeleton dg-skeleton--card" />
+                </div>
+              </div>
+            )}
 
             {status === "signed_out" && (
-              <div className="dg-card" style={{ maxWidth: 480 }}>
-                <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
-                  Sign in on the DeployGuard System page to get started —
-                  nothing extra to remember, it's your existing DogForce
-                  Odoo login.
-                </p>
+              <div className="dg-appview__body">
+                <div className="dg-emptystate">
+                  <div className="dg-emptystate__glyph" aria-hidden="true">DG</div>
+                  <h2>Sign in to continue</h2>
+                  <p>
+                    Sign in on the DeployGuard System page to get started —
+                    nothing extra to remember, it's your existing DogForce Odoo login.
+                  </p>
+                  <button
+                    type="button"
+                    className="dg-btn dg-btn--primary"
+                    onClick={() => goToOdoo()}
+                  >
+                    <OdooIcon size={16} /> Open DeployGuard System
+                  </button>
+                </div>
               </div>
             )}
 
             {status === "signed_in" && session && page === "home" && (
-              <>
-                <h1 style={{ fontSize: 20, fontWeight: 700, margin: "4px 0 20px", color: "var(--ds-text)" }}>
-                  {greeting()}, {session.name.split(" ")[0]}
+              <div className="dg-appview__body">
+                <h1 className="dg-greeting">
+                  {greeting()}, <span>{session.name.split(" ")[0]}</span>
                 </h1>
 
                 <div className="dg-appview__grid">
-                  <button type="button" className="dg-tile" onClick={() => goToOdoo()}>
+                  <button
+                    type="button"
+                    className="dg-tile"
+                    style={{ animationDelay: "40ms" }}
+                    onClick={() => goToOdoo()}
+                  >
                     <span className="dg-tile__icon"><OdooIcon /></span>
-                    <span>
+                    <span className="dg-tile__body">
                       <span className="dg-tile__title">DeployGuard System</span>
-                      <span className="dg-tile__subline">Rosters, attendance, incidents, reports</span>
+                      <span className="dg-tile__subline">
+                        Rosters, attendance, incidents, reports
+                      </span>
                     </span>
+                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
                   </button>
 
-                  <button type="button" className="dg-tile" onClick={() => setPage("work")}>
+                  <button
+                    type="button"
+                    className="dg-tile"
+                    style={{ animationDelay: "90ms" }}
+                    onClick={() => setPage("work")}
+                  >
                     <span className="dg-tile__icon"><ClipboardListIcon /></span>
-                    <span>
+                    <span className="dg-tile__body">
                       <span className="dg-tile__title">My Work & Sweeps</span>
                       <span className="dg-tile__subline">Tasks, checklists, and sweep sign-offs</span>
                     </span>
+                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
                   </button>
 
-                  <div className="dg-card">
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)" }}>Training</span>
+                  <div className="dg-card" style={{ animationDelay: "140ms" }}>
+                    <div className="dg-card__head">
+                      <span className="dg-card__title">Training</span>
                       <span className="dg-chip">Coming soon</span>
                     </div>
-                    <p className="dg-empty" style={{ padding: "8px 0", textAlign: "left" }}>
-                      No training assigned yet.
-                    </p>
+                    <p className="dg-card__body">No training assigned yet.</p>
                   </div>
                 </div>
 
-                <div className="dg-appview__footer">
-                  <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void signOut()}>
+                <footer className="dg-appview__footer">
+                  <button
+                    type="button"
+                    className="dg-btn dg-btn--secondary"
+                    onClick={() => void signOut()}
+                  >
                     Sign out
                   </button>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ds-text-subtle)" }}>
-                    <HelpIcon size={16} /> Something not working? Ask your operations manager for now.
+                  <span className="dg-appview__help">
+                    <HelpIcon size={16} />
+                    Something not working? Ask your operations manager for now.
                   </span>
-                </div>
-              </>
+                </footer>
+              </div>
             )}
 
             {status === "signed_in" && session && page === "work" && <MyWork />}
+          </div>
+        </div>
+      )}
+
+      {commandOpen && (
+        <div className="dg-palette" role="dialog" aria-modal="true" aria-label="Command palette">
+          <div className="dg-palette__backdrop" onClick={() => setCommandOpen(false)} />
+          <div className="dg-palette__panel" role="combobox" aria-expanded="true" aria-controls="dg-palette-list">
+            <div className="dg-palette__inputwrap">
+              <svg className="dg-palette__search" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                <path
+                  d="M11.2 10.1a5 5 0 1 0-1.1 1.1l2.8 2.8.9-.9-2.6-3ZM7.5 11a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <input
+                ref={paletteInputRef}
+                className="dg-palette__input"
+                placeholder="Type a command or search…"
+                value={paletteQuery}
+                onChange={(e) => setPaletteQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setPaletteIndex((i) => Math.min(i + 1, Math.max(filtered.length - 1, 0)));
+                  } else if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setPaletteIndex((i) => Math.max(i - 1, 0));
+                  } else if (e.key === "Enter") {
+                    e.preventDefault();
+                    const c = filtered[paletteIndex];
+                    if (c) runCommand(c);
+                  }
+                }}
+                aria-controls="dg-palette-list"
+                aria-activedescendant={
+                  filtered[paletteIndex] ? `dg-cmd-${filtered[paletteIndex].id}` : undefined
+                }
+              />
+              <kbd className="dg-palette__esc">Esc</kbd>
+            </div>
+
+            <div className="dg-palette__list" id="dg-palette-list" role="listbox">
+              {filtered.length === 0 && (
+                <div className="dg-palette__empty">No matching commands</div>
+              )}
+              {filtered.map((c, i) => (
+                <button
+                  key={c.id}
+                  id={`dg-cmd-${c.id}`}
+                  type="button"
+                  role="option"
+                  aria-selected={i === paletteIndex}
+                  className={`dg-palette__item${i === paletteIndex ? " is-active" : ""}`}
+                  onMouseEnter={() => setPaletteIndex(i)}
+                  onClick={() => runCommand(c)}
+                >
+                  <span className="dg-palette__item-icon">{c.icon}</span>
+                  <span className="dg-palette__item-label">{c.label}</span>
+                  <span className="dg-palette__item-group">{c.group}</span>
+                  {c.shortcut && <kbd className="dg-palette__kbd">{c.shortcut}</kbd>}
+                </button>
+              ))}
+            </div>
+
+            <div className="dg-palette__footer">
+              <span aria-live="polite">
+                {filtered.length} {filtered.length === 1 ? "result" : "results"}
+              </span>
+              <span className="dg-palette__legend">
+                <kbd>↑</kbd><kbd>↓</kbd> navigate <kbd>↵</kbd> run
+              </span>
+            </div>
           </div>
         </div>
       )}
