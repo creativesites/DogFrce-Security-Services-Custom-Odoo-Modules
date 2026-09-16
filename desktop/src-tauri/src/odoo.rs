@@ -124,3 +124,86 @@ pub fn is_unauthenticated_path(path: &str) -> bool {
     ];
     UNAUTH_PREFIXES.iter().any(|p| path.starts_with(p))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::is_unauthenticated_path;
+
+    #[test]
+    fn exact_login_path_is_unauthenticated() {
+        assert!(is_unauthenticated_path("/web/login"));
+    }
+
+    #[test]
+    fn login_path_with_query_string_is_unauthenticated() {
+        // Odoo appends redirect params, e.g. after a session expiry.
+        assert!(is_unauthenticated_path("/web/login?redirect=/odoo"));
+    }
+
+    #[test]
+    fn signup_path_is_unauthenticated() {
+        assert!(is_unauthenticated_path("/web/signup"));
+    }
+
+    #[test]
+    fn reset_password_path_is_unauthenticated() {
+        assert!(is_unauthenticated_path("/web/reset_password"));
+    }
+
+    #[test]
+    fn database_selector_path_is_unauthenticated() {
+        assert!(is_unauthenticated_path("/web/database/selector"));
+    }
+
+    #[test]
+    fn health_check_path_is_unauthenticated() {
+        assert!(is_unauthenticated_path("/web/health"));
+    }
+
+    #[test]
+    fn odoo_app_entry_point_is_authenticated() {
+        assert!(!is_unauthenticated_path("/odoo"));
+    }
+
+    #[test]
+    fn odoo_app_subroute_is_authenticated() {
+        assert!(!is_unauthenticated_path("/odoo/attendance"));
+    }
+
+    #[test]
+    fn web_root_is_authenticated() {
+        // "/web" itself (no trailing segment) is the authenticated web
+        // client shell, distinct from "/web/login".
+        assert!(!is_unauthenticated_path("/web"));
+    }
+
+    #[test]
+    fn empty_path_is_authenticated() {
+        assert!(!is_unauthenticated_path(""));
+    }
+
+    #[test]
+    fn root_path_is_authenticated() {
+        assert!(!is_unauthenticated_path("/"));
+    }
+
+    #[test]
+    fn path_containing_but_not_starting_with_login_is_authenticated() {
+        // A substring match would be wrong here — only a *prefix* match
+        // should count, so a record whose path happens to contain
+        // "/web/login" partway through must not be misclassified.
+        assert!(!is_unauthenticated_path("/odoo/web/login-history"));
+    }
+
+    #[test]
+    fn case_sensitive_login_path_variant_is_authenticated() {
+        // Odoo paths are case-sensitive; a differently-cased path is not
+        // one of the known unauthenticated prefixes.
+        assert!(!is_unauthenticated_path("/Web/Login"));
+    }
+
+    #[test]
+    fn login_prefix_with_extra_trailing_segment_is_unauthenticated() {
+        assert!(is_unauthenticated_path("/web/login/totp"));
+    }
+}

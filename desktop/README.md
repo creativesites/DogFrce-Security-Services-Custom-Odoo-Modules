@@ -186,6 +186,38 @@ install goes to a real DogForce employee:
       causing a confusing auto-login.
 - [ ] Window resizes down to 1024×700 without breaking layout.
 - [ ] Full keyboard navigation through the login form and rail.
+- [x] Automated coverage for `odoo::is_unauthenticated_path` (many cases,
+      `src-tauri/src/odoo.rs`).
+- [x] Automated coverage for `windowing::shell_bounds` — collapsed/expanded
+      geometry at default, minimum, and edge-case window sizes
+      (`src-tauri/src/windowing.rs`).
+- [x] Automated coverage for `config::odoo_base_url` — env var precedence,
+      trailing-slash stripping, whitespace handling
+      (`src-tauri/src/config.rs`).
+- [x] Automated coverage for `extractErrorMessage` — all input shapes,
+      including a regression test for a real bug found during this pass
+      (`src/lib/extractErrorMessage.test.ts`).
+- [x] Automated coverage for `config/env.ts` — env var precedence and
+      defaults for every field (`src/config/env.test.ts`).
+- [ ] Manual accessibility pass against
+      `docs/deployguard/05-ux-principles.md` §9 — see
+      [`AGENT-FINDINGS.md`](./AGENT-FINDINGS.md) for a computed WCAG
+      contrast audit that already found real gaps (focus-ring contrast,
+      chip opacity) still needing a fix in `shell.css`.
+
+## Running tests
+
+```bash
+# Rust unit tests (odoo::is_unauthenticated_path, windowing::shell_bounds,
+# config::odoo_base_url)
+cd desktop/src-tauri
+cargo test
+
+# Frontend unit tests (extractErrorMessage, config/env)
+cd desktop
+npm install   # first time only
+npm test
+```
 
 ## Relationship to the planning docs
 
@@ -198,3 +230,54 @@ Read in this order if you're new to this codebase:
 4. `docs/deployguard/adr/DG-ADR-007-authentication.md`
 5. [`DEVIATIONS.md`](./DEVIATIONS.md) — every place this code differs from
    those documents, and why.
+
+## Agent verification log (background CI/test hardening pass)
+
+**2026-09-16, background agent pass.** Scope: CI/build verification, Rust
+and frontend unit test coverage, and a WCAG contrast audit. Did not touch
+`Overlay.tsx`, `StatusBar.tsx`, `src/session/**`, `src-tauri/src/
+windowing.rs` (only appended a new `#[cfg(test)]` block at its end), or
+`src/styles/shell.css` — those were being actively iterated on in the main
+session; see [`AGENT-FINDINGS.md`](./AGENT-FINDINGS.md) for what would
+need to change there.
+
+- **CI (`.github/workflows/desktop-build.yml`):** static review against
+  `package.json`'s real scripts, `tauri.conf.json`, `Cargo.toml`, and
+  `tauri-apps/tauri-action`'s actual `action.yml` inputs (fetched live).
+  No concrete bugs found — script names match, the action's
+  omit-`tagName`-to-skip-releases behavior is used correctly, all
+  dependencies are cross-platform (`rustls-tls`, no Unix-only assumptions),
+  all 5 referenced icon files exist. A real Windows Actions run was
+  triggered via `gh` from a pushed branch to close the loop on what static
+  review can't confirm (actual MSVC/NSIS build success) — see
+  AGENT-FINDINGS.md §2 for what remains unverified if that run hadn't
+  finished by the time this pass ended.
+- **Rust unit tests added:** `src-tauri/src/odoo.rs` (`is_unauthenticated_
+  path`, 12 cases), `src-tauri/src/windowing.rs` (`shell_bounds`, 8 cases
+  covering collapsed/expanded geometry at default, minimum, and clamped
+  edge-case window sizes — purely additive `mod tests` block at the file's
+  end), `src-tauri/src/config.rs` (`odoo_base_url`, 7 cases covering env
+  var precedence, trailing-slash stripping, whitespace handling). **29/29
+  passed** — `cd desktop/src-tauri && cargo test`.
+- **Frontend tests added:** Vitest 1.6.1 (pinned to match the existing
+  Vite 5 devDependency — `vitest@latest` requires Vite 6/7).
+  `src/lib/extractErrorMessage.test.ts` (15 cases) and
+  `src/config/env.test.ts` (13 cases, using `vi.resetModules()` +
+  `vi.stubEnv()` since `config` is computed eagerly at import time).
+  **28/28 passed** — `cd desktop && npm test`. `npm run typecheck` and
+  `npm run lint` both still pass clean.
+- **Bug found + fixed:** `src/lib/extractErrorMessage.ts` returned an
+  empty string instead of its fallback message for an `Error` with an
+  empty `.message` — fixed, with a regression test. See
+  AGENT-FINDINGS.md §3.
+- **Accessibility audit:** computed real WCAG contrast ratios for every
+  text/background and UI-component/background pair used in the overlay
+  panel and handle, against the 4.5:1 / 3:1 AA thresholds in
+  `docs/deployguard/05-ux-principles.md` §9. Found 3 real failures (focus
+  ring ~1.4:1 vs. required 3:1, "Coming soon" chip effective contrast
+  ~2.16:1 once its `opacity: .6` is accounted for, loading-state text at
+  4.40:1 on `--dgs-canvas`) plus one keyboard-focus-management gap (Escape
+  collapses the panel but doesn't return focus to the handle). Full
+  numbers, severity, and suggested one-token fixes in
+  [`AGENT-FINDINGS.md`](./AGENT-FINDINGS.md) §1 — not applied directly
+  since they require editing boundary files.

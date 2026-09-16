@@ -230,3 +230,105 @@ pub async fn sign_out(app: &AppHandle) {
     set_signed_out(app);
     let _ = navigate_odoo(app, "/web/login");
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Unit tests for the pure `shell_bounds` geometry function only. Nothing
+// else in this file is tested here (everything else needs a live AppHandle
+// / webview, which is integration-test territory, not unit-test territory —
+// see docs/deployguard/25-testing-strategy.md §1's "Desktop native" row).
+// This block is purely additive at the end of the file and does not modify
+// any of the code above.
+// ─────────────────────────────────────────────────────────────────────────
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Typical window size (the default `inner_size` from `build()`).
+    #[test]
+    fn collapsed_bounds_at_default_window_size() {
+        let (pos, size) = shell_bounds(1280.0, 860.0, false);
+        assert_eq!(pos.x, 1280.0 - HANDLE_SIZE - HANDLE_MARGIN);
+        assert_eq!(pos.y, HANDLE_MARGIN);
+        assert_eq!(size.width, HANDLE_SIZE);
+        assert_eq!(size.height, HANDLE_SIZE);
+    }
+
+    #[test]
+    fn expanded_bounds_at_default_window_size() {
+        let (pos, size) = shell_bounds(1280.0, 860.0, true);
+        assert_eq!(pos.x, 1280.0 - EXPANDED_WIDTH);
+        assert_eq!(pos.y, 0.0);
+        assert_eq!(size.width, EXPANDED_WIDTH);
+        assert_eq!(size.height, 860.0);
+    }
+
+    /// The documented minimum window size (`min_inner_size` in `build()`).
+    #[test]
+    fn collapsed_bounds_at_minimum_window_size() {
+        let (pos, size) = shell_bounds(1024.0, 700.0, false);
+        assert_eq!(pos.x, 1024.0 - HANDLE_SIZE - HANDLE_MARGIN);
+        assert_eq!(pos.y, HANDLE_MARGIN);
+        assert_eq!(size.width, HANDLE_SIZE);
+        assert_eq!(size.height, HANDLE_SIZE);
+    }
+
+    #[test]
+    fn expanded_bounds_at_minimum_window_size() {
+        let (pos, size) = shell_bounds(1024.0, 700.0, true);
+        assert_eq!(pos.x, 1024.0 - EXPANDED_WIDTH);
+        assert_eq!(pos.y, 0.0);
+        assert_eq!(size.width, EXPANDED_WIDTH);
+        assert_eq!(size.height, 700.0);
+    }
+
+    /// Below `min_inner_size` shouldn't be reachable in the shipped app
+    /// (Tauri enforces the window minimum), but the pure function must
+    /// still not panic or produce negative/NaN geometry if ever called
+    /// with a narrower width — it should clamp to the window edge.
+    #[test]
+    fn expanded_bounds_clamp_when_window_narrower_than_panel() {
+        let (pos, size) = shell_bounds(300.0, 500.0, true);
+        // Position never goes negative: the panel is pinned to x=0 instead
+        // of spilling off the left edge of the window.
+        assert_eq!(pos.x, 0.0);
+        assert_eq!(pos.y, 0.0);
+        // Width is clamped to the window's own width, never wider than the
+        // window itself.
+        assert_eq!(size.width, 300.0);
+        assert_eq!(size.height, 500.0);
+    }
+
+    /// Symmetric clamp check for the collapsed handle: a window narrower
+    /// than the handle + margin must not push the handle to a negative x.
+    #[test]
+    fn collapsed_bounds_clamp_when_window_narrower_than_handle() {
+        let (pos, size) = shell_bounds(50.0, 200.0, false);
+        assert_eq!(pos.x, 0.0);
+        assert_eq!(pos.y, HANDLE_MARGIN);
+        // The handle's own size is fixed regardless of window width — this
+        // documents current behavior (it can visually overflow a
+        // pathologically narrow window) rather than asserting it's ideal.
+        assert_eq!(size.width, HANDLE_SIZE);
+        assert_eq!(size.height, HANDLE_SIZE);
+    }
+
+    /// A very tall, narrow window: height should pass through unclamped in
+    /// both states, confirming height is never touched by the width-based
+    /// clamp logic.
+    #[test]
+    fn expanded_bounds_preserve_tall_window_height() {
+        let (pos, size) = shell_bounds(1280.0, 2160.0, true);
+        assert_eq!(pos.x, 1280.0 - EXPANDED_WIDTH);
+        assert_eq!(size.height, 2160.0);
+    }
+
+    /// Exact boundary: window width equals the expanded panel width exactly
+    /// — position should sit flush at x=0, not trigger the clamp's `.max`
+    /// arm incorrectly.
+    #[test]
+    fn expanded_bounds_exact_panel_width_window() {
+        let (pos, size) = shell_bounds(EXPANDED_WIDTH, 600.0, true);
+        assert_eq!(pos.x, 0.0);
+        assert_eq!(size.width, EXPANDED_WIDTH);
+    }
+}
