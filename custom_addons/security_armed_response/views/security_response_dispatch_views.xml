@@ -105,7 +105,7 @@
                 <field name="unit_id"/>
                 <filter name="filter_open" string="Open callouts" domain="[('state', 'not in', ('resolved', 'cancelled'))]"/>
                 <filter name="filter_critical" string="Critical / High priority" domain="[('priority', 'in', ('critical', 'high'))]"/>
-                <group expand="0" string="Group By">
+                <group name="group_by">
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_by_site" string="Site" context="{'group_by': 'site_id'}"/>
                 </group>

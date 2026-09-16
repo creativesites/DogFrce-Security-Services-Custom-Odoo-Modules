@@ -67,7 +67,7 @@
                 <filter name="filter_missed" string="Missed" domain="[('state', '=', 'missed')]"/>
                 <filter name="filter_inbound" string="Inbound" domain="[('direction', '=', 'inbound')]"/>
                 <filter name="filter_no_dispatch" string="Not linked to a dispatch" domain="[('dispatch_id', '=', False)]"/>
-                <group expand="0" string="Group By">
+                <group name="group_by">
                     <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_by_day" string="Day" context="{'group_by': 'started_at:day'}"/>
                 </group>

@@ -84,7 +84,7 @@
                 <field name="vehicle_id"/>
                 <filter name="filter_available" string="Available" domain="[('status', '=', 'available')]"/>
                 <filter name="filter_dispatched" string="Dispatched or on scene" domain="[('status', 'in', ('dispatched', 'on_scene'))]"/>
-                <group expand="0" string="Group By">
+                <group name="group_by">
                     <filter name="group_by_status" string="Status" context="{'group_by': 'status'}"/>
                 </group>
             </search>
