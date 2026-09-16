@@ -1,21 +1,22 @@
 //! Builds the single application window and its two child webviews.
 //!
-//! Architecture (revised 2026-09-16 — persistent toolbar + mega menu,
-//! superseding the earlier hover-handle sidebar design; see DEVIATIONS.md
-//! D-2 and D-3):
+//! Architecture (revised 2026-09-16 twice — first to a persistent toolbar
+//! with a mega-menu dropdown, then to a full **app view** the toolbar
+//! switches into, since the DeployGuard side is a real, growing app with
+//! its own Home and future pages, not a glance-only dropdown. Supersedes
+//! the earlier hover-handle sidebar design; see DEVIATIONS.md D-2/D-3):
 //!
 //!   ┌──────────────────────────────────────────────────────────┐
 //!   │ "shell" webview: toolbar (always visible, full width)      │
 //!   │  ⟨ ⟩ ⟳  DG DeployGuard          status ······ name  ⏻     │
 //!   ├──────────────────────────────────────────────────────────┤
-//!   │ ┌ mega menu (only while open — overlays the top of Odoo) ┐│
-//!   │ │  Home content: greeting, work, training …              ││
-//!   │ └──────────────────────────────────────────────────────┘ │
+//!   │  EITHER "odoo" (default — fills the rest of the window,    │
+//!   │  this is the PRIMARY content the user works in all day)    │
 //!   │                                                            │
-//!   │   "odoo" webview: Odoo's own UI, filling the window below  │
-//!   │   the toolbar — this is the PRIMARY content the user       │
-//!   │   works in all day. Never resizes when the menu opens;     │
-//!   │   the menu floats over it instead of pushing it down.      │
+//!   │  OR, while the app view is open, "shell" itself grows to   │
+//!   │  cover this whole area too (Odoo is still running          │
+//!   │  underneath, just fully covered) — a real app page (Home   │
+//!   │  today, more to come: Training, Work, …), not a dropdown.  │
 //!   └──────────────────────────────────────────────────────────┘
 //!
 //! Security model (unchanged): the "odoo" webview gets ZERO Tauri IPC
@@ -41,19 +42,14 @@ pub const SHELL_LABEL: &str = "shell";
 pub const WINDOW_LABEL: &str = "main";
 
 pub const TOOLBAR_HEIGHT: f64 = 48.0;
-const MEGA_MENU_HEIGHT: f64 = 480.0;
 
 /// The "shell" webview is always at least the toolbar strip, full width,
-/// docked to the top. With the mega menu open it grows downward to also
-/// cover a menu panel — but never past the window, and it always
-/// overlays "odoo" rather than resizing it (odoo's own bounds are
-/// independent, see `odoo_bounds`).
-fn shell_bounds(window_width: f64, window_height: f64, menu_open: bool) -> (LogicalPosition<f64>, LogicalSize<f64>) {
-    let height = if menu_open {
-        (TOOLBAR_HEIGHT + MEGA_MENU_HEIGHT).min(window_height)
-    } else {
-        TOOLBAR_HEIGHT.min(window_height)
-    };
+/// docked to the top. While the app view is open it grows to cover the
+/// **entire** window (not a fixed dropdown height) — it's a real page
+/// takeover, not a glance-only menu, because there will be several such
+/// pages (Home today, more later) that deserve real screen space.
+fn shell_bounds(window_width: f64, window_height: f64, app_view_open: bool) -> (LogicalPosition<f64>, LogicalSize<f64>) {
+    let height = if app_view_open { window_height } else { TOOLBAR_HEIGHT.min(window_height) };
     (LogicalPosition::new(0.0, 0.0), LogicalSize::new(window_width, height))
 }
 
@@ -118,8 +114,8 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
                 let _ = odoo_wv.set_size(size);
             }
             if let Some(shell_wv) = app_handle.get_webview(SHELL_LABEL) {
-                let menu_open = *app_handle.state::<AppState>().overlay_expanded.lock().unwrap();
-                let (pos, size) = shell_bounds(logical.width, logical.height, menu_open);
+                let app_view_open = *app_handle.state::<AppState>().overlay_expanded.lock().unwrap();
+                let (pos, size) = shell_bounds(logical.width, logical.height, app_view_open);
                 let _ = shell_wv.set_position(pos);
                 let _ = shell_wv.set_size(size);
             }
@@ -170,7 +166,7 @@ async fn sync_session_from_odoo(app: &AppHandle, url: &tauri::Url) {
     drop(revealed);
 
     if auto_reveal {
-        open_menu(app);
+        open_app_view(app);
     }
 
     let _ = app.emit_to(
@@ -192,24 +188,24 @@ fn set_signed_out(app: &AppHandle) {
     }
 }
 
-fn apply_shell_bounds(app: &AppHandle, menu_open: bool) {
+fn apply_shell_bounds(app: &AppHandle, app_view_open: bool) {
     let Some(window) = app.get_window(WINDOW_LABEL) else { return };
     let Ok(size) = window.inner_size() else { return };
     let Ok(scale) = window.scale_factor() else { return };
     let logical: tauri::LogicalSize<f64> = size.to_logical(scale);
-    let (pos, size) = shell_bounds(logical.width, logical.height, menu_open);
+    let (pos, size) = shell_bounds(logical.width, logical.height, app_view_open);
     if let Some(shell_wv) = app.get_webview(SHELL_LABEL) {
         let _ = shell_wv.set_position(pos);
         let _ = shell_wv.set_size(size);
     }
-    *app.state::<AppState>().overlay_expanded.lock().unwrap() = menu_open;
+    *app.state::<AppState>().overlay_expanded.lock().unwrap() = app_view_open;
 }
 
-pub fn open_menu(app: &AppHandle) {
+pub fn open_app_view(app: &AppHandle) {
     apply_shell_bounds(app, true);
 }
 
-pub fn close_menu(app: &AppHandle) {
+pub fn close_app_view(app: &AppHandle) {
     apply_shell_bounds(app, false);
 }
 
@@ -268,12 +264,12 @@ mod tests {
     }
 
     #[test]
-    fn shell_bounds_menu_open_grows_downward_capped_to_window() {
+    fn shell_bounds_app_view_open_covers_the_entire_window() {
         let (pos, size) = shell_bounds(1280.0, 860.0, true);
         assert_eq!(pos, LogicalPosition::new(0.0, 0.0));
-        assert_eq!(size, LogicalSize::new(1280.0, TOOLBAR_HEIGHT + MEGA_MENU_HEIGHT));
+        assert_eq!(size, LogicalSize::new(1280.0, 860.0));
 
-        // A short window: the menu must never exceed the window height.
+        // A short window: still the full window, never more.
         let (_, short_size) = shell_bounds(1280.0, 300.0, true);
         assert_eq!(short_size.height, 300.0);
     }

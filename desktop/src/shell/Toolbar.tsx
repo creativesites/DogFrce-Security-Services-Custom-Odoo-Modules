@@ -3,7 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "../lib/tauri";
 import { useSession } from "../session/SessionContext";
 import { StatusBar } from "./StatusBar";
-import { OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon } from "./icons";
+import { OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon, HomeIcon } from "./icons";
 import type { SessionEvent } from "../session/types";
 
 function greeting(): string {
@@ -13,53 +13,65 @@ function greeting(): string {
   return "Good evening";
 }
 
+/** The app's own pages, reachable from the left nav once the app view is
+ * open. Only "home" exists today; this list is deliberately structured so
+ * adding a real page later is "add an entry + a case in the switch", not
+ * a redesign. */
+type AppPage = "home";
+const NAV_ITEMS: { key: AppPage; label: string; icon: () => JSX.Element; available: true }[] = [
+  { key: "home", label: "Home", icon: () => <HomeIcon size={18} />, available: true },
+];
+const COMING_SOON_ITEMS = ["My Work", "Training", "Adoption"];
+
 /**
- * The DeployGuard chrome around Odoo, revised 2026-09-16 to a persistent
- * toolbar + mega menu (see DEVIATIONS.md D-2/D-3), replacing the earlier
- * hover-corner-handle design:
+ * The DeployGuard chrome around Odoo, revised 2026-09-16 (three times):
+ * hover-corner-handle → toolbar + dropdown mega menu → **toolbar + full
+ * app view** (see DEVIATIONS.md D-2/D-3). The DeployGuard side is a real,
+ * growing application — a Home today, more pages later (My Work,
+ * Training, Adoption, …) — so it gets real screen space when open, with
+ * its own left navigation, rather than a glance-only dropdown.
  *
- *  - Always visible, docked to the top of the window (the native "shell"
- *    webview is exactly this toolbar strip — see windowing.rs).
- *  - Real Odoo navigation controls (back/forward/reload) drive Odoo's own
- *    browser history via a one-off `history.back()`-style eval, not a
- *    persistent bridge.
- *  - Clicking the DeployGuard brand opens a mega menu that drops down
- *    below the toolbar, overlaying the top of Odoo rather than resizing
- *    it. Click again, Escape, or a click outside closes it.
+ *  - Toolbar: always visible, docked to the top (native "shell" webview
+ *    bounds are exactly this strip — see windowing.rs). Real Odoo
+ *    navigation controls (back/forward/reload) drive Odoo's own browser
+ *    history via a one-off `history.back()`-style eval, not a bridge.
+ *  - App view: clicking the DeployGuard brand switches the "shell"
+ *    webview to cover the *entire* window (Odoo is still running
+ *    underneath, just fully covered — not resized or reloaded). Clicking
+ *    the brand again, Escape, or clicking a link into Odoo switches back.
  *
- * There is no separate "Home" route — the mega menu IS Home. There is no
- * DeployGuard-branded login screen: Odoo's own login page is what's
- * visible underneath when signed out.
+ * There is no DeployGuard-branded login screen: Odoo's own login page is
+ * what's visible underneath when signed out.
  */
 export function Toolbar() {
   const { status, session, signOut } = useSession();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [appViewOpen, setAppViewOpen] = useState(false);
+  const [page, setPage] = useState<AppPage>("home");
   const brandButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  const openMenu = useCallback(() => {
-    setMenuOpen(true);
-    void invoke("menu_open");
+  const openAppView = useCallback(() => {
+    setAppViewOpen(true);
+    void invoke("app_view_open");
   }, []);
 
-  const closeMenu = useCallback(() => {
-    setMenuOpen(false);
-    void invoke("menu_close");
+  const closeAppView = useCallback(() => {
+    setAppViewOpen(false);
+    void invoke("app_view_close");
   }, []);
 
-  const toggleMenu = useCallback(() => {
-    if (menuOpen) closeMenu();
-    else openMenu();
-  }, [menuOpen, openMenu, closeMenu]);
+  const toggleAppView = useCallback(() => {
+    if (appViewOpen) closeAppView();
+    else openAppView();
+  }, [appViewOpen, openAppView, closeAppView]);
 
   // Resync with the *actual* native webview size on mount — Rust is the
-  // source of truth (see get_menu_open's doc comment on the Rust side for
-  // why this matters, e.g. after a dev-server HMR reload).
+  // source of truth (see get_app_view_open's doc comment on the Rust
+  // side for why this matters, e.g. after a dev-server HMR reload).
   useEffect(() => {
     let cancelled = false;
-    invoke<boolean>("get_menu_open")
+    invoke<boolean>("get_app_view_open")
       .then((isOpen) => {
-        if (!cancelled && isOpen) setMenuOpen(true);
+        if (!cancelled && isOpen) setAppViewOpen(true);
       })
       .catch(() => {});
     return () => {
@@ -67,11 +79,11 @@ export function Toolbar() {
     };
   }, []);
 
-  // Rust auto-opens the menu the first time a session is detected.
+  // Rust auto-opens the app view the first time a session is detected.
   useEffect(() => {
     const unlistenPromise = listen<SessionEvent>("deployguard://session-changed", (event) => {
       if (event.payload.status === "signed_in" && event.payload.auto_reveal) {
-        setMenuOpen(true);
+        setAppViewOpen(true);
       }
     });
     return () => {
@@ -81,39 +93,28 @@ export function Toolbar() {
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape" && menuOpen) {
-        closeMenu();
+      if (e.key === "Escape" && appViewOpen) {
+        closeAppView();
         // Keyboard-initiated close returns focus to the control that
-        // opened it (docs/deployguard/05-ux-principles.md §9) — unlike
-        // the outside-click case below, where focus should follow the
-        // user's click, not jump back to the brand button.
+        // opened it (docs/deployguard/05-ux-principles.md §9).
         brandButtonRef.current?.focus();
       }
     }
-    function onPointerDown(e: MouseEvent) {
-      if (menuOpen && menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        closeMenu();
-      }
-    }
     window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("mousedown", onPointerDown);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("mousedown", onPointerDown);
-    };
-  }, [menuOpen, closeMenu]);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [appViewOpen, closeAppView]);
 
-  const goHome = useCallback(() => {
-    void invoke("navigate_odoo", { path: "/odoo" });
-    closeMenu();
-  }, [closeMenu]);
+  const goToOdoo = useCallback((path?: string) => {
+    void invoke("navigate_odoo", { path });
+    closeAppView();
+  }, [closeAppView]);
 
   const goBack = useCallback(() => void invoke("odoo_back"), []);
   const goForward = useCallback(() => void invoke("odoo_forward"), []);
   const reload = useCallback(() => void invoke("odoo_reload"), []);
 
   return (
-    <div className="dg-shell" ref={menuRef}>
+    <div className="dg-shell">
       <div className="dg-toolbar">
         <div className="dg-toolbar__nav">
           <button type="button" className="dg-toolbar__btn" aria-label="Back" title="Back" onClick={goBack}>
@@ -125,7 +126,7 @@ export function Toolbar() {
           <button type="button" className="dg-toolbar__btn" aria-label="Reload" title="Reload" onClick={reload}>
             <ReloadIcon size={16} />
           </button>
-          <button type="button" className="dg-toolbar__btn" aria-label="Go to DeployGuard System home" title="Home" onClick={goHome}>
+          <button type="button" className="dg-toolbar__btn" aria-label="Go to DeployGuard System home" title="DeployGuard System home" onClick={() => goToOdoo()}>
             <OdooIcon size={16} />
           </button>
         </div>
@@ -134,9 +135,9 @@ export function Toolbar() {
           ref={brandButtonRef}
           type="button"
           className="dg-toolbar__brand"
-          aria-expanded={menuOpen}
-          aria-label={menuOpen ? "Close DeployGuard menu" : "Open DeployGuard menu"}
-          onClick={toggleMenu}
+          aria-expanded={appViewOpen}
+          aria-label={appViewOpen ? "Close DeployGuard" : "Open DeployGuard"}
+          onClick={toggleAppView}
         >
           <span className="dg-toolbar__brand-mark" aria-hidden="true">DG</span>
           <span className="dg-toolbar__brand-label">DeployGuard</span>
@@ -158,68 +159,92 @@ export function Toolbar() {
         )}
       </div>
 
-      {menuOpen && (
-        <div className="dg-megamenu">
-          <StatusBar />
+      {appViewOpen && (
+        <div className="dg-appview">
+          <nav className="dg-appview__nav" aria-label="DeployGuard sections">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className="dg-appview__navitem"
+                aria-current={page === item.key ? "page" : undefined}
+                onClick={() => setPage(item.key)}
+              >
+                {item.icon()}
+                <span>{item.label}</span>
+              </button>
+            ))}
+            {COMING_SOON_ITEMS.map((label) => (
+              <div key={label} className="dg-appview__navitem dg-appview__navitem--soon" aria-disabled="true">
+                <span className="dg-appview__navitem-dot" aria-hidden="true" />
+                <span>{label}</span>
+                <span className="dg-chip">Soon</span>
+              </div>
+            ))}
+          </nav>
 
-          {status === "checking" && <p className="dg-empty">Checking your session…</p>}
+          <div className="dg-appview__content">
+            <StatusBar />
 
-          {status === "signed_out" && (
-            <div className="dg-card">
-              <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
-                Sign in on the DeployGuard System page below to get started
-                — nothing extra to remember, it's your existing DogForce
-                Odoo login.
-              </p>
-            </div>
-          )}
+            {status === "checking" && <p className="dg-empty">Checking your session…</p>}
 
-          {status === "signed_in" && session && (
-            <>
-              <h1 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 18px", color: "var(--ds-text)" }}>
-                {greeting()}, {session.name.split(" ")[0]}
-              </h1>
+            {status === "signed_out" && (
+              <div className="dg-card" style={{ maxWidth: 480 }}>
+                <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
+                  Sign in on the DeployGuard System page to get started —
+                  nothing extra to remember, it's your existing DogForce
+                  Odoo login.
+                </p>
+              </div>
+            )}
 
-              <div className="dg-megamenu__grid">
-                <button type="button" className="dg-tile" onClick={goHome}>
-                  <span className="dg-tile__icon"><OdooIcon /></span>
-                  <span>
-                    <span className="dg-tile__title">DeployGuard System</span>
-                    <span className="dg-tile__subline">Rosters, attendance, incidents, reports</span>
+            {status === "signed_in" && session && page === "home" && (
+              <>
+                <h1 style={{ fontSize: 20, fontWeight: 700, margin: "4px 0 20px", color: "var(--ds-text)" }}>
+                  {greeting()}, {session.name.split(" ")[0]}
+                </h1>
+
+                <div className="dg-appview__grid">
+                  <button type="button" className="dg-tile" onClick={() => goToOdoo()}>
+                    <span className="dg-tile__icon"><OdooIcon /></span>
+                    <span>
+                      <span className="dg-tile__title">DeployGuard System</span>
+                      <span className="dg-tile__subline">Rosters, attendance, incidents, reports</span>
+                    </span>
+                  </button>
+
+                  <div className="dg-card">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)" }}>My work</span>
+                      <span className="dg-chip">Coming soon</span>
+                    </div>
+                    <p className="dg-empty" style={{ padding: "8px 0", textAlign: "left" }}>
+                      Tasks and checklists will appear here once work management is enabled.
+                    </p>
+                  </div>
+
+                  <div className="dg-card">
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)" }}>Training</span>
+                      <span className="dg-chip">Coming soon</span>
+                    </div>
+                    <p className="dg-empty" style={{ padding: "8px 0", textAlign: "left" }}>
+                      No training assigned yet.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="dg-appview__footer">
+                  <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void signOut()}>
+                    Sign out
+                  </button>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ds-text-subtle)" }}>
+                    <HelpIcon size={16} /> Something not working? Ask your operations manager for now.
                   </span>
-                </button>
-
-                <div className="dg-card">
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)" }}>My work</span>
-                    <span className="dg-chip">Coming soon</span>
-                  </div>
-                  <p className="dg-empty" style={{ padding: "8px 0", textAlign: "left" }}>
-                    Tasks and checklists will appear here once work management is enabled.
-                  </p>
                 </div>
-
-                <div className="dg-card">
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)" }}>Training</span>
-                    <span className="dg-chip">Coming soon</span>
-                  </div>
-                  <p className="dg-empty" style={{ padding: "8px 0", textAlign: "left" }}>
-                    No training assigned yet.
-                  </p>
-                </div>
-              </div>
-
-              <div className="dg-megamenu__footer">
-                <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void signOut()}>
-                  Sign out
-                </button>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "var(--ds-text-subtle)" }}>
-                  <HelpIcon size={16} /> Something not working? Ask your operations manager for now.
-                </span>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

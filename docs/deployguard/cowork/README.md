@@ -47,26 +47,35 @@ rather than going quiet — this file is the only channel we have.
 ## Claude — Desktop App (`desktop/`)
 
 **Live, right now:** Winston is testing the DeployGuard Desktop pilot
-shell interactively with me in the main session — single-window overlay
-over Odoo, corner handle, session sync, sign-out. I'm iterating on that
-UI directly as he finds issues, so **nothing else should touch
-`desktop/src/shell/`, `desktop/src/session/`, or
-`desktop/src-tauri/src/windowing.rs`** without checking here first — those
-are actively changing under live testing.
+shell interactively with me in the main session — persistent top toolbar
+(real Odoo Back/Forward/Reload) + click-toggled mega menu over Odoo,
+session sync, sign-out. I'm iterating on that UI directly as he finds
+issues, so **nothing else should touch `desktop/src/shell/`,
+`desktop/src/session/`, or `desktop/src-tauri/src/windowing.rs`** without
+checking here first — those are actively changing under live testing.
 
-I've also spawned a background Claude agent, isolated in its own git
-worktree, on tasks that **don't** touch those live files:
+**Background hardening pass — done, merged (`main` @ `7545161`).** A
+background Claude agent (its own git worktree) delivered:
+- 25 Rust tests (`odoo::is_unauthenticated_path`, `config::odoo_base_url`,
+  `windowing::shell_bounds`/`odoo_bounds`) — `cargo test` in
+  `desktop/src-tauri`.
+- 28 frontend tests (Vitest, `extractErrorMessage`, `config/env.ts`) —
+  `npm test` in `desktop/`. Caught and fixed a real bug in
+  `extractErrorMessage.ts` along the way.
+- A WCAG contrast audit (`desktop/AGENT-FINDINGS.md`) — 3 of its findings
+  (focus-ring contrast, chip/empty-state text contrast, Escape not
+  returning focus) were fixed directly in the same commit.
+- **Found a real, repo-wide blocker: the GitHub account has a billing
+  lockout that fails every Actions run in ~3 seconds** ("account is
+  locked due to a billing issue"), confirmed by actually triggering a
+  run (PR #1, now closed — useful parts merged, its now-obsolete
+  pre-toolbar geometry tests were not). **This needs a human to resolve
+  on the GitHub account itself** — no code change here can fix it, and
+  it blocks Aegis's work too (any task that would rely on CI, e.g. T-7's
+  eventual PR checks).
 
-| Area | Task |
-|---|---|
-| CI | Get `.github/workflows/desktop-build.yml` actually producing a working, installable Windows artifact — push a test build, fix whatever GitHub Actions turns up that `cargo build` on macOS can't catch (MSVC-specific errors, bundler issues, icon format quirks on Windows). |
-| Tests | Add the Rust unit tests and Playwright/WebDriver smoke tests described in `desktop/README.md` "Testing checklist" and `docs/deployguard/25-testing-strategy.md` — sign-in failure path, connectivity-loss handling, session restore. |
-| Accessibility | Run the `docs/deployguard/05-ux-principles.md` §9 checklist against the current panel (contrast, keyboard nav, focus order, `aria-label`s) and fix what it finds. |
-| Docs | Keep `desktop/DEVIATIONS.md` and `desktop/README.md` accurate as the live UI changes land — will need a final sync pass once the interactive session settles. |
-
-Its work lands in a separate branch for review/merge once it's done —
-it will not appear in Winston's currently-running dev instance until
-merged.
+Nothing further queued here right now — desktop work continues live with
+Winston. A new background task will be posted here if/when one's scoped.
 
 ---
 

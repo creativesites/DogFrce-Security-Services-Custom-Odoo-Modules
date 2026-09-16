@@ -28,10 +28,10 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_current_session,
-            commands::get_menu_open,
+            commands::get_app_view_open,
             commands::auth_sign_out,
-            commands::menu_open,
-            commands::menu_close,
+            commands::app_view_open,
+            commands::app_view_close,
             commands::navigate_odoo,
             commands::odoo_back,
             commands::odoo_forward,

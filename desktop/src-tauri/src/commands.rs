@@ -14,11 +14,11 @@ pub fn get_current_session(state: State<AppState>) -> Option<SessionInfo> {
 /// Lets the "shell" webview's React state resync with the *actual* native
 /// webview size on mount — including after a dev-server HMR reload, which
 /// resets React state but not the native bounds Rust already set. Without
-/// this, an auto-reveal (see windowing::open_menu) that happens to race a
+/// this, an auto-reveal (see windowing::open_app_view) that happens to race a
 /// reload leaves the native webview big while React renders the toolbar
 /// only, or vice versa.
 #[tauri::command]
-pub fn get_menu_open(state: State<AppState>) -> bool {
+pub fn get_app_view_open(state: State<AppState>) -> bool {
     *state.overlay_expanded.lock().unwrap()
 }
 
@@ -28,13 +28,13 @@ pub async fn auth_sign_out(app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn menu_open(app: AppHandle) {
-    windowing::open_menu(&app);
+pub fn app_view_open(app: AppHandle) {
+    windowing::open_app_view(&app);
 }
 
 #[tauri::command]
-pub fn menu_close(app: AppHandle) {
-    windowing::close_menu(&app);
+pub fn app_view_close(app: AppHandle) {
+    windowing::close_app_view(&app);
 }
 
 #[tauri::command]
