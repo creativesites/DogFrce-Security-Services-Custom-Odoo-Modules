@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_telephony" model="ir.ui.view">
+        <field name="name">res.config.settings.view.security.telephony</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Telephony" string="Telephony" name="security_telephony">
+
+                    <block title="Control Room Line" name="security_telephony_line">
+                        <setting string="SIP Trunk Provider" help="Documentation only — every candidate speaks standard SIP into the same PBX, so this doesn't change the integration.">
+                            <field name="security_telephony_sip_provider" widget="radio"/>
+                        </setting>
+                        <setting string="Control Room Number" help="The public-facing number, once one exists.">
+                            <field name="security_telephony_control_room_number"/>
+                        </setting>
+                    </block>
+
+                    <block title="Webhook" name="security_telephony_webhook">
+                        <setting string="Webhook Token" help="POST call events to /api/telephony/event with this token. Rotate it if it leaks — update the PBX-side config to match.">
+                            <field name="security_telephony_webhook_token"/>
+                        </setting>
+                    </block>
+
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

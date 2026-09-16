@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Armoury Ledger: a filtered view over the existing equipment
+         allocation register (security_equipment), scoped to license-
+         controlled items (firearms, ammunition). No new model, no new
+         views — reuses security_equipment's own kanban/list/form. -->
+    <record id="action_security_armoury_ledger" model="ir.actions.act_window">
+        <field name="name">Armoury Ledger</field>
+        <field name="res_model">security.equipment.allocation</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[("equipment_type_id.requires_license", "=", True)]</field>
+        <field name="context">{'default_equipment_type_id': False}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No licensed items issued yet. Mark an equipment type as
+                "Requires License" (firearms, ammunition) to have it appear
+                here automatically.
+            </p>
+        </field>
+    </record>
+</odoo>

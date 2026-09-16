@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_telephony_call_mgr,security.telephony.call.mgr,model_security_telephony_call,security_base.group_security_manager,1,1,1,1
+access_telephony_call_sup,security.telephony.call.sup,model_security_telephony_call,security_base.group_security_supervisor,1,1,1,0

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_armed_response" model="ir.ui.view">
+        <field name="name">res.config.settings.view.security.armed.response</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Armed Response"
+                     string="Armed Response"
+                     name="security_armed_response">
+
+                    <block title="Live Callout Map" name="security_armed_response_map">
+                        <setting string="Google Maps API Key"
+                                 help="Requires the Maps JavaScript API enabled on the key's Google Cloud project. Restrict the key to this database's domain(s) — it is visible client-side by design, same as any browser Google Maps embed.">
+                            <field name="security_armed_response_gmaps_api_key"/>
+                        </setting>
+                    </block>
+
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

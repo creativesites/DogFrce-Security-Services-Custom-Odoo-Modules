@@ -1,0 +1,98 @@
+/* Live Callout Map — --ds-*/--dgs-* tokens only, no new hex values.
+   Marker colors in live_callout_map.js read these same custom properties
+   at runtime, so the legend below and the pins on the map always match. */
+
+.ar-map-screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    padding: 20px 24px;
+    gap: 14px;
+}
+
+.ar-map-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ar-map-title h1 {
+    font-family: var(--dgs-font, var(--ds-font));
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ds-text, #0D1117);
+    margin: 0 0 2px;
+}
+
+.ar-map-subtitle {
+    font-size: 12.5px;
+    color: var(--ds-text-subtle, #64748B);
+}
+
+.ar-map-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--ds-text-muted, #475569);
+}
+
+.ar-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ar-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.ar-dot-available { background: var(--ds-success, #0D7A4E); }
+.ar-dot-dispatched { background: var(--ds-warning, #92400E); }
+.ar-dot-on-scene { background: var(--ds-danger, #991B1B); }
+
+.ar-legend-arrow {
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 8px solid var(--ds-info, #1D5FA4);
+    display: inline-block;
+}
+
+.ar-map-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: var(--dgs-r-card, 20px);
+    overflow: hidden;
+    border: 1px solid var(--ds-border, #E2E8F0);
+    box-shadow: var(--dgs-lift, 0 1px 2px rgba(16, 23, 36, .05));
+}
+
+.ar-map-empty-state {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+    background: var(--dgs-panel, #FFFFFF);
+    border: 1px solid var(--ds-border, #E2E8F0);
+    border-radius: var(--dgs-r-card, 20px);
+    color: var(--ds-text-muted, #475569);
+    padding: 40px;
+}
+
+.ar-map-empty-state h3 {
+    font-family: var(--dgs-font, var(--ds-font));
+    font-size: 16px;
+    color: var(--ds-text, #0D1117);
+    margin: 0;
+}

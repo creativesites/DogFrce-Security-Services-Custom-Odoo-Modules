@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_telephony_call_list" model="ir.ui.view">
+        <field name="name">security.telephony.call.list</field>
+        <field name="model">security.telephony.call</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state == 'missed'" decoration-danger="state == 'failed'">
+                <field name="started_at"/>
+                <field name="direction"/>
+                <field name="caller_name"/>
+                <field name="from_number"/>
+                <field name="state" widget="badge"/>
+                <field name="duration_seconds" widget="float_time"/>
+                <field name="dispatch_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_telephony_call_form" model="ir.ui.view">
+        <field name="name">security.telephony.call.form</field>
+        <field name="model">security.telephony.call</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_create_dispatch" type="object" string="Raise as Dispatch" class="oe_highlight" invisible="dispatch_id or direction != 'inbound'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="ringing,answered,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Call">
+                            <field name="direction"/>
+                            <field name="from_number"/>
+                            <field name="to_number"/>
+                            <field name="caller_name"/>
+                            <field name="employee_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                        </group>
+                        <group string="Timing">
+                            <field name="started_at" readonly="1"/>
+                            <field name="answered_at" readonly="1"/>
+                            <field name="ended_at" readonly="1"/>
+                            <field name="duration_seconds" widget="float_time" readonly="1"/>
+                            <field name="recording_url" widget="url" invisible="not recording_url"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="dispatch_id"/>
+                        <field name="notes"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_telephony_call_search" model="ir.ui.view">
+        <field name="name">security.telephony.call.search</field>
+        <field name="model">security.telephony.call</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="from_number"/>
+                <field name="caller_name"/>
+                <filter name="filter_missed" string="Missed" domain="[('state', '=', 'missed')]"/>
+                <filter name="filter_inbound" string="Inbound" domain="[('direction', '=', 'inbound')]"/>
+                <filter name="filter_no_dispatch" string="Not linked to a dispatch" domain="[('dispatch_id', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_by_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_by_day" string="Day" context="{'group_by': 'started_at:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_telephony_call" model="ir.actions.act_window">
+        <field name="name">Call Log</field>
+        <field name="res_model">security.telephony.call</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No calls logged yet — this fills in once a PBX is connected
+                and posting to /api/telephony/event.
+            </p>
+        </field>
+    </record>
+</odoo>

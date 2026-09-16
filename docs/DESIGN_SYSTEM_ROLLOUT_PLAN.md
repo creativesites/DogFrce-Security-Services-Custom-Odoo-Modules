@@ -106,13 +106,75 @@ list/form parts) until there's spare capacity.
 These are the `soon: true` leaves in `nav_catalog.js` — **do not build them
 against ad hoc CSS and retrofit later; start on `--ds-*`/`--dgs-*` tokens.**
 
-### Quick Response / Armed Response — does not exist yet
-Confirmed: there is no "Quick Response," "Armed Response," or "dispatch"
-module in the codebase today. `nav_catalog.js` already reserves the shape
-for it (`Operations → Armed response → Unit dispatch board · Live callout
-map · Armoury ledger`, all `soon: true`). When this gets built, it's a new
-module (e.g. `security_armed_response`) depended on by nothing existing;
-wire its actions into those three nav leaves and drop `soon: true`.
+### Armed Response — shipped (dispatch board, live map, armoury)
+`security_armed_response` is live: `security.response.unit` (commander,
+members, assigned `security.vehicle`, status) and `security.response.dispatch`
+(source, site, priority, state machine new → acknowledged → dispatched →
+on scene → resolved/cancelled, response-time compute). The dispatch board
+is a kanban grouped by state, styled on `--ds-*`/`--dgs-*` tokens
+(`dispatch_board.css`).
+
+Live Callout Map uses Google Maps (JS API key set in Settings → Armed
+Response — `security_armed_response.gmaps_api_key`, no default, shows a
+clear empty state until one is added). Marker colors are read from the
+same `--ds-success/-warning/-danger/-info` tokens at runtime, not
+hardcoded, so the legend and the pins can never drift apart. Positions
+come from `security.response.unit.last_lat/last_lng`, updated either
+manually on the unit form or by POSTing to
+`/api/armed_response/units/<id>/ping` with that unit's own `gps_token`
+(rotatable per-unit, not a single shared module secret). **No GPS/fleet-
+tracking provider is wired up yet** — that endpoint is the only thing that
+changes once one is chosen; the map, the data model, and the dispatch
+workflow are already done and don't need to change.
+
+Armoury did **not** get a new model — `security_equipment` already modeled
+serialized, license-tracked items (`requires_license` on
+`security.equipment.type`, `license_number`/`license_expiry` on
+`security.equipment.item`) generically enough to cover firearms. The
+"Armoury Ledger" nav leaf is a filtered `ir.actions.act_window` over the
+existing `security.equipment.allocation` register
+(`domain=[("equipment_type_id.requires_license", "=", True)]`), reusing
+its stock kanban/list/form views — zero duplication, zero risk to the
+existing equipment data. A `group_armoury_custodian` role exists for when
+tighter row-level access is wanted; no record rule was added yet (deferred
+deliberately — see the module's own notes — to avoid touching access on a
+model with live production data without a dedicated review).
+
+### Telephony — shipped (call log + webhook), no PBX connected yet
+`security_telephony` is live: `security.telephony.call` logs every
+inbound/outbound call (state machine ringing → answered →
+completed/missed/failed), resolves caller identity by reusing the
+WhatsApp bridge's own phone-matching logic (`security.whatsapp.bridge.
+_resolve_sender_identity`) rather than a second copy of it, and lets a
+controller promote a call to an Armed Response dispatch manually — not
+automatically, since not every call is a callout and that's a human
+decision.
+
+`/api/telephony/event` is the provider-agnostic inbound webhook (same
+shape as the GPS ping endpoint: auth=none, single shared token checked
+per request, idempotent on the PBX's own call id). Architecture decision,
+researched against Namibia's actual telecom landscape rather than
+assumed: **self-hosted Asterisk fed by a local Namibian SIP trunk**, not
+a hosted PBX product or an international CPaaS — Twilio and Africa's
+Talking were both checked and ruled out (neither reliably issues local
++264 numbers; Africa's Talking Voice doesn't cover Namibia at all).
+Three real, CRAN-licensed local candidates for the trunk: MTC Cirrus
+CloudPBX, Paratus Namibia, 0824 Telco/Telepassport — all standard SIP,
+so the provider choice is a Settings-page dropdown (documentation only),
+not an architecture change. **No PBX exists yet** — DogForce has none
+today; this ships the receiving end so connecting one later only means
+pointing its call-events at this URL.
+
+The webhook token is `config_parameter`-backed with a Python default,
+which means — same gotcha as any Odoo settings field like this — it
+isn't actually generated/persisted until Settings → Telephony is opened
+and saved once. Documented in the field's own help text; worth knowing
+before assuming the endpoint "isn't working."
+
+Not done: actual call origination (click-to-call) — needs real Asterisk
+ARI connection details that don't exist yet, so it's not stubbed with a
+fake button; the call log and inbound webhook are the complete, useful
+slice for now.
 
 ### Documents — current module is certification tracking, not a document register
 `security_documents` today is guard certification/expiry tracking

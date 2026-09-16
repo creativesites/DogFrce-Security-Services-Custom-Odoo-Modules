@@ -1,0 +1,94 @@
+/* Armed Response — Dispatch Board
+   Uses --ds-*/--dgs-* tokens exclusively, per docs/DEPLOYGUARD_DESIGN_SYSTEM.md.
+   No new hex values, no third dark surface. */
+
+.ar-dispatch-board .o_kanban_group {
+    background: var(--dgs-canvas, #F5F6F9);
+    border-radius: var(--dgs-r-card, 20px);
+}
+
+.ar-dispatch-card {
+    background: var(--dgs-panel, #FFFFFF);
+    border: 1px solid var(--ds-border, #E2E8F0);
+    border-radius: var(--dgs-r-tile, 16px);
+    box-shadow: var(--dgs-lift, 0 1px 2px rgba(16, 23, 36, .05));
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: box-shadow .15s ease;
+}
+
+.ar-dispatch-card:hover {
+    box-shadow: var(--dgs-lift-hover, 0 10px 26px rgba(16, 23, 36, .10));
+}
+
+.ar-dispatch-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ar-dispatch-name {
+    font-family: var(--dgs-mono, "IBM Plex Mono", monospace);
+    font-variant-numeric: tabular-nums;
+    font-size: 12px;
+    color: var(--ds-text-muted, #475569);
+}
+
+.ar-dispatch-site {
+    font-family: var(--dgs-font, var(--ds-font));
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--ds-text, #0D1117);
+}
+
+.ar-dispatch-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ds-text-subtle, #64748B);
+}
+
+.ar-dispatch-time {
+    font-family: var(--dgs-mono, "IBM Plex Mono", monospace);
+    font-variant-numeric: tabular-nums;
+}
+
+.ar-dispatch-unassigned {
+    color: var(--ds-warning, #92400E);
+    font-weight: 600;
+}
+
+/* Priority chip — semantic status colors only, no new hex. */
+.ar-priority-chip {
+    font-family: var(--dgs-mono, "IBM Plex Mono", monospace);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--dgs-r-pill, 22px);
+}
+
+.ar-priority-chip-low,
+.ar-priority-chip-medium {
+    background: var(--ds-info-bg, #E0EEFA);
+    color: var(--ds-info, #1D5FA4);
+}
+
+.ar-priority-chip-high {
+    background: var(--ds-warning-bg, #FEF3C7);
+    color: var(--ds-warning, #92400E);
+}
+
+.ar-priority-chip-critical {
+    background: var(--ds-danger-bg, #FEE2E2);
+    color: var(--ds-danger, #991B1B);
+}
+
+.ar-dispatch-card.ar-priority-critical {
+    border-left: 3px solid var(--ds-danger, #991B1B);
+}

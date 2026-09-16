@@ -9,9 +9,12 @@
  * - action:   "<module>.<xmlid>" of an existing action. Omitted for `soon`
  *             leaves and for leaves whose feature has no dedicated action
  *             yet (they render the same as `soon` — see shell_nav_panel.js).
- * - soon:     true for the six planned modules (Armed Response, Armoury,
- *             Fleet & Tracking, Client Portal, Recruitment, Documents-soon
- *             entries) — renders a SOON chip, never clickable.
+ * - soon:     true for planned-but-unbuilt leaves — renders a SOON chip,
+ *             never clickable. Armed Response's dispatch board, live
+ *             callout map (Google Maps), and the Armoury ledger all
+ *             shipped in `security_armed_response`. Still soon as of this
+ *             writing: Fleet & tracking map, Client Portal, Recruitment,
+ *             Telephony, Document register.
  * - owner:    true restricts the leaf to security_base.group_security_owner.
  * - countKey: key into the shell service's nav_counts payload for the live
  *             count pill.
@@ -46,16 +49,16 @@ export const NAV_CATALOG = [
                 label: "Planning",
                 children: [
                     { key: "demand_planning", label: "Demand planning", action: "security_operations.action_security_demand_plan", owner: true },
-                    { key: "telephony", label: "Telephony", soon: true },
+                    { key: "telephony", label: "Telephony", action: "security_telephony.action_security_telephony_call" },
                 ],
             },
             {
                 key: "armed_response",
                 label: "Armed response",
                 children: [
-                    { key: "unit_dispatch_board", label: "Unit dispatch board", soon: true },
-                    { key: "live_callout_map", label: "Live callout map", soon: true },
-                    { key: "armoury_ledger", label: "Armoury ledger", soon: true },
+                    { key: "unit_dispatch_board", label: "Unit dispatch board", action: "security_armed_response.action_security_response_dispatch" },
+                    { key: "live_callout_map", label: "Live callout map", action: "security_armed_response.action_security_live_callout_map" },
+                    { key: "armoury_ledger", label: "Armoury ledger", action: "security_armed_response.action_security_armoury_ledger" },
                 ],
             },
             {
@@ -157,7 +160,7 @@ export const NAV_CATALOG = [
                 label: "Assets",
                 children: [
                     { key: "equipment_issue_return", label: "Equipment issue / return", action: "security_equipment.action_security_equipment_return_wizard" },
-                    { key: "armoury", label: "Armoury", soon: true },
+                    { key: "armoury", label: "Armoury", action: "security_armed_response.action_security_armoury_ledger" },
                 ],
             },
         ],

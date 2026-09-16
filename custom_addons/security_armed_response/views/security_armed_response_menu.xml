@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_security_live_callout_map" model="ir.actions.client">
+        <field name="name">Live Callout Map</field>
+        <field name="tag">security_armed_response.LiveCalloutMap</field>
+    </record>
+
+    <menuitem
+        id="menu_security_armed_response_root"
+        name="Armed Response"
+        parent="security_operations.menu_security_operations_root"
+        sequence="40"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_response_dispatch"
+        name="Dispatch Board"
+        parent="menu_security_armed_response_root"
+        action="action_security_response_dispatch"
+        sequence="10"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_response_unit"
+        name="Response Units"
+        parent="menu_security_armed_response_root"
+        action="action_security_response_unit"
+        sequence="20"
+        groups="group_response_commander,security_base.group_security_manager"
+    />
+
+    <menuitem
+        id="menu_security_live_callout_map"
+        name="Live Callout Map"
+        parent="menu_security_armed_response_root"
+        action="action_security_live_callout_map"
+        sequence="25"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <menuitem
+        id="menu_security_armoury_ledger"
+        name="Armoury Ledger"
+        parent="menu_security_armed_response_root"
+        action="action_security_armoury_ledger"
+        sequence="30"
+        groups="group_armoury_custodian,security_base.group_security_manager"
+    />
+</odoo>
