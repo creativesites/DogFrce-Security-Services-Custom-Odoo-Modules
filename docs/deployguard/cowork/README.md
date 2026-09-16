@@ -8,6 +8,34 @@ This directory serves as our central hub for tracking, coordinating, and executi
 
 ---
 
+## 🚨 Urgent correction — `gemini-2.5-flash` is deprecated, T-1's target was wrong
+
+**2026-09-16, Claude.** T-1 asked for `gemini-2.5-flash` as the default
+model. That was correct when I proposed it but **is now wrong**: a real,
+live call to the Gemini API today (verified via `packages/ai/scripts/
+smoke-test.ts`, not a guess) returned:
+
+> `404 Not Found: This model models/gemini-2.5-flash is no longer
+> available to new users. Please update your code to use
+> models/gemini-3.6-flash for the latest features and improvements.`
+
+I found `gemini-2.5-flash` already set as the default in
+`security_ai_engine/providers/gemini.py`, `models/security_ai_config.py`
+(x2, including the help text), `models/security_ai_engine.py`'s pricing
+table, and `controllers/chat_controller.py`'s fallback — please update
+**all of these** to `gemini-3.6-flash`. If `security_ai_engine.py`'s
+pricing table needs a real price for `gemini-3.6-flash` rather than
+reusing the old `gemini-2.5-flash` numbers, flag that here rather than
+guessing — I don't have pricing data from this smoke test, only that the
+model name itself changed.
+
+Also worth a quick check while you're in there: confirm none of the
+other model name strings in that module (fallback providers, cached
+model lists, etc.) reference other now-retired model ids — I only
+verified `gemini-3.6-flash` specifically, not a full model-catalog sweep.
+
+---
+
 ## About Aegis
 
 * **Primary Stack Expertise:** Odoo 19 Community, Python (`TransactionCase` & `HttpCase`), PostgreSQL, OWL 2, Vanilla CSS custom properties.
@@ -29,7 +57,7 @@ below). Neither agent edits the other's area without saying so here first.
 
 | ID | Task Description | Priority | Assigned To | Status |
 |---|---|---|---|---|
-| **T-1** | Fix Defect D-1: Set Google Gemini as the default active AI provider and align default models to `gemini-2.5-flash`. | P1 | Aegis | 🔲 Ready to start — **confirmed, go ahead** (see `docs/deployguard/00-current-state.md` §8, `docs/deployguard/31-dogforce-rollout.md` Stage 0 item 7) |
+| **T-1** | Fix Defect D-1: Set Google Gemini as the default active AI provider and align default models to **`gemini-3.6-flash`** (corrected 2026-09-16 — see the urgent note above; `gemini-2.5-flash` is deprecated). | P1 | Aegis | 🔲 Ready to start — **confirmed, go ahead** (see `docs/deployguard/00-current-state.md` §8, `docs/deployguard/31-dogforce-rollout.md` Stage 0 item 7) |
 | **T-2** | Fix Defect D-3: Correct certification model lookup mismatch (`security.employee.certification`) in scanners. | P1 | Aegis | 🔲 Ready to start — **confirmed, go ahead** (Stage 0 item 9) |
 | **T-3** | Implement deduction cap & carry-forward logic (G-1) in `security_payroll_core`. | P0 | Aegis | 🔲 Awaiting instructions — **go ahead**; please add a one-line summary of the actual rule (cap %, carry-forward period) here once you've located the source spec, so Winston/Claude can sanity-check before you build against it |
 | **T-4** | Harden and verify leave accrual cron with dedicated unit tests (G-5) in `security_leave`. | P1 | Aegis | 🔲 Awaiting instructions — **go ahead** |

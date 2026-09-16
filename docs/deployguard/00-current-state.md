@@ -129,7 +129,7 @@ Groups in `security_base/security/security_groups.xml`: Security Guard → Super
 
 | ID | Defect | Location |
 |---|---|---|
-| D-1 | `security.ai.config.active_provider` defaults to `claude`; **Gemini must be the default.** Provider files hardcode `claude-sonnet-4-6` and `gemini-1.5-pro`, which disagree with the config default `gemini-2.5-flash`. | `security_ai_engine/models/security_ai_config.py`, `providers/*.py` |
+| D-1 | `security.ai.config.active_provider` defaults to `claude`; **Gemini must be the default.** Provider files hardcode `claude-sonnet-4-6` and `gemini-1.5-pro`, which disagree with the config default `gemini-2.5-flash`. **Update (2026-09-16, verified against the live API):** `gemini-2.5-flash` is itself now deprecated — a real call returns `404 … use models/gemini-3.6-flash`. The correct target model is **`gemini-3.6-flash`**, not `gemini-2.5-flash`. | `security_ai_engine/models/security_ai_config.py`, `providers/*.py` |
 | D-2 | `openai` provider silently falls through to the Claude agent path. | `security_ai_engine/controllers/chat_controller.py` |
 | D-3 | `action_scan_certification_expiry` looks up non-existent `security.guard.certification` (real model `security.employee.certification`), so the scan does nothing. | `security_notifications/models/security_notifications.py` |
 | D-4 | `security.mobile.bridge` and `security.portal.bridge` implement `_handle_bus_event` but are never dispatched, so Expo push from bus events is dead code. | `security_base/models/security_event_bus.py` |

@@ -45,6 +45,26 @@ If a proposed feature does not serve that sentence, it is not MVP.
 | macOS/Linux distribution, mobile retrofit to the design system | No user need yet | FUT |
 | Any ERP capability (rosters, payroll, billing, equipment) | Odoo is the system of record | Never |
 
+### 3.1 Sales guardrail — say this out loud in every MVP conversation
+
+**MVP contains no AI-generated text, insight, or recommendation anywhere
+in the product.** Every number, status and exception the user sees is
+produced by a deterministic rule (§2's Foundations row: rules decide
+facts, per [11-ai-intelligence.md](11-ai-intelligence.md) §1). That is
+correct, deliberate engineering — deterministic value has to be real and
+trusted before AI reasons over it (see
+[29-roadmap.md](29-roadmap.md) §3, "Why AI comes after the pilot"). It is
+**not** the same product as "an AI intelligence engine," and the two must
+never be conflated in a sales conversation, a demo, or a proposal.
+
+If asked "is this AI?" during the MVP, the honest answer is: **"Not yet —
+that's V1, and it's already designed"** (point to
+[11-ai-intelligence.md](11-ai-intelligence.md) and
+[DG-ADR-010](adr/DG-ADR-010-ai-architecture.md)). Do not let anyone —
+including an eager owner — walk away from an MVP demo believing they
+bought AI-generated insight when what they saw was a (very real, very
+useful) rules engine.
+
 ## 4. Release definitions
 
 | Release | Theme | Exit criteria |
