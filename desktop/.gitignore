@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-windows
 *.tsbuildinfo
 src-tauri/target
 src-tauri/gen
