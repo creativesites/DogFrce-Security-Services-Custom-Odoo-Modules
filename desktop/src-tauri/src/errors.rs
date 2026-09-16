@@ -9,6 +9,12 @@ pub enum AppError {
     NetworkUnreachable,
     #[error("DeployGuard ERP returned an unexpected error.")]
     ServerError,
+    /// An Odoo-side validation/business-rule message (e.g. a UserError
+    /// raised by a model method) — safe to show verbatim, it's
+    /// domain-logic text the same user would see inside Odoo itself,
+    /// never a credential/token/cookie.
+    #[error("{0}")]
+    RequestFailed(String),
     #[error("Something went wrong. Try again.")]
     Unknown,
 }

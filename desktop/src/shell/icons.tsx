@@ -26,6 +26,38 @@ export function HomeIcon({ size }: IconProps = {}) {
   );
 }
 
+export function ClipboardListIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <rect x="6" y="4" width="12" height="16" rx="2" />
+      <path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4" />
+      <path d="M9 10h.01" />
+      <path d="M12 10h3" />
+      <path d="M9 14h.01" />
+      <path d="M12 14h3" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8.5 12.3 2.4 2.4 4.6-5.4" />
+    </svg>
+  );
+}
+
+export function AlertTriangleIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <path d="M12 4 3 19h18L12 4Z" />
+      <path d="M12 10v4" />
+      <path d="M12 17h.01" />
+    </svg>
+  );
+}
+
 export function OdooIcon({ size }: IconProps = {}) {
   return (
     <svg {...common(size)} aria-hidden="true">

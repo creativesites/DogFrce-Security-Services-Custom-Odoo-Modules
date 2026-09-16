@@ -33,6 +33,7 @@ pub fn run() {
             commands::app_view_open,
             commands::app_view_close,
             commands::navigate_odoo,
+            commands::odoo_call_kw,
             commands::odoo_back,
             commands::odoo_forward,
             commands::odoo_reload,

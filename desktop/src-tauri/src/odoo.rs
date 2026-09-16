@@ -91,6 +91,70 @@ pub async fn destroy_session(session_id: &str) {
     }
 }
 
+#[derive(Deserialize)]
+struct CallKwResponse {
+    result: Option<serde_json::Value>,
+    error: Option<serde_json::Value>,
+}
+
+/// Generic `/web/dataset/call_kw` proxy, used by the "My Work" feature (and
+/// any future feature needing standard Odoo model access) instead of a
+/// bespoke endpoint per model — `call_kw` already respects the signed-in
+/// user's normal ACLs. This is a thin passthrough: the "shell" webview never
+/// sees the session cookie itself (D-1/D-2 — it lives only in
+/// `AppState.session_cookie`), so the request has to be made from Rust.
+pub async fn call_kw(
+    session_id: &str,
+    model: &str,
+    method: &str,
+    args: serde_json::Value,
+    kwargs: serde_json::Value,
+) -> Result<serde_json::Value, crate::errors::AppError> {
+    let base_url = config::odoo_base_url();
+    let c = client().ok_or(crate::errors::AppError::Unknown)?;
+
+    let resp = c
+        .post(format!("{base_url}/web/dataset/call_kw"))
+        .header(reqwest::header::COOKIE, format!("session_id={session_id}"))
+        .json(&json!({
+            "jsonrpc": "2.0",
+            "method": "call",
+            "params": {
+                "model": model,
+                "method": method,
+                "args": args,
+                "kwargs": kwargs,
+            }
+        }))
+        .send()
+        .await?;
+
+    if !resp.status().is_success() {
+        return Err(crate::errors::AppError::ServerError);
+    }
+
+    let parsed: CallKwResponse = resp.json().await.map_err(|_| crate::errors::AppError::ServerError)?;
+
+    if let Some(err) = parsed.error {
+        tracing::warn!(error = %err, model, method, "odoo call_kw returned an error");
+        // Odoo's JSON-RPC error shape nests the actual UserError/
+        // ValidationError text in error.data.message; error.message is
+        // just "Odoo Server Error" and not useful to show. Fall back to
+        // the generic message if the shape doesn't match (e.g. a raw
+        // traceback with no `data.message`, which we don't want to leak).
+        let user_message = err
+            .get("data")
+            .and_then(|d| d.get("message"))
+            .and_then(|m| m.as_str());
+        return Err(match user_message {
+            Some(message) => crate::errors::AppError::RequestFailed(message.to_string()),
+            None => crate::errors::AppError::ServerError,
+        });
+    }
+
+    parsed.result.ok_or(crate::errors::AppError::ServerError)
+}
+
 pub async fn health_check() -> bool {
     let base_url = config::odoo_base_url();
     match client() {
