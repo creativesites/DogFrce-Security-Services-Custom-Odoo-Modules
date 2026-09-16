@@ -200,12 +200,24 @@ live, not from memory). **No concrete bugs found**; specifics:
 **Not verified (could not, without a real Windows runner or Actions
 run):** actual successful compilation of `tao`/`wry`/`muda` and other
 native-UI crates against the MSVC toolchain, actual NSIS/MSI bundle
-generation, and WebView2 runtime behavior. I have `gh` CLI access with
-`workflow` scope and pushed a branch to trigger a real run — see the
-handback message for the run's actual status/URL if it completed in time,
-otherwise it's still the one thing this pass could not fully close out
-locally (macOS can't cross-compile a Windows Tauri bundle, so this was
-always going to require either CI or a Windows machine).
+generation, and WebView2 runtime behavior.
+
+I pushed branch `agent/desktop-ci-test-hardening` and opened
+[PR #1](https://github.com/creativesites/DogFrce-Security-Services-Custom-Odoo-Modules/pull/1)
+specifically to make `desktop-build.yml` actually run on a real
+`windows-latest` runner (it had literally never executed before this —
+`workflow_dispatch` isn't usable until the workflow file exists on
+`main`, which it doesn't yet on this remote, so `pull_request` was the
+only way to fire it). **The run failed in ~3 seconds with: "The job was
+not started because your account is locked due to a billing issue."** —
+this is not a code or config problem. I confirmed it's account-wide and
+pre-existing by checking runs on `main` going back to 2026-09-02, which
+fail with the identical billing-lockout annotation regardless of what
+they build. **Action needed from a human with billing access to the
+`creativesites` GitHub account/org** before this workflow (or any
+workflow in this repo) can actually execute and give a real pass/fail
+signal. Everything else in this section remains static-verification-only
+until that's resolved.
 
 ---
 
