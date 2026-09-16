@@ -20,15 +20,29 @@
   --dg-radius-lg: var(--dgs-r-card);
   --dg-radius-xl: var(--dgs-r-shell);
 
+  /* dgs.css only defines the base rail color plus a translucent hover
+     overlay -- no second/third dark elevation tier. Deriving them from
+     --dgs-rail via color-mix keeps every value traceable to the one real
+     dark-surface token instead of hand-picking new hex, while still
+     giving the gradients throughout this file the graduated tiers they
+     need. --dgs-rail-active is NOT a background tier despite the name --
+     per shell_tokens.css / shell.css it is the emphasis color for an
+     active icon/row on the rail, so it must never back a whole surface. */
   --dg-bg:        var(--dgs-rail);
-  --dg-bg-2:      var(--dgs-rail-hover);
-  --dg-bg-3:      var(--dgs-rail-active);
+  --dg-bg-2:      color-mix(in oklab, var(--dgs-rail) 88%, white 12%);
+  --dg-bg-3:      color-mix(in oklab, var(--dgs-rail) 76%, white 24%);
   --dg-line:      var(--dgs-rail-divider);
-  --dg-line-2:    var(--ds-border);
-  --dg-hi:        var(--dgs-lift);
-  --dg-text:      var(--ds-text);
-  --dg-text-2:    var(--ds-text-2);
-  --dg-text-3:    var(--ds-text-subtle);
+  --dg-line-2:    color-mix(in oklab, var(--dgs-rail-divider) 60%, white 40%);
+  --dg-hi:        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  /* Text-on-rail has no dedicated --ds- or --dgs- token either (--ds-text
+     is near-black, sized for the light --ds-surface canvas, not this
+     dark chrome). shell.css's own rail nav sets exactly this pair --
+     --dgs-rail-icon for idle text/icons, literal white for the
+     emphasized/hover state -- so this follows that established
+     precedent rather than inventing a new one. */
+  --dg-text:      #fff;
+  --dg-text-2:    var(--dgs-rail-icon);
+  --dg-text-3:    color-mix(in oklab, var(--dgs-rail-icon) 65%, var(--dgs-rail) 35%);
   --dg-accent:    var(--ds-accent);
   --dg-accent-2:  var(--ds-accent-mid);
   --dg-danger:    var(--ds-danger);
@@ -217,6 +231,7 @@
   color: #fff;
   letter-spacing: 0.02em;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  object-fit: cover; /* no-op on the initials <span>, needed when this class renders an <img> */
 }
 .dg-toolbar__profile-name {
   font-size: 12px;

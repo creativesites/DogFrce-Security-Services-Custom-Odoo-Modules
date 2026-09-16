@@ -96,6 +96,28 @@ pub async fn odoo_call_kw(
     odoo::call_kw(&session_id, &model, &method, args, kwargs).await
 }
 
+/// Fetches the signed-in user's Odoo avatar as a `data:` URL. The
+/// frontend is responsible for caching it (localStorage, keyed by uid) --
+/// this command always does a real fetch, it doesn't cache on the Rust
+/// side.
+#[tauri::command]
+pub async fn odoo_fetch_avatar(state: State<'_, AppState>) -> Result<Option<String>, AppError> {
+    let session_id = state
+        .session_cookie
+        .lock()
+        .unwrap()
+        .clone()
+        .ok_or(AppError::Unknown)?;
+    let uid = state
+        .session
+        .lock()
+        .unwrap()
+        .as_ref()
+        .map(|s| s.uid)
+        .ok_or(AppError::Unknown)?;
+    odoo::fetch_avatar_data_url(&session_id, uid).await
+}
+
 #[tauri::command]
 pub async fn connectivity_check() -> connectivity::ConnectivityReport {
     connectivity::check().await

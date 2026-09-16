@@ -4,6 +4,7 @@ import {
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "../lib/tauri";
+import { getCachedAvatar, setCachedAvatar } from "../lib/avatarCache";
 import { useSession } from "../session/SessionContext";
 import { StatusBar } from "./StatusBar";
 import {
@@ -80,6 +81,31 @@ export function Toolbar() {
   const [paletteIndex, setPaletteIndex] = useState(0);
   const brandButtonRef = useRef<HTMLButtonElement | null>(null);
   const paletteInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // ---- Avatar: cached first, then a background refresh from Odoo --------
+  useEffect(() => {
+    if (status !== "signed_in" || !session) {
+      setAvatarUrl(null);
+      return;
+    }
+    const cached = getCachedAvatar(session.uid);
+    setAvatarUrl(cached);
+
+    let cancelled = false;
+    invoke<string | null>("odoo_fetch_avatar")
+      .then((dataUrl) => {
+        if (cancelled || !dataUrl) return;
+        setCachedAvatar(session.uid, dataUrl);
+        setAvatarUrl(dataUrl);
+      })
+      .catch(() => {
+        // No network fetch this launch — the cached avatar (if any) or the
+        // initials fallback below is all we show. Not worth surfacing an
+        // error for a cosmetic feature.
+      });
+    return () => { cancelled = true; };
+  }, [status, session]);
 
   // ---- Window state (unchanged behavior) ---------------------------------
   useEffect(() => {
@@ -291,15 +317,19 @@ export function Toolbar() {
 
         {status === "signed_in" && session ? (
           <div className="dg-toolbar__profile" title={session.name}>
-            <span
-              className="dg-toolbar__avatar"
-              aria-hidden="true"
-              style={{
-                background: `linear-gradient(135deg, hsl(${avatarHue} 62% 46%), hsl(${(avatarHue + 40) % 360} 68% 38%))`,
-              }}
-            >
-              {initialsOf(session.name)}
-            </span>
+            {avatarUrl ? (
+              <img className="dg-toolbar__avatar" src={avatarUrl} alt="" aria-hidden="true" />
+            ) : (
+              <span
+                className="dg-toolbar__avatar"
+                aria-hidden="true"
+                style={{
+                  background: `linear-gradient(135deg, hsl(${avatarHue} 62% 46%), hsl(${(avatarHue + 40) % 360} 68% 38%))`,
+                }}
+              >
+                {initialsOf(session.name)}
+              </span>
+            )}
             <span className="dg-toolbar__profile-name">{session.name}</span>
             <span className="dg-toolbar__presence" aria-label="Signed in" />
           </div>

@@ -155,6 +155,46 @@ pub async fn call_kw(
     parsed.result.ok_or(crate::errors::AppError::ServerError)
 }
 
+/// Fetches the signed-in user's Odoo avatar (`res.users.avatar_128`) and
+/// returns it as a `data:` URL the frontend can drop straight into an
+/// `<img src>` -- same session-cookie-in-Rust reasoning as `call_kw`
+/// (D-1/D-2: the "shell" webview never holds the cookie). Returns
+/// `Ok(None)` on a non-2xx response or an empty body so the caller can
+/// fall back to the initials avatar. Note: a user with no avatar set
+/// still gets Odoo's own generic placeholder image back with a 200 --
+/// this doesn't try to detect and reject that specifically, so such
+/// users will see Odoo's placeholder rather than the initials fallback.
+/// Not worth the fragility of fingerprinting a "no avatar" image.
+pub async fn fetch_avatar_data_url(session_id: &str, uid: i64) -> Result<Option<String>, crate::errors::AppError> {
+    let base_url = config::odoo_base_url();
+    let c = client().ok_or(crate::errors::AppError::Unknown)?;
+
+    let resp = c
+        .get(format!("{base_url}/web/image/res.users/{uid}/avatar_128"))
+        .header(reqwest::header::COOKIE, format!("session_id={session_id}"))
+        .send()
+        .await?;
+
+    if !resp.status().is_success() {
+        return Ok(None);
+    }
+
+    let content_type = resp
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("image/png")
+        .to_string();
+
+    let bytes = resp.bytes().await.map_err(|_| crate::errors::AppError::ServerError)?;
+    if bytes.is_empty() {
+        return Ok(None);
+    }
+
+    let encoded = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &bytes);
+    Ok(Some(format!("data:{content_type};base64,{encoded}")))
+}
+
 pub async fn health_check() -> bool {
     let base_url = config::odoo_base_url();
     match client() {
