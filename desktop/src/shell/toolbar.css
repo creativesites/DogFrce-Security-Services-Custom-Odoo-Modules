@@ -5,45 +5,37 @@
      toolbar reads as "native chrome", not "a web div."
    ========================================================================= */
 
+/* These --dg-* names are local aliases only -- every one of them resolves
+   to a real --ds- or --dgs- token, never a raw color. The toolbar/app-view
+   is DeployGuard chrome, so it uses the shell dark rail surface
+   (--dgs-rail) as its one fixed background -- per the design system rule
+   that the rail is the only dark surface, this does NOT follow
+   prefers-color-scheme; it is a fixed chrome color, not a themeable one. */
 .dg-shell,
 .dg-toolbar,
 .dg-appview,
 .dg-palette {
-  --dg-radius-sm: 6px;
-  --dg-radius-md: 9px;
-  --dg-radius-lg: 14px;
-  --dg-radius-xl: 18px;
+  --dg-radius-sm: var(--ds-radius-sm);
+  --dg-radius-md: var(--dgs-r-control);
+  --dg-radius-lg: var(--dgs-r-card);
+  --dg-radius-xl: var(--dgs-r-shell);
 
-  --dg-bg:        #0c0d10;
-  --dg-bg-2:      #141519;
-  --dg-bg-3:      #1b1d23;
-  --dg-line:      rgba(255, 255, 255, 0.07);
-  --dg-line-2:    rgba(255, 255, 255, 0.11);
-  --dg-hi:        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --dg-text:      var(--ds-text, #f2f3f5);
-  --dg-text-2:    var(--ds-text-2, #a8acb6);
-  --dg-text-3:    var(--ds-text-subtle, #6b7280);
-  --dg-accent:    #5b8cff;
-  --dg-accent-2:  #8a5bff;
-  --dg-danger:    #ff5f56;
-  --dg-success:   #2ecc71;
+  --dg-bg:        var(--dgs-rail);
+  --dg-bg-2:      var(--dgs-rail-hover);
+  --dg-bg-3:      var(--dgs-rail-active);
+  --dg-line:      var(--dgs-rail-divider);
+  --dg-line-2:    var(--ds-border);
+  --dg-hi:        var(--dgs-lift);
+  --dg-text:      var(--ds-text);
+  --dg-text-2:    var(--ds-text-2);
+  --dg-text-3:    var(--ds-text-subtle);
+  --dg-accent:    var(--ds-accent);
+  --dg-accent-2:  var(--ds-accent-mid);
+  --dg-danger:    var(--ds-danger);
+  --dg-success:   var(--ds-success);
 
   --dg-ease:      cubic-bezier(0.22, 1, 0.36, 1);
   --dg-ease-out:  cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@media (prefers-color-scheme: light) {
-  .dg-shell, .dg-toolbar, .dg-appview, .dg-palette {
-    --dg-bg:     #ffffff;
-    --dg-bg-2:   #f7f8fa;
-    --dg-bg-3:   #eef0f4;
-    --dg-line:   rgba(15, 18, 25, 0.08);
-    --dg-line-2: rgba(15, 18, 25, 0.14);
-    --dg-hi:     inset 0 1px 0 rgba(255, 255, 255, 0.9);
-    --dg-text:   var(--ds-text, #12141a);
-    --dg-text-2: var(--ds-text-2, #4a4f5c);
-    --dg-text-3: var(--ds-text-subtle, #7b8090);
-  }
 }
 
 /* ---------------------------------------------------------------- shell -- */
