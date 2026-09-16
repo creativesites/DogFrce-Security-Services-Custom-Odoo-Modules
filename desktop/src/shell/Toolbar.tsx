@@ -6,8 +6,9 @@ import { useSession } from "../session/SessionContext";
 import { StatusBar } from "./StatusBar";
 import {
   OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon, HomeIcon,
-  WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon,
+  WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon, ClipboardListIcon,
 } from "./icons";
+import { MyWork } from "./pages/MyWork";
 import type { SessionEvent } from "../session/types";
 
 function greeting(): string {
@@ -18,14 +19,15 @@ function greeting(): string {
 }
 
 /** The app's own pages, reachable from the left nav once the app view is
- * open. Only "home" exists today; this list is deliberately structured so
- * adding a real page later is "add an entry + a case in the switch", not
- * a redesign. */
-type AppPage = "home";
+ * open. "home" and "work" exist today; this list is deliberately
+ * structured so adding a real page later is "add an entry + a case in the
+ * switch", not a redesign. */
+type AppPage = "home" | "work";
 const NAV_ITEMS: { key: AppPage; label: string; icon: () => JSX.Element; available: true }[] = [
   { key: "home", label: "Home", icon: () => <HomeIcon size={18} />, available: true },
+  { key: "work", label: "My Work & Sweeps", icon: () => <ClipboardListIcon size={18} />, available: true },
 ];
-const COMING_SOON_ITEMS = ["My Work", "Training", "Adoption"];
+const COMING_SOON_ITEMS = ["Training", "Adoption"];
 
 /**
  * The DeployGuard chrome around Odoo, revised 2026-09-16 (three times):
@@ -264,15 +266,13 @@ export function Toolbar() {
                     </span>
                   </button>
 
-                  <div className="dg-card">
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)" }}>My work</span>
-                      <span className="dg-chip">Coming soon</span>
-                    </div>
-                    <p className="dg-empty" style={{ padding: "8px 0", textAlign: "left" }}>
-                      Tasks and checklists will appear here once work management is enabled.
-                    </p>
-                  </div>
+                  <button type="button" className="dg-tile" onClick={() => setPage("work")}>
+                    <span className="dg-tile__icon"><ClipboardListIcon /></span>
+                    <span>
+                      <span className="dg-tile__title">My Work & Sweeps</span>
+                      <span className="dg-tile__subline">Tasks, checklists, and sweep sign-offs</span>
+                    </span>
+                  </button>
 
                   <div className="dg-card">
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
@@ -295,6 +295,8 @@ export function Toolbar() {
                 </div>
               </>
             )}
+
+            {status === "signed_in" && session && page === "work" && <MyWork />}
           </div>
         </div>
       )}

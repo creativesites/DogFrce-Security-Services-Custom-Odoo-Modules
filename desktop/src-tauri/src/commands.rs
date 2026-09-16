@@ -2,8 +2,9 @@
 //! See capabilities/main.json — the "odoo" webview shares the same window
 //! but has none of these.
 
+use crate::errors::AppError;
 use crate::state::{AppState, SessionInfo};
-use crate::{connectivity, diagnostics, windowing};
+use crate::{connectivity, diagnostics, odoo, windowing};
 use tauri::{AppHandle, State};
 
 #[tauri::command]
@@ -70,6 +71,29 @@ pub fn window_toggle_maximize(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn window_close(app: AppHandle) -> Result<(), String> {
     windowing::window_close(&app).map_err(|e| e.to_string())
+}
+
+/// Generic Odoo `call_kw` proxy for the "shell" webview (see odoo.rs's
+/// `call_kw` doc comment for why this has to be a Rust hop rather than a
+/// direct fetch from React). Scoped to whatever ACLs the signed-in user's
+/// session already has — no elevated access, no bespoke per-feature
+/// endpoint. Used by My Work today; any future feature needing standard
+/// Odoo model reads/writes can reuse it rather than growing a new command.
+#[tauri::command]
+pub async fn odoo_call_kw(
+    state: State<'_, AppState>,
+    model: String,
+    method: String,
+    args: serde_json::Value,
+    kwargs: serde_json::Value,
+) -> Result<serde_json::Value, AppError> {
+    let session_id = state
+        .session_cookie
+        .lock()
+        .unwrap()
+        .clone()
+        .ok_or(AppError::Unknown)?;
+    odoo::call_kw(&session_id, &model, &method, args, kwargs).await
 }
 
 #[tauri::command]
