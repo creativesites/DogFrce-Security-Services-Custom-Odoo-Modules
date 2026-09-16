@@ -52,7 +52,7 @@ const provider = new GeminiProvider({ apiKey: process.env.GEMINI_API_KEY! });
 
 const result = await provider.generateStructured({
   capability: "adoption.drop.explain",
-  model: "gemini-3.6-flash",
+  model: "gemini-3.8-flash",  // primary — see model tiering below
   system: promptTemplate,
   input: contextBundle,       // built by a context assembler that doesn't exist yet
   schema: adoptionExplanationSchema,
@@ -67,3 +67,14 @@ if (!validation.ok) {
   // reject: uncited claim or invented number — see validation.errors
 }
 ```
+
+### Model tiering
+
+Both confirmed live against the real API (2026-09-16, `scripts/smoke-test.ts`):
+
+- **`gemini-3.8-flash`** — primary/default for new capabilities.
+- **`gemini-3.6-flash`** — cheaper fallback tier for high-volume or
+  latency-sensitive capabilities where 3.8's extra cost/latency isn't
+  worth it. No capability picks this yet since none are wired to real
+  data — set it explicitly per-capability when they are, don't default
+  to it silently.

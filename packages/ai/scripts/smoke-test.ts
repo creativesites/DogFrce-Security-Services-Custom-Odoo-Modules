@@ -28,11 +28,11 @@ const evidence = [
   { id: "event:0192f1a2", kind: "event" as const, summary: "Attendance batch missed for Site 12, Monday" },
 ];
 
-console.log("Calling Gemini (gemini-3.6-flash) with structured output + citation instructions...\n");
+console.log("Calling Gemini (gemini-3.8-flash) with structured output + citation instructions...\n");
 
 const result = await provider.generateStructured({
   capability: "smoke-test@1",
-  model: "gemini-3.6-flash",
+  model: "gemini-3.8-flash",
   system:
     "You summarise operational facts for a security company manager in one sentence. " +
     "You may ONLY state numbers that appear in the `facts` you are given, and you MUST " +
