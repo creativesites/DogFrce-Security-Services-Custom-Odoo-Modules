@@ -1,0 +1,43 @@
+[package]
+name = "deployguard-desktop"
+version = "0.1.0"
+description = "DeployGuard Desktop — DogForce pilot shell"
+authors = ["DogForce Security Services"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "deployguard_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# "unstable" gates the multi-webview APIs (Window::add_child, per-webview
+# capabilities) this app relies on to embed Odoo directly in the main
+# window with a DeployGuard overlay, instead of a second window. See
+# desktop/DEVIATIONS.md.
+tauri = { version = "2", features = ["unstable"] }
+tauri-plugin-notification = "2"
+tauri-plugin-os = "2"
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", default-features = false, features = ["json", "cookies", "rustls-tls"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+url = "2"
+thiserror = "2"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1", features = ["v4"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

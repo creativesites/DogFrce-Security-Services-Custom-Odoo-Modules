@@ -1,0 +1,101 @@
+name: DeployGuard Desktop — Windows build
+
+# Produces a real, installable Windows artifact (NSIS + MSI) from macOS
+# development, per docs/deployguard/26-deployment-strategy.md §4 and the
+# desktop build mission's §11 ("prefer GitHub Actions for Windows builds
+# rather than requiring the developer to own a Windows machine").
+#
+# This workflow builds UNSIGNED installers (see desktop/DEVIATIONS.md D-5
+# and docs/deployguard/32-open-questions.md OQ-7). Code signing is added
+# as a follow-up once a certificate / Azure Trusted Signing is in place —
+# search this file for "TODO(signing)".
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "desktop/**"
+      - ".github/workflows/desktop-build.yml"
+  pull_request:
+    paths:
+      - "desktop/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which .env.<environment> to build with"
+        required: true
+        default: "production"
+        type: choice
+        options: [production, staging]
+
+concurrency:
+  group: desktop-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri -> target
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # No secrets are read here — only the non-secret Odoo base URL,
+      # matching desktop/.env.example. See DEVIATIONS.md D-1.
+      - name: Write build-time config
+        shell: bash
+        env:
+          TARGET_ENV: ${{ inputs.environment || 'production' }}
+        run: |
+          echo "VITE_DEPLOYGUARD_ENV=${TARGET_ENV}" >> .env.production
+          echo "VITE_ODOO_BASE_URL=https://dogforcesecurityservices.com" >> .env.production
+          echo "VITE_ODOO_DB=dogforce_prod" >> .env.production
+          echo "VITE_APP_VERSION=0.1.0-pilot-${GITHUB_SHA::7}" >> .env.production
+
+      - name: Build Tauri app (Windows, unsigned)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          # TODO(signing): once a certificate exists, set
+          # TAURI_SIGNING_PRIVATE_KEY / WINDOWS_CERTIFICATE here from repo
+          # secrets — see docs/deployguard/26-deployment-strategy.md §4.
+          TAURI_ENV_PLATFORM: windows
+          DEPLOYGUARD_ODOO_BASE_URL: https://dogforcesecurityservices.com
+          DEPLOYGUARD_ODOO_DB: dogforce_prod
+        with:
+          projectPath: desktop
+          args: --target x86_64-pc-windows-msvc
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployguard-desktop-windows-${{ github.sha }}
+          path: |
+            desktop/src-tauri/target/**/release/bundle/nsis/*.exe
+            desktop/src-tauri/target/**/release/bundle/msi/*.msi
+          if-no-files-found: error
+          retention-days: 30

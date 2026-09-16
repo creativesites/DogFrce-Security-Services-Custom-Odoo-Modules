@@ -1,0 +1,41 @@
+mod commands;
+mod config;
+mod connectivity;
+mod diagnostics;
+mod errors;
+mod odoo;
+mod state;
+mod windowing;
+
+use state::AppState;
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
+    tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(AppState::default())
+        .setup(|app| {
+            windowing::build(app.handle())?;
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            commands::get_current_session,
+            commands::get_overlay_expanded,
+            commands::auth_sign_out,
+            commands::overlay_expand,
+            commands::overlay_collapse,
+            commands::navigate_odoo,
+            commands::connectivity_check,
+            commands::diagnostics_get,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running DeployGuard desktop");
+}

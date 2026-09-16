@@ -22,6 +22,9 @@ docs/
 # Mobile app (separate build)
 mobile/
 
+# Desktop app (separate build)
+desktop/
+
 # Scripts that aren't needed at runtime
 scripts/
 
