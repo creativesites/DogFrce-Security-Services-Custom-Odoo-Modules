@@ -58,6 +58,21 @@ pub fn odoo_reload(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn window_minimize(app: AppHandle) -> Result<(), String> {
+    windowing::window_minimize(&app).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn window_toggle_maximize(app: AppHandle) -> Result<(), String> {
+    windowing::window_toggle_maximize(&app).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn window_close(app: AppHandle) -> Result<(), String> {
+    windowing::window_close(&app).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub async fn connectivity_check() -> connectivity::ConnectivityReport {
     connectivity::check().await
 }

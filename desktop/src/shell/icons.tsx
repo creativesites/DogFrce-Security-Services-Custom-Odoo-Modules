@@ -79,3 +79,39 @@ export function ChevronDownIcon({ size }: IconProps = {}) {
     </svg>
   );
 }
+
+/** Window controls (decorations are off — see windowing.rs — so the
+ * toolbar draws its own, VS Code–style). Intentionally plain strokes,
+ * not the OS-native glyphs, matching the rest of the icon set. */
+export function WindowMinimizeIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+export function WindowMaximizeIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <rect x="5" y="5" width="14" height="14" rx="1.5" />
+    </svg>
+  );
+}
+
+export function WindowRestoreIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <rect x="7" y="7" width="12" height="12" rx="1.5" />
+      <path d="M17 7V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v9.5A1.5 1.5 0 0 0 6 17h1" />
+    </svg>
+  );
+}
+
+export function WindowCloseIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <path d="M6 6l12 12M18 6 6 18" />
+    </svg>
+  );
+}

@@ -161,6 +161,34 @@ body {
   font-style: italic;
 }
 
+/* ── Window controls — decorations are off, so this is the only way to  ── *
+ * ── minimize/maximize/close (Toolbar.tsx). Windows-convention grouping  ── *
+ * ── on the far right; the rest of the toolbar is the drag region.       ── */
+.dg-toolbar__winctl {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 1px solid var(--dgs-rail-divider);
+}
+
+.dg-toolbar__winbtn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--dgs-rail-icon);
+  border-radius: var(--ds-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.dg-toolbar__winbtn:hover { background: var(--dgs-rail-hover); color: #fff; }
+.dg-toolbar__winbtn:focus-visible { outline: 2px solid var(--ds-accent-mid); outline-offset: -2px; }
+.dg-toolbar__winbtn--close:hover { background: var(--ds-danger); color: #fff; }
+
 /* ── App view — a real page takeover (Home today, more pages later),   ─── *
  * ── not a glance-only dropdown. Covers the whole window below the      ── *
  * ── toolbar: a left nav for sections + a content area.                 ── */

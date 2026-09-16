@@ -36,6 +36,9 @@ pub fn run() {
             commands::odoo_back,
             commands::odoo_forward,
             commands::odoo_reload,
+            commands::window_minimize,
+            commands::window_toggle_maximize,
+            commands::window_close,
             commands::connectivity_check,
             commands::diagnostics_get,
         ])

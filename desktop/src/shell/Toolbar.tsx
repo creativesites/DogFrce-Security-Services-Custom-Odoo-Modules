@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "../lib/tauri";
 import { useSession } from "../session/SessionContext";
 import { StatusBar } from "./StatusBar";
-import { OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon, HomeIcon } from "./icons";
+import {
+  OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon, HomeIcon,
+  WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon,
+} from "./icons";
 import type { SessionEvent } from "../session/types";
 
 function greeting(): string {
@@ -47,7 +51,31 @@ export function Toolbar() {
   const { status, session, signOut } = useSession();
   const [appViewOpen, setAppViewOpen] = useState(false);
   const [page, setPage] = useState<AppPage>("home");
+  const [isMaximized, setIsMaximized] = useState(false);
   const brandButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Decorations are off (windowing.rs), so this toolbar is the only way
+  // to minimize/maximize/close — and the only source of window-state
+  // truth, since Tauri's own drag region also maximizes on double-click
+  // (see the drag.js comment in the Tauri source) without going through
+  // our commands. Query real state rather than assuming our last click
+  // is still accurate.
+  useEffect(() => {
+    const win = getCurrentWindow();
+    let cancelled = false;
+    win.isMaximized().then((m) => { if (!cancelled) setIsMaximized(m); }).catch(() => {});
+    const unlistenPromise = win.onResized(() => {
+      win.isMaximized().then((m) => { if (!cancelled) setIsMaximized(m); }).catch(() => {});
+    });
+    return () => {
+      cancelled = true;
+      unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
+    };
+  }, []);
+
+  const minimizeWindow = useCallback(() => void invoke("window_minimize"), []);
+  const toggleMaximizeWindow = useCallback(() => void invoke("window_toggle_maximize"), []);
+  const closeWindow = useCallback(() => void invoke("window_close"), []);
 
   const openAppView = useCallback(() => {
     setAppViewOpen(true);
@@ -144,7 +172,12 @@ export function Toolbar() {
           <ChevronDownIcon size={14} />
         </button>
 
-        <div className="dg-toolbar__spacer" />
+        {/* Empty space doubles as the window's drag handle — decorations
+            are off (windowing.rs), so nothing else provides one. Tauri's
+            built-in drag.js excludes buttons/links automatically, and
+            also maximizes on double-click, which is why isMaximized is
+            tracked via onResized above rather than only our own toggle. */}
+        <div className="dg-toolbar__spacer" data-tauri-drag-region />
 
         <div className="dg-toolbar__status">
           <StatusBar compact />
@@ -157,6 +190,24 @@ export function Toolbar() {
         ) : (
           <span className="dg-toolbar__signedout">Not signed in</span>
         )}
+
+        <div className="dg-toolbar__winctl">
+          <button type="button" className="dg-toolbar__winbtn" aria-label="Minimize" title="Minimize" onClick={minimizeWindow}>
+            <WindowMinimizeIcon size={14} />
+          </button>
+          <button
+            type="button"
+            className="dg-toolbar__winbtn"
+            aria-label={isMaximized ? "Restore" : "Maximize"}
+            title={isMaximized ? "Restore" : "Maximize"}
+            onClick={toggleMaximizeWindow}
+          >
+            {isMaximized ? <WindowRestoreIcon size={13} /> : <WindowMaximizeIcon size={13} />}
+          </button>
+          <button type="button" className="dg-toolbar__winbtn dg-toolbar__winbtn--close" aria-label="Close" title="Close" onClick={closeWindow}>
+            <WindowCloseIcon size={14} />
+          </button>
+        </div>
       </div>
 
       {appViewOpen && (

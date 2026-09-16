@@ -67,16 +67,33 @@ pub enum SessionEvent {
     SignedOut,
 }
 
+/// The window's initial logical content size, matching the `inner_size`
+/// requested from `WindowBuilder` below. We deliberately do NOT re-query
+/// `window.inner_size()` right after `build()` to compute the initial
+/// child-webview bounds: on macOS in particular, the OS can still be
+/// finishing the window's real geometry when that synchronous call runs,
+/// so it can return a stale/default size — the toolbar would render with
+/// wrong bounds until the first real `Resized` event (e.g. the user
+/// maximizing the window) recalculated it correctly. Using the size we
+/// know we asked for avoids the race entirely; the `on_window_event`
+/// resize handler below is what keeps things correct afterward, and it
+/// *is* safe to trust because it's driven by a real, already-applied
+/// resize.
+const INITIAL_WINDOW_SIZE: (f64, f64) = (1280.0, 860.0);
+
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let window = WindowBuilder::new(app, WINDOW_LABEL)
         .title("DeployGuard")
-        .inner_size(1280.0, 860.0)
+        .inner_size(INITIAL_WINDOW_SIZE.0, INITIAL_WINDOW_SIZE.1)
         .min_inner_size(1024.0, 700.0)
+        // Custom title bar (see Toolbar.tsx): the toolbar itself carries
+        // the drag region and window controls, VS Code–style, instead of
+        // stacking our chrome under a separate native title bar.
+        .decorations(false)
         .center()
         .build()?;
 
-    let inner_size = window.inner_size()?;
-    let logical: tauri::LogicalSize<f64> = inner_size.to_logical(window.scale_factor()?);
+    let logical = LogicalSize::new(INITIAL_WINDOW_SIZE.0, INITIAL_WINDOW_SIZE.1);
 
     // "odoo" — fills the window below the toolbar. No IPC (see capabilities/main.json).
     let (odoo_pos, odoo_size) = odoo_bounds(logical.width, logical.height);
@@ -240,6 +257,31 @@ fn eval_in_odoo(app: &AppHandle, js: &str) -> Result<(), AppError> {
         odoo_wv.eval(js).map_err(|_| AppError::Unknown)?;
     }
     Ok(())
+}
+
+/// Window controls for the custom (decorations-off) title bar — the
+/// toolbar provides its own minimize/maximize/close buttons since the OS
+/// no longer draws any (see `build()`'s `.decorations(false)`).
+pub fn window_minimize(app: &AppHandle) -> Result<(), AppError> {
+    app.get_window(WINDOW_LABEL)
+        .and_then(|w| w.minimize().ok())
+        .ok_or(AppError::Unknown)
+}
+
+pub fn window_toggle_maximize(app: &AppHandle) -> Result<(), AppError> {
+    let Some(window) = app.get_window(WINDOW_LABEL) else { return Err(AppError::Unknown) };
+    let is_maximized = window.is_maximized().map_err(|_| AppError::Unknown)?;
+    if is_maximized {
+        window.unmaximize().map_err(|_| AppError::Unknown)
+    } else {
+        window.maximize().map_err(|_| AppError::Unknown)
+    }
+}
+
+pub fn window_close(app: &AppHandle) -> Result<(), AppError> {
+    app.get_window(WINDOW_LABEL)
+        .and_then(|w| w.close().ok())
+        .ok_or(AppError::Unknown)
 }
 
 pub async fn sign_out(app: &AppHandle) {
