@@ -653,16 +653,10 @@
   gap: 10px;
 }
 .dg-emptystate__glyph {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  color: #fff;
-  background: linear-gradient(135deg, var(--dg-accent), var(--dg-accent-2));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 12px 30px -12px color-mix(in oklab, var(--dg-accent) 80%, transparent);
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
 }
 .dg-emptystate h2 {
   margin: 6px 0 0;

@@ -413,3 +413,233 @@ body {
     transition-duration: 0.001ms;
   }
 }
+
+/* =============================================================================
+   DeployGuard Desktop — depth & motion layer
+   Load AFTER shell_tokens.css / design_system.css / shell.css.
+   Adds a tactile, floating-glass feel (layered elevation, spring easing,
+   one orchestrated mount stagger) on top of the existing --ds- --dgs-*
+   tokens. No new palette — every color reference below reuses an
+   existing token. Safe to drop in without touching the files above.
+   ============================================================================= */
+
+:root {
+  /* Motion */
+  --dgs-ease-spring: cubic-bezier(.22, 1, .36, 1);
+  --dgs-ease-pop:    cubic-bezier(.34, 1.56, .64, 1);
+  --dgs-dur-fast:    130ms;
+  --dgs-dur-med:     260ms;
+  --dgs-dur-slow:    420ms;
+
+  /* Layered elevation: rim highlight (top edge catches light) + a soft
+     ambient shadow that grows on hover/focus. This is what reads as
+     "floating" instead of "bordered card". */
+  --dgs-depth-1:
+    0 .5px 0 rgba(255,255,255,.75) inset,
+    0 1px 1px rgba(16,23,36,.04),
+    0 10px 22px -14px rgba(16,23,36,.16);
+  --dgs-depth-2:
+    0 .5px 0 rgba(255,255,255,.9) inset,
+    0 2px 4px rgba(16,23,36,.06),
+    0 24px 48px -18px rgba(16,23,36,.26);
+  --dgs-depth-press:
+    0 1px 2px rgba(16,23,36,.10) inset,
+    0 1px 1px rgba(16,23,36,.06);
+
+  --dgs-glow-accent: 0 0 0 1px rgba(27,58,107,.12), 0 10px 22px -8px rgba(27,58,107,.38);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dgs-dur-fast: 1ms; --dgs-dur-med: 1ms; --dgs-dur-slow: 1ms; }
+}
+
+/* ── One orchestrated reveal: the page header settles in, tiles rise in
+   sequence behind it. This fires once on mount — not on every hover. ─── */
+
+.dg-page-enter { animation: dg-rise var(--dgs-dur-slow) var(--dgs-ease-spring) both; }
+
+@keyframes dg-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.dg-tasklist { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Cards / tiles: floating elevation instead of flat borders ────────── */
+
+.dg-card {
+  background: var(--dgs-panel);
+  border-radius: var(--dgs-r-card);
+  box-shadow: var(--dgs-depth-1);
+  padding: 16px;
+  transition: box-shadow var(--dgs-dur-med) var(--dgs-ease-spring);
+}
+.dg-card:hover { box-shadow: var(--dgs-depth-2); }
+
+.dg-tile {
+  background: var(--dgs-panel);
+  border-radius: var(--dgs-r-tile);
+  box-shadow: var(--dgs-depth-1);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  border: none;
+  text-align: left;
+  width: 100%;
+  font-family: var(--dgs-font);
+  transform: translateY(0) scale(1);
+  transition: box-shadow var(--dgs-dur-med) var(--dgs-ease-spring),
+              transform var(--dgs-dur-med) var(--dgs-ease-spring);
+  animation: dg-rise var(--dgs-dur-slow) var(--dgs-ease-spring) both;
+  animation-delay: calc(var(--i, 0) * 45ms);
+}
+.dg-tile:hover  { box-shadow: var(--dgs-depth-2); transform: translateY(-2px); }
+.dg-tile:active { box-shadow: var(--dgs-depth-press); transform: translateY(0) scale(.99); transition-duration: var(--dgs-dur-fast); }
+.dg-tile:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; }
+
+.dg-tile__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--ds-radius-md);
+  background: linear-gradient(150deg, var(--ds-accent-light), var(--ds-accent-mid) 140%);
+  color: var(--ds-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 4px 10px -5px rgba(27,58,107,.4);
+}
+
+/* ── Detail view: a real transition when drilling into a task ─────────── */
+
+.dg-detail-enter { animation: dg-detail-in var(--dgs-dur-slow) var(--dgs-ease-spring) both; }
+
+@keyframes dg-detail-in {
+  from { opacity: 0; transform: translateX(14px) scale(.99); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* ── Buttons: physical press, glossy primary, no flat click ────────────── */
+
+.dg-btn {
+  transition: transform var(--dgs-dur-fast) var(--dgs-ease-spring),
+              box-shadow var(--dgs-dur-fast) var(--dgs-ease-spring),
+              filter var(--dgs-dur-fast) var(--dgs-ease-spring),
+              background-color var(--dgs-dur-fast) var(--dgs-ease-spring);
+}
+.dg-btn:active { transform: scale(.97); }
+
+.dg-btn--primary {
+  background: linear-gradient(180deg, #24487F, var(--ds-accent) 65%);
+  box-shadow: var(--dgs-glow-accent), 0 1px 0 rgba(255,255,255,.2) inset;
+}
+.dg-btn--primary:hover:not(:disabled)  { filter: brightness(1.07); transform: translateY(-1px); }
+.dg-btn--primary:active:not(:disabled) { transform: translateY(0) scale(.97); box-shadow: var(--dgs-depth-press); filter: none; }
+.dg-btn--primary:disabled { background: var(--ds-border); box-shadow: none; }
+
+.dg-btn--secondary { box-shadow: var(--dgs-depth-1); }
+.dg-btn--secondary:hover  { box-shadow: var(--dgs-depth-2); }
+.dg-btn--secondary:active { box-shadow: var(--dgs-depth-press); }
+
+/* ── Inputs: quiet focus glow instead of a hard blue ring ──────────────── */
+
+.dg-input {
+  transition: border-color var(--dgs-dur-fast) var(--dgs-ease-spring),
+              box-shadow var(--dgs-dur-fast) var(--dgs-ease-spring);
+}
+.dg-input:focus {
+  outline: none;
+  border-color: var(--ds-accent-mid) !important;
+  box-shadow: 0 0 0 3px rgba(27,58,107,.12);
+}
+
+/* ── Checklist checkbox: a small satisfying pop instead of a stock tick ── */
+
+.dg-check-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  border: 1.5px solid var(--ds-border);
+  background: var(--dgs-panel);
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  flex: 0 0 auto;
+  transition: background var(--dgs-dur-fast) var(--dgs-ease-spring),
+              border-color var(--dgs-dur-fast) var(--dgs-ease-spring),
+              box-shadow var(--dgs-dur-fast) var(--dgs-ease-spring),
+              transform var(--dgs-dur-fast) var(--dgs-ease-pop);
+}
+.dg-check-input::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  transform: scale(0);
+  transition: transform var(--dgs-dur-fast) var(--dgs-ease-pop);
+  clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 44% 63%);
+}
+.dg-check-input:checked {
+  background: var(--ds-accent);
+  border-color: var(--ds-accent);
+  box-shadow: var(--dgs-glow-accent);
+}
+.dg-check-input:checked::before { transform: scale(1); }
+.dg-check-input:active { transform: scale(.9); }
+.dg-check-input:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; }
+
+/* ── Status dot: a gentle "alive" pulse, reserved for the online state ─── */
+
+.dg-statusbar__dot--online {
+  animation: dg-pulse 2.4s ease-in-out infinite;
+}
+@keyframes dg-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13,122,78,.35); }
+  50%      { box-shadow: 0 0 0 5px rgba(13,122,78,0); }
+}
+
+/* ── Small confirmations (e.g. "Saved") pop in rather than just appear ── */
+
+.dg-pop-in { animation: dg-pop var(--dgs-dur-med) var(--dgs-ease-pop) both; }
+@keyframes dg-pop { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+
+/* ── Skeleton loading, for swapping in for the plain "Loading…" text ──── */
+
+.dg-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--ds-slate);
+  border-radius: var(--dgs-r-tile);
+}
+.dg-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+  transform: translateX(-100%);
+  animation: dg-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes dg-shimmer { to { transform: translateX(100%); } }
+
+/* ── Nav rail items: a light directional nudge on hover ────────────────── */
+
+.dg-appview__navitem {
+  transition: background var(--dgs-dur-fast) var(--dgs-ease-spring),
+              transform var(--dgs-dur-fast) var(--dgs-ease-spring);
+}
+.dg-appview__navitem:hover { transform: translateX(2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-tile, .dg-page-enter, .dg-detail-enter, .dg-pop-in,
+  .dg-statusbar__dot--online, .dg-skeleton::after {
+    animation: none !important;
+  }
+  .dg-tile:hover, .dg-btn:active, .dg-check-input,
+  .dg-appview__navitem:hover, .dg-btn--primary:hover {
+    transform: none !important;
+  }
+}

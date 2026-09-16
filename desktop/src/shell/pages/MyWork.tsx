@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ChecklistItemDef,
   ChecklistResponse,
@@ -62,8 +62,23 @@ function DueBadge({ task }: { task: WorkTask }) {
  * The backing Odoo module may not be installed in every environment this
  * runs in yet, so every RPC here is wrapped and surfaced as an error state
  * rather than allowed to crash the page.
+ *
+ * Visual notes: list tiles rise in on mount (one orchestrated stagger,
+ * see --i + .dg-tile in shell_depth.css) rather than animating on every
+ * hover; drilling into a task uses .dg-detail-enter for a single settling
+ * transition. Both respect prefers-reduced-motion via the shared tokens.
  */
-export function MyWork() {
+interface MyWorkProps {
+  /** Bumped by the toolbar's Reload button when this page is the one on
+   * screen (see Toolbar.tsx — Reload otherwise targets the Odoo webview,
+   * which is invisible while the app view covers the window, so it would
+   * silently do nothing here without this). Any change refetches; the
+   * initial mount already fetches on its own, so that first value is
+   * ignored. */
+  reloadSignal?: number;
+}
+
+export function MyWork({ reloadSignal }: MyWorkProps) {
   const { session } = useSession();
   const [employeeState, setEmployeeState] = useState<LoadState>("loading");
   const [employeeId, setEmployeeId] = useState<number | null>(null);
@@ -115,15 +130,28 @@ export function MyWork() {
     void loadTasks();
   }, [loadTasks]);
 
+  const isFirstReloadSignal = useRef(true);
+  useEffect(() => {
+    if (isFirstReloadSignal.current) { isFirstReloadSignal.current = false; return; }
+    if (selectedTaskId == null) refresh();
+    // else: TaskDetail below gets the same reloadSignal and refetches itself.
+  }, [reloadSignal]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const taskCount = tasks.length;
 
   if (employeeState === "loading") {
-    return <p className="dg-empty">Loading your work…</p>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="dg-skeleton" style={{ height: 56 }} />
+        <div className="dg-skeleton" style={{ height: 56 }} />
+        <div className="dg-skeleton" style={{ height: 56 }} />
+      </div>
+    );
   }
 
   if (employeeState === "error") {
     return (
-      <div className="dg-card" style={{ maxWidth: 480 }}>
+      <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
         <p style={{ fontSize: 13, color: "var(--ds-danger)", margin: "0 0 10px" }}>{employeeError}</p>
         <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void loadEmployee()}>
           Try again
@@ -134,7 +162,7 @@ export function MyWork() {
 
   if (employeeId == null) {
     return (
-      <div className="dg-card" style={{ maxWidth: 480 }}>
+      <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
         <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
           Your account isn't linked to an employee record yet, so there's no work queue to show. Ask your
           operations manager to link one.
@@ -149,13 +177,17 @@ export function MyWork() {
         taskId={selectedTaskId}
         onBack={() => setSelectedTaskId(null)}
         onChanged={refresh}
+        reloadSignal={reloadSignal}
       />
     );
   }
 
   return (
     <>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 20px" }}>
+      <div
+        className="dg-page-enter"
+        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 20px" }}
+      >
         <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "var(--ds-text)" }}>My Work</h1>
         {tasksState === "ready" && (
           <span className="dg-chip">
@@ -164,10 +196,16 @@ export function MyWork() {
         )}
       </div>
 
-      {tasksState === "loading" && <p className="dg-empty">Loading your tasks…</p>}
+      {tasksState === "loading" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="dg-skeleton" style={{ height: 62 }} />
+          <div className="dg-skeleton" style={{ height: 62 }} />
+          <div className="dg-skeleton" style={{ height: 62 }} />
+        </div>
+      )}
 
       {tasksState === "error" && (
-        <div className="dg-card" style={{ maxWidth: 480 }}>
+        <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
           <p style={{ fontSize: 13, color: "var(--ds-danger)", margin: "0 0 10px" }}>{tasksError}</p>
           <button type="button" className="dg-btn dg-btn--secondary" onClick={refresh}>
             Try again
@@ -176,7 +214,7 @@ export function MyWork() {
       )}
 
       {tasksState === "ready" && taskCount === 0 && (
-        <div className="dg-card" style={{ maxWidth: 480 }}>
+        <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
           <p className="dg-empty" style={{ padding: "8px 0" }}>
             Nothing assigned to you right now. New tasks and sweeps will show up here.
           </p>
@@ -184,13 +222,13 @@ export function MyWork() {
       )}
 
       {tasksState === "ready" && taskCount > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {tasks.map((task) => (
+        <div className="dg-tasklist">
+          {tasks.map((task, index) => (
             <button
               key={task.id}
               type="button"
               className="dg-tile"
-              style={{ alignItems: "flex-start" }}
+              style={{ alignItems: "flex-start", "--i": index } as React.CSSProperties}
               onClick={() => setSelectedTaskId(task.id)}
             >
               <span className="dg-tile__icon">
@@ -216,7 +254,9 @@ export function MyWork() {
   );
 }
 
-function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () => void; onChanged: () => void }) {
+function TaskDetail({
+  taskId, onBack, onChanged, reloadSignal,
+}: { taskId: number; onBack: () => void; onChanged: () => void; reloadSignal?: number }) {
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [task, setTask] = useState<WorkTask | null>(null);
@@ -260,6 +300,12 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
   useEffect(() => {
     void load();
   }, [load]);
+
+  const isFirstReloadSignal = useRef(true);
+  useEffect(() => {
+    if (isFirstReloadSignal.current) { isFirstReloadSignal.current = false; return; }
+    void load();
+  }, [reloadSignal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (showCncPicker && cncOptions.length === 0) {
@@ -318,12 +364,18 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
   }, [task, items, draft, responseByItem, taskId, load]);
 
   if (state === "loading") {
-    return <p className="dg-empty">Loading task…</p>;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 640 }}>
+        <div className="dg-skeleton" style={{ height: 28, width: 220 }} />
+        <div className="dg-skeleton" style={{ height: 120 }} />
+        <div className="dg-skeleton" style={{ height: 44, width: 200 }} />
+      </div>
+    );
   }
 
   if (state === "error" || !task) {
     return (
-      <div className="dg-card" style={{ maxWidth: 480 }}>
+      <div className="dg-card dg-detail-enter" style={{ maxWidth: 480 }}>
         <p style={{ fontSize: 13, color: "var(--ds-danger)", margin: "0 0 10px" }}>{error}</p>
         <div style={{ display: "flex", gap: 8 }}>
           <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void load()}>
@@ -338,7 +390,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
   }
 
   return (
-    <>
+    <div className="dg-detail-enter">
       <button
         type="button"
         className="dg-btn dg-btn--secondary"
@@ -370,7 +422,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
       )}
 
       {task.state === "verified" && (
-        <div className="dg-card" style={{ marginBottom: 18, display: "flex", gap: 8, alignItems: "center" }}>
+        <div className="dg-card dg-pop-in" style={{ marginBottom: 18, display: "flex", gap: 8, alignItems: "center" }}>
           <CheckCircleIcon size={16} />
           <span style={{ fontSize: 12.5, color: "var(--ds-text-2)" }}>Verified — no further action needed.</span>
         </div>
@@ -406,7 +458,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
                 {savingChecklist ? "Saving…" : "Save checklist"}
               </button>
               {checklistSaved && Object.keys(draft).length === 0 && (
-                <span style={{ fontSize: 12, color: "var(--ds-success)" }}>Saved</span>
+                <span className="dg-pop-in" style={{ fontSize: 12, color: "var(--ds-success)" }}>Saved</span>
               )}
             </div>
           )}
@@ -416,7 +468,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
       {actionError && <p style={{ fontSize: 12.5, color: "var(--ds-danger)", margin: "0 0 12px" }}>{actionError}</p>}
 
       {showCncPicker && (
-        <div className="dg-card" style={{ marginBottom: 14 }}>
+        <div className="dg-card dg-detail-enter" style={{ marginBottom: 14 }}>
           <p style={{ fontSize: 13, fontWeight: 600, color: "var(--ds-text)", margin: "0 0 10px" }}>
             Why couldn't this be completed?
           </p>
@@ -424,6 +476,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
             <select
               value={cncReason}
               onChange={(e) => setCncReason(e.target.value)}
+              className="dg-input"
               style={{
                 width: "100%",
                 padding: "8px 10px",
@@ -447,6 +500,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
               onChange={(e) => setCncReason(e.target.value)}
               placeholder="Describe why this couldn't be completed"
               rows={3}
+              className="dg-input"
               style={{
                 width: "100%",
                 padding: "8px 10px",
@@ -519,7 +573,7 @@ function TaskDetail({ taskId, onBack, onChanged }: { taskId: number; onBack: () 
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -549,6 +603,7 @@ function ChecklistItemRow({
       <label style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <input
           type="checkbox"
+          className="dg-check-input"
           checked={checked}
           disabled={disabled}
           onChange={(e) => onChange({ value_bool: e.target.checked })}
@@ -565,6 +620,7 @@ function ChecklistItemRow({
         {label}
         <input
           type="number"
+          className="dg-input"
           value={value === false ? "" : value}
           disabled={disabled}
           onChange={(e) => onChange({ value_number: e.target.value === "" ? undefined : Number(e.target.value) })}
@@ -601,6 +657,7 @@ function ChecklistItemRow({
       {label}
       <input
         type="text"
+        className="dg-input"
         value={value === false ? "" : value}
         disabled={disabled}
         onChange={(e) => onChange({ value_text: e.target.value })}

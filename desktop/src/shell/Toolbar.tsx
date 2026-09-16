@@ -76,6 +76,7 @@ export function Toolbar() {
   const { status, session, signOut } = useSession();
   const [appViewOpen, setAppViewOpen] = useState(false);
   const [page, setPage] = useState<AppPage>("home");
+  const [workReloadSignal, setWorkReloadSignal] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
@@ -197,7 +198,18 @@ export function Toolbar() {
 
   const goBack = useCallback(() => void invoke("odoo_back"), []);
   const goForward = useCallback(() => void invoke("odoo_forward"), []);
-  const reload = useCallback(() => void invoke("odoo_reload"), []);
+  const reload = useCallback(() => {
+    // Reload always targeting the Odoo webview is a no-op the user can
+    // see whenever a DeployGuard page (like My Work) covers it -- that
+    // webview is invisible while appViewOpen, so "nothing happens" is
+    // exactly what you'd expect from reloading a hidden page. Route to
+    // whatever's actually on screen instead.
+    if (appViewOpen && page === "work") {
+      setWorkReloadSignal((n) => n + 1);
+      return;
+    }
+    void invoke("odoo_reload");
+  }, [appViewOpen, page]);
 
   // ---- Command palette ---------------------------------------------------
   type Command = {
@@ -423,7 +435,7 @@ export function Toolbar() {
             {status === "signed_out" && (
               <div className="dg-appview__body">
                 <div className="dg-emptystate">
-                  <div className="dg-emptystate__glyph" aria-hidden="true">DG</div>
+                  <img className="dg-emptystate__glyph" src={dogforceLogo} alt="" aria-hidden="true" />
                   <h2>Sign in to continue</h2>
                   <p>
                     Sign in on the DogForce ERP page to get started —
@@ -502,7 +514,9 @@ export function Toolbar() {
               </div>
             )}
 
-            {status === "signed_in" && session && page === "work" && <MyWork />}
+            {status === "signed_in" && session && page === "work" && (
+              <MyWork reloadSignal={workReloadSignal} />
+            )}
           </div>
         </div>
       )}
