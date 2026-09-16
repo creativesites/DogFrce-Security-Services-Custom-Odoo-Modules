@@ -34,7 +34,7 @@ export function useConnectivity(): ConnectivityReport {
         if (!cancelled) setReport(result);
       } catch {
         if (!cancelled) {
-          setReport({ state: "offline", message: "Can't reach DeployGuard right now." });
+          setReport({ state: "offline", message: "Can't reach DogForce right now." });
         }
       } finally {
         if (!cancelled) timer = setTimeout(check, 20000);

@@ -36,7 +36,7 @@ pub async fn check() -> ConnectivityReport {
         // Report the honest, narrower claim we can actually verify.
         ConnectivityReport {
             state: ConnectivityState::OdooUnreachable,
-            message: "Can't reach DeployGuard ERP right now.".to_string(),
+            message: "Can't reach DogForce ERP right now.".to_string(),
         }
     }
 }

@@ -3,7 +3,7 @@ import { useConnectivity } from "../lib/connectivity";
 const LABEL: Record<string, string> = {
   online: "Connected",
   connecting: "Connecting…",
-  odoo_unreachable: "DeployGuard System is unavailable",
+  odoo_unreachable: "DogForce ERP is unavailable",
   offline: "You're offline",
   auth_expired: "Your session expired — sign in again",
 };

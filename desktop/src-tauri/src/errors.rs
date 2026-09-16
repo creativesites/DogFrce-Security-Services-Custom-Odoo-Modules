@@ -5,9 +5,9 @@ use serde::Serialize;
 #[derive(Debug, thiserror::Error, Serialize)]
 #[serde(tag = "kind", content = "message", rename_all = "snake_case")]
 pub enum AppError {
-    #[error("Can't reach DeployGuard ERP. Check your connection.")]
+    #[error("Can't reach DogForce ERP. Check your connection.")]
     NetworkUnreachable,
-    #[error("DeployGuard ERP returned an unexpected error.")]
+    #[error("DogForce ERP returned an unexpected error.")]
     ServerError,
     /// An Odoo-side validation/business-rule message (e.g. a UserError
     /// raised by a model method) — safe to show verbatim, it's

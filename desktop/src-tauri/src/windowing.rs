@@ -83,7 +83,7 @@ const INITIAL_WINDOW_SIZE: (f64, f64) = (1280.0, 860.0);
 
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let window = WindowBuilder::new(app, WINDOW_LABEL)
-        .title("DeployGuard")
+        .title("DogForce Security Services")
         .inner_size(INITIAL_WINDOW_SIZE.0, INITIAL_WINDOW_SIZE.1)
         .min_inner_size(1024.0, 700.0)
         // Custom title bar (see Toolbar.tsx): the toolbar itself carries

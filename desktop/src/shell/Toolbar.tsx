@@ -13,6 +13,7 @@ import {
 } from "./icons";
 import { MyWork } from "./pages/MyWork";
 import type { SessionEvent } from "../session/types";
+import dogforceLogo from "../assets/dogforce-logo-256.png";
 import "./toolbar.css";
 
 function greeting(): string {
@@ -211,7 +212,7 @@ export function Toolbar() {
         run: () => { openAppView(); setPage("home"); },
       },
       {
-        id: "odoo", group: "Navigate", label: "Open DeployGuard System",
+        id: "odoo", group: "Navigate", label: "Open DogForce ERP",
         icon: <OdooIcon size={16} />,
         run: () => goToOdoo(),
       },
@@ -231,7 +232,7 @@ export function Toolbar() {
         run: () => reload(),
       },
       {
-        id: "toggle-appview", group: "View", label: appViewOpen ? "Close DeployGuard" : "Open DeployGuard",
+        id: "toggle-appview", group: "View", label: appViewOpen ? "Close DogForce" : "Open DogForce",
         icon: <ChevronDownIcon size={16} />,
         run: () => toggleAppView(),
       },
@@ -290,7 +291,7 @@ export function Toolbar() {
           <IconButton label="Forward" onClick={goForward}><ForwardIcon size={16} /></IconButton>
           <IconButton label="Reload" onClick={reload}><ReloadIcon size={15} /></IconButton>
           <span className="dg-toolbar__divider" aria-hidden="true" />
-          <IconButton label="DeployGuard System home" onClick={() => goToOdoo()}>
+          <IconButton label="DogForce ERP home" onClick={() => goToOdoo()}>
             <OdooIcon size={16} />
           </IconButton>
         </div>
@@ -300,11 +301,11 @@ export function Toolbar() {
           type="button"
           className={`dg-toolbar__brand${appViewOpen ? " is-open" : ""}`}
           aria-expanded={appViewOpen}
-          aria-label={appViewOpen ? "Close DeployGuard" : "Open DeployGuard"}
+          aria-label={appViewOpen ? "Close DogForce" : "Open DogForce"}
           onClick={toggleAppView}
         >
-          <span className="dg-toolbar__brand-mark" aria-hidden="true">DG</span>
-          <span className="dg-toolbar__brand-label">DeployGuard</span>
+          <img className="dg-toolbar__brand-logo" src={dogforceLogo} alt="" aria-hidden="true" />
+          <span className="dg-toolbar__brand-label">DogForce</span>
           <ChevronDownIcon size={14}  />
         </button>
 
@@ -362,8 +363,8 @@ export function Toolbar() {
       </div>
 
       {appViewOpen && (
-        <div className="dg-appview" role="dialog" aria-modal="false" aria-label="DeployGuard">
-          <nav className="dg-appview__nav" aria-label="DeployGuard sections">
+        <div className="dg-appview" role="dialog" aria-modal="false" aria-label="DogForce">
+          <nav className="dg-appview__nav" aria-label="DogForce sections">
             <div className="dg-appview__nav-group">Workspace</div>
             {NAV_ITEMS.map((item) => (
               <button
@@ -425,7 +426,7 @@ export function Toolbar() {
                   <div className="dg-emptystate__glyph" aria-hidden="true">DG</div>
                   <h2>Sign in to continue</h2>
                   <p>
-                    Sign in on the DeployGuard System page to get started —
+                    Sign in on the DogForce ERP page to get started —
                     nothing extra to remember, it's your existing DogForce Odoo login.
                   </p>
                   <button
@@ -433,7 +434,7 @@ export function Toolbar() {
                     className="dg-btn dg-btn--primary"
                     onClick={() => goToOdoo()}
                   >
-                    <OdooIcon size={16} /> Open DeployGuard System
+                    <OdooIcon size={16} /> Open DogForce ERP
                   </button>
                 </div>
               </div>
@@ -454,7 +455,7 @@ export function Toolbar() {
                   >
                     <span className="dg-tile__icon"><OdooIcon /></span>
                     <span className="dg-tile__body">
-                      <span className="dg-tile__title">DeployGuard System</span>
+                      <span className="dg-tile__title">DogForce ERP</span>
                       <span className="dg-tile__subline">
                         Rosters, attendance, incidents, reports
                       </span>
