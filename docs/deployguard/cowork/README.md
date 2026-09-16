@@ -44,6 +44,44 @@ rather than going quiet — this file is the only channel we have.
 
 ---
 
+## Next Phase — Odoo Bridge Addon (BUILD-ORDER P1)
+
+The desktop app (`desktop/`) is far enough along that the next real
+milestone is the **Odoo-side bridge** it will eventually talk to instead
+of hitting Odoo directly (see `desktop/DEVIATIONS.md` D-1/D-2 for exactly
+what's temporary today, and why). This is a substantial, multi-task
+phase — do it in the order below, each task buildable and testable on
+its own; don't wait to have all of it before shipping the first pieces.
+
+Read first: [DG-ADR-018](../adr/DG-ADR-018-odoo-bridge-addons.md) (the
+whole design), [DG-ADR-007](../adr/DG-ADR-007-authentication.md) (auth
+flow this addon implements), [12-odoo-integration.md](../12-odoo-integration.md)
+(facade method contracts).
+
+| ID | Task Description | Priority | Assigned To | Status |
+|---|---|---|---|---|
+| **T-8** | Scaffold `custom_addons/security_deployguard_bridge` (core addon, explicit install — not auto-install, per R-6/R-2): manifest depending on `security_base`, `auth_totp`, `rpc`, `mail`; `group_deployguard_integration` security group + a dedicated `DeployGuard Integration` internal user created on install; settings model (`security.deployguard.config`: Platform base URL, tenant ID, webhook secret write-only field, bridge signing keypair generation, health fields) with a Settings UI page restricted to `base.group_system`. No auth/facade logic yet — just the module skeleton, config model, and its view/security XML. | P1 | Aegis | 🔲 Ready to start |
+| **T-9** | On top of T-8: implement the **auth endpoints** from DG-ADR-007 §4 — `POST /api/deployguard/v1/auth/login` (verifies credentials via `request.session.authenticate`, does **not** persist a web session — `save_session` disabled — mints a short-lived signed JWS assertion instead), `POST /api/deployguard/v1/auth/totp`, `POST /api/deployguard/v1/sso/ticket` (single-use, ≤60s, refuses `base.group_system` accounts and anyone without the DeployGuard access flag), `GET /deployguard/sso/consume` (burns the ticket, creates a normal Odoo session, redirects). Rate-limit login by account/IP/device. Full Odoo test coverage (`HttpCase`) for: valid login, wrong password, TOTP required, ticket single-use, ticket expiry, ticket refused for an admin account, replay protection. This is security-critical code — be conservative, and flag anything you're unsure about here rather than guessing. | P0 | Aegis | 🔲 Awaiting T-8 |
+| **T-10** | Implement `security.deployguard.outbox` (event_id, event_type, payload JSON, state, attempts, next_attempt_at — mirroring `security_reconciliation_core`'s job pattern) + the `security.deployguard.api` facade model with **read-only** methods for T-8's config plus: `ping`, `get_sites`, `get_employees`, `get_users` (see [12-odoo-integration.md](../12-odoo-integration.md) §3 for exact field lists — stick to the documented allowlists, no extra fields "just in case"). A cron dispatches outbox rows to the Platform webhook endpoint every minute (HMAC-signed per DG-ADR-018 §3) — the endpoint won't exist yet, so the cron should log clearly and retry with backoff rather than erroring loudly. | P1 | Aegis | 🔲 Awaiting T-8 |
+| **T-11** | Auto-install domain bridge `security_deployguard_attendance` (depends on T-8's core bridge + `security_attendance`): emit outbox events on attendance batch create/submit/review/lock, and add `get_attendance_batches`/`get_attendance_summary` to the facade. Use this one module as the template — don't build the other domain bridges (roster/incidents/leave/notifications) yet; get this one fully right and tested first, then say so here and we'll scope the rest as follow-up tasks. | P2 | Aegis | 🔲 Awaiting T-10 |
+
+**Ground rules for this phase specifically:**
+- Every new model needs `ir.model.access.csv` rows scoped to
+  `group_deployguard_integration` only — no `base.group_user` fallback.
+- No secret (webhook secret, signing private key) may ever appear in
+  plaintext in `ir.config_parameter`, a log line, or a test fixture —
+  encrypt at rest per [16-security-architecture.md](../16-security-architecture.md) §6, and use
+  placeholder/generated values in tests, never anything resembling a
+  real credential.
+- This whole phase stays **uninstalled everywhere** until Claude/Winston
+  say otherwise — it's built and tested in isolation, not deployed to
+  demo or production Namibia/Zambia databases as part of this work.
+- Update this table's Status column as you go; if T-9's security-critical
+  parts give you pause on any design choice, ask here before writing
+  code, not after.
+
+---
+
 ## Claude — Desktop App (`desktop/`)
 
 **Live, right now:** Winston is testing the DeployGuard Desktop pilot
