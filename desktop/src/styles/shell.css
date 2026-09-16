@@ -35,7 +35,12 @@ body {
   width: 100%;
 }
 
-/* ── Toolbar — always visible, docked to the top ────────────────────────── */
+/* ── Toolbar — always visible, docked to the top ────────────────────────── *
+ * Deliberately the app's dark "rail" chrome (design system §2 rule 2: the
+ * rail is the only dark surface) rather than a light tone — a light
+ * toolbar was visually indistinguishable from Odoo's own light UI
+ * directly beneath it (confirmed by a real screenshot, 2026-09-16). Dark
+ * guarantees separation against any Odoo page, light or dark-accented. */
 .dg-toolbar {
   height: 48px;
   flex: 0 0 48px;
@@ -43,14 +48,10 @@ body {
   align-items: center;
   gap: 6px;
   padding: 0 10px;
-  /* --dgs-desk (not the white --dgs-panel) so the toolbar reads as
-     distinct chrome sitting above Odoo's own light UI, not a sliver
-     that blends into it — plus a real shadow, not just a 1px border. */
-  background: var(--dgs-desk);
-  box-shadow: var(--dgs-lift);
+  background: var(--dgs-rail);
+  box-shadow: var(--dgs-lift-hover);
   position: relative;
   z-index: 1;
-  border-bottom: 1px solid var(--ds-border);
 }
 
 .dg-toolbar__nav {
@@ -64,15 +65,15 @@ body {
   height: 30px;
   border: none;
   background: transparent;
-  color: var(--ds-text-muted);
+  color: var(--dgs-rail-icon);
   border-radius: var(--ds-radius);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
 }
-.dg-toolbar__btn:hover { background: var(--ds-slate); color: var(--ds-text); }
-.dg-toolbar__btn:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 1px; }
+.dg-toolbar__btn:hover { background: var(--dgs-rail-hover); color: #fff; }
+.dg-toolbar__btn:focus-visible { outline: 2px solid var(--ds-accent-mid); outline-offset: 1px; }
 
 .dg-toolbar__brand {
   display: flex;
@@ -85,13 +86,12 @@ body {
   background: transparent;
   border-radius: var(--dgs-r-control);
   cursor: pointer;
-  color: var(--ds-text);
+  color: #fff;
 }
-.dg-toolbar__brand:hover { background: var(--ds-slate); }
-.dg-toolbar__brand:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 1px; }
+.dg-toolbar__brand:hover { background: var(--dgs-rail-hover); }
+.dg-toolbar__brand:focus-visible { outline: 2px solid var(--ds-accent-mid); outline-offset: 1px; }
 .dg-toolbar__brand[aria-expanded="true"] {
-  background: var(--ds-accent-light);
-  border-color: var(--ds-accent-mid);
+  background: var(--dgs-rail-hover);
 }
 
 .dg-toolbar__brand-mark {
@@ -143,7 +143,7 @@ body {
 
 .dg-toolbar__profile {
   font-size: 12px;
-  color: var(--ds-text-muted);
+  color: var(--dgs-rail-icon);
   padding: 0 4px;
   max-width: 160px;
   overflow: hidden;
@@ -157,7 +157,7 @@ body {
 
 .dg-toolbar__signedout {
   font-size: 11.5px;
-  color: var(--ds-text-subtle);
+  color: var(--dgs-rail-icon);
   font-style: italic;
 }
 
@@ -280,6 +280,13 @@ body {
 .dg-statusbar__dot--degraded { background: var(--ds-warning); }
 .dg-statusbar__dot--offline  { background: var(--ds-danger); }
 .dg-statusbar__dot--connecting { background: var(--ds-info); }
+
+/* The status colours above are tuned for light backgrounds; on the dark
+   toolbar (--dgs-rail) a dark red/green/amber dot has poor contrast. A
+   thin light ring keeps it visible regardless of what's behind it. */
+.dg-statusbar-dot-wrap .dg-statusbar__dot {
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .55);
+}
 
 .dg-card {
   background: var(--dgs-panel);
