@@ -1,5 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo noupdate="1">
+    <!-- MVP template referenced by security_work_task.py's auto-completion:
+         its code must stay "attendance.post" for that matching to work. -->
+    <record id="template_attendance_post" model="security.work.checklist.template">
+        <field name="name">Attendance Posting</field>
+        <field name="code">attendance.post</field>
+        <field name="description">Post and confirm today's attendance for a site. Auto-verified when the matching attendance batch is reviewed or locked in Odoo.</field>
+    </record>
+    <record id="item_attendance_post_1" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_attendance_post"/>
+        <field name="sequence">10</field>
+        <field name="label">All guards on shift marked present, absent or AWOL</field>
+        <field name="item_type">boolean</field>
+    </record>
+    <record id="item_attendance_post_2" model="security.work.checklist.item.def">
+        <field name="template_id" ref="template_attendance_post"/>
+        <field name="sequence">20</field>
+        <field name="label">Discrepancies noted</field>
+        <field name="item_type">text</field>
+        <field name="required">0</field>
+    </record>
+
     <record id="template_site_visit" model="security.work.checklist.template">
         <field name="name">Site Visit Inspection</field>
         <field name="code">site.visit</field>

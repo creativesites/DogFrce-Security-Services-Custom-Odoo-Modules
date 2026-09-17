@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_training_supervisor" model="res.groups">
+        <field name="name">Training / Supervisor</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Can author, submit for review, approve/reject course versions, and assign training to employees.</field>
+    </record>
+
+    <record id="rule_training_version_published_only" model="ir.rule">
+        <field name="name">Course Version: employees see published only</field>
+        <field name="model_id" ref="model_security_training_course_version"/>
+        <field name="domain_force">[('state', '=', 'published')]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_training_version_supervisor_all" model="ir.rule">
+        <field name="name">Course Version: supervisors see all</field>
+        <field name="model_id" ref="model_security_training_course_version"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_training_supervisor'))]"/>
+    </record>
+
+    <record id="rule_training_assignment_own" model="ir.rule">
+        <field name="name">Training Assignment: own or supervise all</field>
+        <field name="model_id" ref="model_security_training_assignment"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_training_assignment_supervisor_all" model="ir.rule">
+        <field name="name">Training Assignment: supervisors see all</field>
+        <field name="model_id" ref="model_security_training_assignment"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_training_supervisor'))]"/>
+    </record>
+
+    <record id="rule_training_attempt_own" model="ir.rule">
+        <field name="name">Training Attempt: own or supervise all</field>
+        <field name="model_id" ref="model_security_training_attempt"/>
+        <field name="domain_force">[('assignment_id.employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_training_attempt_supervisor_all" model="ir.rule">
+        <field name="name">Training Attempt: supervisors see all</field>
+        <field name="model_id" ref="model_security_training_attempt"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_training_supervisor'))]"/>
+    </record>
+
+    <record id="rule_training_lesson_progress_own" model="ir.rule">
+        <field name="name">Lesson Progress: own or supervise all</field>
+        <field name="model_id" ref="model_security_training_lesson_progress"/>
+        <field name="domain_force">[('assignment_id.employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_training_lesson_progress_supervisor_all" model="ir.rule">
+        <field name="name">Lesson Progress: supervisors see all</field>
+        <field name="model_id" ref="model_security_training_lesson_progress"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_training_supervisor'))]"/>
+    </record>
+
+    <record id="rule_training_competency_own" model="ir.rule">
+        <field name="name">Competency: own or supervise all</field>
+        <field name="model_id" ref="model_security_training_competency"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_training_competency_supervisor_all" model="ir.rule">
+        <field name="name">Competency: supervisors see all</field>
+        <field name="model_id" ref="model_security_training_competency"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_training_supervisor'))]"/>
+    </record>
+</odoo>

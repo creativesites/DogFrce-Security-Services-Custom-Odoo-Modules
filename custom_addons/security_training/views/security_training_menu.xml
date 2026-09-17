@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_security_training_root" name="Training" sequence="26"/>
+    <menuitem id="menu_security_training_my" name="My Training" parent="menu_security_training_root"
+              action="action_security_training_assignment_my" sequence="10"/>
+    <menuitem id="menu_security_training_assignments" name="Assignments" parent="menu_security_training_root"
+              action="action_security_training_assignment" sequence="20"
+              groups="security_training.group_training_supervisor"/>
+    <menuitem id="menu_security_training_courses" name="Courses" parent="menu_security_training_root"
+              action="action_security_training_course" sequence="30"
+              groups="security_training.group_training_supervisor"/>
+    <menuitem id="menu_security_training_versions" name="Course Versions" parent="menu_security_training_root"
+              action="action_security_training_course_version" sequence="40"
+              groups="security_training.group_training_supervisor"/>
+    <menuitem id="menu_security_training_competencies" name="Competencies" parent="menu_security_training_root"
+              action="action_security_training_competency" sequence="50"
+              groups="security_training.group_training_supervisor"/>
+</odoo>

@@ -13,14 +13,30 @@
           checklist definitions (typed items: boolean/text/number/photo).
         - security.work.checklist.response: per-task answers to a
           template's items.
-        Deliberately NOT here yet: ScheduleRule-based recurrence
-        (materialising tasks from shift/site events), AutoCompleteRule
-        (auto-closing tasks from Odoo events like attendance posting),
-        and offline sync — those need the worker/API layer described in
-        08-work-management.md §3-4 and BUILD-ORDER.md P4, which doesn't
-        exist yet. Tasks here are created manually or by other addons
-        calling this model directly; that's an honest MVP boundary, not
-        an oversight.
+        BUILD-STATUS-AND-PHASE-PLAN.md Phase 3 adds, in this Odoo-native
+        slice (not the Platform worker the paragraph above originally
+        assumed):
+        - security.work.schedule.rule: calendar recurrence (fixed weekdays,
+          fixed assignee) over a rolling 7-day horizon. Shift-based and
+          site-event-based recurrence are NOT implemented -- see that
+          model's docstring for why a heuristic wasn't attempted instead.
+        - Auto-completion: security.work.task is a security.bus.subscriber
+          for "attendance.batch.reviewed"/"attendance.batch.locked" (now
+          emitted by security_attendance), auto-verifying matching
+          attendance.post tasks. Incident-triggered auto-completion is not
+          implemented -- security_discipline emits no incident lifecycle
+          events yet.
+        - Evidence: a size limit on checklist photo evidence, and a
+          retention cron that purges photos (not answers) from closed
+          tasks past a configurable age.
+        - A verify queue action and an overdue sweep that flags a task
+          once via chatter + activity.
+        - Record rules on security.work.checklist.response, which
+          previously had none -- any employee could read or edit any other
+          employee's checklist answers by record id.
+        Still not here: offline sync (needs the desktop's own SQLCipher/
+        outbox work, BUILD-STATUS-AND-PHASE-PLAN.md Phase 3.7-3.9) and
+        site-event-based recurrence.
     """,
     "version": "19.0.1.0.0",
     "category": "Security/Operations",
@@ -32,8 +48,10 @@
         "security/ir.model.access.csv",
         "views/security_work_task_views.xml",
         "views/security_work_checklist_views.xml",
+        "views/security_work_schedule_rule_views.xml",
         "views/security_work_menu.xml",
         "data/security_work_checklist_templates.xml",
+        "data/security_work_cron.xml",
     ],
     "installable": True,
     "application": False,

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_training_course_list" model="ir.ui.view">
+        <field name="name">security.training.course.list</field>
+        <field name="model">security.training.course</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="published_version_id"/>
+                <field name="version_count"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_training_course_form" model="ir.ui.view">
+        <field name="name">security.training.course.form</field>
+        <field name="model">security.training.course</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name" placeholder="e.g. Using DeployGuard ERP — Attendance"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="grants_certification_id"/>
+                        </group>
+                        <group>
+                            <field name="published_version_id" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Versions" name="versions">
+                            <field name="version_ids">
+                                <list>
+                                    <field name="version_number"/>
+                                    <field name="state" widget="badge"
+                                           decoration-success="state == 'published'"
+                                           decoration-warning="state == 'in_review'"
+                                           decoration-muted="state == 'archived'"/>
+                                    <field name="approved_by_id"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_training_course" model="ir.actions.act_window">
+        <field name="name">Courses</field>
+        <field name="res_model">security.training.course</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Create your first course.</p></field>
+    </record>
+
+    <record id="view_security_training_course_version_form" model="ir.ui.view">
+        <field name="name">security.training.course.version.form</field>
+        <field name="model">security.training.course.version</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit_for_review" type="object" string="Submit for Review"
+                            invisible="state != 'draft'" class="btn-primary"
+                            groups="security_training.group_training_supervisor"/>
+                    <button name="action_approve" type="object" string="Approve &amp; Publish"
+                            invisible="state != 'in_review'" class="btn-primary"
+                            groups="security_training.group_training_supervisor"/>
+                    <button name="action_reject" type="object" string="Send Back to Draft"
+                            invisible="state != 'in_review'"
+                            groups="security_training.group_training_supervisor"/>
+                    <button name="action_archive_version" type="object" string="Archive"
+                            invisible="state == 'archived'"
+                            groups="security_training.group_training_supervisor"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_review,published"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+                    <group>
+                        <field name="course_id" readonly="1"/>
+                        <field name="submitted_by_id" readonly="1" invisible="not submitted_by_id"/>
+                        <field name="approved_by_id" readonly="1" invisible="not approved_by_id"/>
+                        <field name="approved_at" readonly="1" invisible="not approved_at"/>
+                    </group>
+                    <notebook>
+                        <page string="Sections &amp; Lessons" name="sections">
+                            <field name="section_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                </list>
+                                <form>
+                                    <group><field name="name"/></group>
+                                    <field name="lesson_ids">
+                                        <list editable="bottom">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="name"/>
+                                            <field name="content_type"/>
+                                            <field name="video_url" invisible="content_type != 'video_url'"/>
+                                        </list>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                        <page string="Assessments" name="assessments">
+                            <field name="assessment_ids">
+                                <list editable="bottom">
+                                    <field name="name"/>
+                                    <field name="pass_mark_pct"/>
+                                    <field name="max_attempts"/>
+                                    <field name="question_count"/>
+                                </list>
+                                <form>
+                                    <group>
+                                        <field name="name"/>
+                                        <field name="pass_mark_pct"/>
+                                        <field name="max_attempts"/>
+                                    </group>
+                                    <field name="question_ids">
+                                        <list editable="bottom">
+                                            <field name="sequence" widget="handle"/>
+                                            <field name="text"/>
+                                            <field name="question_type"/>
+                                        </list>
+                                        <form>
+                                            <group>
+                                                <field name="text"/>
+                                                <field name="question_type"/>
+                                            </group>
+                                            <field name="option_ids">
+                                                <list editable="bottom">
+                                                    <field name="sequence" widget="handle"/>
+                                                    <field name="text"/>
+                                                    <field name="is_correct"/>
+                                                </list>
+                                            </field>
+                                        </form>
+                                    </field>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_training_course_version" model="ir.actions.act_window">
+        <field name="name">Course Versions</field>
+        <field name="res_model">security.training.course.version</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

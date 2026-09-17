@@ -157,6 +157,8 @@ class CrmLead(models.Model):
 
 class SecurityOperationsCrmBridge(models.AbstractModel):
     _name = "security.operations.crm.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Security Operations CRM Event Bridge"
 
     @api.model

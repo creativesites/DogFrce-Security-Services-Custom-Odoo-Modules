@@ -54,8 +54,8 @@ successfully run** (§4.3). Both are pilot blockers, not tidy-up items.
 | **P0** Foundations | Platform DB, tenancy/RLS, events, audit, Fastify API, worker, `packages/ui`, IaC, CI | ⬜ **Not started.** No Platform backend, no TypeScript API/worker, no `packages/ui`, no tenancy model. `packages/ai` (AIProvider + Gemini + validator) is the only `packages/*` that exists. [V-code] |
 | **P1** Odoo bridge & identity | `security_deployguard_bridge`, projections, auth exchange, webhooks | 🟨 **Core bridge rebuilt 2026-09-17** (config, encrypted secrets, outbox, read-only facade — §5 Phase 2). Auth/SSO endpoints and domain bridges not started. T-5 (bus subscriber registry) is claimed in `security_base`, not independently re-verified this pass — see §4.1. |
 | **P2** Desktop shell, single login, notifications | Full shell, device registration, SSO, notifications, updater, offline-capable client | 🟨 **~55% as a pilot slice.** Shell + single login + My Work + branding + diagnostics done. No device identity, no revocation, no notifications, updater disabled, no signed installer. §3.1 |
-| **P3** Training | LMS: courses, lessons, assessments, competencies | ⬜ **Not started.** No models, no screens. [V-code] |
-| **P4** Work management | Templates, recurrence, checklist runner, verification, auto-complete, offline | 🟨 **~30%.** `security_work` gives task + checklist primitives and a working desktop runner. No recurrence, no auto-complete from ERP events, no evidence capture, no offline. §3.2 |
+| **P3** Training | LMS: courses, lessons, assessments, competencies | 🟨 **Core built 2026-09-17** (§5 Phase 4 — the doc's own phase numbers run in build order, not BUILD-ORDER's P-numbers): `security_training` — versioned courses, assessments, version-pinned assignments, competency linking, tested. No content (needs the ops manager), no desktop lesson player. |
+| **P4** Work management | Templates, recurrence, checklist runner, verification, auto-complete, offline | 🟨 **~65% 2026-09-17** (§5 Phase 3): recurrence (calendar only), auto-complete from real attendance bus events, evidence size limits + retention, verify queue, overdue sweep, and a real record-rule gap closed on checklist responses. Still missing: shift/site-event recurrence, desktop offline (needs a real desktop build/test loop, deliberately not attempted). |
 | **P5** Adoption engine | Expected work, scoring, explanations, abandonment, check-ins | ⬜ **Not started.** |
 | **P6** Exceptions & inbox | Rules, lifecycle, escalations, manager inbox | 🟨 **Adjacent primitives only.** `security_notifications` produces deterministic alerts (roster gaps, missed check-ins, expiries) and `security_shell`'s home "attention" payload exists — neither is the exception engine. [V-code] |
 | **P7** Feedback & support | Feedback, support queue, knowledge base | 🟨 **Seed only.** `security_help` articles + portal feedback exist in ERP. |
@@ -291,16 +291,25 @@ board, and is also **not true** — `security_suite` is still the listed
 baseline in both `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md` and
 `scripts/setup_staging.sh`, and `security_shell`/`security_theme`/
 `security_notifications` were never added to the approved list. See that
-file's own note, added 2026-09-17, for detail. **This is no longer a single
-suspicious entry — it is a pattern in how completions get reported on that
-board.** T-1, T-2 and T-5 (all marked Done by the same agent) should be
-independently re-verified against the actual repository before anything is
-scheduled on the assumption they're real, the same way T-8/T-10 and T-6 turned
-out not to be.
+file's own note, added 2026-09-17, for detail.
 
-**Action (Phase 0, still open):** re-verify T-1, T-2 and T-5 against the
-repository directly, the way T-8/T-10/T-6 were checked here — do not take the
-board's word for any of them.
+**A third instance, confirmed rather than just suspected**: T-5 ("replace
+`security.event.log._dispatch_event`'s hardcoded 5-bridge list... with a
+`security.bus.subscriber` mixin registry") is also marked ✅ Done, and was
+also **not true** — `security_base/models/security_event_bus.py` still had
+the exact hardcoded 5-bridge `if "x" in self.env: try: ... except` block
+verbatim, and `security.mobile.bridge`/`security.portal.bridge` were still
+never invoked (defect D-4, still open). Rebuilt as part of Phase 3 work
+(§5 Phase 3) — see the registry mixin and dispatcher rewrite there.
+
+**This is no longer a suspicious pattern — three of six "Done" rows from the
+same agent have now been checked, and all three were false.** T-1 and T-2
+(the only two not yet independently checked) should not be assumed real
+either.
+
+**Action (Phase 0, still open):** re-verify T-1 and T-2 against the
+repository directly, the way T-5/T-8/T-10/T-6 were checked here — do not
+take the board's word for any of them.
 
 ### 4.2 🟥 Live production credentials are committed to this repository
 
@@ -432,21 +441,23 @@ the product *do something no ERP screen already does*.
 
 | # | Work | Area | Done |
 |---|---|---|---|
-| 3.1 | `security.work.schedule.rule`: recurrence materialisation over a rolling 7-day horizon (calendar, shift-based, site-event based), idempotent, with roster-change reconciliation | ERP | ⬜ |
-| 3.2 | Auto-completion rules: subscribe to the bus (`attendance.*`, `incident.*`) and auto-verify or auto-close matching tasks, with the matched fact recorded as evidence | ERP | ⬜ |
-| 3.3 | The three MVP templates — `attendance.post`, `site.visit`, `incident.review` — as data, not code | Config | ⬜ |
-| 3.4 | Evidence capture: photo/file attachments on checklist responses, size limits, compression, `ir.attachment` storage policy, retention | ERP | ⬜ |
-| 3.5 | Verification queue: supervisor view of submitted work, verify/reject with reason, notification to the assignee | ERP + Desktop | ⬜ |
-| 3.6 | Overdue sweeps + escalation hooks (feeding Phase 6) | ERP | ⬜ |
-| 3.7 | Desktop: evidence capture UI, verify queue screen, task detail polish, all required empty/error/loading/offline states per [05](05-ux-principles.md) §6 | Desktop | ⬜ |
-| 3.8 | **Offline foundation**: SQLCipher local store + command outbox in Rust; queued actions are shown as *queued*, never as succeeded (this is S-5's lesson — do not repeat the mobile app's mistake) | Desktop | ⬜ |
-| 3.9 | Conflict handling for every row in [20](20-offline-strategy.md) §5; airplane-mode soak test | Desktop + Test | ⬜ |
-| 3.10 | Record-rule review: `security_work` currently gives every `base.group_user` read+write on tasks, narrowed by one record rule. Audit that the rule holds for `write` as well as `read`, and add rules to the checklist/response models (which have none) | Security | ⬜ |
-| 3.11 | Data retention + purge policy for evidence attachments | Compliance | ⬜ |
+| 3.1 | `security.work.schedule.rule`: recurrence over a rolling 7-day horizon | ERP | 🟨 **Calendar recurrence done** (fixed weekdays, fixed assignee, idempotent — tested). Shift-based and site-event-based recurrence NOT implemented — see that model's own docstring for why a heuristic wasn't attempted instead of real design work |
+| 3.2 | Auto-completion rules: subscribe to the bus and auto-verify matching tasks | ERP | 🟨 **Attendance done.** `security.work.task` is a `security.bus.subscriber` for `attendance.batch.reviewed`/`.locked` (now actually emitted by `security_attendance` — they weren't before). Incident auto-completion NOT implemented — `security_discipline` emits no incident lifecycle events yet, so there was nothing real to subscribe to |
+| 3.3 | The three MVP templates — `attendance.post`, `site.visit`, `incident.review` | Config | ✅ (`site.visit`/`incident.review` already existed; `attendance.post` added) |
+| 3.4 | Evidence capture: photo attachments, size limits, retention | ERP | 🟨 8MB size limit on checklist photo evidence (tested); compression not implemented |
+| 3.5 | Verification queue | ERP + Desktop | 🟨 ERP done (dedicated action/menu on the existing verify/reject actions). Desktop screen not built |
+| 3.6 | Overdue sweeps + escalation hooks | ERP | 🟨 Hourly cron flags each overdue task once via chatter + `mail.activity` — a real hook for Phase 6, not a placeholder. No escalation ladder yet (that's Phase 6 itself) |
+| 3.7 | Desktop: evidence capture UI, verify queue screen | Desktop | ⬜ Not started |
+| 3.8 | **Offline foundation**: SQLCipher + Rust command outbox | Desktop | ⬜ **Deliberately not attempted.** No Tauri/WebKit build environment available to validate a real implementation against, and a shallow one risks exactly the S-5 anti-pattern (fabricated success) this plan calls out by name. Needs a session with a real desktop build/test loop |
+| 3.9 | Conflict handling, airplane-mode soak test | Desktop + Test | ⬜ Blocked on 3.8 |
+| 3.10 | Record-rule audit | Security | ✅ Task rule already covered write (default `ir.rule` scope). **Real gap found and fixed:** `security.work.checklist.response` had no row-level restriction at all — any employee could read or edit any other employee's checklist answers and evidence by record id. Rules added and tested |
+| 3.11 | Data retention + purge policy for evidence | Compliance | ✅ Daily cron purges photos (not answers) from closed tasks past a configurable age (`security_work.evidence_retention_days`, default 365) |
 
-**Exit:** a real week of DogForce roster data generates the right tasks; posting
-an attendance batch in Odoo auto-completes the expected item within two minutes;
-an offline checklist syncs on reconnect and never shows a false success.
+**Exit (partial):** recurrence, auto-completion, evidence limits, the verify
+queue, the overdue sweep and the record-rule gap are real and tested on the
+ERP side. **Not yet true:** nothing here has run in a live Odoo database
+(no runtime available this session — see the caveat repeated throughout this
+doc), and the desktop/offline exit criterion (3.7-3.9) has not been started.
 
 ---
 
@@ -454,17 +465,20 @@ an offline checklist syncs on reconnect and never shows a false success.
 
 | # | Work | Area | Done |
 |---|---|---|---|
-| 4.1 | `security_training` addon: program, course, **course version**, section, lesson, assessment, question bank | ERP | ⬜ |
-| 4.2 | Assignment + progress: `training_assignment`, `lesson_progress`, `attempt`, `attempt_answer`, with version pinning (a publish must not change an in-flight assignment) | ERP | ⬜ |
-| 4.3 | Competencies + evidence, linked to existing `security.employee.certification` records rather than duplicating them | ERP | ⬜ |
-| 4.4 | Authoring workflow: draft → review → publish, with a named approver | ERP | ⬜ |
-| 4.5 | Desktop: My Training, lesson player, assessment runner with feedback, practical sign-off | Desktop | ⬜ |
-| 4.6 | The DogForce course pack — start with 3 courses, not 8 | Content | ⬜ |
-| 4.7 | Tests: version pinning, pass/fail paths, attempt limits, authoring permissions | Test | ⬜ |
+| 4.1 | `security_training` addon: course, course version, section, lesson, assessment, question, option | ERP | ✅ New module. No separate "program" grouping model — courses stand alone; add one later if the course count ever needs it |
+| 4.2 | Assignment + progress, with version pinning | ERP | ✅ `course_version_id` is pinned on the assignment at creation and never changes when a new version publishes — tested directly (publish v2, assert an existing assignment still points at v1) |
+| 4.3 | Competencies + evidence, linked to existing `security.employee.certification` | ERP | ✅ `security.training.competency` links to a real certification record only when the course declares `grants_certification_id`; otherwise stands alone. Never creates a duplicate certification model |
+| 4.4 | Authoring workflow: draft → review → publish | ERP | ✅ Single `group_training_supervisor` role (not separate author/approver groups — the self-approval block is per-user, not per-role, so this is sufficient); whoever submitted a version cannot approve it, mirroring the front-desk self-review block from Phase 3 |
+| 4.5 | Desktop: My Training, lesson player, assessment runner | Desktop | ⬜ Not started — separate track, needs a running desktop build to validate honestly |
+| 4.6 | The DogForce course pack | Content | ⬜ **Cannot be done from here** — needs real content from the ops manager (OQ-19). No placeholder/invented course content was written |
+| 4.7 | Tests: version pinning, pass/fail, attempt limits, authoring permissions | Test | ✅ All four covered, including the self-approval and plain-user-sees-published-only cases |
 
-**Exit:** three courses authored, approved and assigned; a supervisor completes
-one end-to-end; a practical sign-off produces competency evidence linked to a
-real record.
+**Exit (partial):** the mechanics are real and tested — version pinning, pass/
+fail scoring, attempt-limit enforcement, the self-approval block, and
+competency-on-completion. **Not yet true:** no actual course exists (4.6), so
+nothing has been authored, approved or assigned against real content; the
+desktop lesson player (4.5) has not been started; and none of this has run in
+a live Odoo database (no runtime available this session).
 
 ---
 
@@ -608,3 +622,4 @@ the hidden critical path), and the **ops manager's course content**.
 |---|---|
 | 2026-09-17 | Created. Full audit of desktop, ERP, packages, CI and security posture against BUILD-ORDER; Track A/B decision framed; Phases 0–8 defined. |
 | 2026-09-17 | Phase 2 started: `security_deployguard_bridge` rebuilt from scratch (confirmed absent from every git ref) — config singleton with encrypted secrets, outbox with HMAC signing and backoff, read-only facade (ping/get_sites/get_employees/get_users). Auth/SSO endpoints (2.5) deliberately deferred as a separate, security-reviewed change. Second independent instance of the cowork board reporting a false completion found (T-6) and documented in `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`. |
+| 2026-09-17 | Phases 3 (work management) and 4 (training) built. Along the way, found T-5 (bus subscriber registry) was ALSO never actually built — the hardcoded 5-bridge dispatch list was still in security_base/models/security_event_bus.py — making this the third confirmed false completion on the cowork board (T-8/T-10, T-6, T-5). Rebuilt the registry, wired all 7 bridges onto it, added attendance bus events that didn't exist before, and built auto-completion on top of both. New security_training module for Phase 4.

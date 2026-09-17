@@ -52,6 +52,8 @@ class SecurityPayslip(models.Model):
 
 class SecurityDisciplinePayrollBridge(models.AbstractModel):
     _name = "security.discipline.payroll.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Security Attendance to Discipline & Payroll Event Bridge"
 
     @api.model

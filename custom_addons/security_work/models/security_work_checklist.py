@@ -1,4 +1,12 @@
+import base64
+
 from odoo import api, fields, models
+from odoo.exceptions import ValidationError
+
+# 8MB -- generous for a phone photo, small enough that ir.attachment storage
+# doesn't quietly become a cost/retention problem. BUILD-STATUS-AND-PHASE-
+# PLAN.md Phase 3.4.
+MAX_PHOTO_BYTES = 8 * 1024 * 1024
 
 
 class SecurityWorkChecklistTemplate(models.Model):
@@ -65,3 +73,41 @@ class SecurityWorkChecklistResponse(models.Model):
         "unique(task_id, item_def_id)",
         "This item already has a response on this task.",
     )
+
+    @api.constrains("photo")
+    def _check_photo_size(self):
+        for response in self:
+            if not response.photo:
+                continue
+            # Binary fields hold base64 text; decode to check the real size.
+            raw_size = len(base64.b64decode(response.photo))
+            if raw_size > MAX_PHOTO_BYTES:
+                raise ValidationError(
+                    f"Photo evidence is too large "
+                    f"({raw_size // (1024 * 1024)} MB). Maximum is "
+                    f"{MAX_PHOTO_BYTES // (1024 * 1024)} MB."
+                )
+
+    @api.model
+    def action_purge_old_evidence(self):
+        """Retention cron (BUILD-STATUS-AND-PHASE-PLAN.md Phase 3.11).
+        Clears photo evidence on responses belonging to tasks in a terminal
+        state (verified/cancelled) whose task was closed more than
+        `security_work.evidence_retention_days` days ago (default 365).
+        Text/number/boolean answers are kept -- only the binary evidence is
+        purged, since that is the storage cost and the more sensitive data
+        (a site photo). Clearing the field deletes the linked ir.attachment,
+        since this field is declared with attachment=True."""
+        retention_days = int(
+            self.env["ir.config_parameter"].sudo().get_param(
+                "security_work.evidence_retention_days", default="365"
+            )
+        )
+        cutoff = fields.Datetime.subtract(fields.Datetime.now(), days=retention_days)
+        stale = self.search([
+            ("photo", "!=", False),
+            ("task_id.state", "in", ("verified", "cancelled")),
+            ("task_id.write_date", "<", cutoff),
+        ])
+        stale.write({"photo": False})
+        return stale

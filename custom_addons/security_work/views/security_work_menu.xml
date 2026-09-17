@@ -4,4 +4,6 @@
     <menuitem id="menu_security_work_my" name="My Work" parent="menu_security_work_root" action="action_security_work_task_my" sequence="10"/>
     <menuitem id="menu_security_work_all" name="All Tasks" parent="menu_security_work_root" action="action_security_work_task" sequence="20" groups="security_work.group_work_supervisor"/>
     <menuitem id="menu_security_work_templates" name="Checklist Templates" parent="menu_security_work_root" action="action_security_work_checklist_template" sequence="30" groups="security_work.group_work_supervisor"/>
+    <menuitem id="menu_security_work_verify_queue" name="Verify Queue" parent="menu_security_work_root" action="action_security_work_task_verify_queue" sequence="15" groups="security_work.group_work_supervisor"/>
+    <menuitem id="menu_security_work_schedule_rules" name="Recurring Task Rules" parent="menu_security_work_root" action="action_security_work_schedule_rule" sequence="40" groups="security_work.group_work_supervisor"/>
 </odoo>

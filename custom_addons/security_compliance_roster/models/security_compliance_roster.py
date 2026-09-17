@@ -107,6 +107,8 @@ class SecurityEmployeeDocument(models.Model):
 
 class SecurityComplianceRosterBridge(models.AbstractModel):
     _name = "security.compliance.roster.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Security Compliance and Roster Intelligence Bridge"
 
     @api.model

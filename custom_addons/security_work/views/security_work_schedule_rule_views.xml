@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_work_schedule_rule_list" model="ir.ui.view">
+        <field name="name">security.work.schedule.rule.list</field>
+        <field name="model">security.work.schedule.rule</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="checklist_template_id"/>
+                <field name="employee_id"/>
+                <field name="site_id"/>
+                <field name="last_materialized_date"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_work_schedule_rule_form" model="ir.ui.view">
+        <field name="name">security.work.schedule.rule.form</field>
+        <field name="model">security.work.schedule.rule</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="_materialize" type="object" string="Materialize Now" class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="checklist_template_id"/>
+                            <field name="employee_id"/>
+                            <field name="site_id"/>
+                        </group>
+                        <group>
+                            <field name="task_name_template"/>
+                            <field name="due_hour"/>
+                            <field name="active"/>
+                            <field name="last_materialized_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Runs on">
+                        <field name="monday"/>
+                        <field name="tuesday"/>
+                        <field name="wednesday"/>
+                        <field name="thursday"/>
+                        <field name="friday"/>
+                        <field name="saturday"/>
+                        <field name="sunday"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_work_schedule_rule" model="ir.actions.act_window">
+        <field name="name">Recurring Task Rules</field>
+        <field name="res_model">security.work.schedule.rule</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No recurring task rules yet.</p></field>
+    </record>
+</odoo>

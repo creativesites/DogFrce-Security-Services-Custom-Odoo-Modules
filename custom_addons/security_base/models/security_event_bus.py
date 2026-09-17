@@ -71,10 +71,23 @@ class SecurityEventLog(models.Model):
         log._dispatch_event()
         return log
 
+    def _get_bus_subscriber_model_names(self):
+        """Every installed model inheriting security.bus.subscriber, found
+        via the registry rather than a hardcoded list (DG-ADR-018 §2, fixes
+        defect D-4). `env.registry` behaves as a mapping of model name ->
+        model class."""
+        subscriber_cls = type(self.env["security.bus.subscriber"])
+        return [
+            name for name, cls in self.env.registry.items()
+            if name != "security.bus.subscriber" and issubclass(cls, subscriber_cls)
+        ]
+
     def _dispatch_event(self):
         """
-        Routes the logged event to active module bridge interceptors.
-        Safe execution: handles downstream exceptions cleanly without blocking original transactions.
+        Routes the logged event to every installed security.bus.subscriber
+        whose _bus_events includes this event (or declares "*"). Safe
+        execution: handles downstream exceptions cleanly without blocking
+        the original transaction.
         """
         self.ensure_one()
         payload = {}
@@ -86,39 +99,15 @@ class SecurityEventLog(models.Model):
 
         _logger.info("Intelligence Bus | Dispatched event: %s | Source: %s(%s)", self.name, self.source_model, self.source_id)
 
-        # 1. CRM Operations Intelligence Loop Bridge
-        if "security.operations.crm.bridge" in self.env:
+        for model_name in self._get_bus_subscriber_model_names():
+            model = self.env[model_name]
+            bus_events = getattr(model, "_bus_events", [])
+            if "*" not in bus_events and self.name not in bus_events:
+                continue
             try:
-                self.env["security.operations.crm.bridge"]._handle_bus_event(self.name, self.source_model, self.source_id, payload)
+                with self.env.cr.savepoint():
+                    model._handle_bus_event(self.name, self.source_model, self.source_id, payload)
             except Exception as e:
-                _logger.error("Downstream CRM Loop Failed for event %s: %s", self.name, e)
-
-        # 2. Reliability, Attendance, and Discipline Loop Bridge
-        if "security.discipline.payroll.bridge" in self.env:
-            try:
-                self.env["security.discipline.payroll.bridge"]._handle_bus_event(self.name, self.source_model, self.source_id, payload)
-            except Exception as e:
-                _logger.error("Downstream Discipline Loop Failed for event %s: %s", self.name, e)
-
-        # 3. Fleet delay and Route Attendance Bridge
-        if "security.fleet.ops.bridge" in self.env:
-            try:
-                self.env["security.fleet.ops.bridge"]._handle_bus_event(self.name, self.source_model, self.source_id, payload)
-            except Exception as e:
-                _logger.error("Downstream Fleet Ops Loop Failed for event %s: %s", self.name, e)
-
-        # 4. Equipment, Damage Repairs, and Payroll Bridge
-        if "security.equipment.payroll.bridge" in self.env:
-            try:
-                self.env["security.equipment.payroll.bridge"]._handle_bus_event(self.name, self.source_model, self.source_id, payload)
-            except Exception as e:
-                _logger.error("Downstream Equipment Loop Failed for event %s: %s", self.name, e)
-
-        # 5. Document compliance warnings Bridge
-        if "security.compliance.roster.bridge" in self.env:
-            try:
-                self.env["security.compliance.roster.bridge"]._handle_bus_event(self.name, self.source_model, self.source_id, payload)
-            except Exception as e:
-                _logger.error("Downstream Compliance Roster Loop Failed for event %s: %s", self.name, e)
+                _logger.error("Downstream %s Failed for event %s: %s", model_name, self.name, e)
 
         self.write({"state": "processed"})
