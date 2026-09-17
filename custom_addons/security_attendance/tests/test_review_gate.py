@@ -18,19 +18,19 @@ class TestAttendanceReviewGate(TransactionCase):
         cls.ops_user = cls.env["res.users"].create({
             "name": "Ops User",
             "login": "review_gate_ops_user",
-            "groups_id": [(6, 0, [cls.env.ref("hr.group_hr_user").id])],
+            "group_ids": [(6, 0, [cls.env.ref("hr.group_hr_user").id])],
         })
         cls.front_desk_user = cls.env["res.users"].create({
             "name": "Front Desk User",
             "login": "review_gate_front_desk_user",
-            "groups_id": [(6, 0, [
+            "group_ids": [(6, 0, [
                 cls.env.ref("security_operations.group_security_front_desk").id
             ])],
         })
         cls.random_user = cls.env["res.users"].create({
             "name": "Random Internal User",
             "login": "review_gate_random_user",
-            "groups_id": [(6, 0, [cls.env.ref("base.group_user").id])],
+            "group_ids": [(6, 0, [cls.env.ref("base.group_user").id])],
         })
 
     def _batch(self, captured_by):
@@ -60,7 +60,7 @@ class TestAttendanceReviewGate(TransactionCase):
         manager = self.env["res.users"].create({
             "name": "Ops Manager",
             "login": "review_gate_manager_user",
-            "groups_id": [(6, 0, [
+            "group_ids": [(6, 0, [
                 self.env.ref("security_base.group_security_manager").id
             ])],
         })

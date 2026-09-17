@@ -24,7 +24,7 @@ class TestCourseAuthoring(TransactionCase):
         })
 
     def _course_with_one_section(self, user=None):
-        env = self.env if user is None else self.env.with_user(user)
+        env = self.env if user is None else self.env(user=user)
         course = env["security.training.course"].create({"name": "Test Course"})
         version = course.version_ids[:1] or env["security.training.course.version"].create({
             "course_id": course.id
@@ -43,7 +43,7 @@ class TestCourseAuthoring(TransactionCase):
             self.env["security.training.course"].with_user(self.plain_user).create({"name": "Nope"})
 
     def test_cannot_submit_review_without_a_section(self):
-        env = self.env.with_user(self.author)
+        env = self.env(user=self.author)
         course = env["security.training.course"].create({"name": "Empty Course"})
         version = env["security.training.course.version"].create({"course_id": course.id})
         with self.assertRaises(UserError):
@@ -72,10 +72,10 @@ class TestCourseAuthoring(TransactionCase):
         v1.with_user(self.author).action_submit_for_review()
         v1.with_user(self.approver).action_approve()
 
-        v2 = self.env.with_user(self.author)["security.training.course.version"].create({
+        v2 = self.env["security.training.course.version"].with_user(self.author).create({
             "course_id": course.id
         })
-        self.env.with_user(self.author)["security.training.section"].create({
+        self.env["security.training.section"].with_user(self.author).create({
             "course_version_id": v2.id, "name": "Section 1 (v2)",
         })
         v2.with_user(self.author).action_submit_for_review()

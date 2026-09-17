@@ -80,11 +80,11 @@ class SecurityWorkTask(models.Model):
     def _search_is_overdue(self, operator, value):
         now = fields.Datetime.now()
         open_states = ["open", "in_progress"]
-        is_overdue_domain = [("due_at", "<", now), ("state", "in", open_states)]
+        is_overdue_domain = ["&", ("due_at", "<", now), ("state", "in", open_states)]
         matches_true = (operator == "=" and value) or (operator == "!=" and not value)
         if matches_true:
             return is_overdue_domain
-        return ["!"] + is_overdue_domain
+        return ["|", ("due_at", ">=", now), ("state", "not in", open_states)]
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -183,8 +183,10 @@ class SecurityWorkTask(models.Model):
         exception engine to consume later, not a full escalation ladder;
         posting to the task's own chatter/activity is real signal today,
         not a placeholder."""
-        overdue = self.search([
-            ("is_overdue", "=", True),
+        now = fields.Datetime.now()
+        overdue = self.sudo().search([
+            ("due_at", "<", now),
+            ("state", "in", ("open", "in_progress")),
             ("overdue_flagged_at", "=", False),
         ])
         for task in overdue:

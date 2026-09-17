@@ -326,10 +326,17 @@ class SecurityClientOnboardingWizard(models.TransientModel):
                 "pay_rate": req.pay_rate,
             })
 
+        billing_mode_map = {
+            "fixed_monthly": "recurring",
+            "per_shift": "shift",
+            "per_hour": "adhoc",
+            "milestone": "adhoc",
+        }
+        plan_billing_mode = billing_mode_map.get(self.billing_mode, self.billing_mode or "recurring")
         self.env["security.billing.plan"].create({
             "name": f"{partner.name} — Billing Plan",
             "partner_id": partner.id,
-            "billing_mode": self.billing_mode or "fixed_monthly",
+            "billing_mode": plan_billing_mode,
             "date_start": self.billing_start or self.contract_start or fields.Date.today(),
             "payment_term_days": self.billing_payment_term_days,
             "vat_rate": self.billing_vat_rate,

@@ -7,6 +7,8 @@ class TestHoursEquityAudit(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.user.tz = "UTC"
+        cls.env.company.partner_id.tz = "UTC"
         cls.partner = cls.env["res.partner"].create({"name": "Hours Audit Client"})
         cls.site = cls.env["security.client.site"].create({
             "name": "Hours Audit Site", "partner_id": cls.partner.id,
@@ -49,7 +51,7 @@ class TestHoursEquityAudit(TransactionCase):
 
     def test_no_data_yields_empty_result(self):
         audit = self.env["security.attendance.hours.audit"].create({
-            "date_from": "2026-08-01", "date_to": "2026-08-31",
+            "date_from": "2035-08-01", "date_to": "2035-08-31",
         })
         audit.action_run()
         self.assertFalse(audit.line_ids)
@@ -61,12 +63,12 @@ class TestHoursEquityAudit(TransactionCase):
         guard_under = self.env["hr.employee"].create({"name": "Under-rostered Guard"})
 
         # Team average ~= 8h; over-rostered guard well above +20%, under well below -20%.
-        self._record_for(guard_normal, "2026-08-03", worked_hours=8.0)
-        self._record_for(guard_over, "2026-08-03", worked_hours=12.0)
-        self._record_for(guard_under, "2026-08-03", worked_hours=2.0)
+        self._record_for(guard_normal, "2035-08-03", worked_hours=8.0)
+        self._record_for(guard_over, "2035-08-03", worked_hours=12.0)
+        self._record_for(guard_under, "2035-08-03", worked_hours=2.0)
 
         audit = self.env["security.attendance.hours.audit"].create({
-            "date_from": "2026-08-01", "date_to": "2026-08-31",
+            "date_from": "2035-08-01", "date_to": "2035-08-31",
         })
         audit.action_run()
 
@@ -79,11 +81,11 @@ class TestHoursEquityAudit(TransactionCase):
     def test_within_band_is_not_flagged(self):
         guard_a = self.env["hr.employee"].create({"name": "Guard A"})
         guard_b = self.env["hr.employee"].create({"name": "Guard B"})
-        self._record_for(guard_a, "2026-08-03", worked_hours=8.0)
-        self._record_for(guard_b, "2026-08-03", worked_hours=8.5)
+        self._record_for(guard_a, "2035-08-03", worked_hours=8.0)
+        self._record_for(guard_b, "2035-08-03", worked_hours=8.5)
 
         audit = self.env["security.attendance.hours.audit"].create({
-            "date_from": "2026-08-01", "date_to": "2026-08-31",
+            "date_from": "2035-08-01", "date_to": "2035-08-31",
         })
         audit.action_run()
         self.assertTrue(all(line.flag == "normal" for line in audit.line_ids))
@@ -97,19 +99,19 @@ class TestHoursEquityAudit(TransactionCase):
             "site_id": other_site.id, "post_type_id": self.post_type.id,
         })
         guard = self.env["hr.employee"].create({"name": "Cross-Site Guard"})
-        self._record_for(guard, "2026-08-03", worked_hours=8.0)
+        self._record_for(guard, "2035-08-03", worked_hours=8.0)
 
         other_slot = self.env["security.roster.slot"].create({
-            "shift_date": "2026-08-04", "post_id": other_post.id,
+            "shift_date": "2035-08-04", "post_id": other_post.id,
             "shift_template_id": self.template.id, "employee_id": guard.id,
         })
         other_record = self.env["security.attendance.record"].create({
             "roster_slot_id": other_slot.id,
         })
-        other_record.write({"check_in": "2026-08-04 06:00:00", "check_out": "2026-08-04 18:00:00"})
+        other_record.write({"check_in": "2035-08-04 06:00:00", "check_out": "2035-08-04 18:00:00"})
 
         audit = self.env["security.attendance.hours.audit"].create({
-            "date_from": "2026-08-01", "date_to": "2026-08-31",
+            "date_from": "2035-08-01", "date_to": "2035-08-31",
             "site_id": self.site.id,
         })
         audit.action_run()
@@ -118,9 +120,9 @@ class TestHoursEquityAudit(TransactionCase):
 
     def test_rerun_clears_previous_lines(self):
         guard = self.env["hr.employee"].create({"name": "Rerun Guard"})
-        self._record_for(guard, "2026-08-03", worked_hours=8.0)
+        self._record_for(guard, "2035-08-03", worked_hours=8.0)
         audit = self.env["security.attendance.hours.audit"].create({
-            "date_from": "2026-08-01", "date_to": "2026-08-31",
+            "date_from": "2035-08-01", "date_to": "2035-08-31",
         })
         audit.action_run()
         audit.action_run()

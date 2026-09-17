@@ -12,7 +12,7 @@ class TestAttendanceBusEvents(TransactionCase):
         cls.front_desk_user = cls.env["res.users"].create({
             "name": "Bus Event Front Desk",
             "login": "bus_event_front_desk_user",
-            "groups_id": [(6, 0, [
+            "group_ids": [(6, 0, [
                 cls.env.ref("security_operations.group_security_front_desk").id
             ])],
         })

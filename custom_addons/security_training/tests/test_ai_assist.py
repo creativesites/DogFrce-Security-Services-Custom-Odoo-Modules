@@ -16,9 +16,9 @@ class TestLessonAiAssist(TransactionCase):
             "name": "AI Assist Test Author", "login": "ai-assist-test-author@access-control.test",
             "group_ids": [(6, 0, [cls.env.ref("security_training.group_training_supervisor").id])],
         })
-        env = cls.env.with_user(author)
+        env = cls.env(user=author)
         course = env["security.training.course"].create({"name": "AI Assist Test Course"})
-        version = course.version_ids
+        version = course.version_ids[:1] or env["security.training.course.version"].create({"course_id": course.id})
         section = env["security.training.section"].create({
             "course_version_id": version.id, "name": "S1",
         })

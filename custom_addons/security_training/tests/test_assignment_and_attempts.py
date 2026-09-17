@@ -14,15 +14,19 @@ class TestAssignmentVersionPinning(TransactionCase):
             "name": "Pin Test Author", "login": "pin-test-author@access-control.test",
             "group_ids": [(6, 0, [cls.env.ref("security_training.group_training_supervisor").id])],
         })
+        cls.approver = cls.env["res.users"].create({
+            "name": "Pin Test Approver", "login": "pin-test-approver@access-control.test",
+            "group_ids": [(6, 0, [cls.env.ref("security_training.group_training_supervisor").id])],
+        })
         cls.employee = cls.env["hr.employee"].create({"name": "Pin Test Guard"})
 
     def _published_version(self, course_name, section_name):
-        env = self.env.with_user(self.author)
+        env = self.env(user=self.author)
         course = env["security.training.course"].create({"name": course_name})
-        version = course.version_ids
+        version = course.version_ids[:1] or env["security.training.course.version"].create({"course_id": course.id})
         env["security.training.section"].create({"course_version_id": version.id, "name": section_name})
         version.action_submit_for_review()
-        version.with_user(self.env.ref("base.user_admin")).action_approve()
+        version.with_user(self.approver).action_approve()
         return course, version
 
     def test_assignment_pins_the_published_version(self):
@@ -33,14 +37,14 @@ class TestAssignmentVersionPinning(TransactionCase):
         self.assertEqual(assignment.course_version_id, v1)
 
     def test_cannot_assign_a_course_with_no_published_version(self):
-        course = self.env.with_user(self.author)["security.training.course"].create({"name": "Unpublished"})
+        course = self.env["security.training.course"].with_user(self.author).create({"name": "Unpublished"})
         with self.assertRaises(UserError):
             self.env["security.training.assignment"].create({
                 "employee_id": self.employee.id, "course_id": course.id,
             })
 
     def test_new_publish_does_not_change_existing_assignment(self):
-        env = self.env.with_user(self.author)
+        env = self.env(user=self.author)
         course, v1 = self._published_version("Repin Course", "S1")
         assignment = self.env["security.training.assignment"].create({
             "employee_id": self.employee.id, "course_id": course.id,
@@ -50,7 +54,7 @@ class TestAssignmentVersionPinning(TransactionCase):
         v2 = env["security.training.course.version"].create({"course_id": course.id})
         env["security.training.section"].create({"course_version_id": v2.id, "name": "S1 v2"})
         v2.action_submit_for_review()
-        v2.with_user(self.env.ref("base.user_admin")).action_approve()
+        v2.with_user(self.approver).action_approve()
 
         assignment.invalidate_recordset()
         self.assertEqual(
@@ -67,15 +71,19 @@ class TestAttemptScoring(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        author = cls.env["res.users"].create({
+        cls.author = cls.env["res.users"].create({
             "name": "Attempt Test Author", "login": "attempt-test-author@access-control.test",
             "group_ids": [(6, 0, [cls.env.ref("security_training.group_training_supervisor").id])],
         })
-        env = cls.env.with_user(author)
+        cls.approver = cls.env["res.users"].create({
+            "name": "Attempt Test Approver", "login": "attempt-test-approver@access-control.test",
+            "group_ids": [(6, 0, [cls.env.ref("security_training.group_training_supervisor").id])],
+        })
+        env = cls.env(user=cls.author)
         cls.employee = cls.env["hr.employee"].create({"name": "Attempt Test Guard"})
 
         course = env["security.training.course"].create({"name": "Quiz Course"})
-        version = course.version_ids
+        version = course.version_ids[:1] or env["security.training.course.version"].create({"course_id": course.id})
         env["security.training.section"].create({"course_version_id": version.id, "name": "S1"})
         cls.assessment = env["security.training.assessment"].create({
             "course_version_id": version.id, "name": "Quiz", "pass_mark_pct": 100.0, "max_attempts": 2,
@@ -91,7 +99,7 @@ class TestAttemptScoring(TransactionCase):
         })
 
         version.action_submit_for_review()
-        version.with_user(cls.env.ref("base.user_admin")).action_approve()
+        version.with_user(cls.approver).action_approve()
         cls.assignment = cls.env["security.training.assignment"].create({
             "employee_id": cls.employee.id, "course_id": course.id,
         })
@@ -134,9 +142,9 @@ class TestAttemptScoring(TransactionCase):
     def test_passing_completes_the_assignment_after_lessons_done(self):
         lesson = self.assignment.course_version_id.section_ids.lesson_ids
         if not lesson:
-            lesson = self.env.with_user(
-                self.env.ref("base.user_admin")
-            )["security.training.lesson"].create({
+            lesson = self.env["security.training.lesson"].with_user(
+                self.author
+            ).create({
                 "section_id": self.assignment.course_version_id.section_ids[0].id, "name": "L1",
             })
         self.env["security.training.lesson.progress"].create({
@@ -148,9 +156,9 @@ class TestAttemptScoring(TransactionCase):
         self.assertEqual(self.assignment.state, "completed")
 
     def test_completing_the_assignment_grants_a_competency(self):
-        lesson = self.env.with_user(
-            self.env.ref("base.user_admin")
-        )["security.training.lesson"].create({
+        lesson = self.env["security.training.lesson"].with_user(
+            self.author
+        ).create({
             "section_id": self.assignment.course_version_id.section_ids[0].id, "name": "L1",
         })
         self.env["security.training.lesson.progress"].create({

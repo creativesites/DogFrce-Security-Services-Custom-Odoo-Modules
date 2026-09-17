@@ -224,10 +224,9 @@ class SecurityAttendanceBatch(models.Model):
         Consumed today by security_work's auto-completion
         (docs/ROSTERING_SIMPLIFICATION_PLAN.md is the client-facing plan;
         the phase plan's Phase 3 is where this was scoped)."""
-        event_model = self.env.get("security.event.log")
-        if not event_model:
+        if "security.event.log" not in self.env:
             return
-        event_model.register_event(
+        self.env["security.event.log"].register_event(
             event_name,
             "security.attendance.batch",
             batch.id,
@@ -794,11 +793,10 @@ class SecurityAttendanceRecord(models.Model):
         records = super().create(vals_list)
         records._sync_hr_attendance()
         # DogForce Intelligence Bus Event
-        event_model = self.env.get("security.event.log")
-        if event_model:
+        if "security.event.log" in self.env:
             for rec in records:
                 if rec.manual_presence in ["absent", "awol"] or rec.absence_type == "awol":
-                    event_model.register_event("attendance.missed", "security.attendance.record", rec.id)
+                    self.env["security.event.log"].register_event("attendance.missed", "security.attendance.record", rec.id)
         return records
 
     def write(self, vals):
@@ -811,10 +809,9 @@ class SecurityAttendanceRecord(models.Model):
             self.sudo()._notify_awol()
         
         # DogForce Intelligence Bus Event
-        event_model = self.env.get("security.event.log")
-        if event_model and (vals.get("manual_presence") in ["absent", "awol"] or vals.get("absence_type") == "awol"):
+        if "security.event.log" in self.env and (vals.get("manual_presence") in ["absent", "awol"] or vals.get("absence_type") == "awol"):
             for rec in self:
-                event_model.register_event("attendance.missed", "security.attendance.record", rec.id)
+                self.env["security.event.log"].register_event("attendance.missed", "security.attendance.record", rec.id)
         
         fields_to_sync = {"manual_presence", "check_in", "check_out", "employee_id"}
         if any(f in vals for f in fields_to_sync):

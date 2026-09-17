@@ -66,7 +66,7 @@ class TestRosterSignoff(TransactionCase):
         user = self.env["res.users"].create({
             "name": "Ordinary User",
             "login": "ordinary_user_signoff_test",
-            "groups_id": [(6, 0, [self.env.ref("base.group_user").id])],
+            "group_ids": [(6, 0, [self.env.ref("base.group_user").id])],
         })
         with self.assertRaises(UserError):
             finance.with_user(user).action_sign()

@@ -23,6 +23,8 @@ class TestAttendanceScenarios(TransactionCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.env.user.tz = "UTC"
+        cls.env.company.partner_id.tz = "UTC"
 
         # Minimal client / site / post / shift-template infrastructure
         cls.partner = cls.env["res.partner"].create({"name": "Attendance Scenario Client"})
