@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="def_attendance_post" model="security.adoption.expected.work.definition">
+        <field name="workflow_key">attendance.post</field>
+        <field name="cadence_description">Per shift-day, per site supervisor</field>
+    </record>
+    <record id="def_incident_review" model="security.adoption.expected.work.definition">
+        <field name="workflow_key">incident.review</field>
+        <field name="cadence_description">Per incident, 24h SLA</field>
+    </record>
+    <record id="def_site_visit" model="security.adoption.expected.work.definition">
+        <field name="workflow_key">site.visit</field>
+        <field name="cadence_description">Weekly, per site supervisor</field>
+    </record>
+    <record id="def_training_mandatory" model="security.adoption.expected.work.definition">
+        <field name="workflow_key">training.mandatory</field>
+        <field name="cadence_description">Per assignment due date</field>
+    </record>
+    <record id="def_shift_handover" model="security.adoption.expected.work.definition">
+        <field name="workflow_key">shift.handover</field>
+        <field name="cadence_description">Per shift change, per site supervisor (V1 template)</field>
+    </record>
+</odoo>

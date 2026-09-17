@@ -44,7 +44,7 @@ jobs:
 
       - name: Install modules
         run: |
-          MODULES="security_base,security_operations,security_attendance,security_leave,security_l10n_na,security_payroll_core,security_loans,security_discipline,security_billing,security_accounting_controls,security_client_reports,security_reporting,security_documents,security_equipment,security_fleet,security_shift_planner,security_ai_engine,security_notifications,security_dogforce_migration,security_mobile,security_client_onboarding,security_work,security_deployguard_bridge,security_training"
+          MODULES="security_base,security_operations,security_attendance,security_leave,security_l10n_na,security_payroll_core,security_loans,security_discipline,security_billing,security_accounting_controls,security_client_reports,security_reporting,security_documents,security_equipment,security_fleet,security_shift_planner,security_ai_engine,security_notifications,security_dogforce_migration,security_mobile,security_client_onboarding,security_work,security_deployguard_bridge,security_training,security_adoption"
           docker exec $(docker compose -f deploy/docker-compose.yml ps -q odoo) \
             odoo -c /etc/odoo/odoo.conf -d ${TEST_DB:-dogforce_ci} \
             -i "$MODULES" \
@@ -59,7 +59,7 @@ jobs:
         run: |
           export TEST_DB=dogforce_ci
           ./scripts/run-tests.sh \
-            security_base,security_payroll_core,security_attendance,security_leave,security_billing,security_shift_planner,security_equipment,security_fleet,security_mobile,security_client_onboarding,security_work,security_deployguard_bridge,security_training
+            security_base,security_payroll_core,security_attendance,security_leave,security_billing,security_shift_planner,security_equipment,security_fleet,security_mobile,security_client_onboarding,security_work,security_deployguard_bridge,security_training,security_adoption
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

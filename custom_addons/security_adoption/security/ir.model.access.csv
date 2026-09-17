@@ -1,0 +1,14 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_adoption_definition_user,security.adoption.expected.work.definition.user,model_security_adoption_expected_work_definition,base.group_user,1,0,0,0
+access_security_adoption_definition_admin,security.adoption.expected.work.definition.admin,model_security_adoption_expected_work_definition,group_adoption_admin,1,1,1,0
+access_security_adoption_item_user,security.adoption.expected.work.item.user,model_security_adoption_expected_work_item,base.group_user,1,0,0,0
+access_security_adoption_item_admin,security.adoption.expected.work.item.admin,model_security_adoption_expected_work_item,group_adoption_admin,1,1,1,0
+access_security_adoption_snapshot_user,security.adoption.snapshot.user,model_security_adoption_snapshot,base.group_user,1,0,0,0
+access_security_adoption_snapshot_admin,security.adoption.snapshot.admin,model_security_adoption_snapshot,group_adoption_admin,1,1,1,0
+access_security_adoption_factor_user,security.adoption.score.factor.user,model_security_adoption_score_factor,base.group_user,1,0,0,0
+access_security_adoption_factor_admin,security.adoption.score.factor.admin,model_security_adoption_score_factor,group_adoption_admin,1,1,1,0
+access_security_adoption_baseline_admin,security.adoption.baseline.admin,model_security_adoption_baseline,group_adoption_admin,1,1,1,0
+access_security_adoption_signal_user,security.adoption.abandonment.signal.user,model_security_adoption_abandonment_signal,base.group_user,1,0,0,0
+access_security_adoption_signal_admin,security.adoption.abandonment.signal.admin,model_security_adoption_abandonment_signal,group_adoption_admin,1,1,1,0
+access_security_adoption_checkin_user,security.adoption.checkin.user,model_security_adoption_checkin,base.group_user,1,1,0,0
+access_security_adoption_checkin_admin,security.adoption.checkin.admin,model_security_adoption_checkin,group_adoption_admin,1,1,1,0

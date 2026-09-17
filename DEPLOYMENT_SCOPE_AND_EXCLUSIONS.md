@@ -63,6 +63,19 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 > database, staging included, until the desktop app has something to talk to
 > it about.
 >
+> **`security_adoption` is also explicitly NOT in this list**, for a
+> different and more serious reason: docs/deployguard/09-adoption-engine.md
+> itself gates everything past §5.2 on a privacy/legal review and an
+> employment-contract notice that do not exist yet. It was built anyway on
+> an explicit, logged product-owner override that accepts that risk (see
+> BUILD-STATUS-AND-PHASE-PLAN.md Phase 5's decisions section) -- the module
+> is real and tested, but installing it on `dogforce_prod` or `dogforce_
+> staging` before that review happens would mean measuring and scoring real
+> employees' work without the legal groundwork the spec's own author
+> required. Do not add it to this list, or to any deployment script's
+> module argument, until that review exists and someone updates this note
+> to say so.
+>
 > **Known gap, not fixed by this note:** `security_shell`, `security_theme`
 > and `security_notifications` are also missing from this approved list
 > despite being production-critical (`security_shell` especially -- see

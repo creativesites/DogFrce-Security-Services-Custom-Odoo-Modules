@@ -53,6 +53,13 @@ class SecurityWorkTask(models.Model):
     cnc_note = fields.Char(string="Could-not-complete details")
     reject_reason = fields.Char()
     cancel_reason = fields.Char()
+    reject_count = fields.Integer(
+        default=0, readonly=True,
+        help="Times this task was sent back from submitted to in_progress. "
+             "Read by security_adoption's F5 reporting-quality factor as a "
+             "rework signal -- never reset, since it describes the task's "
+             "whole history, not just its current cycle.",
+    )
 
     checklist_template_id = fields.Many2one("security.work.checklist.template")
     response_ids = fields.One2many("security.work.checklist.response", "task_id", string="Checklist responses")
@@ -152,7 +159,12 @@ class SecurityWorkTask(models.Model):
 
     def action_reject(self, reason=None):
         self._check_transition(["submitted"])
-        self.write({"state": "in_progress", "reject_reason": reason or False})
+        for task in self:
+            task.write({
+                "state": "in_progress",
+                "reject_reason": reason or False,
+                "reject_count": task.reject_count + 1,
+            })
 
     def action_could_not_complete(self, reason, note=None):
         self._check_transition(["open", "in_progress"])
