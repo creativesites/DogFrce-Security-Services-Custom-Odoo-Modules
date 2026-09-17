@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Employees see their own score and their own expected-work items
+         (spec §8 "employees see their own data"); admins see everyone's,
+         for the tenant-wide adoption overview (spec Desktop 5.7, not
+         built in this slice — see manifest). Neither can see another
+         employee's data by record id, since exported/cross-person views
+         are exactly what spec §8's "audit on every cross-person view"
+         guards against. -->
+    <record id="rule_adoption_item_own" model="ir.rule">
+        <field name="name">Adoption Expected Work Item: own only</field>
+        <field name="model_id" ref="model_security_adoption_expected_work_item"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_adoption_item_admin_all" model="ir.rule">
+        <field name="name">Adoption Expected Work Item: admins see all</field>
+        <field name="model_id" ref="model_security_adoption_expected_work_item"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_adoption_admin'))]"/>
+    </record>
+
+    <record id="rule_adoption_snapshot_own" model="ir.rule">
+        <field name="name">Adoption Snapshot: own only</field>
+        <field name="model_id" ref="model_security_adoption_snapshot"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_adoption_snapshot_admin_all" model="ir.rule">
+        <field name="name">Adoption Snapshot: admins see all</field>
+        <field name="model_id" ref="model_security_adoption_snapshot"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_adoption_admin'))]"/>
+    </record>
+
+    <record id="rule_adoption_factor_own" model="ir.rule">
+        <field name="name">Adoption Score Factor: own only</field>
+        <field name="model_id" ref="model_security_adoption_score_factor"/>
+        <field name="domain_force">[('snapshot_id.employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_adoption_factor_admin_all" model="ir.rule">
+        <field name="name">Adoption Score Factor: admins see all</field>
+        <field name="model_id" ref="model_security_adoption_score_factor"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_adoption_admin'))]"/>
+    </record>
+
+    <!-- Abandonment signals and check-ins go to the person first, but
+         handling (investigate/assist/remind/escalate) is an admin action
+         — spec §5, §8 "notifications about a person go to the person
+         first". Employees get read-only visibility of their own signal
+         via the base rule; admins get full read/write via ACL + the
+         all-records rule below. -->
+    <record id="rule_adoption_signal_own" model="ir.rule">
+        <field name="name">Adoption Abandonment Signal: own only, read-only in effect via ACL</field>
+        <field name="model_id" ref="model_security_adoption_abandonment_signal"/>
+        <field name="domain_force">[('employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_adoption_signal_admin_all" model="ir.rule">
+        <field name="name">Adoption Abandonment Signal: admins see all</field>
+        <field name="model_id" ref="model_security_adoption_abandonment_signal"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_adoption_admin'))]"/>
+    </record>
+
+    <record id="rule_adoption_checkin_own" model="ir.rule">
+        <field name="name">Adoption Check-in: own signal only</field>
+        <field name="model_id" ref="model_security_adoption_checkin"/>
+        <field name="domain_force">[('signal_id.employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_adoption_checkin_admin_all" model="ir.rule">
+        <field name="name">Adoption Check-in: admins see all</field>
+        <field name="model_id" ref="model_security_adoption_checkin"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_adoption_admin'))]"/>
+    </record>
+</odoo>

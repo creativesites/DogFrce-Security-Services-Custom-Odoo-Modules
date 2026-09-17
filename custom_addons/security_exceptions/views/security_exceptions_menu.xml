@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_exceptions_root" name="Exceptions" sequence="96" groups="group_exception_triage"/>
+    <menuitem id="menu_exceptions_inbox" name="Inbox" parent="menu_exceptions_root" action="action_exception_instance" sequence="10"/>
+    <menuitem id="menu_exceptions_rule" name="Rules" parent="menu_exceptions_root" action="action_exception_rule" sequence="20"/>
+    <menuitem id="menu_exceptions_policy" name="Escalation Policies" parent="menu_exceptions_root" action="action_exception_policy" sequence="30"/>
+</odoo>

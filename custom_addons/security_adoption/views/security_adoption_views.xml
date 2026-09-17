@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_adoption_snapshot_list" model="ir.ui.view">
+        <field name="name">security.adoption.snapshot.list</field>
+        <field name="model">security.adoption.snapshot</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id"/>
+                <field name="window_start"/>
+                <field name="window_end"/>
+                <field name="score"/>
+                <field name="confidence"/>
+                <field name="expected_total"/>
+                <field name="excused_total"/>
+                <field name="rule_version"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_adoption_snapshot_form" model="ir.ui.view">
+        <field name="name">security.adoption.snapshot.form</field>
+        <field name="model">security.adoption.snapshot</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="employee_id"/>
+                        <field name="window_start"/>
+                        <field name="window_end"/>
+                        <field name="score"/>
+                        <field name="confidence"/>
+                        <field name="expected_total"/>
+                        <field name="excused_total"/>
+                        <field name="rule_version"/>
+                    </group>
+                    <notebook>
+                        <page string="Factors">
+                            <field name="factor_ids" readonly="1">
+                                <list>
+                                    <field name="factor_key"/>
+                                    <field name="weight"/>
+                                    <field name="raw_value"/>
+                                    <field name="weighted_value"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_adoption_snapshot" model="ir.actions.act_window">
+        <field name="name">Adoption Snapshots</field>
+        <field name="res_model">security.adoption.snapshot</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_adoption_item_list" model="ir.ui.view">
+        <field name="name">security.adoption.expected.work.item.list</field>
+        <field name="model">security.adoption.expected.work.item</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id"/>
+                <field name="workflow_key"/>
+                <field name="site_id"/>
+                <field name="period_date"/>
+                <field name="state" decoration-success="state == 'fulfilled'" decoration-danger="state == 'missed'"/>
+                <field name="excusal_reason"/>
+                <field name="on_time"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_adoption_item" model="ir.actions.act_window">
+        <field name="name">Expected Work Items</field>
+        <field name="res_model">security.adoption.expected.work.item</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_adoption_definition_list" model="ir.ui.view">
+        <field name="name">security.adoption.expected.work.definition.list</field>
+        <field name="model">security.adoption.expected.work.definition</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="workflow_key"/>
+                <field name="cadence_description"/>
+                <field name="weight"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_adoption_definition" model="ir.actions.act_window">
+        <field name="name">Expected Work Definitions</field>
+        <field name="res_model">security.adoption.expected.work.definition</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_adoption_signal_list" model="ir.ui.view">
+        <field name="name">security.adoption.abandonment.signal.list</field>
+        <field name="model">security.adoption.abandonment.signal</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id"/>
+                <field name="workflow_key"/>
+                <field name="trigger_type"/>
+                <field name="state"/>
+                <field name="detected_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_adoption_signal_form" model="ir.ui.view">
+        <field name="name">security.adoption.abandonment.signal.form</field>
+        <field name="model">security.adoption.abandonment.signal</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start_investigating" type="object" string="Start Investigating" invisible="state != 'signal'"/>
+                    <button name="action_send_assist_checkin" type="object" string="Send Assist Check-in" invisible="state not in ('signal', 'investigating')"/>
+                    <button name="action_remind" type="object" string="Remind" invisible="state != 'assist'"/>
+                    <button name="action_escalate" type="object" string="Escalate" invisible="state not in ('assist', 'reminded')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="employee_id"/>
+                        <field name="workflow_key"/>
+                        <field name="trigger_type"/>
+                        <field name="baseline_id"/>
+                        <field name="detected_at"/>
+                        <field name="resolution_excusal_reason"/>
+                    </group>
+                    <field name="investigate_notes" placeholder="Automatic and manual investigation findings..."/>
+                    <notebook>
+                        <page string="Check-ins">
+                            <field name="checkin_ids">
+                                <list>
+                                    <field name="sent_at"/>
+                                    <field name="answer"/>
+                                    <field name="answered_at"/>
+                                    <field name="routed_action"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_adoption_signal" model="ir.actions.act_window">
+        <field name="name">Silent Abandonment Signals</field>
+        <field name="res_model">security.adoption.abandonment.signal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_adoption_baseline_list" model="ir.ui.view">
+        <field name="name">security.adoption.baseline.list</field>
+        <field name="model">security.adoption.baseline</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id"/>
+                <field name="workflow_key"/>
+                <field name="rate"/>
+                <field name="weeks_of_history"/>
+                <field name="items_counted"/>
+                <field name="has_enough_history"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_adoption_baseline" model="ir.actions.act_window">
+        <field name="name">Adoption Baselines</field>
+        <field name="res_model">security.adoption.baseline</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

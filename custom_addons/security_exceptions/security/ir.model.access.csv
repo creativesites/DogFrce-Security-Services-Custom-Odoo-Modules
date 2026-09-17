@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_security_exception_rule_triage,security.exception.rule.triage,model_security_exception_rule,group_exception_triage,1,1,1,0
+access_security_exception_policy_triage,security.exception.escalation.policy.triage,model_security_exception_escalation_policy,group_exception_triage,1,1,1,0
+access_security_exception_instance_triage,security.exception.instance.triage,model_security_exception_instance,group_exception_triage,1,1,1,0

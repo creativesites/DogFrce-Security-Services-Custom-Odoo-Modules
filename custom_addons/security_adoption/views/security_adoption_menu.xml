@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_adoption_root" name="Adoption" sequence="95" groups="base.group_user"/>
+    <menuitem id="menu_adoption_snapshot" name="Snapshots" parent="menu_adoption_root" action="action_adoption_snapshot" sequence="10"/>
+    <menuitem id="menu_adoption_item" name="Expected Work Items" parent="menu_adoption_root" action="action_adoption_item" sequence="20"/>
+    <menuitem id="menu_adoption_signal" name="Abandonment Signals" parent="menu_adoption_root" action="action_adoption_signal" sequence="30" groups="group_adoption_admin"/>
+    <menuitem id="menu_adoption_baseline" name="Baselines" parent="menu_adoption_root" action="action_adoption_baseline" sequence="40" groups="group_adoption_admin"/>
+    <menuitem id="menu_adoption_definition" name="Expected Work Definitions" parent="menu_adoption_root" action="action_adoption_definition" sequence="50" groups="group_adoption_admin"/>
+</odoo>

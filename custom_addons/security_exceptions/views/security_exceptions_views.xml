@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_exception_instance_list" model="ir.ui.view">
+        <field name="name">security.exception.instance.list</field>
+        <field name="model">security.exception.instance</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="tier == 'critical' and state in ('open','stale_paused')" decoration-warning="tier == 'attention' and state in ('open','stale_paused')">
+                <field name="tier"/>
+                <field name="title"/>
+                <field name="site_id"/>
+                <field name="state"/>
+                <field name="escalation_level"/>
+                <field name="first_seen_at"/>
+                <field name="last_confirmed_at"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_exception_instance_form" model="ir.ui.view">
+        <field name="name">security.exception.instance.form</field>
+        <field name="model">security.exception.instance</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_acknowledge" type="object" string="Acknowledge" invisible="state not in ('open', 'stale_paused')"/>
+                    <button name="action_resolve" type="object" string="Resolve" invisible="state in ('resolved', 'auto_resolved')"/>
+                    <button name="action_reopen" type="object" string="Reopen" invisible="state not in ('resolved', 'auto_resolved', 'acknowledged')"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="title"/>
+                        <field name="tier"/>
+                        <field name="site_id"/>
+                        <field name="notification_id"/>
+                        <field name="rule_id"/>
+                        <field name="escalation_level"/>
+                        <field name="first_seen_at"/>
+                        <field name="last_confirmed_at"/>
+                        <field name="escalated_at"/>
+                        <field name="acknowledged_by_id"/>
+                        <field name="acknowledged_at"/>
+                        <field name="resolved_at"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_exception_instance_search" model="ir.ui.view">
+        <field name="name">security.exception.instance.search</field>
+        <field name="model">security.exception.instance</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="title"/>
+                <field name="site_id"/>
+                <filter name="critical" string="Critical" domain="[('tier', '=', 'critical')]"/>
+                <filter name="attention" string="Attention" domain="[('tier', '=', 'attention')]"/>
+                <filter name="watch" string="Watch" domain="[('tier', '=', 'watch')]"/>
+                <separator/>
+                <filter name="needs_action" string="Needs Action" domain="[('state', 'in', ('open', 'stale_paused'))]"/>
+                <group expand="1" string="Group By">
+                    <filter name="group_tier" string="Tier" context="{'group_by': 'tier'}"/>
+                    <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_exception_instance" model="ir.actions.act_window">
+        <field name="name">Exceptions Inbox</field>
+        <field name="res_model">security.exception.instance</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_exception_instance_search"/>
+        <field name="context">{'search_default_needs_action': 1, 'search_default_group_tier': 1}</field>
+    </record>
+
+    <record id="view_exception_rule_list" model="ir.ui.view">
+        <field name="name">security.exception.rule.list</field>
+        <field name="model">security.exception.rule</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="notification_type"/>
+                <field name="tier"/>
+                <field name="escalation_policy_id"/>
+                <field name="auto_resolve"/>
+                <field name="stale_after_minutes"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_exception_rule" model="ir.actions.act_window">
+        <field name="name">Exception Rules</field>
+        <field name="res_model">security.exception.rule</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="view_exception_policy_list" model="ir.ui.view">
+        <field name="name">security.exception.escalation.policy.list</field>
+        <field name="model">security.exception.escalation.policy</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="name"/>
+                <field name="use_working_calendar"/>
+                <field name="level1_delay_minutes"/>
+                <field name="level1_group_id"/>
+                <field name="level2_delay_minutes"/>
+                <field name="level2_group_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_exception_policy" model="ir.actions.act_window">
+        <field name="name">Escalation Policies</field>
+        <field name="res_model">security.exception.escalation.policy</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

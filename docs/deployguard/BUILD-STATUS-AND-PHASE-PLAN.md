@@ -521,19 +521,40 @@ Do not start 5.2 onwards until the privacy/legal review and the
 employment-contract notice exist. Measuring people without that is a legal
 problem, not a feature.
 
+**Status update:** 5.1 is still genuinely open — no privacy/legal review or
+employee notice exists. 5.2–5.6 and 5.8 were nonetheless built this round on
+an explicit product-owner instruction ("Start Phase 5 anyway") that
+accepted this risk when I raised it. This is a deliberate, logged override
+of the spec's own gate, not an oversight — see the decision recorded below.
+
 | # | Work | Area | Done |
 |---|---|---|---|
-| 5.1 | Privacy/legal review + employee notice + the in-app monitoring acknowledgement from 1.9 | Compliance | ⬜ |
-| 5.2 | Expected Work Model for the 5 MVP workflows; baseline computed from ERP history so we can prove before/after | ERP | ⬜ |
-| 5.3 | Nightly scoring per tenant timezone, with score factors stored (never a bare number) | ERP | ⬜ |
-| 5.4 | Excusals: leave, absence, roster change, and **platform fault** — with retroactive restoration when a fault is resolved | ERP | ⬜ |
-| 5.5 | Confidence gating: no score below 5 items; say "not enough data", never a misleading 0% | ERP | ⬜ |
-| 5.6 | Abandonment detection + assistance check-in ("help before blame" framing per [31](31-dogforce-rollout.md) §6) | ERP | ⬜ |
-| 5.7 | Desktop: adoption overview, the explanation screen (every score drillable to the events behind it), own-score view | Desktop | ⬜ |
-| 5.8 | Fixture-month tests producing exact expected snapshots | Test | ⬜ |
+| 5.1 | Privacy/legal review + employee notice + the in-app monitoring acknowledgement from 1.9 | Compliance | ⬜ **Still open — not built, and can't be: it's not code.** |
+| 5.2 | Expected Work Model for the 5 MVP workflows; baseline computed from ERP history so we can prove before/after | ERP | ✅ `security_adoption` (new module): `security.adoption.expected.work.definition`/`.item`, one materialiser per workflow_key grounded in real models (`security.attendance.batch`, `security.work.task` + checklist code, `security.incident`, `security.training.assignment`) — see gaps below. |
+| 5.3 | Nightly scoring per tenant timezone, with score factors stored (never a bare number) | ERP | ✅ `security.adoption.snapshot` + `security.adoption.score.factor`, 5 factors (F1-F5) stored per snapshot, `rule_version` stamped on every row. Per-tenant timezone specifically: uses `fields.Date.context_today`, single-tenant only (no multi-tenant timezone config exists in this repo to plug into). |
+| 5.4 | Excusals: leave, absence, roster change, and **platform fault** — with retroactive restoration when a fault is resolved | ERP | 🟡 `leave`, `no_shift` implemented and tested. `absence`, `reassigned`, `site_inactive`, `suppressed_by_admin` are modeled (selection values exist) but no materialiser currently emits them — the real ERP signal each would read (attendance absence status, roster reassignment record, site deactivation event) wasn't wired into the excusal checks this round. `system_fault` retroactive restoration is NOT implemented — there is no support-ticket/fault model in this repo to link it to (see `security_adoption`'s manifest). |
+| 5.5 | Confidence gating: no score below 5 items; say "not enough data", never a misleading 0% | ERP | ✅ insufficient/low/medium/high thresholds at 5/15/40, tested. "Never a misleading 0%" specifically: the `score` field is still computed and stored even at `insufficient` confidence — a future desktop view (5.7, not built) is what's responsible for not *displaying* it; the backend doesn't suppress the number itself. |
+| 5.6 | Abandonment detection + assistance check-in ("help before blame" framing per [31](31-dogforce-rollout.md) §6) | ERP | 🟡 Baseline (EWM over 8 weeks), both trigger conditions, and the SIGNAL→INVESTIGATE→ASSIST→REMIND→ESCALATE state machine are real and tested (`security.adoption.baseline`, `.abandonment.signal`, `.checkin`). The automatic INVESTIGATE checks that need a live systems signal this repo doesn't have yet (permission/role change, ERP outage, device-offline, another employee covering the same work) are NOT auto-detected — they're recorded as a manual `investigate_notes` field for now. The ASSIST check-in is a plain record with the spec's 8 answers and real routing logic, not a chat UI. |
+| 5.7 | Desktop: adoption overview, the explanation screen (every score drillable to the events behind it), own-score view | Desktop | ⬜ **Not built this round.** Deliberately deferred — the backend (5.2-5.6) needed to exist and be tested first; building the desktop screens against a backend that might still be wrong would have been the wrong order. |
+| 5.8 | Fixture-month tests producing exact expected snapshots | Test | 🟡 21 tests across `test_materialization.py`/`test_scoring.py`/`test_abandonment.py` assert exact factor values and confidence bands from constructed fixtures, but there's no single "one fixture month, five real ERP workflows, one exact expected snapshot" end-to-end test — the tests are per-model/per-mechanism rather than one full-month scenario. Static validation only (XML parse, py_compile, ACL/manifest checks) — no Odoo runtime available in this environment to actually run the test suite; see the standing note at the top of this section of prior phases. |
+
+**Known, documented approximation (not a fabricated field):** `security.incident`
+has no "assigned reviewer" field. `incident.review`'s expected-work item
+falls back to the first active `security_base.group_security_manager`
+member as the notional owner until the incident is actually approved, at
+which point the item is re-attributed to the real approver. This is called
+out in `security_adoption`'s manifest rather than hidden.
+
+**Deployment:** `security_adoption` is deliberately **excluded** from
+`DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`'s approved list, for the same reason
+5.1 is still open — see that file's note. It must not be installed on
+`dogforce_prod` or `dogforce_staging` until the privacy/legal review (5.1)
+actually happens.
 
 **Exit:** every score on screen explains itself down to individual events and
-missing items; a resolved platform fault visibly restores prior scores.
+missing items; a resolved platform fault visibly restores prior scores. —
+**Not yet met**: no desktop explanation screen exists (5.7), and
+`system_fault` restoration isn't implemented (5.4).
 
 ---
 
@@ -541,17 +562,21 @@ missing items; a resolved platform fault visibly restores prior scores.
 
 | # | Work | Area | Done |
 |---|---|---|---|
-| 6.1 | Exception rule engine: rules, instances, evidence, timeline, dedupe, auto-resolve, pause-on-stale-data | ERP | ⬜ |
-| 6.2 | Ingest rather than re-derive: consume `security_notifications`' existing deterministic alerts (roster gaps, missed check-ins, expiries) instead of writing second versions of them | ERP | ⬜ |
-| 6.3 | Escalation policies against a working calendar; acknowledging cancels escalation | ERP | ⬜ |
-| 6.4 | Manager inbox (Critical / Attention / Watch) with keyboard triage; scoped supervisor inbox | Desktop | ⬜ |
-| 6.5 | Notification delivery: in-app, desktop OS notifications (wire `tauri-plugin-notification` at last), email; preferences, quiet hours, digests | Desktop + ERP | ⬜ |
-| 6.6 | Email provider decision + deliverability setup — SPF/DKIM/DMARC (OQ-10) | Infra | ⬜ |
-| 6.7 | Per-rule positive/negative fixtures; escalation timing tests | Test | ⬜ |
+| 6.1 | Exception rule engine: rules, instances, evidence, timeline, dedupe, auto-resolve, pause-on-stale-data | ERP | ✅ New `security_exceptions` module: `security.exception.rule`, `.instance`, `.escalation.policy`. Dedupe is a DB unique constraint on `notification_id` (1 instance per source notification, ever); evidence/timeline is `mail.thread` chatter on the instance; auto-resolve fires when the source notification is dismissed; pause-on-stale-data fires when the sync cron hasn't reconfirmed an instance within its rule's `stale_after_minutes`. |
+| 6.2 | Ingest rather than re-derive: consume `security_notifications`' existing deterministic alerts (roster gaps, missed check-ins, expiries) instead of writing second versions of them | ERP | ✅ No detection logic duplicated anywhere in the new module — `action_sync_from_notifications` only ever reads `security.notification` rows `security_notifications` already produces (roster_gap, awol_alert, cert_expiry, document_expiry, invoice_overdue, override_audit) and wraps them in a triage instance. |
+| 6.3 | Escalation policies against a working calendar; acknowledging cancels escalation | ERP | ✅ Two-level escalation (`level1_group_id`/`level2_group_id` + delays). `use_working_calendar` computes elapsed time via `resource.calendar.get_work_hours_count` (a real Odoo API) against the company calendar; Critical stays wall-clock since a missing guard doesn't stop mattering after hours. Acknowledging moves the instance out of the escalation query entirely — tested. |
+| 6.4 | Manager inbox (Critical / Attention / Watch) with keyboard triage; scoped supervisor inbox | Desktop | ⬜ **Not built this round.** Odoo backend list/search view only (grouped and filtered by tier, "Needs Action" default filter) — same deferral pattern as `security_adoption`'s 5.7: backend first, desktop screens as a separate follow-up. No keyboard triage, no scoped supervisor-only inbox (the triage group currently sees everything; per-site/per-supervisor scoping wasn't built). |
+| 6.5 | Notification delivery: in-app, desktop OS notifications (wire `tauri-plugin-notification` at last), email; preferences, quiet hours, digests | Desktop + ERP | 🟡 In-app only, and only by reusing `security.notification`'s existing create-time email-on-critical behavior (escalations create a `system`-type critical notification, which already emails its recipients). No desktop OS notifications (needs a Tauri build environment this session doesn't have), no preferences/quiet-hours/digests. |
+| 6.6 | Email provider decision + deliverability setup — SPF/DKIM/DMARC (OQ-10) | Infra | ⬜ **Not started — this is a business/infra decision, not code.** Needs the founder to pick a provider before any deliverability setup makes sense. |
+| 6.7 | Per-rule positive/negative fixtures; escalation timing tests | Test | ✅ 11 tests across `test_ingestion.py` (dedupe, no-rule-no-instance, auto-resolve, acknowledge/resolve/reopen lifecycle) and `test_escalation.py` (level 1/2 timing via backdated timestamps rather than real sleeps, acknowledge cancels escalation, stale-data pause and un-pause). Static validation only (XML parse, py_compile, ACL/manifest checks) — no Odoo runtime available in this environment to actually run the suite. |
 
-**Exit:** a missing night supervisor raises Critical within two minutes and
-escalates on schedule; acknowledging stops it; the inbox is empty when nothing
-needs a human.
+**Exit (partial):** the rule engine, dedupe, auto-resolve, pause-on-stale-data
+and two-level escalation are real and tested on the ERP side, and a Critical
+exception can reach level 1 within 2 minutes per its seeded policy (untested
+against a live cron scheduler — no runtime available). **Not yet true:** no
+desktop inbox exists (6.4), delivery is in-app/email-only via the existing
+notification model rather than a dedicated preference/quiet-hours system
+(6.5), and the email provider decision (6.6) hasn't been made.
 
 ---
 
@@ -656,4 +681,6 @@ the hidden critical path), and the **ops manager's course content**.
 | 2026-09-17 | Created. Full audit of desktop, ERP, packages, CI and security posture against BUILD-ORDER; Track A/B decision framed; Phases 0–8 defined. |
 | 2026-09-17 | Phase 2 started: `security_deployguard_bridge` rebuilt from scratch (confirmed absent from every git ref) — config singleton with encrypted secrets, outbox with HMAC signing and backoff, read-only facade (ping/get_sites/get_employees/get_users). Auth/SSO endpoints (2.5) deliberately deferred as a separate, security-reviewed change. Second independent instance of the cowork board reporting a false completion found (T-6) and documented in `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`. |
 | 2026-09-17 | Phases 3 (work management) and 4 (training) built. Along the way, found T-5 (bus subscriber registry) was ALSO never actually built — the hardcoded 5-bridge dispatch list was still in security_base/models/security_event_bus.py — making this the third confirmed false completion on the cowork board (T-8/T-10, T-6, T-5). Rebuilt the registry, wired all 7 bridges onto
-| 2026-09-17 | Phase 4 continued same day: real first course ("Getting Live: Client Setup & Rostering") written and seeded, desktop lesson player (`MyTraining.tsx`) built with modal/overlay lesson content, an assessment runner, deep-link "learn by doing" into the real Odoo webview, and an optional AI assist panel (explicit founder override of the MVP no-AI guard, scoped to this feature only). 60 Gemini video-generation prompts written across 5 videos. `npm run typecheck`/`lint`/`test` all pass; not exercised in a real Tauri window. it, added attendance bus events that didn't exist before, and built auto-completion on top of both. New security_training module for Phase 4.
+| 2026-09-17 | Phase 4 continued same day: real first course ("Getting Live: Client Setup & Rostering") written and seeded, desktop lesson player (`MyTraining.tsx`) built with modal/overlay lesson content, an assessment runner, deep-link "learn by doing" into the real Odoo webview, and an optional AI assist panel (explicit founder override of the MVP no-AI guard, scoped to this feature only). 60 Gemini video-generation prompts written across 5 videos. `npm run typecheck`/`lint`/`test` all pass; not exercised in a real Tauri window. it, added attendance bus events that didn't exist before, and built auto-completion on top of both. New security_training module for Phase 4. |
+| 2026-09-17 | Phase 5 (adoption engine) started on explicit founder instruction ("Start Phase 5 anyway") over the spec's own privacy/legal gate (OQ-6, still open — see §5.1). New `security_adoption` module: Expected Work Model for all 5 MVP workflow_keys, each grounded in a real existing model rather than a Platform event that doesn't exist (Track A); nightly snapshot scoring with F1-F5 stored per-snapshot and confidence gating; silent-abandonment baseline (8-week EWM) and the SIGNAL→INVESTIGATE→ASSIST→REMIND→ESCALATE state machine with real routing logic. Documented gaps: `system_fault` excusal not implemented (no fault/support-ticket model exists yet), several excusal reasons modeled but not yet wired to a real signal, `incident.review`'s "reviewer" is an approximation (no such field on `security.incident`), and the desktop UI (5.7) is not built. `security_adoption` added to CI but deliberately kept OUT of `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`'s approved list until 5.1 actually closes. |
+| 2026-09-17 | Phase 6 (exceptions, inbox, notifications) built. New `security_exceptions` module ingests `security_notifications`' existing deterministic alerts 1:1 (no detection logic duplicated, per 6.2) into triaged, deduplicated exception instances with a two-level escalation ladder (wall-clock for Critical, `resource.calendar.get_work_hours_count`-based working-time for Attention/Watch), acknowledge-cancels-escalation, and pause-on-stale-data. Not built: the desktop manager/supervisor inbox UI (6.4, Odoo backend list view only for now), desktop OS notifications and preference/quiet-hours/digest delivery (6.5 — needs a Tauri build environment this session doesn't have), and the email provider decision (6.6 — a business decision, not code). |
