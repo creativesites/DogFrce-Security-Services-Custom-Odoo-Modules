@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Roster sign-off sheet. Non-blocking by design: the roster Operations
+      drafts is already the operative roster, and these rows record that each
+      role has checked their part of it. See
+      docs/ROSTERING_SIMPLIFICATION_PLAN.md §3.
+    -->
+
+    <record id="view_security_roster_signoff_list" model="ir.ui.view">
+        <field name="name">security.roster.signoff.list</field>
+        <field name="model">security.roster.signoff</field>
+        <field name="arch" type="xml">
+            <list editable="bottom" create="0" delete="0"
+                  decoration-success="state == 'signed'"
+                  decoration-danger="state == 'flagged'"
+                  decoration-muted="state == 'pending'">
+                <field name="role" readonly="1"/>
+                <field name="state" widget="badge" readonly="1"
+                       decoration-success="state == 'signed'"
+                       decoration-danger="state == 'flagged'"/>
+                <field name="user_id" readonly="1" optional="show"/>
+                <field name="signed_at" readonly="1" optional="show"/>
+                <field name="note" placeholder="Comment, or what needs fixing…"
+                       readonly="not can_sign"/>
+                <field name="can_sign" column_invisible="1"/>
+                <button name="action_sign" type="object" string="Sign off"
+                        icon="fa-check" class="btn-link"
+                        invisible="state == 'signed' or not can_sign"/>
+                <button name="action_flag" type="object" string="Flag"
+                        icon="fa-flag" class="btn-link"
+                        invisible="state == 'flagged' or not can_sign"/>
+                <button name="action_reset" type="object" string="Undo"
+                        icon="fa-undo" class="btn-link"
+                        invisible="state == 'pending' or not can_sign"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_roster_signoff_search" model="ir.ui.view">
+        <field name="name">security.roster.signoff.search</field>
+        <field name="model">security.roster.signoff</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="batch_id"/>
+                <field name="role"/>
+                <filter name="filter_pending" string="Awaiting sign-off"
+                        domain="[('state', '=', 'pending')]"/>
+                <filter name="filter_flagged" string="Flagged"
+                        domain="[('state', '=', 'flagged')]"/>
+                <filter name="filter_mine" string="Waiting on me"
+                        domain="[('state', '=', 'pending'), ('can_sign', '=', True)]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_batch" string="Roster batch"
+                            context="{'group_by': 'batch_id'}"/>
+                    <filter name="group_role" string="Role"
+                            context="{'group_by': 'role'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_roster_signoff" model="ir.actions.act_window">
+        <field name="name">Roster Sign-Offs</field>
+        <field name="res_model">security.roster.signoff</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_security_roster_signoff_search"/>
+        <field name="context">{'search_default_filter_pending': 1, 'search_default_group_batch': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing is waiting on a sign-off.</p>
+            <p>
+                Sign-offs appear here once a roster has been generated. They record that
+                each role has checked the roster — they never hold it up.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_roster_signoff"
+        name="Roster Sign-Offs"
+        parent="security_operations.menu_security_roster"
+        action="action_security_roster_signoff"
+        sequence="38"
+    />
+    <!--
+      Sign-off status on the batch itself. Added as an inherited view so the
+      main roster form stays one file and this feature stays removable.
+
+      Note on `submitted` / `approved`: those states pre-date the sign-off
+      sheet and are kept so batches already mid-flight are not stranded. They
+      are no longer the intended path — Operations generates, the roster is
+      live, and the roles below sign off around it.
+    -->
+    <record id="view_security_roster_batch_form_signoff" model="ir.ui.view">
+        <field name="name">security.roster.batch.form.signoff</field>
+        <field name="model">security.roster.batch</field>
+        <field name="inherit_id" ref="security_operations.view_security_roster_batch_form"/>
+        <field name="arch" type="xml">
+
+            <!-- The batch form has no button box, and already has a notebook,
+                 so the sign-off sheet joins that notebook rather than adding a
+                 second one. -->
+            <field name="approved_by_id" position="after">
+                <field name="signoff_summary" readonly="1" invisible="not signoff_ids"/>
+                <field name="signoff_flagged_count" invisible="1"/>
+                <field name="signoff_pending_count" invisible="1"/>
+            </field>
+
+            <notebook position="inside">
+                <page string="Sign-Offs" name="signoffs" invisible="not signoff_ids">
+                    <div class="alert alert-info" role="status">
+                        <strong>This roster is live.</strong>
+                        Sign-offs record that each role has checked it &#8212; they do not
+                        hold it up.
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="signoff_flagged_count == 0">
+                        A role has flagged a problem with this roster. The roster keeps
+                        running; the flag needs someone to action it.
+                    </div>
+                    <field name="signoff_ids" nolabel="1"
+                           context="{'default_batch_id': id}"/>
+                </page>
+            </notebook>
+
+        </field>
+    </record>
+
+</odoo>

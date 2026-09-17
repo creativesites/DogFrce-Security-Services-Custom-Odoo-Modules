@@ -56,3 +56,6 @@ access_site_setup_wizard_manager,security.site.setup.wizard manager,model_securi
 access_site_setup_wizard_owner,security.site.setup.wizard owner,model_security_site_setup_wizard,security_base.group_security_owner,1,1,1,1
 access_roster_reject_wizard_manager,security.roster.reject.wizard manager,model_security_roster_reject_wizard,security_base.group_security_manager,1,1,1,1
 access_roster_reject_wizard_owner,security.roster.reject.wizard owner,model_security_roster_reject_wizard,security_base.group_security_owner,1,1,1,1
+access_roster_signoff_user,security.roster.signoff user,model_security_roster_signoff,hr.group_hr_user,1,1,1,0
+access_roster_signoff_manager,security.roster.signoff manager,model_security_roster_signoff,security_base.group_security_manager,1,1,1,1
+access_roster_signoff_owner,security.roster.signoff owner,model_security_roster_signoff,security_base.group_security_owner,1,1,1,1

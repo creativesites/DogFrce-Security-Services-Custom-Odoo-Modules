@@ -9,4 +9,57 @@
             <field name="global" eval="True"/>
         </record>
     </data>
+
+    <data>
+        <!--
+          Roles that own a step in the roster sign-off sheet
+          (docs/ROSTERING_SIMPLIFICATION_PLAN.md §3). Front Desk and Finance had
+          no group of their own; GM maps to Security Manager, HR to the existing
+          HR/Payroll Officer, and Director to Security Owner.
+        -->
+        <record id="group_security_front_desk" model="res.groups">
+            <field name="name">Security Front Desk</field>
+            <field name="category_id" ref="security_base.module_category_security_operations"/>
+            <field name="implied_ids" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="comment">Cross-checks rosters and validates daily attendance posting.</field>
+        </record>
+
+        <record id="group_security_finance" model="res.groups">
+            <field name="name">Security Finance</field>
+            <field name="category_id" ref="security_base.module_category_security_operations"/>
+            <field name="implied_ids" eval="[(4, ref('hr.group_hr_user'))]"/>
+            <field name="comment">Releases payments and audits rosters and payroll.</field>
+        </record>
+
+        <!--
+          The General Manager / Director account.
+
+          Wilbert is the ultimate responsible person: he rosters, he approves,
+          and he administers. Rather than ticking a dozen boxes on his user
+          record by hand (and getting it subtly wrong after every module
+          install), this single role carries every operational role plus Odoo
+          administration.
+
+          It DOES imply base.group_system, which is deliberate and was asked
+          for explicitly. Two consequences to keep in mind rather than
+          rediscover later: technical menus and live view editing become
+          available on this account, and per DG-ADR-007 the future DeployGuard
+          SSO path refuses tickets for accounts holding base.group_system —
+          so when that ships, this account will sign in to Odoo directly rather
+          than through the desktop broker.
+        -->
+        <record id="group_security_director" model="res.groups">
+            <field name="name">Security Director (full access)</field>
+            <field name="category_id" ref="security_base.module_category_security_operations"/>
+            <field name="implied_ids" eval="[
+                (4, ref('security_base.group_security_owner')),
+                (4, ref('security_base.group_security_hr_payroll_officer')),
+                (4, ref('security_operations.group_security_front_desk')),
+                (4, ref('security_operations.group_security_finance')),
+                (4, ref('base.group_system')),
+            ]"/>
+            <field name="comment">Full operational and administrative access. For the
+                General Manager / Director only.</field>
+        </record>
+    </data>
 </odoo>

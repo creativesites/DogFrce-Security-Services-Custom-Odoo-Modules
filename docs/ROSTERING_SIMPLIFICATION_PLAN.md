@@ -142,13 +142,27 @@ Plus, separately from the monthly roster:
   requirements and `security_shift_planner` has roster scoring — the data exists,
   the report does not.
 
-> **Design note worth flagging:** six sequential approvals on a monthly roster is
-> a lot of ceremony, and each added gate is a place the roster stops moving. I'd
-> recommend steps 2–3 (front desk cross-check, GM validate) be **blocking**, and
-> steps 4–6 (HR, Finance, Director) be **parallel sign-offs** on an already-live
-> roster — guards get posted, while payroll and finance confirm in their own time.
-> Sequential-everything means nobody gets rostered until the Director clicks a
-> button. Raise this with Wilbert before building step 6 as a hard gate.
+### 3.1 DECIDED (17 Sep) — every sign-off is non-blocking
+
+The founder's ruling, which settles the design question raised here earlier:
+
+> "The operations 'drafted' roster is like the final roster unless changed.
+> Subsequent approvals must be non-blocking. So once the roster is made, the
+> system works with that roster — but front desk must cross-check as their
+> responsibility and sign off, same for the other described roles."
+
+So the model is **accountability, not gating**:
+
+- The roster Operations generates **is** the operative roster. The company works
+  to it immediately.
+- Front Desk, GM, HR, Finance and Director each get a **sign-off row** against
+  that live roster. Signing records that they checked their part.
+- A role that finds a problem **flags** it, with a mandatory reason. The roster
+  keeps running; the flag is what gets chased.
+- No sign-off, at any step, can stop a guard being posted.
+
+Implemented as `security.roster.signoff` (one row per role per batch) rather
+than extra states on the batch — states imply a sequence, and there isn't one.
 
 ---
 
@@ -226,26 +240,25 @@ menu.
 **Acceptance:** Wilbert opens a client and sees, on one screen, every site under
 that client, which tender each belongs to, and the shifts each site requires.
 
-### Task 5 — Roster approval chain (six roles) · ~3h · may spill to tomorrow
+### Task 5 — Roster sign-off sheet (non-blocking) · DONE
 
-- [ ] New groups: `group_security_front_desk`, `group_security_finance`,
-      `group_security_director` (HR officer and Manager already exist)
-- [ ] Extend `security.roster.batch` states per §3, each with its own
-      `*_by_id` / `*_at` stamp and a chatter entry
-- [ ] Each transition button visible only to its group; no self-approval — the
-      user who drafted cannot cross-check, the one who cross-checked cannot
-      validate
-- [ ] Rejection at any step returns the batch to the previous step with a
-      mandatory reason, not to draft
-- [ ] A status bar on the batch showing where it is in the chain and who it is
-      waiting on
-- [ ] Unit tests: full happy path, each rejection path, self-approval refusal
+- [x] New groups: `group_security_front_desk`, `group_security_finance`,
+      `group_security_director` (HR officer and Manager already existed)
+- [x] `security.roster.signoff`: one row per role per batch, states
+      pending / signed / flagged, stamped with who and when
+- [x] Rows are created when the roster is **generated** — the moment it becomes
+      operative — not at some later approval step
+- [x] A role can only sign for itself (`can_sign` checks group membership);
+      flagging requires a written reason
+- [x] `signoff_summary` on the batch names who it is waiting on, or who flagged
+- [x] Sign-off sheet on the batch form, plus a **Roster Sign-Offs** menu
+      defaulting to "awaiting sign-off", groupable, with a "waiting on me" filter
+- [x] Tests asserting the non-blocking property directly: a batch with five
+      pending sign-offs, and a batch with a flag, both still confirm
 
-**Acceptance:** a roster drafted by Operations cannot reach Confirmed without
-five distinct users acting, and the batch always shows who it is waiting on.
-
-> Confirm the sequential-vs-parallel question in §3 with Wilbert before building
-> steps 4–6 as hard gates.
+**Legacy note:** the batch's `submitted` / `approved` states pre-date this and
+are left in place so anything mid-flight isn't stranded. They are no longer the
+intended path.
 
 ### Task 6 — Front-desk daily validation + HR hours audit · ~2h · likely tomorrow
 
@@ -295,21 +308,28 @@ Per the phase plan, Phase 2 is the bridge addon. Today's slice:
 - [ ] Agree a channel for sharing credentials that is not chat — a password
       manager, shared vault, or nothing
 
-### 6.2 "Admin rights" means the right role, not superuser
+### 6.2 DECIDED (17 Sep) — the GM account gets operational **and** admin rights
 
-A1 asks for the Operations Manager to have admin rights. The correct
-implementation is **Security Manager + HR/Payroll Officer groups with explicit
-unlink permissions** (Task 1) — not `base.group_system`.
+> "Wilbert is the manager. For his specific account and roles, he must have both
+> operational and admin rights throughout. He is the ultimate responsible person
+> and he will also be doing things like rostering when he wants."
 
-Reasons: `base.group_system` exposes the technical menus, the ability to edit
-views and fields live, and — per the bridge design in
-[DG-ADR-007](deployguard/adr/DG-ADR-007-authentication.md) — is explicitly
-refused SSO tickets. Handing it out casually makes the audit trail meaningless
-and breaks the future single-sign-on path.
+Implemented as a single role, `group_security_director` ("Security Director (full
+access)"), which implies Security Owner, HR/Payroll Officer, Front Desk, Finance
+**and `base.group_system`**. One group to assign, rather than a dozen checkboxes
+that drift out of date after every module install.
 
-If, after Task 1, something he needs is still blocked, the answer is to add that
-specific permission to the Manager role — not to escalate the account. Every such
-addition gets recorded here.
+Two consequences, recorded so they are not rediscovered later rather than as an
+objection:
+
+1. Technical menus and live view/field editing are available on this account.
+2. Per [DG-ADR-007](deployguard/adr/DG-ADR-007-authentication.md), the future
+   DeployGuard SSO path refuses tickets for accounts holding `base.group_system`.
+   When the bridge ships, this account signs in to Odoo directly rather than
+   through the desktop broker. That is a one-account exception, not a blocker.
+
+Everyone else stays on narrow roles: Front Desk, Finance, HR, Supervisor,
+Manager.
 
 ### 6.3 Every change ships with its test and its migration
 
@@ -330,3 +350,4 @@ are view/ACL changes that can be validated on a local stack first.
 | Date | Change |
 |---|---|
 | 2026-09-17 | Created from manager feedback. Root-cause audit of the setup chain; seven asks mapped to seven tasks. |
+| 2026-09-17 | Two decisions recorded: sign-offs are non-blocking (§3.1); the GM account gets a combined operational + admin role (§6.2). Tasks 1–5 implemented. |
