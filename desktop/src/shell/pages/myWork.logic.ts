@@ -106,3 +106,18 @@ export function byDueDateAscending<T extends { due_at: string | false }>(a: T, b
 export function isActiveState(state: WorkTaskState): boolean {
   return state === "open" || state === "in_progress" || state === "rejected" || state === "submitted";
 }
+
+export type RosterRole = "front_desk" | "general_manager" | "hr" | "finance" | "director";
+
+export const ROSTER_ROLE_LABELS: Record<RosterRole, string> = {
+  front_desk: "Front Desk (Posting & Attendance)",
+  general_manager: "General Manager (Validation)",
+  hr: "HR (Hours & Equity Audit)",
+  finance: "Finance (Payment Release)",
+  director: "Director (Executive Oversight)",
+};
+
+export function formatRosterRole(role: string): string {
+  return ROSTER_ROLE_LABELS[role as RosterRole] ?? role;
+}
+

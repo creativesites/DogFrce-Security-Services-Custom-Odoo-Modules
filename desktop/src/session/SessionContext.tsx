@@ -6,10 +6,12 @@ import type { SessionEvent, SessionInfo } from "./types";
 interface SessionState {
   status: "checking" | "signed_in" | "signed_out";
   session: SessionInfo | null;
+  isExpired?: boolean;
 }
 
 interface SessionContextValue extends SessionState {
   signOut: () => Promise<void>;
+  markExpired: () => void;
 }
 
 const SessionContext = createContext<SessionContextValue | null>(null);
@@ -24,7 +26,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
  * since Odoo can navigate and sync before React mounts).
  */
 export function SessionProviderRoot({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<SessionState>({ status: "checking", session: null });
+  const [state, setState] = useState<SessionState>({ status: "checking", session: null, isExpired: false });
 
   useEffect(() => {
     let cancelled = false;
@@ -33,20 +35,24 @@ export function SessionProviderRoot({ children }: { children: ReactNode }) {
       .then((session) => {
         if (cancelled) return;
         setState((s) =>
-          s.status === "checking" ? { status: session ? "signed_in" : "signed_out", session } : s,
+          s.status === "checking" ? { status: session ? "signed_in" : "signed_out", session, isExpired: false } : s,
         );
       })
       .catch(() => {
-        if (!cancelled) setState((s) => (s.status === "checking" ? { status: "signed_out", session: null } : s));
+        if (!cancelled) setState((s) => (s.status === "checking" ? { status: "signed_out", session: null, isExpired: false } : s));
       });
 
     const unlistenPromise = listen<SessionEvent>("deployguard://session-changed", (event) => {
       if (cancelled) return;
       const payload = event.payload;
       if (payload.status === "signed_in") {
-        setState({ status: "signed_in", session: payload.session });
+        setState({ status: "signed_in", session: payload.session, isExpired: false });
       } else {
-        setState({ status: "signed_out", session: null });
+        setState((prev) => ({
+          status: "signed_out",
+          session: null,
+          isExpired: prev.status === "signed_in" || prev.isExpired,
+        }));
       }
     });
 
@@ -58,10 +64,14 @@ export function SessionProviderRoot({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await invoke<void>("auth_sign_out");
-    setState({ status: "signed_out", session: null });
+    setState({ status: "signed_out", session: null, isExpired: false });
   };
 
-  return <SessionContext.Provider value={{ ...state, signOut }}>{children}</SessionContext.Provider>;
+  const markExpired = () => {
+    setState((s) => ({ ...s, isExpired: true }));
+  };
+
+  return <SessionContext.Provider value={{ ...state, signOut, markExpired }}>{children}</SessionContext.Provider>;
 }
 
 export function useSession(): SessionContextValue {

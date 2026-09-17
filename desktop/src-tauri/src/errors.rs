@@ -9,6 +9,8 @@ pub enum AppError {
     NetworkUnreachable,
     #[error("DogForce ERP returned an unexpected error.")]
     ServerError,
+    #[error("Your session has expired. Please sign in to continue.")]
+    SessionExpired,
     /// An Odoo-side validation/business-rule message (e.g. a UserError
     /// raised by a model method) — safe to show verbatim, it's
     /// domain-logic text the same user would see inside Odoo itself,

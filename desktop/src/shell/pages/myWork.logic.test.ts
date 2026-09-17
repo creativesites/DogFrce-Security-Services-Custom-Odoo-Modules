@@ -6,6 +6,7 @@ import {
   isActiveState,
   isOverdue,
   parseOdooDatetime,
+  formatRosterRole,
 } from "./myWork.logic";
 
 describe("availableActions", () => {
@@ -158,3 +159,18 @@ describe("isActiveState", () => {
     expect(isActiveState("cancelled")).toBe(false);
   });
 });
+
+describe("formatRosterRole", () => {
+  it("formats all defined signoff roles with readable titles", () => {
+    expect(formatRosterRole("front_desk")).toBe("Front Desk (Posting & Attendance)");
+    expect(formatRosterRole("general_manager")).toBe("General Manager (Validation)");
+    expect(formatRosterRole("hr")).toBe("HR (Hours & Equity Audit)");
+    expect(formatRosterRole("finance")).toBe("Finance (Payment Release)");
+    expect(formatRosterRole("director")).toBe("Director (Executive Oversight)");
+  });
+
+  it("falls back to the raw role string if unknown", () => {
+    expect(formatRosterRole("custom_role")).toBe("custom_role");
+  });
+});
+

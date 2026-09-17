@@ -3,16 +3,20 @@ import {
   ChecklistItemDef,
   ChecklistResponse,
   WorkTask,
+  RosterSignoff,
   fetchChecklistItems,
   fetchChecklistResponses,
   fetchCncReasonOptions,
   fetchMyTasks,
+  fetchPendingRosterSignoffs,
+  signRosterBatch,
   fetchTask,
   resolveEmployeeId,
   runWorkAction,
   saveChecklistResponse,
 } from "../../api/work";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
+import { invoke } from "../../lib/tauri";
 import { useSession } from "../../session/SessionContext";
 import {
   STATE_LABELS,
@@ -22,6 +26,7 @@ import {
   dueBadgeTone,
   isOverdue,
   parseOdooDatetime,
+  formatRosterRole,
 } from "./myWork.logic";
 import { AlertTriangleIcon, CheckCircleIcon, ClipboardListIcon } from "../icons";
 
@@ -88,7 +93,47 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
   const [tasks, setTasks] = useState<WorkTask[]>([]);
   const [tasksError, setTasksError] = useState<string | null>(null);
 
+  const [signoffs, setSignoffs] = useState<RosterSignoff[]>([]);
+  const [signoffBusyId, setSignoffBusyId] = useState<number | null>(null);
+  const [signoffFeedback, setSignoffFeedback] = useState<{ id: number; message: string } | null>(null);
+
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+
+  const loadSignoffs = useCallback(async () => {
+    if (!session) return;
+    try {
+      const items = await fetchPendingRosterSignoffs();
+      setSignoffs(items);
+    } catch {
+      setSignoffs([]);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    void loadSignoffs();
+  }, [loadSignoffs]);
+
+  const handleSignRoster = async (signoffId: number) => {
+    setSignoffBusyId(signoffId);
+    try {
+      await signRosterBatch(signoffId);
+      setSignoffFeedback({ id: signoffId, message: "Signed off!" });
+      setTimeout(() => {
+        setSignoffs((prev) => prev.filter((s) => s.id !== signoffId));
+        setSignoffFeedback(null);
+      }, 1200);
+    } catch (err) {
+      alert(extractErrorMessage(err, "Failed to sign off roster batch."));
+    } finally {
+      setSignoffBusyId(null);
+    }
+  };
+
+  const handleReviewRoster = async (signoff: RosterSignoff) => {
+    const batchId = signoff.batch_id[0];
+    await invoke("navigate_odoo", { path: `/odoo/action-security_operations.action_security_roster_batch/${batchId}` });
+    await invoke("app_view_close");
+  };
 
   const loadEmployee = useCallback(async () => {
     if (!session) return;
@@ -128,7 +173,8 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
 
   const refresh = useCallback(() => {
     void loadTasks();
-  }, [loadTasks]);
+    void loadSignoffs();
+  }, [loadTasks, loadSignoffs]);
 
   const isFirstReloadSignal = useRef(true);
   useEffect(() => {
@@ -162,11 +208,21 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
 
   if (employeeId == null) {
     return (
-      <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
-        <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
-          Your account isn't linked to an employee record yet, so there's no work queue to show. Ask your
-          operations manager to link one.
-        </p>
+      <div className="dg-page-enter" style={{ maxWidth: 640 }}>
+        <RosterSignoffSection
+          signoffs={signoffs}
+          busyId={signoffBusyId}
+          feedback={signoffFeedback}
+          onSign={(id) => void handleSignRoster(id)}
+          onReview={(s) => void handleReviewRoster(s)}
+        />
+        <div className="dg-card" style={{ maxWidth: 480, marginTop: signoffs.length > 0 ? 16 : 0 }}>
+          <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
+            {signoffs.length > 0
+              ? "Your account does not have a linked guard profile for field sweeps, but roster sign-offs assigned to your role appear above."
+              : "Your account isn't linked to an employee record yet, so there's no work queue to show. Ask your operations manager to link one."}
+          </p>
+        </div>
       </div>
     );
   }
@@ -184,6 +240,14 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
 
   return (
     <>
+      <RosterSignoffSection
+        signoffs={signoffs}
+        busyId={signoffBusyId}
+        feedback={signoffFeedback}
+        onSign={(id) => void handleSignRoster(id)}
+        onReview={(s) => void handleReviewRoster(s)}
+      />
+
       <div
         className="dg-page-enter"
         style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 20px" }}
@@ -669,6 +733,107 @@ function ChecklistItemRow({
           fontFamily: "var(--dgs-font)",
         }}
       />
+    </div>
+  );
+}
+
+function RosterSignoffSection({
+  signoffs,
+  busyId,
+  feedback,
+  onSign,
+  onReview,
+}: {
+  signoffs: RosterSignoff[];
+  busyId: number | null;
+  feedback: { id: number; message: string } | null;
+  onSign: (id: number) => void;
+  onReview: (signoff: RosterSignoff) => void;
+}) {
+  if (signoffs.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 24 }} className="dg-page-enter">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <h2
+          style={{
+            fontSize: 13,
+            fontWeight: 700,
+            margin: 0,
+            textTransform: "uppercase",
+            letterSpacing: "0.05em",
+            color: "var(--ds-warning)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <AlertTriangleIcon size={16} /> Roster Approvals Waiting On You
+        </h2>
+        <span className="dg-chip" style={{ background: "var(--ds-warning-bg)", color: "var(--ds-warning)" }}>
+          {signoffs.length} {signoffs.length === 1 ? "batch" : "batches"}
+        </span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {signoffs.map((s) => (
+          <div
+            key={s.id}
+            className="dg-card"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "12px 16px",
+              borderColor: "var(--ds-warning-border, var(--ds-border))",
+            }}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: 600, fontSize: 13.5, color: "var(--ds-text)" }}>
+                {s.batch_id[1]}
+              </div>
+              <div style={{ fontSize: 11.5, color: "var(--ds-text-muted)", marginTop: 3 }}>
+                Your Role: <strong style={{ color: "var(--ds-text)" }}>{formatRosterRole(s.role)}</strong>
+              </div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {feedback?.id === s.id ? (
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: "var(--ds-success)",
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <CheckCircleIcon size={14} /> {feedback.message}
+                </span>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="dg-btn dg-btn--secondary"
+                    style={{ fontSize: 12, padding: "4px 10px" }}
+                    onClick={() => onReview(s)}
+                  >
+                    Review in ERP
+                  </button>
+                  <button
+                    type="button"
+                    className="dg-btn dg-btn--primary"
+                    style={{ fontSize: 12, padding: "4px 12px" }}
+                    disabled={busyId === s.id}
+                    onClick={() => onSign(s.id)}
+                  >
+                    {busyId === s.id ? "Signing…" : "Sign Off"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

@@ -150,6 +150,16 @@ pub async fn call_kw(
 
     if let Some(err) = parsed.error {
         tracing::warn!(error = %err, model, method, "odoo call_kw returned an error");
+        if let Some(code) = err.get("code").and_then(|c| c.as_i64()) {
+            if code == 100 {
+                return Err(crate::errors::AppError::SessionExpired);
+            }
+        }
+        if let Some(subname) = err.get("data").and_then(|d| d.get("name")).and_then(|n| n.as_str()) {
+            if subname.contains("SessionExpiredException") {
+                return Err(crate::errors::AppError::SessionExpired);
+            }
+        }
         // Odoo's JSON-RPC error shape nests the actual UserError/
         // ValidationError text in error.data.message; error.message is
         // just "Odoo Server Error" and not useful to show. Fall back to

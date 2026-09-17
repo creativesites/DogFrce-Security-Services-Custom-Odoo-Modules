@@ -92,7 +92,7 @@ pub async fn odoo_call_kw(
         .lock()
         .unwrap()
         .clone()
-        .ok_or(AppError::Unknown)?;
+        .ok_or(AppError::SessionExpired)?;
     odoo::call_kw(&session_id, &model, &method, args, kwargs).await
 }
 
@@ -107,7 +107,7 @@ pub async fn odoo_fetch_avatar(state: State<'_, AppState>) -> Result<Option<Stri
         .lock()
         .unwrap()
         .clone()
-        .ok_or(AppError::Unknown)?;
+        .ok_or(AppError::SessionExpired)?;
     let uid = state
         .session
         .lock()

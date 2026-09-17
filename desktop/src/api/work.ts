@@ -151,3 +151,56 @@ export async function saveChecklistResponse(
     ]);
   }
 }
+
+export interface RosterSignoff {
+  id: number;
+  batch_id: [number, string];
+  role: "front_desk" | "general_manager" | "hr" | "finance" | "director";
+  sequence: number;
+  state: "pending" | "signed" | "flagged";
+  user_id: [number, string] | false;
+  signed_at: string | false;
+  note: string | false;
+  can_sign: boolean;
+}
+
+const ROSTER_SIGNOFF_FIELDS = [
+  "id",
+  "batch_id",
+  "role",
+  "sequence",
+  "state",
+  "user_id",
+  "signed_at",
+  "note",
+  "can_sign",
+];
+
+/** All pending roster signoffs waiting on the current user's role. */
+export async function fetchPendingRosterSignoffs(): Promise<RosterSignoff[]> {
+  return callKw<RosterSignoff[]>(
+    "security.roster.signoff",
+    "search_read",
+    [[["state", "=", "pending"], ["can_sign", "=", true]], ROSTER_SIGNOFF_FIELDS],
+    { order: "batch_id desc, sequence asc" },
+  );
+}
+
+/** Signs off a roster batch for the active user's role. */
+export async function signRosterBatch(signoffId: number): Promise<boolean> {
+  return callKw<boolean>(
+    "security.roster.signoff",
+    "action_sign",
+    [[signoffId]],
+  );
+}
+
+/** Flags an issue on a roster batch with an explanatory note. */
+export async function flagRosterBatch(signoffId: number, note: string): Promise<boolean> {
+  return callKw<boolean>(
+    "security.roster.signoff",
+    "action_flag",
+    [[signoffId], note],
+  );
+}
+
