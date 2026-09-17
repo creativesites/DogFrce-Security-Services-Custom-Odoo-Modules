@@ -27,6 +27,6 @@ echo "Modules: ${MODULES}"
   --test-enable \
   --stop-after-init \
   -i "$MODULES" \
-  --log-level=test:INFO
+  --log-level=test
 
 echo "Tests finished."

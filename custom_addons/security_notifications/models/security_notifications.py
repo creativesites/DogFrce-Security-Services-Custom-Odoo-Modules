@@ -151,33 +151,32 @@ class SecurityNotification(models.Model):
         """Cron: create notifications for guard certifications expiring within 30 days."""
         from datetime import date, timedelta
         cutoff = date.today() + timedelta(days=30)
-        cert_model = self.env.get("security.guard.certification")
-        if not cert_model:
+        if "security.employee.certification" not in self.env:
             return
+        cert_model = self.env["security.employee.certification"]
         expiring = cert_model.search([
             ("expiry_date", "<=", str(cutoff)),
             ("expiry_date", ">=", str(date.today())),
-            ("state", "in", ["valid", "expiring"]),
         ])
         for cert in expiring:
             existing = self.search([
                 ("notification_type", "=", "cert_expiry"),
-                ("related_model", "=", "security.guard.certification"),
+                ("related_model", "=", "security.employee.certification"),
                 ("related_id", "=", cert.id),
                 ("state", "!=", "dismissed"),
             ], limit=1)
             if not existing:
                 guard_name = cert.employee_id.name if cert.employee_id else "Guard"
-                cert_name = cert.certification_type_id.name if hasattr(cert, 'certification_type_id') and cert.certification_type_id else "Certification"
+                cert_name = cert.certification_id.name if cert.certification_id else "Certification"
                 days_left = (cert.expiry_date - date.today()).days
                 self.create({
                     "title": f"Cert Expiring ({days_left}d): {cert_name} — {guard_name}",
                     "body": f"Certification '{cert_name}' for guard {guard_name} expires on {cert.expiry_date}. Risk of slot disqualification.",
                     "notification_type": "cert_expiry",
                     "severity": "warning" if days_left > 14 else "critical",
-                    "related_model": "security.guard.certification",
+                    "related_model": "security.employee.certification",
                     "related_id": cert.id,
-                    "company_id": cert.company_id.id if hasattr(cert, 'company_id') and cert.company_id else self.env.company.id,
+                    "company_id": cert.employee_id.company_id.id if cert.employee_id and cert.employee_id.company_id else self.env.company.id,
                 })
 
     @api.model

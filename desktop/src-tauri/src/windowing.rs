@@ -153,6 +153,8 @@ async fn sync_session_from_odoo(app: &AppHandle, url: &tauri::Url) {
         Ok(c) => c,
         Err(e) => {
             tracing::warn!(error = %e, "could not read odoo webview cookies");
+            record_sync_note(app, format!("couldn't read the browser cookies: {e}"));
+            set_signed_out(app);
             return;
         }
     };
@@ -161,14 +163,21 @@ async fn sync_session_from_odoo(app: &AppHandle, url: &tauri::Url) {
         .find(|c| c.name() == "session_id")
         .map(|c| c.value().to_string())
     else {
+        record_sync_note(app, "the page loaded but no session cookie was set".to_string());
         set_signed_out(app);
         return;
     };
 
-    let Some(session) = odoo::fetch_session_info(&session_id).await else {
-        set_signed_out(app);
-        return;
+    let session = match odoo::fetch_session_info(&session_id).await {
+        Ok(session) => session,
+        Err(reason) => {
+            tracing::warn!(reason, "could not verify the odoo session");
+            record_sync_note(app, format!("signed in to Odoo, but couldn't verify it: {reason}"));
+            set_signed_out(app);
+            return;
+        }
     };
+    record_sync_note(app, "signed in successfully".to_string());
 
     let state = app.state::<AppState>();
     let was_signed_in = state.session.lock().unwrap().is_some();
@@ -191,6 +200,10 @@ async fn sync_session_from_odoo(app: &AppHandle, url: &tauri::Url) {
         "deployguard://session-changed",
         SessionEvent::SignedIn { session, auto_reveal },
     );
+}
+
+fn record_sync_note(app: &AppHandle, note: String) {
+    *app.state::<AppState>().last_sync_note.lock().unwrap() = Some(note);
 }
 
 fn set_signed_out(app: &AppHandle) {

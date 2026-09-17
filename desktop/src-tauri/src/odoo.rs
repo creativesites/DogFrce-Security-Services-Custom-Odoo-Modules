@@ -41,11 +41,17 @@ fn client() -> Option<reqwest::Client> {
         .ok()
 }
 
-/// Resolves who a session cookie belongs to, or `None` if it's not a
-/// signed-in (internal) user's session.
-pub async fn fetch_session_info(session_id: &str) -> Option<crate::state::SessionInfo> {
+/// Resolves who a session cookie belongs to.
+///
+/// Returns `Err(reason)` rather than collapsing every failure into `None`
+/// -- a "why didn't sign-in work" report is useless without knowing
+/// *which* step failed (couldn't reach the server at all vs. reached it
+/// and got rejected vs. reached it and the session just isn't signed in).
+/// `reason` is safe to show a user or put in diagnostics: it's a network/
+/// protocol description, never the cookie value or any credential.
+pub async fn fetch_session_info(session_id: &str) -> Result<crate::state::SessionInfo, String> {
     let base_url = config::odoo_base_url();
-    let c = client()?;
+    let c = client().ok_or_else(|| "could not build an HTTP client".to_string())?;
 
     let resp = c
         .post(format!("{base_url}/web/session/get_session_info"))
@@ -53,22 +59,29 @@ pub async fn fetch_session_info(session_id: &str) -> Option<crate::state::Sessio
         .json(&json!({ "jsonrpc": "2.0", "method": "call", "params": {} }))
         .send()
         .await
-        .ok()?;
+        .map_err(|e| format!("couldn't reach {base_url}: {e}"))?;
 
     if !resp.status().is_success() {
-        return None;
+        return Err(format!("{base_url} responded with HTTP {}", resp.status()));
     }
 
-    let parsed: JsonRpcResponse<SessionInfoResult> = resp.json().await.ok()?;
-    let result = parsed.result?;
+    let parsed: JsonRpcResponse<SessionInfoResult> = resp
+        .json()
+        .await
+        .map_err(|e| format!("couldn't parse the response from {base_url}: {e}"))?;
+    let result = parsed
+        .result
+        .ok_or_else(|| "Odoo's response had no result".to_string())?;
 
     // Odoo represents "not logged in" as uid: false, not a missing field.
     let uid = match result.uid {
-        Some(serde_json::Value::Number(n)) => n.as_i64()?,
-        _ => return None,
+        Some(serde_json::Value::Number(n)) => n
+            .as_i64()
+            .ok_or_else(|| "Odoo returned a non-integer uid".to_string())?,
+        _ => return Err("that session isn't signed in (anonymous session)".to_string()),
     };
 
-    Some(crate::state::SessionInfo {
+    Ok(crate::state::SessionInfo {
         uid,
         login: result.username.clone().unwrap_or_default(),
         name: result.name.unwrap_or_default(),

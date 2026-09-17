@@ -54,14 +54,19 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 | `security_ai_engine` | AI Control Room Analytics |
 | **`security_ai_whatsapp_bridge`** | **WhatsApp Control Room Assistant (`OWNER STATS`, Attendance Check-ins)** |
 | **`security_backup_vault`** | **Automated WAL Backups, Filestore Tarballs & Cloudflare R2 Offsite Sync** |
-| `security_suite` | All-In-One Suite Installer (Namibia Profile) |
-| `security_client_onboarding` | Client/site/shift-requirement/billing onboarding wizard -- in active daily use (see docs/ROSTERING_SIMPLIFICATION_PLAN.md), but was missing from this list entirely until now |
+| `security_theme` | Custom branding, assets, login screen styling & color scheme |
+| `security_notifications` | Central alert-hub, bells, SMS triggers & critical thresholds |
+| `security_shell` | Custom client portal sidebar canvas, navigation rails, and Tauri app framework |
+| `security_client_onboarding` | Client/site/shift-requirement/billing onboarding wizard -- in active daily use (see docs/ROSTERING_SIMPLIFICATION_PLAN.md) |
+| `security_deployguard_bridge` | DeployGuard Desktop bridge -- session/session-info endpoints the desktop app talks to directly (see `desktop/DEVIATIONS.md`) |
+| `security_work` | Work management -- schedule rules, task assignment, checklists surfaced in DeployGuard Desktop's "My Work & Sweeps" |
+| `security_training` | Staff training tracking |
 
-> **`security_deployguard_bridge` is explicitly NOT in this list.** It is
-> scaffolded in the repository (see docs/deployguard/BUILD-STATUS-AND-PHASE-
-> PLAN.md Phase 2) but per the cowork ground rules stays uninstalled on every
-> database, staging included, until the desktop app has something to talk to
-> it about.
+> **`security_deployguard_bridge` was previously scoped out** of production
+> pending the desktop app having something to talk to it about (see
+> docs/deployguard/BUILD-STATUS-AND-PHASE-PLAN.md Phase 2) -- confirmed with
+> the client 2026-09-17 that it, alongside `security_work` and
+> `security_training`, now ships to `dogforce_prod`.
 >
 > **`security_adoption` is also explicitly NOT in this list**, for a
 > different and more serious reason: docs/deployguard/09-adoption-engine.md
@@ -76,19 +81,11 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 > module argument, until that review exists and someone updates this note
 > to say so.
 >
-> **Known gap, not fixed by this note:** `security_shell`, `security_theme`
-> and `security_notifications` are also missing from this approved list
-> despite being production-critical (`security_shell` especially -- see
-> [00-current-state.md](docs/deployguard/00-current-state.md) §3.1), and
-> `security_suite` is still listed as the baseline installer here and in
-> `scripts/setup_staging.sh` even though the cowork board (`docs/deployguard/
-> cowork/README.md`) records this as fixed ("T-6... Done"). It is not fixed
-> in this file. This is the same pattern as the `security_deployguard_bridge`
-> discrepancy in BUILD-STATUS-AND-PHASE-PLAN.md §4.1: work marked Done on
-> that board that isn't reflected in the repository. Treat T-6 as unverified
-> until someone actually edits this file and `scripts/setup_staging.sh`.
-
-
+> `security_suite` (the old all-in-one installer) is deliberately **not**
+> listed here -- individual modules are installed directly instead. If
+> `scripts/setup_staging.sh` still references `security_suite`, that script
+> is stale and should be updated to match this list, not the other way
+> around.
 
 ---
 

@@ -111,3 +111,12 @@ class SecurityEventLog(models.Model):
                 _logger.error("Downstream %s Failed for event %s: %s", model_name, self.name, e)
 
         self.write({"state": "processed"})
+
+
+class SecurityBusSubscriber(models.AbstractModel):
+    _name = "security.bus.subscriber"
+    _description = "Security Bus Event Subscriber Mixin"
+
+    def _handle_bus_event(self, event_name, source_model, source_id, payload):
+        """Override in subclasses to handle the dispatched event."""
+        pass

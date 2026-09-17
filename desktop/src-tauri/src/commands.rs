@@ -126,5 +126,6 @@ pub async fn connectivity_check() -> connectivity::ConnectivityReport {
 #[tauri::command]
 pub async fn diagnostics_get(state: State<'_, AppState>) -> Result<diagnostics::Diagnostics, ()> {
     let signed_in = state.session.lock().unwrap().is_some();
-    Ok(diagnostics::collect(signed_in).await)
+    let last_sync_note = state.last_sync_note.lock().unwrap().clone();
+    Ok(diagnostics::collect(signed_in, last_sync_note).await)
 }
