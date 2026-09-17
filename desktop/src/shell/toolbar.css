@@ -855,3 +855,117 @@
   .dg-tile:hover { transform: none; }
   .dg-toolbar__brand.is-open .dg-toolbar__brand-chevron { transform: none; }
 }
+/* ── My Training: lesson/assessment modal ──────────────────────────────
+   Same fixed-backdrop + centered-panel language as .dg-palette above,
+   reused here for lesson content and the assessment runner so both
+   "floating overlay" surfaces in this app look and animate the same way. */
+
+.dg-lesson-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+.dg-lesson-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  animation: dg-fade 180ms var(--dg-ease-out) both;
+}
+.dg-lesson-modal__panel {
+  position: relative;
+  width: min(560px, 92vw);
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--dg-radius-xl);
+  border: 1px solid var(--ds-border);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-md);
+  overflow: hidden;
+}
+.dg-lesson-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--ds-border-light);
+  flex-shrink: 0;
+}
+.dg-lesson-modal__close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--ds-text-subtle);
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: var(--ds-radius-sm);
+}
+.dg-lesson-modal__close:hover,
+.dg-lesson-modal__close:focus-visible {
+  background: var(--ds-slate);
+  color: var(--ds-text);
+}
+.dg-lesson-modal__body {
+  padding: 16px 18px;
+  overflow-y: auto;
+  flex: 1;
+}
+.dg-lesson-modal__foot {
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--ds-border-light);
+  flex-shrink: 0;
+}
+
+.dg-lesson-video {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  margin-bottom: 16px;
+  border-radius: var(--dgs-r-control);
+  overflow: hidden;
+  background: var(--ds-slate);
+}
+.dg-lesson-video iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.dg-lesson-body {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ds-text-2);
+}
+.dg-lesson-body p { margin: 0 0 12px; }
+.dg-lesson-body ul,
+.dg-lesson-body ol { margin: 0 0 12px; padding-left: 20px; }
+.dg-lesson-body strong { color: var(--ds-text); }
+
+.dg-lesson-ai {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ds-border-light);
+}
+.dg-lesson-ai__panel {
+  margin-top: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-lesson-modal__backdrop,
+  .dg-lesson-modal__panel { animation: none; }
+}
+
+/* Selected-state highlight for a .dg-tile used as a selectable option row
+   (quiz answers in the assessment runner) rather than a navigation tile. */
+.dg-tile.is-active {
+  border-color: var(--ds-accent-mid);
+  background: var(--ds-accent-light);
+}

@@ -150,3 +150,59 @@ class SecurityTrainingLesson(models.Model):
     )
     body = fields.Html(string="Content", help="Used when content_type is 'text'.")
     video_url = fields.Char(help="Used when content_type is 'video_url'.")
+    deep_link_path = fields.Char(
+        string="Try it in ERP (path)",
+        help="An Odoo path (e.g. '/odoo/action-security_client_onboarding.action_"
+             "security_client_onboarding_wizard') the desktop app's 'Try it in "
+             "DogForce ERP' button navigates the live Odoo webview to, so the "
+             "learner does the real action in the real app rather than a "
+             "simulation. Optional -- leave blank for lessons with nothing to "
+             "practise directly (e.g. an overview lesson).",
+    )
+
+    def ask_ai(self, question):
+        """Optional AI assist, scoped to this lesson's own content -- never
+        used for grading or scoring (assessments are graded deterministically
+        in security_training_assignment.py, unaffected by this).
+
+        This is a deliberate exception to docs/deployguard/28-mvp-scope.md
+        §3.1 ("MVP contains no AI-generated text... anywhere in the
+        product"). Flagged when built, and explicitly approved by the
+        product owner (Winston, 2026-09-17) as an intentional override for
+        the training assistant specifically -- not a blanket reopening of
+        that scope guard. If more AI-generated content appears elsewhere in
+        the MVP later, that is a separate decision, not an extension of
+        this one.
+
+        Fails with a clear, catchable message (not a crash) when
+        security_ai_engine isn't installed or has no Gemini key configured
+        -- the desktop UI shows that message rather than the panel at all.
+        """
+        self.ensure_one()
+        try:
+            from odoo.addons.security_ai_engine.providers.gemini import GeminiProvider
+        except ImportError:
+            raise UserError(  # noqa: B904 - deliberately a clean message, not a traceback
+                "AI assist isn't available: security_ai_engine isn't installed."
+            )
+
+        config_model = self.env.get("security.ai.config")
+        if not config_model:
+            raise UserError("AI assist isn't available: security_ai_engine isn't installed.")
+        config = config_model.sudo().search([("active", "=", True)], limit=1)
+        if not config or not config.gemini_api_key:
+            raise UserError("AI assist isn't available: no Gemini API key is configured.")
+
+        lesson_text = self.body or ""
+        system_prompt = (
+            "You are a training assistant inside DogForce's DeployGuard system. "
+            "Answer the learner's question using ONLY the lesson content below. "
+            "If the answer isn't in the lesson, say so plainly and suggest they "
+            "ask their supervisor -- never invent steps or field names that "
+            "aren't in the lesson. Keep the answer under 120 words."
+        )
+        user_message = f"Lesson: {self.name}\n\nLesson content:\n{lesson_text}\n\nQuestion: {question}"
+
+        provider = GeminiProvider(config.gemini_api_key, model_override=config.gemini_model)
+        result = provider.complete(system_prompt, user_message, max_tokens=300, temperature=0.2)
+        return result.text

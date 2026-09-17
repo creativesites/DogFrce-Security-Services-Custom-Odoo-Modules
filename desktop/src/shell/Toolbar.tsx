@@ -9,9 +9,10 @@ import { useSession } from "../session/SessionContext";
 import { StatusBar } from "./StatusBar";
 import {
   OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon, HomeIcon,
-  WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon, ClipboardListIcon,
+  WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon, ClipboardListIcon, BookIcon,
 } from "./icons";
 import { MyWork } from "./pages/MyWork";
+import { MyTraining } from "./pages/MyTraining";
 import type { SessionEvent } from "../session/types";
 import dogforceLogo from "../assets/dogforce-logo-256.png";
 import "./toolbar.css";
@@ -43,12 +44,13 @@ function hueOf(seed: string): number {
  * open. "home" and "work" exist today; this list is deliberately
  * structured so adding a real page later is "add an entry + a case in the
  * switch", not a redesign. */
-type AppPage = "home" | "work";
+type AppPage = "home" | "work" | "training";
 const NAV_ITEMS: { key: AppPage; label: string; icon: () => JSX.Element; available: true }[] = [
   { key: "home", label: "Home", icon: () => <HomeIcon size={18} />, available: true },
   { key: "work", label: "My Work & Sweeps", icon: () => <ClipboardListIcon size={18} />, available: true },
+  { key: "training", label: "My Training", icon: () => <BookIcon size={18} />, available: true },
 ];
-const COMING_SOON_ITEMS = ["Training", "Adoption"];
+const COMING_SOON_ITEMS = ["Adoption"];
 
 /** Small local icon button with a CSS tooltip. */
 function IconButton({
@@ -77,6 +79,7 @@ export function Toolbar() {
   const [appViewOpen, setAppViewOpen] = useState(false);
   const [page, setPage] = useState<AppPage>("home");
   const [workReloadSignal, setWorkReloadSignal] = useState(0);
+  const [trainingReloadSignal, setTrainingReloadSignal] = useState(0);
   const [isMaximized, setIsMaximized] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
@@ -208,6 +211,10 @@ export function Toolbar() {
       setWorkReloadSignal((n) => n + 1);
       return;
     }
+    if (appViewOpen && page === "training") {
+      setTrainingReloadSignal((n) => n + 1);
+      return;
+    }
     void invoke("odoo_reload");
   }, [appViewOpen, page]);
 
@@ -222,6 +229,11 @@ export function Toolbar() {
         id: "home", group: "Navigate", label: "Go to Home",
         icon: <HomeIcon size={16} />,
         run: () => { openAppView(); setPage("home"); },
+      },
+      {
+        id: "training", group: "Navigate", label: "Go to My Training",
+        icon: <BookIcon size={16} />,
+        run: () => { openAppView(); setPage("training"); },
       },
       {
         id: "odoo", group: "Navigate", label: "Open DogForce ERP",
@@ -489,13 +501,19 @@ export function Toolbar() {
                     <span className="dg-tile__arrow" aria-hidden="true">→</span>
                   </button>
 
-                  <div className="dg-card" style={{ animationDelay: "140ms" }}>
-                    <div className="dg-card__head">
-                      <span className="dg-card__title">Training</span>
-                      <span className="dg-chip">Coming soon</span>
-                    </div>
-                    <p className="dg-card__body">No training assigned yet.</p>
-                  </div>
+                  <button
+                    type="button"
+                    className="dg-tile"
+                    style={{ animationDelay: "140ms" }}
+                    onClick={() => setPage("training")}
+                  >
+                    <span className="dg-tile__icon"><BookIcon /></span>
+                    <span className="dg-tile__body">
+                      <span className="dg-tile__title">My Training</span>
+                      <span className="dg-tile__subline">Courses, lessons and assessments</span>
+                    </span>
+                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
+                  </button>
                 </div>
 
                 <footer className="dg-appview__footer">
@@ -516,6 +534,9 @@ export function Toolbar() {
 
             {status === "signed_in" && session && page === "work" && (
               <MyWork reloadSignal={workReloadSignal} />
+            )}
+            {status === "signed_in" && session && page === "training" && (
+              <MyTraining reloadSignal={trainingReloadSignal} />
             )}
           </div>
         </div>

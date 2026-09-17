@@ -37,6 +37,7 @@
         "views/security_training_assignment_views.xml",
         "views/security_training_competency_views.xml",
         "views/security_training_menu.xml",
+        "data/security_training_dogforce_course.xml",
     ],
     "installable": True,
     "application": False,

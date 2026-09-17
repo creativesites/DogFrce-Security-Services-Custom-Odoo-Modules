@@ -119,7 +119,9 @@ class SecurityTrainingAttempt(models.Model):
 
     @api.model
     def action_start_attempt(self, assignment_id, assessment_id):
-        assignment = self.env["security.training.assignment"].browse(assignment_id)
+        """Returns the new attempt's id (an int), not the recordset itself
+        -- a bare recordset isn't JSON-serialisable, and this method is
+        called over RPC (desktop/src/api/training.ts's startAttempt)."""
         assessment = self.env["security.training.assessment"].browse(assessment_id)
         prior = self.search_count([
             ("assignment_id", "=", assignment_id), ("assessment_id", "=", assessment_id),
@@ -128,10 +130,11 @@ class SecurityTrainingAttempt(models.Model):
             raise UserError(
                 f"No attempts left for '{assessment.name}' ({assessment.max_attempts} allowed)."
             )
-        return self.create({
+        attempt = self.create({
             "assignment_id": assignment_id, "assessment_id": assessment_id,
             "attempt_number": prior + 1,
         })
+        return attempt.id
 
     def action_submit(self, answers):
         """answers: {question_id: [selected_option_id, ...]}"""
@@ -166,7 +169,7 @@ class SecurityTrainingAttempt(models.Model):
             ))
             if attempts_used >= self.assessment_id.max_attempts:
                 self.assignment_id.write({"state": "failed"})
-        return self
+        return self.id  # RPC-safe: a bare recordset isn't JSON-serialisable
 
 
 class SecurityTrainingAttemptAnswer(models.Model):

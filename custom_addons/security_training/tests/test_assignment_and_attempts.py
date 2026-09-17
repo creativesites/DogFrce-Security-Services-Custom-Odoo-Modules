@@ -96,35 +96,37 @@ class TestAttemptScoring(TransactionCase):
             "employee_id": cls.employee.id, "course_id": course.id,
         })
 
+    def _start_attempt(self):
+        """action_start_attempt returns an id (RPC-safe), not a recordset --
+        browse it back for these Python-side tests."""
+        Attempt = self.env["security.training.attempt"]
+        attempt_id = Attempt.action_start_attempt(self.assignment.id, self.assessment.id)
+        return Attempt.browse(attempt_id)
+
     def test_correct_answer_passes(self):
-        attempt = self.env["security.training.attempt"].action_start_attempt(
-            self.assignment.id, self.assessment.id
-        )
+        attempt = self._start_attempt()
         attempt.action_submit({self.question.id: [self.correct_option.id]})
         self.assertEqual(attempt.state, "passed")
         self.assertEqual(attempt.score_pct, 100.0)
 
     def test_wrong_answer_fails(self):
-        attempt = self.env["security.training.attempt"].action_start_attempt(
-            self.assignment.id, self.assessment.id
-        )
+        attempt = self._start_attempt()
         attempt.action_submit({self.question.id: [self.wrong_option.id]})
         self.assertEqual(attempt.state, "failed")
         self.assertEqual(attempt.score_pct, 0.0)
 
     def test_attempt_limit_is_enforced(self):
         Attempt = self.env["security.training.attempt"]
-        a1 = Attempt.action_start_attempt(self.assignment.id, self.assessment.id)
+        a1 = self._start_attempt()
         a1.action_submit({self.question.id: [self.wrong_option.id]})
-        a2 = Attempt.action_start_attempt(self.assignment.id, self.assessment.id)
+        a2 = self._start_attempt()
         a2.action_submit({self.question.id: [self.wrong_option.id]})
         with self.assertRaises(UserError):
             Attempt.action_start_attempt(self.assignment.id, self.assessment.id)
 
     def test_exhausting_attempts_fails_the_assignment(self):
-        Attempt = self.env["security.training.attempt"]
         for _ in range(2):
-            attempt = Attempt.action_start_attempt(self.assignment.id, self.assessment.id)
+            attempt = self._start_attempt()
             attempt.action_submit({self.question.id: [self.wrong_option.id]})
         self.assignment.invalidate_recordset()
         self.assertEqual(self.assignment.state, "failed")
@@ -140,9 +142,7 @@ class TestAttemptScoring(TransactionCase):
         self.env["security.training.lesson.progress"].create({
             "assignment_id": self.assignment.id, "lesson_id": lesson[:1].id,
         })
-        attempt = self.env["security.training.attempt"].action_start_attempt(
-            self.assignment.id, self.assessment.id
-        )
+        attempt = self._start_attempt()
         attempt.action_submit({self.question.id: [self.correct_option.id]})
         self.assignment.invalidate_recordset()
         self.assertEqual(self.assignment.state, "completed")
@@ -156,9 +156,7 @@ class TestAttemptScoring(TransactionCase):
         self.env["security.training.lesson.progress"].create({
             "assignment_id": self.assignment.id, "lesson_id": lesson.id,
         })
-        attempt = self.env["security.training.attempt"].action_start_attempt(
-            self.assignment.id, self.assessment.id
-        )
+        attempt = self._start_attempt()
         attempt.action_submit({self.question.id: [self.correct_option.id]})
         competency = self.env["security.training.competency"].search(
             [("assignment_id", "=", self.assignment.id)]

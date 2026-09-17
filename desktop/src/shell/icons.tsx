@@ -39,6 +39,15 @@ export function ClipboardListIcon({ size }: IconProps = {}) {
   );
 }
 
+export function BookIcon({ size }: IconProps = {}) {
+  return (
+    <svg {...common(size)} aria-hidden="true">
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16.5H6.5A2.5 2.5 0 0 0 4 22z" />
+      <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16.5h5.5a2.5 2.5 0 0 1 2.5 2.5z" />
+    </svg>
+  );
+}
+
 export function CheckCircleIcon({ size }: IconProps = {}) {
   return (
     <svg {...common(size)} aria-hidden="true">

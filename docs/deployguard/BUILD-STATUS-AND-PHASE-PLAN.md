@@ -54,7 +54,7 @@ successfully run** (§4.3). Both are pilot blockers, not tidy-up items.
 | **P0** Foundations | Platform DB, tenancy/RLS, events, audit, Fastify API, worker, `packages/ui`, IaC, CI | ⬜ **Not started.** No Platform backend, no TypeScript API/worker, no `packages/ui`, no tenancy model. `packages/ai` (AIProvider + Gemini + validator) is the only `packages/*` that exists. [V-code] |
 | **P1** Odoo bridge & identity | `security_deployguard_bridge`, projections, auth exchange, webhooks | 🟨 **Core bridge rebuilt 2026-09-17** (config, encrypted secrets, outbox, read-only facade — §5 Phase 2). Auth/SSO endpoints and domain bridges not started. T-5 (bus subscriber registry) is claimed in `security_base`, not independently re-verified this pass — see §4.1. |
 | **P2** Desktop shell, single login, notifications | Full shell, device registration, SSO, notifications, updater, offline-capable client | 🟨 **~55% as a pilot slice.** Shell + single login + My Work + branding + diagnostics done. No device identity, no revocation, no notifications, updater disabled, no signed installer. §3.1 |
-| **P3** Training | LMS: courses, lessons, assessments, competencies | 🟨 **Core built 2026-09-17** (§5 Phase 4 — the doc's own phase numbers run in build order, not BUILD-ORDER's P-numbers): `security_training` — versioned courses, assessments, version-pinned assignments, competency linking, tested. No content (needs the ops manager), no desktop lesson player. |
+| **P3** Training | LMS: courses, lessons, assessments, competencies | 🟨 **~75% 2026-09-17** (§5 Phase 4): `security_training` — versioned courses, assessments, version-pinned assignments, competency linking, tested; a real first course ("Getting Live") with 12 lessons and an assessment; a working desktop lesson player with deep-link "learn by doing" and an AI assist panel. Videos not recorded yet; player unverified inside an actual windowed build; ops manager's full 8-course pack still not started. |
 | **P4** Work management | Templates, recurrence, checklist runner, verification, auto-complete, offline | 🟨 **~65% 2026-09-17** (§5 Phase 3): recurrence (calendar only), auto-complete from real attendance bus events, evidence size limits + retention, verify queue, overdue sweep, and a real record-rule gap closed on checklist responses. Still missing: shift/site-event recurrence, desktop offline (needs a real desktop build/test loop, deliberately not attempted). |
 | **P5** Adoption engine | Expected work, scoring, explanations, abandonment, check-ins | ⬜ **Not started.** |
 | **P6** Exceptions & inbox | Rules, lifecycle, escalations, manager inbox | 🟨 **Adjacent primitives only.** `security_notifications` produces deterministic alerts (roster gaps, missed check-ins, expiries) and `security_shell`'s home "attention" payload exists — neither is the exception engine. [V-code] |
@@ -469,16 +469,49 @@ doc), and the desktop/offline exit criterion (3.7-3.9) has not been started.
 | 4.2 | Assignment + progress, with version pinning | ERP | ✅ `course_version_id` is pinned on the assignment at creation and never changes when a new version publishes — tested directly (publish v2, assert an existing assignment still points at v1) |
 | 4.3 | Competencies + evidence, linked to existing `security.employee.certification` | ERP | ✅ `security.training.competency` links to a real certification record only when the course declares `grants_certification_id`; otherwise stands alone. Never creates a duplicate certification model |
 | 4.4 | Authoring workflow: draft → review → publish | ERP | ✅ Single `group_training_supervisor` role (not separate author/approver groups — the self-approval block is per-user, not per-role, so this is sufficient); whoever submitted a version cannot approve it, mirroring the front-desk self-review block from Phase 3 |
-| 4.5 | Desktop: My Training, lesson player, assessment runner | Desktop | ⬜ Not started — separate track, needs a running desktop build to validate honestly |
-| 4.6 | The DogForce course pack | Content | ⬜ **Cannot be done from here** — needs real content from the ops manager (OQ-19). No placeholder/invented course content was written |
-| 4.7 | Tests: version pinning, pass/fail, attempt limits, authoring permissions | Test | ✅ All four covered, including the self-approval and plain-user-sees-published-only cases |
+| 4.5 | Desktop: My Training, lesson player, assessment runner | Desktop | ✅ **`MyTraining.tsx` built 2026-09-17** — assignment list, lesson content (text/video) in a modal overlay, an assessment runner (one question per screen, progress dots, pass/fail result), a "Try it in DogForce ERP" deep link per lesson (real `navigate_odoo`, not a simulated overlay — see §6 below for why), and an optional AI-assist panel. `npm run typecheck`/`lint`/`test` all pass (83 tests); **not run inside an actual Tauri window** — no windowed build environment available here |
+| 4.6 | The DogForce course pack | Content | ✅ **First real course written 2026-09-17**: "Getting Live: Client Setup & Rostering" — 6 sections, 12 lessons, a 5-question assessment, seeded as real data (not the ops manager's eventual 8-course pack, but real content addressing this week's actual production gaps). See [TRAINING_COURSE_GETTING_LIVE.md](../TRAINING_COURSE_GETTING_LIVE.md) for the course plan and 60 video-generation prompts (5 videos × 12 clips). Videos not yet recorded — placeholder URLs in the seed data |
+| 4.7 | Tests: version pinning, pass/fail, attempt limits, authoring permissions | Test | ✅ All four covered, including the self-approval and plain-user-sees-published-only cases, plus a course-seed sanity suite and a desktop `myTraining.logic` unit suite (21 tests) |
 
-**Exit (partial):** the mechanics are real and tested — version pinning, pass/
-fail scoring, attempt-limit enforcement, the self-approval block, and
-competency-on-completion. **Not yet true:** no actual course exists (4.6), so
-nothing has been authored, approved or assigned against real content; the
-desktop lesson player (4.5) has not been started; and none of this has run in
-a live Odoo database (no runtime available this session).
+**Exit (partial):** the mechanics are real and tested, a real first course
+exists with real content addressing this week's actual gaps, and a working
+desktop lesson player has been built with "learn by doing" (real ERP deep
+links, not a simulated overlay) and an optional AI assist panel. **Not yet
+true:** the five course videos haven't been recorded; the lesson player has
+not been exercised inside a real windowed Tauri build (no such environment
+available here — typecheck/lint/tests are the ceiling of what could be
+verified); and none of the ERP side has run against a live Odoo database.
+
+### Two decisions made mid-Phase-4, both explicit calls from the founder
+
+**AI assist is in, as a deliberate, narrow exception.** [28-mvp-scope.md](28-mvp-scope.md)
+§3.1 says "MVP contains no AI-generated text, insight, or recommendation
+anywhere in the product." `security.training.lesson.ask_ai` (Gemini, via the
+existing `security_ai_engine` provider) is a real exception to that,
+approved explicitly by Winston (2026-09-17) for the training assistant
+specifically. It answers only from the lesson's own text, never grades
+anything, and fails cleanly (not a crash) if `security_ai_engine` isn't
+installed or has no key configured. This does not reopen the no-AI guard
+for anything else in the MVP — that stays a separate decision each time.
+
+**"Learn by doing" is a real ERP deep link, not a coach-mark overlay.** The
+founder asked for overlays/modals/"learn by doing" interactivity. The lesson
+content and assessment runner are genuinely modal/overlay UI now. But a
+coach-mark literally pointing at elements inside Odoo's own DOM was not
+attempted, on purpose: the "odoo" webview has zero IPC and no injected
+script by deliberate security design (`desktop/DEVIATIONS.md`,
+`capabilities/main.json`), and faking coordinates without that would be
+fragile and break on any Odoo UI change. Instead, each hands-on lesson
+deep-links the live Odoo webview to the real screen via the existing
+`navigate_odoo` command — the learner does the actual task in the actual
+app. See [TRAINING_COURSE_GETTING_LIVE.md](../TRAINING_COURSE_GETTING_LIVE.md)
+§5 for the full reasoning.
+
+**Also noted for later, not acted on now:** the founder suggested plain
+SQLite (unencrypted) as an interim simplification for the Phase 3.7-3.9
+offline store, instead of blocking that work on SQLCipher from day one.
+Recorded here for when that phase is actually picked up — nothing in this
+round touched offline storage.
 
 ---
 
@@ -622,4 +655,5 @@ the hidden critical path), and the **ops manager's course content**.
 |---|---|
 | 2026-09-17 | Created. Full audit of desktop, ERP, packages, CI and security posture against BUILD-ORDER; Track A/B decision framed; Phases 0–8 defined. |
 | 2026-09-17 | Phase 2 started: `security_deployguard_bridge` rebuilt from scratch (confirmed absent from every git ref) — config singleton with encrypted secrets, outbox with HMAC signing and backoff, read-only facade (ping/get_sites/get_employees/get_users). Auth/SSO endpoints (2.5) deliberately deferred as a separate, security-reviewed change. Second independent instance of the cowork board reporting a false completion found (T-6) and documented in `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`. |
-| 2026-09-17 | Phases 3 (work management) and 4 (training) built. Along the way, found T-5 (bus subscriber registry) was ALSO never actually built — the hardcoded 5-bridge dispatch list was still in security_base/models/security_event_bus.py — making this the third confirmed false completion on the cowork board (T-8/T-10, T-6, T-5). Rebuilt the registry, wired all 7 bridges onto it, added attendance bus events that didn't exist before, and built auto-completion on top of both. New security_training module for Phase 4.
+| 2026-09-17 | Phases 3 (work management) and 4 (training) built. Along the way, found T-5 (bus subscriber registry) was ALSO never actually built — the hardcoded 5-bridge dispatch list was still in security_base/models/security_event_bus.py — making this the third confirmed false completion on the cowork board (T-8/T-10, T-6, T-5). Rebuilt the registry, wired all 7 bridges onto
+| 2026-09-17 | Phase 4 continued same day: real first course ("Getting Live: Client Setup & Rostering") written and seeded, desktop lesson player (`MyTraining.tsx`) built with modal/overlay lesson content, an assessment runner, deep-link "learn by doing" into the real Odoo webview, and an optional AI assist panel (explicit founder override of the MVP no-AI guard, scoped to this feature only). 60 Gemini video-generation prompts written across 5 videos. `npm run typecheck`/`lint`/`test` all pass; not exercised in a real Tauri window. it, added attendance bus events that didn't exist before, and built auto-completion on top of both. New security_training module for Phase 4.
