@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=odoo:odoo custom_addons/ /mnt/extra-addons/
-COPY --chown=odoo:odoo odoo.conf /etc/odoo/odoo.conf
+COPY --chown=odoo:odoo odoo.conf.template /etc/odoo/odoo.conf.template
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

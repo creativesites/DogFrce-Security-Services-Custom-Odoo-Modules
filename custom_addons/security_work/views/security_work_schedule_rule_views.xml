@@ -21,7 +21,7 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="_materialize" type="object" string="Materialize Now" class="btn-primary"/>
+                    <button name="action_materialize_all" type="object" string="Materialize Now" class="btn-primary"/>
                 </header>
                 <sheet>
                     <div class="oe_title"><h1><field name="name"/></h1></div>

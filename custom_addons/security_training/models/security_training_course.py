@@ -58,7 +58,7 @@ class SecurityTrainingCourseVersion(models.Model):
     course_id = fields.Many2one("security.training.course", required=True, ondelete="cascade")
     version_number = fields.Integer(required=True, default=1)
     name = fields.Char(compute="_compute_name", store=True)
-    state = fields.Selection(VERSION_STATES, default="draft", required=True, tracking=True)
+    state = fields.Selection(VERSION_STATES, default="draft", required=True)
 
     section_ids = fields.One2many("security.training.section", "course_version_id", string="Sections")
     assessment_ids = fields.One2many("security.training.assessment", "course_version_id", string="Assessments")

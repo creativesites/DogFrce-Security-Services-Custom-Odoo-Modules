@@ -36,9 +36,7 @@
                         <field name="under_count" nolabel="1" readonly="1"/> under.
                     </div>
 
-                    <field name="line_ids" nolabel="1"
-                           decoration-danger="flag == 'over'"
-                           decoration-warning="flag == 'under'">
+                    <field name="line_ids" nolabel="1">
                         <list create="0" edit="0" delete="0" default_order="payable_hours desc">
                             <field name="employee_id"/>
                             <field name="payable_hours" sum="Total"/>

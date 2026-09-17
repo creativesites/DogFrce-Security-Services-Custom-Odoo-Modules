@@ -65,6 +65,13 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Frontend tests
+        run: npm test
+
+      - name: Rust tests
+        run: cargo test
+        working-directory: desktop/src-tauri
+
       # No secrets are read here — only the non-secret Odoo base URL,
       # matching desktop/.env.example. See DEVIATIONS.md D-1.
       - name: Write build-time config

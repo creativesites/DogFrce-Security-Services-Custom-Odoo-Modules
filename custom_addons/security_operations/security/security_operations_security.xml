@@ -12,6 +12,19 @@
 
     <data>
         <!--
+          Odoo 19 replaced res.groups.category_id with res.groups.privilege_id,
+          a new intermediate res.groups.privilege model (which itself carries
+          category_id; see base/models/res_groups_privilege.py). One shared
+          privilege record per category, matching core's own convention (e.g.
+          marketing_card_groups.xml), preserves the original "grouped under
+          Security Operations" intent with the smallest possible change.
+        -->
+        <record id="res_groups_privilege_security_operations" model="res.groups.privilege">
+            <field name="name">Security Operations</field>
+            <field name="category_id" ref="security_base.module_category_security_operations"/>
+        </record>
+
+        <!--
           Roles that own a step in the roster sign-off sheet
           (docs/ROSTERING_SIMPLIFICATION_PLAN.md §3). Front Desk and Finance had
           no group of their own; GM maps to Security Manager, HR to the existing
@@ -19,14 +32,14 @@
         -->
         <record id="group_security_front_desk" model="res.groups">
             <field name="name">Security Front Desk</field>
-            <field name="category_id" ref="security_base.module_category_security_operations"/>
+            <field name="privilege_id" ref="res_groups_privilege_security_operations"/>
             <field name="implied_ids" eval="[(4, ref('hr.group_hr_user'))]"/>
             <field name="comment">Cross-checks rosters and validates daily attendance posting.</field>
         </record>
 
         <record id="group_security_finance" model="res.groups">
             <field name="name">Security Finance</field>
-            <field name="category_id" ref="security_base.module_category_security_operations"/>
+            <field name="privilege_id" ref="res_groups_privilege_security_operations"/>
             <field name="implied_ids" eval="[(4, ref('hr.group_hr_user'))]"/>
             <field name="comment">Releases payments and audits rosters and payroll.</field>
         </record>
@@ -50,7 +63,7 @@
         -->
         <record id="group_security_director" model="res.groups">
             <field name="name">Security Director (full access)</field>
-            <field name="category_id" ref="security_base.module_category_security_operations"/>
+            <field name="privilege_id" ref="res_groups_privilege_security_operations"/>
             <field name="implied_ids" eval="[
                 (4, ref('security_base.group_security_owner')),
                 (4, ref('security_base.group_security_hr_payroll_officer')),

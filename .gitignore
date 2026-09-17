@@ -8,6 +8,8 @@ __pycache__/
 .local/
 filestore/
 sessions/
+odoo.conf
+*.local.conf
 
 # Editor files
 .idea/

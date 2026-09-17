@@ -69,7 +69,7 @@
                 <field name="course_id"/>
                 <filter name="filter_mine" string="My Training" domain="[('employee_id.user_id', '=', uid)]"/>
                 <filter name="filter_not_completed" string="Not Completed" domain="[('state', '!=', 'completed')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_course" string="Course" context="{'group_by': 'course_id'}"/>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                 </group>

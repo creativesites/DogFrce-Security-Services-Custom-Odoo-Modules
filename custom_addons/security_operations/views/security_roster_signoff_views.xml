@@ -50,7 +50,7 @@
                         domain="[('state', '=', 'flagged')]"/>
                 <filter name="filter_mine" string="Waiting on me"
                         domain="[('state', '=', 'pending'), ('can_sign', '=', True)]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_batch" string="Roster batch"
                             context="{'group_by': 'batch_id'}"/>
                     <filter name="group_role" string="Role"

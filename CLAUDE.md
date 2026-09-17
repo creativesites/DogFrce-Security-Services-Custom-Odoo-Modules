@@ -8,7 +8,7 @@ Quick reference for working on this repo with Claude Code. Everything Claude nee
 
 | Layer | Tech |
 |---|---|
-| Backend | Odoo 17 Community, Python 3.12, PostgreSQL |
+| Backend | Odoo 19 Community, Python 3.12, PostgreSQL |
 | Custom modules | `custom_addons/` — all prefixed `security_*` |
 | Mobile app | Expo SDK 54, React Native 0.81, expo-router v6 |
 | Mobile API | Odoo JSON-RPC + custom REST endpoints in `security_mobile` |
@@ -21,18 +21,18 @@ Quick reference for working on this repo with Claude Code. Everything Claude nee
 | | |
 |---|---|
 | **IP / URL** | `http://47.84.205.81:8069` |
-| **SSH** | `ssh root@47.84.205.81` |
-| **Odoo admin password** | `admin123` |
+| **SSH** | `ssh root@47.84.205.81` (credentials in vault) |
+| **Odoo admin password** | `[Stored in Password Vault]` |
 | **Database name** | `dogforce-demo` |
-| **DB host (Render PG)** | `dpg-d8hu5gtdt1ts73enc480-a.singapore-postgres.render.com` |
+| **DB host (Render PG)** | `[Stored in Password Vault / Environment]` |
 | **DB user** | `odoo` |
-| **DB password** | `umDKFz8bHRvq7ZGy7nJlYznWoZq1ZW7l` |
+| **DB password** | `[Stored in Password Vault / Environment]` |
 | **Docker container** | `dogforce-demo-odoo-1` |
 | **Remote addons path** | `/opt/dogforce/custom_addons` |
 
 ### Demo user accounts (Odoo)
 
-All demo accounts use password **`Demo2026!`**
+All demo accounts use password **`Demo2026!`** (demo environment only)
 
 | Role | Display name | Login | Password | Access |
 |---|---|---|---|---|
@@ -40,7 +40,7 @@ All demo accounts use password **`Demo2026!`**
 | Operations Manager | Demo Manager | `demo.manager@dogforce.demo` | `Demo2026!` | Rosters, attendance, leave approvals, client sites |
 | Field Operator (Supervisor) | Demo Operator | `demo.operator@dogforce.demo` | `Demo2026!` | Posting console, guard records, incidents, equipment |
 | Read-Only Viewer | Demo Viewer | `demo.viewer@dogforce.demo` | `Demo2026!` | View dashboards, reports, attendance — no edits |
-| Odoo superadmin | — | `admin` | `admin123` | Full Odoo backend incl. technical menus |
+| Odoo superadmin | — | `admin` | `[Stored in Password Vault]` | Full Odoo backend incl. technical menus |
 
 > Demo accounts are seeded by `custom_addons/security_demo_site/data/demo_accounts.xml`.
 > To reset a demo account password: `Settings → Users → [user] → Save` (Odoo re-hashes on save).

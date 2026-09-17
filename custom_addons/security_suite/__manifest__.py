@@ -14,9 +14,12 @@
         - Security Loans, Discipline, & Equipment Tracking
         - Security Clients, Billing, Invoicing & ZRA Compliance
         - Security AI Engine & WhatsApp Bridge
+        - Security Armed Response & Armoury Dispatch
+        - Security Telephony & Call Logging
+        - Security Work Management & Tasks
+        - Security Training & Competencies
         - Security Client Reports & Reporting
         - DogForce Licensing & Onboarding
-        - Zambian Demo Data Seed (Sentinel Security Zambia Ltd)
     """,
     'category': 'Security Services',
     'author': 'Winston Zulu',
@@ -25,6 +28,7 @@
         'security_accounting_controls',
         'security_ai_engine',
         'security_ai_whatsapp_bridge',
+        'security_armed_response',
         'security_attendance',
         'security_backup_vault',
         'security_base',
@@ -35,6 +39,9 @@
         'security_client_onboarding',
         'security_client_reports',
         'security_compliance_roster',
+        'security_demo_data',
+        'security_demo_data_zm',
+        'security_deployguard_bridge',
         'security_discipline',
         'security_discipline_payroll',
         'security_documents',
@@ -46,6 +53,7 @@
         'security_fleet_ops',
         'security_help',
         'security_l10n_na',
+        'security_l10n_zm',
         'security_leave',
         'security_licensing',
         'security_loans',
@@ -59,9 +67,14 @@
         'security_reconciliation_billing_account',
         'security_reconciliation_core',
         'security_reporting',
+        'security_shell',
         'security_shift_planner',
+        'security_telephony',
         'security_theme',
         'security_tour',
+        'security_training',
+        'security_work',
+        'security_zra_invoice',
     ],
     'data': [],
     'installable': True,

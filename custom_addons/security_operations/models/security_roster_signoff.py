@@ -57,7 +57,7 @@ class SecurityRosterSignoff(models.Model):
     signed_at = fields.Datetime(readonly=True)
     note = fields.Char(string="Comment")
 
-    can_sign = fields.Boolean(compute="_compute_can_sign")
+    can_sign = fields.Boolean(compute="_compute_can_sign", search="_search_can_sign")
 
     _sql_constraints = [
         (
@@ -73,6 +73,16 @@ class SecurityRosterSignoff(models.Model):
         for rec in self:
             group = ROLE_GROUP.get(rec.role)
             rec.can_sign = bool(group) and self.env.user.has_group(group)
+
+    def _search_can_sign(self, operator, value):
+        matching_roles = [
+            role for role, group in ROLE_GROUP.items()
+            if self.env.user.has_group(group)
+        ]
+        matches_true = (operator == "=" and value) or (operator == "!=" and not value)
+        if matches_true:
+            return [("role", "in", matching_roles)]
+        return [("role", "not in", matching_roles)]
 
     def _assert_can_sign(self):
         for rec in self:

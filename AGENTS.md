@@ -8,7 +8,7 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 
 | Layer | Tech |
 |---|---|
-| Backend | Odoo 17 Community, Python 3.12, PostgreSQL |
+| Backend | Odoo 19 Community, Python 3.12, PostgreSQL |
 | Custom modules | `custom_addons/` — all prefixed `security_*` |
 | Mobile app | Expo SDK 54, React Native 0.81, expo-router v6 |
 | Mobile API | Odoo JSON-RPC + custom REST endpoints in `security_mobile` |
@@ -21,8 +21,8 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 | | |
 |---|---|
 | **IP / URL** | `http://47.84.205.81:8069` |
-| **SSH** | `ssh root@47.84.205.81` |
-| **Odoo admin password** | `admin123` |
+| **SSH** | `ssh root@47.84.205.81` (credentials in vault) |
+| **Odoo admin password** | `[Stored in Password Vault]` |
 | **Database name** | `dogforce-demo` |
 | **Docker container** | `dogforce-demo-odoo-1` |
 
@@ -36,10 +36,10 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 |---|---|
 | **Domain** | `https://dogforcesecurityservices.com` |
 | **IP** | `199.192.23.46` (12 GB RAM Namecheap VPS) |
-| **SSH** | `ssh root@199.192.23.46` (password: `4Li02oO6R5mCT6Uyhx`) |
-| **Odoo superadmin** | `admin` / `admin123` |
+| **SSH** | `ssh root@199.192.23.46` (credentials in vault) |
+| **Odoo superadmin** | `admin` / `[Stored in Password Vault]` |
 | **Database** | `dogforce_prod` |
-| **DB user/pass** | `odoo` / `DogForce_Prod_Db_2026_SecurePass!` |
+| **DB user/pass** | `odoo` / `[Stored in Password Vault]` |
 | **Docker container** | `dogforce-prod-odoo` |
 | **Remote addons path** | `/opt/dogforce/custom_addons` |
 
@@ -49,10 +49,10 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 
 | Role | Display name | Login | Password | Access |
 |---|---|---|---|---|
-| Owner / Full Admin | Kuume | `kuume@dogforcesecurityservices.com` | `Df!K9#mP2@xQr7zN` | Full platform — owner dashboard, payroll, billing, AI, settings |
-| System Administrator | DogForce Administrator | `admin@dogforcesecurityservices.com` | `Df!A7#rJ3@xKp9wM` | Full platform — same as owner |
-| Operations Manager | Wilbert | `wilbert@dogforcesecurityservices.com` | `Df!W4#nB8@yLm2qT` | Rosters, attendance, leave approvals, client sites |
-| Odoo superadmin | — | `admin` | `admin123` | Full Odoo backend incl. technical menus |
+| Owner / Full Admin | Kuume | `kuume@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — owner dashboard, payroll, billing, AI, settings |
+| System Administrator | DogForce Administrator | `admin@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — same as owner |
+| Operations Manager | Wilbert | `wilbert@dogforcesecurityservices.com` | `[In Password Vault]` | Rosters, attendance, leave approvals, client sites |
+| Odoo superadmin | — | `admin` | `[In Password Vault]` | Full Odoo backend incl. technical menus |
 
 > **Password reset policy**: Passwords are created directly in the database via `odoo shell`. No XML data file controls them, so **no deployment will ever reset them**. To change a password, use Settings → Users → [user] → Set Password in the Odoo UI.
 

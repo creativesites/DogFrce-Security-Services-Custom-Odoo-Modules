@@ -32,7 +32,7 @@
                 <filter name="filter_pending" string="Pending" domain="[('state', '=', 'pending')]"/>
                 <filter name="filter_failed" string="Failed" domain="[('state', '=', 'failed')]"/>
                 <filter name="filter_dead" string="Dead" domain="[('state', '=', 'dead')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
                     <filter name="group_type" string="Event Type" context="{'group_by': 'event_type'}"/>
                 </group>

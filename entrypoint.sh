@@ -1,6 +1,33 @@
 #!/bin/bash
 set -e
 
+# Generate /etc/odoo/odoo.conf from template if template exists and config does not
+if [ -f /etc/odoo/odoo.conf.template ] && [ ! -f /etc/odoo/odoo.conf ]; then
+  python3 -c "
+import os
+template_path = '/etc/odoo/odoo.conf.template'
+target_path = '/etc/odoo/odoo.conf'
+with open(template_path, 'r') as f:
+    content = f.read()
+
+defaults = {
+    'ADMIN_PASSWD': os.environ.get('ADMIN_PASSWD', 'admin123'),
+    'DB_HOST': os.environ.get('HOST', os.environ.get('DB_HOST', 'db')),
+    'DB_PORT': os.environ.get('PORT', os.environ.get('DB_PORT', '5432')),
+    'DB_USER': os.environ.get('USER', os.environ.get('DB_USER', 'odoo')),
+    'DB_PASSWORD': os.environ.get('PASSWORD', os.environ.get('DB_PASSWORD', '')),
+    'DB_NAME': os.environ.get('DB_NAME', 'dogforce_prod'),
+    'HTTP_PORT': os.environ.get('HTTP_PORT', '8069'),
+    'LOG_LEVEL': os.environ.get('LOG_LEVEL', 'info'),
+}
+for key, val in defaults.items():
+    content = content.replace(f'\${{{key}}}', str(val))
+
+with open(target_path, 'w') as f:
+    f.write(content)
+"
+fi
+
 echo "Checking if custom modules are installed..."
 
 INSTALLED=$(PGPASSWORD=$DB_PASSWORD psql -h $DB_HOST -U $DB_USER -d $DB_NAME -tAc \

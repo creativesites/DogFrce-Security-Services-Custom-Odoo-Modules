@@ -59,7 +59,18 @@ jobs:
         run: |
           export TEST_DB=dogforce_ci
           ./scripts/run-tests.sh \
-            security_base,security_payroll_core,security_attendance,security_leave,security_billing,security_shift_planner,security_equipment,security_fleet,security_mobile,security_client_onboarding,security_work,security_deployguard_bridge,security_training
+            security_base,security_operations,security_payroll_core,security_attendance,security_leave,security_billing,security_shift_planner,security_equipment,security_fleet,security_mobile,security_client_onboarding,security_work,security_deployguard_bridge,security_training
+
+      - name: Packages/AI tests
+        working-directory: packages/ai
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+          npm run typecheck
+          npm test
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

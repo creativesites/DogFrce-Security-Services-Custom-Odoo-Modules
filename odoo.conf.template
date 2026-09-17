@@ -1,0 +1,16 @@
+[options]
+addons_path = /mnt/extra-addons,/usr/lib/python3/dist-packages/odoo/addons
+admin_passwd = ${ADMIN_PASSWD}
+db_host = ${DB_HOST}
+db_port = ${DB_PORT:-5432}
+db_user = ${DB_USER:-odoo}
+db_password = ${DB_PASSWORD}
+db_name = ${DB_NAME:-dogforce_prod}
+http_port = ${HTTP_PORT:-8069}
+logfile = /dev/stdout
+log_level = ${LOG_LEVEL:-info}
+proxy_mode = True
+
+; --- Hardening: never expose the public database manager ---
+list_db = False
+dbfilter = ^${DB_NAME:-dogforce_prod}$

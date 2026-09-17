@@ -289,12 +289,14 @@ class SecurityLeaveRequest(models.Model):
 
     @api.constrains("employee_id", "leave_type_id", "requested_days", "state")
     def _check_negative_limit(self):
+        if self.env.context.get("install_mode"):
+            return
         for request in self:
             if request.state != "approved":
                 continue
             balance = request.balance_id.balance_days if request.balance_id else 0.0
-            limit = request.leave_type_id.negative_balance_limit
-            if balance - request.requested_days < (-1 * limit):
+            limit = request.leave_type_id.negative_balance_limit or 0.0
+            if balance < (-1 * limit):
                 raise ValidationError(
                     "The approved leave request would exceed the allowed negative balance limit."
                 )

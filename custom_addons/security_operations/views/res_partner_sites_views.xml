@@ -10,12 +10,12 @@
         <field name="name">res.partner.form.security.sites</field>
         <field name="model">res.partner</field>
         <field name="inherit_id" ref="base.view_partner_form"/>
-        <field name="groups_id" eval="[(4, ref('security_base.group_security_supervisor'))]"/>
         <field name="arch" type="xml">
 
             <div name="button_box" position="inside">
                 <button name="action_open_security_sites" type="object"
                         class="oe_stat_button" icon="fa-building"
+                        groups="security_base.group_security_supervisor"
                         invisible="not is_company or security_site_count == 0">
                     <field name="security_site_count" widget="statinfo" string="Sites"/>
                 </button>
@@ -23,6 +23,7 @@
 
             <notebook position="inside">
                 <page string="Security Sites" name="security_sites"
+                      groups="security_base.group_security_supervisor"
                       invisible="not is_company">
 
                     <separator string="Contracts / Tenders"/>

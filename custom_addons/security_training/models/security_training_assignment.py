@@ -178,4 +178,9 @@ class SecurityTrainingAttemptAnswer(models.Model):
 
     attempt_id = fields.Many2one("security.training.attempt", required=True, ondelete="cascade")
     question_id = fields.Many2one("security.training.question", required=True, ondelete="cascade")
-    selected_option_ids = fields.Many2many("security.training.question.option")
+    selected_option_ids = fields.Many2many(
+        "security.training.question.option",
+        "security_training_ans_option_rel",
+        "answer_id",
+        "option_id",
+    )
