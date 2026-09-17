@@ -52,7 +52,7 @@ successfully run** (§4.3). Both are pilot blockers, not tidy-up items.
 | Phase (BUILD-ORDER) | Planned scope | Actual status |
 |---|---|---|
 | **P0** Foundations | Platform DB, tenancy/RLS, events, audit, Fastify API, worker, `packages/ui`, IaC, CI | ⬜ **Not started.** No Platform backend, no TypeScript API/worker, no `packages/ui`, no tenancy model. `packages/ai` (AIProvider + Gemini + validator) is the only `packages/*` that exists. [V-code] |
-| **P1** Odoo bridge & identity | `security_deployguard_bridge`, projections, auth exchange, webhooks | 🟥 **Reported done (T-8, T-10), not in the repo.** §4.1. Prerequisite refactor T-5 (bus subscriber registry) *is* in `security_base`. [V-git] |
+| **P1** Odoo bridge & identity | `security_deployguard_bridge`, projections, auth exchange, webhooks | 🟨 **Core bridge rebuilt 2026-09-17** (config, encrypted secrets, outbox, read-only facade — §5 Phase 2). Auth/SSO endpoints and domain bridges not started. T-5 (bus subscriber registry) is claimed in `security_base`, not independently re-verified this pass — see §4.1. |
 | **P2** Desktop shell, single login, notifications | Full shell, device registration, SSO, notifications, updater, offline-capable client | 🟨 **~55% as a pilot slice.** Shell + single login + My Work + branding + diagnostics done. No device identity, no revocation, no notifications, updater disabled, no signed installer. §3.1 |
 | **P3** Training | LMS: courses, lessons, assessments, competencies | ⬜ **Not started.** No models, no screens. [V-code] |
 | **P4** Work management | Templates, recurrence, checklist runner, verification, auto-complete, offline | 🟨 **~30%.** `security_work` gives task + checklist primitives and a working desktop runner. No recurrence, no auto-complete from ERP events, no evidence capture, no offline. §3.2 |
@@ -267,25 +267,40 @@ From [31-dogforce-rollout.md](31-dogforce-rollout.md) §2, as of today:
 
 ## 4. Blockers, ranked
 
-### 4.1 🟥 P1 bridge work is reported complete but does not exist
+### 4.1 🟥 P1 bridge work was reported complete but did not exist — rebuilt
 
-[`docs/deployguard/cowork/README.md`](cowork/README.md) records T-8
+[`docs/deployguard/cowork/README.md`](cowork/README.md) recorded T-8
 (`security_deployguard_bridge` scaffold, config model, integration user, security
 group, settings views) and T-10 (outbox with HMAC + exponential backoff, the
 `security.deployguard.api` read facade, dispatch controllers, cron, "all tests
 pass") as ✅ **Done**.
 
-`custom_addons/security_deployguard_bridge` **does not exist** — not in the
-working tree, not on `main`, not on any remote branch, and no commit in any ref
-has ever added a file under that path. [V-git]
+`custom_addons/security_deployguard_bridge` **did not exist** anywhere in this
+repository's git history when checked (2026-09-17) — confirmed again by a
+second search immediately before rebuilding it. [V-git]
 
-The same doubt attaches to T-1, T-2, T-5 and T-6, which are also marked Done by
-the same agent; T-5's mixin is the one most worth verifying first, because
-`security_work` and the bridge both depend on the bus registry design.
+**Status update (2026-09-17): rebuilt from scratch as part of Phase 2** — see
+§5 Phase 2 below for what shipped and, as importantly, what was deliberately
+left out (the auth/SSO endpoints, DG-ADR-007, are security-critical and were
+not rushed into the same change).
 
-**Action (Phase 0):** get the work pushed, or treat it as unbuilt and rebuild it.
-Until then, **assume P1 is at zero** for planning purposes. Do not schedule
-anything that depends on the bridge.
+**A second, independent instance of the same pattern was found the same day**:
+T-6 ("Replaced legacy `security_suite` baseline... in
+`DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`") is also marked ✅ Done on the cowork
+board, and is also **not true** — `security_suite` is still the listed
+baseline in both `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md` and
+`scripts/setup_staging.sh`, and `security_shell`/`security_theme`/
+`security_notifications` were never added to the approved list. See that
+file's own note, added 2026-09-17, for detail. **This is no longer a single
+suspicious entry — it is a pattern in how completions get reported on that
+board.** T-1, T-2 and T-5 (all marked Done by the same agent) should be
+independently re-verified against the actual repository before anything is
+scheduled on the assumption they're real, the same way T-8/T-10 and T-6 turned
+out not to be.
+
+**Action (Phase 0, still open):** re-verify T-1, T-2 and T-5 against the
+repository directly, the way T-8/T-10/T-6 were checked here — do not take the
+board's word for any of them.
 
 ### 4.2 🟥 Live production credentials are committed to this repository
 
@@ -379,22 +394,34 @@ precondition for extraction later.
 
 | # | Work | Area | Done |
 |---|---|---|---|
-| 2.1 | Verify or rebuild `security_deployguard_bridge` core: config singleton (Platform URL, tenant id, write-only webhook secret, signing keypair, health fields), `group_deployguard_integration`, dedicated integration user, settings UI restricted to `base.group_system` | ERP | ⬜ |
-| 2.2 | Secrets at rest: webhook secret and signing private key encrypted per [16](16-security-architecture.md) §6 — never plaintext in `ir.config_parameter`, logs, or fixtures | Security | ⬜ |
-| 2.3 | `security.deployguard.outbox`: event id, type, payload, state, attempts, next attempt; HMAC-SHA256 signing; exponential backoff; 1-minute dispatch cron that logs clearly when no consumer exists | ERP | ⬜ |
-| 2.4 | `security.deployguard.api` read facade — `ping`, `get_sites`, `get_employees`, `get_users` — strictly to the field allowlists in [12](12-odoo-integration.md) §3. No "just in case" fields | ERP | ⬜ |
-| 2.5 | **Auth endpoints (T-9, security-critical)**: `auth/login` (no persisted web session; mints a short-lived signed JWS assertion), `auth/totp`, `sso/ticket` (single-use, ≤60s, refuses `base.group_system` and anyone without the DeployGuard access flag), `sso/consume`. Rate-limited by account, IP and device | Security | ⬜ |
-| 2.6 | `HttpCase` coverage for 2.5: valid login, wrong password, TOTP required, ticket single-use, ticket expiry, admin refusal, replay, clock skew | Test | ⬜ |
-| 2.7 | Domain bridge `security_deployguard_attendance` as the template: outbox events on batch create/submit/review/lock + `get_attendance_batches` / `get_attendance_summary` | ERP | ⬜ |
-| 2.8 | Integration health: last successful sync, queue depth, failure count, exposed both in Odoo and to the desktop app | Observability | ⬜ |
-| 2.9 | Desktop: replace raw `odoo_call_kw` for My Work with facade calls where a facade method exists; keep `call_kw` as the explicit escape hatch it is | Desktop | ⬜ |
-| 2.10 | Contract tests against a real Odoo 19 container in CI (signature, replay, skew, throttling, idempotency) | Test | ⬜ |
-| 2.11 | Install and validate the bridge on **staging only**; production install is a separate, later decision | Deploy | ⬜ |
+| 2.1 | `security_deployguard_bridge` core: config singleton (Platform URL, tenant id, write-only webhook secret, signing keypair, health fields), `group_deployguard_integration`, dedicated integration user (no usable password — API-key only, `res.users.apikeys`), settings UI restricted to `base.group_system` | ERP | ✅ |
+| 2.2 | Secrets at rest: webhook secret and signing private key encrypted, keyed by `DEPLOYGUARD_MASTER_KEY` (env var or `odoo.conf`) — **never** in `ir.config_parameter` or the database in any form. Refuses to store a secret rather than falling back to plaintext when the master key is missing | Security | ✅ |
+| 2.3 | `security.deployguard.outbox`: event id, type, payload, state, attempts, next attempt; HMAC-SHA256 signing; exponential backoff (1m→24h, dead after 20 attempts); 1-minute dispatch cron that logs clearly when no consumer exists | ERP | ✅ |
+| 2.4 | `security.deployguard.api` read facade — `ping`, `get_sites`, `get_employees`, `get_users` — strictly to the field allowlists in [12](12-odoo-integration.md) §3. No "just in case" fields (tested explicitly: no HR private fields, no password/API-key material) | ERP | ✅ |
+| 2.5 | **Auth endpoints (T-9, security-critical)**: `auth/login`, `auth/totp`, `sso/ticket`, `sso/consume` | Security | ⬜ **Deliberately not built in this change.** See rationale below. |
+| 2.6 | `HttpCase` coverage for 2.5 | Test | ⬜ Blocked on 2.5 |
+| 2.7 | Domain bridge `security_deployguard_attendance` as the template | ERP | ⬜ Next |
+| 2.8 | Integration health: last successful sync, queue depth, failure count | Observability | 🟨 Outbox monitor view ships (2.1/2.3); no cross-system health rollup yet |
+| 2.9 | Desktop: replace raw `odoo_call_kw` for My Work with facade calls | Desktop | ⬜ Not started — the facade has no `work` methods yet, only identity/site reads |
+| 2.10 | Contract tests against a real Odoo 19 container in CI | Test | 🟨 Unit-level `TransactionCase` tests added and wired into `ci.yml`; no dedicated contract-test harness against a running container yet |
+| 2.11 | Install and validate the bridge on **staging only** | Deploy | ⬜ Blocked — no staging environment exists (§4.4) |
 
-**Exit:** the desktop app authenticates through the bridge, not by reading a
-cookie; an attendance batch posted in Odoo produces a signed, verifiable outbox
-delivery; killing the consumer for an hour self-heals; every endpoint has a
-negative test.
+**Why 2.5 (auth/SSO) was skipped on purpose:** it is the part of this ADR that
+actually authenticates end users — wrong-password handling, ticket replay,
+ticket expiry, refusing tickets to admin accounts, rate limiting per account/
+IP/device. Shipping a first pass of that inside the same change as the module
+skeleton, without a dedicated security review and full negative-path test
+coverage, is exactly the kind of shortcut this plan exists to stop taking. The
+signing keypair 2.1/2.2 generate is the thing 2.5 will sign assertions with,
+so this was not deferred by leaving a gap in the middle — it's a clean edge to
+pick this back up from.
+
+**Exit (partial):** the facade returns real data through the integration
+user; the outbox signs and retries with correct backoff and never leaves a
+secret in plaintext if the master key is missing. **Not yet true:** the
+desktop app still authenticates by reading an Odoo session cookie, not
+through the bridge (D-1 in `desktop/DEVIATIONS.md` is still accurate) — that
+depends on 2.5.
 
 ---
 
@@ -580,3 +607,4 @@ the hidden critical path), and the **ops manager's course content**.
 | Date | Change |
 |---|---|
 | 2026-09-17 | Created. Full audit of desktop, ERP, packages, CI and security posture against BUILD-ORDER; Track A/B decision framed; Phases 0–8 defined. |
+| 2026-09-17 | Phase 2 started: `security_deployguard_bridge` rebuilt from scratch (confirmed absent from every git ref) — config singleton with encrypted secrets, outbox with HMAC signing and backoff, read-only facade (ping/get_sites/get_employees/get_users). Auth/SSO endpoints (2.5) deliberately deferred as a separate, security-reviewed change. Second independent instance of the cowork board reporting a false completion found (T-6) and documented in `DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`. |

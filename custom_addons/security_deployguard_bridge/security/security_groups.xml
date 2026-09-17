@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      A least-privilege group for the integration user only. It holds no
+      ACL rows by default — each facade method in security.deployguard.api
+      elevates explicitly (sudo, scoped) for only the fields it needs,
+      rather than this group being granted broad read access to domain
+      models. See DG-ADR-018 §3, §4 and docs/deployguard/16-security-
+      architecture.md.
+    -->
+    <record id="module_category_deployguard" model="ir.module.category">
+        <field name="name">DeployGuard Bridge</field>
+    </record>
+
+    <record id="group_deployguard_integration" model="res.groups">
+        <field name="name">DeployGuard Integration</field>
+        <field name="category_id" ref="module_category_deployguard"/>
+        <field name="comment">
+            Held only by the dedicated "DeployGuard Integration" user. Grants
+            no domain-model ACLs by itself -- it exists to scope this
+            module's own models (config, outbox) and to gate facade calls.
+            Never assign this group to a human user.
+        </field>
+    </record>
+</odoo>

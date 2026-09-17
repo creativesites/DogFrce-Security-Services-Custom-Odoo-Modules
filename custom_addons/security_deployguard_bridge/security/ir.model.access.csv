@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_deployguard_config_system,security.deployguard.config system,model_security_deployguard_config,base.group_system,1,1,1,0
+access_deployguard_config_integration,security.deployguard.config integration,model_security_deployguard_config,group_deployguard_integration,1,0,0,0
+access_deployguard_outbox_system,security.deployguard.outbox system,model_security_deployguard_outbox,base.group_system,1,1,0,1
+access_deployguard_outbox_integration,security.deployguard.outbox integration,model_security_deployguard_outbox,group_deployguard_integration,1,1,1,0
