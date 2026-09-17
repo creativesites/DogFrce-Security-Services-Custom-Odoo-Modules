@@ -54,7 +54,12 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 | `security_ai_engine` | AI Control Room Analytics |
 | **`security_ai_whatsapp_bridge`** | **WhatsApp Control Room Assistant (`OWNER STATS`, Attendance Check-ins)** |
 | **`security_backup_vault`** | **Automated WAL Backups, Filestore Tarballs & Cloudflare R2 Offsite Sync** |
-| `security_suite` | All-In-One Suite Installer (Namibia Profile) |
+| `security_theme` | Custom branding, assets, login screen styling & color scheme |
+| `security_notifications` | Central alert-hub, bells, SMS triggers & critical thresholds |
+| `security_shell` | Custom client portal sidebar canvas, navigation rails, and Tauri app framework |
+| `security_deployguard_bridge` | DeployGuard Desktop bridge -- session/session-info endpoints the desktop app talks to directly (see `desktop/DEVIATIONS.md`) |
+| `security_work` | Work management -- schedule rules, task assignment, checklists surfaced in DeployGuard Desktop's "My Work & Sweeps" |
+| `security_training` | Staff training tracking |
 
 ---
 
