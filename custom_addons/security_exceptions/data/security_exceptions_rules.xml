@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_roster_gap" model="security.exception.rule">
+        <field name="notification_type">roster_gap</field>
+        <field name="tier">critical</field>
+        <field name="escalation_policy_id" ref="policy_critical"/>
+        <field name="stale_after_minutes">15</field>
+    </record>
+    <record id="rule_awol_alert" model="security.exception.rule">
+        <field name="notification_type">awol_alert</field>
+        <field name="tier">critical</field>
+        <field name="escalation_policy_id" ref="policy_critical"/>
+        <field name="stale_after_minutes">15</field>
+    </record>
+    <record id="rule_invoice_overdue" model="security.exception.rule">
+        <field name="notification_type">invoice_overdue</field>
+        <field name="tier">attention</field>
+        <field name="escalation_policy_id" ref="policy_attention"/>
+    </record>
+    <record id="rule_cert_expiry" model="security.exception.rule">
+        <field name="notification_type">cert_expiry</field>
+        <field name="tier">attention</field>
+        <field name="escalation_policy_id" ref="policy_attention"/>
+    </record>
+    <record id="rule_document_expiry" model="security.exception.rule">
+        <field name="notification_type">document_expiry</field>
+        <field name="tier">watch</field>
+        <field name="escalation_policy_id" ref="policy_watch"/>
+    </record>
+    <record id="rule_override_audit" model="security.exception.rule">
+        <field name="notification_type">override_audit</field>
+        <field name="tier">watch</field>
+        <field name="escalation_policy_id" ref="policy_watch"/>
+    </record>
+</odoo>

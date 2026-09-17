@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Critical: escalates fast and around the clock — a missing guard
+         doesn't stop mattering after hours, so this policy stays on
+         wall-clock minutes (spec's own "raises Critical within two
+         minutes" exit criterion needs sub-hour timing, not a working
+         calendar). -->
+    <record id="policy_critical" model="security.exception.escalation.policy">
+        <field name="name">Critical: fast, 24/7</field>
+        <field name="use_working_calendar">0</field>
+        <field name="level1_delay_minutes">2</field>
+        <field name="level1_group_id" ref="security_base.group_security_supervisor"/>
+        <field name="level2_delay_minutes">15</field>
+        <field name="level2_group_id" ref="security_base.group_security_manager"/>
+    </record>
+
+    <record id="policy_attention" model="security.exception.escalation.policy">
+        <field name="name">Attention: working hours</field>
+        <field name="use_working_calendar">1</field>
+        <field name="level1_delay_minutes">120</field>
+        <field name="level1_group_id" ref="security_base.group_security_supervisor"/>
+        <field name="level2_delay_minutes">480</field>
+        <field name="level2_group_id" ref="security_base.group_security_manager"/>
+    </record>
+
+    <record id="policy_watch" model="security.exception.escalation.policy">
+        <field name="name">Watch: working hours, slow</field>
+        <field name="use_working_calendar">1</field>
+        <field name="level1_delay_minutes">1440</field>
+        <field name="level1_group_id" ref="security_base.group_security_supervisor"/>
+        <field name="level2_delay_minutes">4320</field>
+        <field name="level2_group_id" ref="security_base.group_security_manager"/>
+    </record>
+</odoo>
