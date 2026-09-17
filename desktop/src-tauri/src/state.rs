@@ -29,4 +29,12 @@ pub struct AppState {
     /// current signed-in session, so we don't pop it open again on every
     /// Odoo page navigation — only on the None → Some transition.
     pub(crate) has_auto_revealed: Mutex<bool>,
+    /// A short, human-readable note about what happened the last time the
+    /// app tried to sync the session from the Odoo webview -- e.g. why a
+    /// login attempt appeared to fail. Non-sensitive (no cookies or
+    /// credentials), surfaced via `diagnostics_get` so a user stuck on
+    /// "sign in to continue" can self-report something more useful than
+    /// "it didn't work" -- see 2026-09-17's owner's-laptop incident, where
+    /// this info didn't exist and there was nothing to diagnose from.
+    pub last_sync_note: Mutex<Option<String>>,
 }

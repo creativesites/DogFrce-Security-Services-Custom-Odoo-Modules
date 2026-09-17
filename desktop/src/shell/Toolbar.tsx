@@ -12,6 +12,7 @@ import {
   WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon, ClipboardListIcon,
 } from "./icons";
 import { MyWork } from "./pages/MyWork";
+import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import type { SessionEvent } from "../session/types";
 import dogforceLogo from "../assets/dogforce-logo-256.png";
 import "./toolbar.css";
@@ -448,6 +449,7 @@ export function Toolbar() {
                   >
                     <OdooIcon size={16} /> Open DogForce ERP
                   </button>
+                  <DiagnosticsPanel />
                 </div>
               </div>
             )}

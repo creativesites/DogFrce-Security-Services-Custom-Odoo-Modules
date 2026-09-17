@@ -14,10 +14,14 @@ pub struct Diagnostics {
     pub odoo_base_url: String,
     pub odoo_reachable: bool,
     pub signed_in: bool,
+    /// What happened the last time the app tried to sync the session from
+    /// the Odoo webview (e.g. why a login attempt didn't take) -- `None`
+    /// if that's never run yet this session. See `state::AppState`.
+    pub last_sync_note: Option<String>,
     pub generated_at: String,
 }
 
-pub async fn collect(signed_in: bool) -> Diagnostics {
+pub async fn collect(signed_in: bool, last_sync_note: Option<String>) -> Diagnostics {
     Diagnostics {
         app_version: env!("CARGO_PKG_VERSION").to_string(),
         os: tauri_plugin_os::type_().to_string(),
@@ -25,6 +29,7 @@ pub async fn collect(signed_in: bool) -> Diagnostics {
         odoo_base_url: crate::config::odoo_base_url(),
         odoo_reachable: odoo::health_check().await,
         signed_in,
+        last_sync_note,
         generated_at: chrono::Utc::now().to_rfc3339(),
     }
 }
