@@ -1,0 +1,208 @@
+/*
+ * Clients & Sites command center overlay.
+ *
+ * Written from scratch on the --ds-*/--dgs-* tokens (no raw hex — see
+ * docs/DEPLOYGUARD_DESIGN_SYSTEM.md). Not shared with the other mega menus
+ * (security_shift_planner's rostering_mega_menu.css, reused informally by
+ * fleet/equipment/base): that file hardcodes hex values and this module does
+ * not depend on security_shift_planner. Cutting a real dependency here
+ * matters more than saving ~400 lines, especially since this stylesheet was
+ * previously never loaded at all — see the manifest history: this menu's
+ * markup has been rendering with zero CSS applied.
+ *
+ * Kept intentionally small: this is four cards and one button, not the
+ * 5-tab/15-card command center it used to be.
+ */
+
+.rmm-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 500;
+    background: rgba(15, 23, 42, 0.45);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 8vh 24px 24px;
+    overflow-y: auto;
+    font-family: var(--ds-font);
+}
+
+.rmm-container {
+    background: var(--ds-surface);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-lg);
+    width: 760px;
+    max-width: 95vw;
+    box-shadow: var(--ds-shadow-md);
+    overflow: hidden;
+    color: var(--ds-text);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.rmm-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.5rem 1.75rem 1rem;
+    gap: 1.25rem;
+}
+
+.rmm-brand-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--ds-accent);
+    color: #fff;
+    font-weight: 700;
+    font-size: .75rem;
+    padding: .35rem .75rem;
+    border-radius: var(--ds-radius-sm);
+    margin-bottom: .5rem;
+}
+
+.rmm-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--ds-text);
+    margin: 0;
+}
+
+.rmm-subtitle {
+    font-size: .82rem;
+    color: var(--ds-text-muted);
+    margin-top: .2rem;
+}
+
+.rmm-close-btn {
+    background: none;
+    border: none;
+    color: var(--ds-text-subtle);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: .25rem .5rem;
+    border-radius: var(--ds-radius-sm);
+}
+
+.rmm-close-btn:hover,
+.rmm-close-btn:focus-visible {
+    background: var(--ds-slate);
+    color: var(--ds-text);
+}
+
+.rmm-close-btn:focus-visible {
+    outline: 2px solid var(--ds-accent);
+    outline-offset: 1px;
+}
+
+/* ── Primary CTA ────────────────────────────────────────────────────── */
+
+.rmm-primary-cta {
+    margin: 0 1.75rem 1.25rem;
+    padding: 1rem 1.25rem;
+    background: var(--ds-accent-light);
+    border: 1px solid var(--ds-accent-mid);
+    border-radius: var(--ds-radius-md);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .75rem 1rem;
+}
+
+.rmm-primary-cta-btn {
+    background: var(--ds-accent);
+    color: #fff;
+    border: none;
+    font-weight: 700;
+    font-size: .92rem;
+    padding: .6rem 1.1rem;
+    border-radius: var(--ds-radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.rmm-primary-cta-btn:hover {
+    background: var(--ds-accent-hover);
+}
+
+.rmm-primary-cta-btn:focus-visible {
+    outline: 2px solid var(--ds-accent);
+    outline-offset: 2px;
+}
+
+.rmm-primary-cta-hint {
+    font-size: .82rem;
+    color: var(--ds-text-muted);
+}
+
+/* ── Card grid — the four destinations ─────────────────────────────── */
+
+.rmm-body {
+    padding: 0 1.75rem 1.75rem;
+}
+
+.rmm-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: .85rem;
+}
+
+.rmm-card {
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
+    padding: 1rem;
+    background: var(--ds-bg);
+    border: 1px solid var(--ds-border-light);
+    border-radius: var(--ds-radius-md);
+    cursor: pointer;
+    transition: border-color .12s ease, box-shadow .12s ease;
+}
+
+.rmm-card:hover,
+.rmm-card:focus-visible {
+    border-color: var(--ds-accent-mid);
+    box-shadow: var(--ds-shadow-sm);
+}
+
+.rmm-card:focus-visible {
+    outline: 2px solid var(--ds-accent);
+    outline-offset: 2px;
+}
+
+.rmm-card-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--ds-radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    color: #fff;
+}
+
+.rmm-card-icon.icon-blue { background: var(--ds-info); }
+.rmm-card-icon.icon-emerald { background: var(--ds-success); }
+.rmm-card-icon.icon-purple { background: var(--ds-accent); }
+.rmm-card-icon.icon-amber { background: var(--ds-warning); }
+
+.rmm-card-title {
+    font-weight: 700;
+    font-size: .92rem;
+    color: var(--ds-text);
+}
+
+.rmm-card-desc {
+    font-size: .8rem;
+    color: var(--ds-text-muted);
+    line-height: 1.4;
+    margin-top: .15rem;
+}
+
+/* ── Responsiveness ─────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .rmm-card-grid { grid-template-columns: 1fr; }
+    .rmm-header, .rmm-primary-cta, .rmm-body { padding-left: 1.1rem; padding-right: 1.1rem; }
+}

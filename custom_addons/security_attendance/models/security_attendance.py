@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 import pytz
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 from odoo.addons.security_attendance.utils.shift_split import split_shift_by_boundaries
 
 
@@ -177,7 +177,34 @@ class SecurityAttendanceBatch(models.Model):
                 },
             }
 
+    def _assert_can_review(self):
+        """Front Desk validates daily posting; Operations cannot self-review.
+
+        docs/ROSTERING_SIMPLIFICATION_PLAN.md §3/A7a: front desk cross-checks
+        what operations posted and marked. Before this check, whoever had
+        access to the Posting Console (typically the person who just captured
+        attendance) could click "Submit Batch" and it silently reviewed its
+        own posting -- there was no separate checkpoint at all.
+        """
+        front_desk_groups = (
+            "security_operations.group_security_front_desk",
+            "security_base.group_security_manager",
+            "security_base.group_security_owner",
+        )
+        for batch in self:
+            if not any(self.env.user.has_group(g) for g in front_desk_groups):
+                raise UserError(
+                    "Only Front Desk (or a manager/owner) can review a posting "
+                    "sheet. Ask Front Desk to validate this batch."
+                )
+            if batch.captured_by_id and batch.captured_by_id == self.env.user:
+                raise UserError(
+                    "You captured this posting sheet, so you cannot also be "
+                    "the one who reviews it. Ask Front Desk to validate it."
+                )
+
     def action_review(self):
+        self._assert_can_review()
         for batch in self:
             batch.reviewed_by_id = self.env.user
             batch.state = "reviewed"

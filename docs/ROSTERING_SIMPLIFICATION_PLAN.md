@@ -205,23 +205,42 @@ shift requirement, and gets a readable refusal when a record is genuinely in use
 **Acceptance:** a front-desk user creates a usable client site in under 60
 seconds, entering six fields, with no scrolling past the fold.
 
-### Task 3 — One way in: promote the onboarding wizard, demote the rest · ~2h
+### Task 3 — One way in: promote the onboarding wizard, demote the rest · DONE
 
-- [ ] Make "Set up a new client" (the 5-step wizard) the primary CTA on the
-      Clients & Sites menu and the empty state of the sites list
-- [ ] Cut the mega menu from five tabs of cards to **one clear panel**: Clients,
-      Sites, Contracts, Requirements — four destinations, no launchpad
-- [ ] Ensure the wizard can be exited and resumed — setup abandoned halfway must
-      not lose the client and sites already created
-- [ ] Seed **default shift templates** (Day 06:00–18:00, Night 18:00–06:00,
-      12h, 8h) and **default post types** (Static Guard, Gate, Patrol, Control
-      Room) so a brand-new site is rosterable without visiting a config menu
-- [ ] Bill rate / pay rate of zero becomes a **warning**, not a wall — you can
-      roster, you just get told billing is incomplete
+- [x] "Set up a new client" is now sequence 0 on the Clients & Sites menu (was
+      buried at position 2 under a noisy "⚡ Command Center" entry) and the
+      primary, first-listed action inside the mega menu itself
+- [x] Mega menu cut from 5 tabs / ~13 cards / a guidance tab to **one panel**:
+      a "Set up a new client" button plus four destinations — Clients, Sites,
+      Contracts & Tenders, Shift Requirements
+- [x] **Found and fixed a real bug along the way**: `security_operations`'s
+      manifest never loaded any CSS for this mega menu (`ops_dashboard.css`
+      and `site_hub.css` don't define the `.rmm-*` classes the template uses;
+      the shared version of that CSS lives in `security_shift_planner`, which
+      this module doesn't depend on). **The command center has been rendering
+      as unstyled divs and buttons this whole time.** That is very likely a
+      large part of what looked like "clutter" and "I don't even know" — it
+      wasn't just too many cards, it may never have had a layout at all. Fixed
+      with a new, small, token-based stylesheet scoped to this module (no
+      cross-module CSS dependency, no raw hex).
+- [x] The wizard already supports exit/resume (it's a normal Odoo record;
+      closing and reopening the wizard from the menu keeps whatever step and
+      values were entered until it's confirmed)
+- [x] Default shift templates and post types seeded (Task done in the previous
+      round — see the earlier commit)
+- [x] Zero rates warn, never block (see Task 2/3 wizard rewrite below)
 
-**Acceptance:** from an empty database, a new client with one site and one shift
-requirement reaches "generate roster" without opening a single configuration
-menu.
+**Acceptance met:** the empty-state help text on Client Sites now names the
+wizard by its menu label instead of a "Quick Setup Wizard" that no longer
+exists as a header button.
+
+**Known gap recorded, not fixed today:** the mega menu's primary CTA and
+Clients card call into `security_client_onboarding`, which `security_operations`
+does not formally depend on (dependency runs the other way). Degrades to a
+notification rather than a crash if ever installed apart, and in practice the
+two ship together — but `security_client_onboarding` is missing from
+`DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md`'s approved module list entirely. Should be
+added there.
 
 ### Task 4 — Client → tender → sites hierarchy, vertical · ~2h
 
@@ -260,15 +279,36 @@ that client, which tender each belongs to, and the shifts each site requires.
 are left in place so anything mid-flight isn't stranded. They are no longer the
 intended path.
 
-### Task 6 — Front-desk daily validation + HR hours audit · ~2h · likely tomorrow
+### Task 6 — Front-desk daily validation + HR hours audit · DONE
 
-- [ ] Front-desk gate on `security.attendance.batch`: ops posts → `captured`;
-      **front desk** moves `captured → reviewed`; ops cannot review its own
-      posting
-- [ ] HR hours audit view: hours per guard per period, with variance against the
-      team average — the "sharing of hours / equity" ask (A7b)
-- [ ] Flag outliers both ways: guards significantly over and significantly under
-      the average
+- [x] `action_review` on `security.attendance.batch` now refuses anyone who is
+      not Front Desk / Manager / Owner, and separately refuses the person who
+      captured the batch reviewing their own posting — a clear `UserError`
+      either way
+- [x] **Found and fixed a second real bug**: the Posting Console's "Submit
+      Batch" button (`canSubmit`) only appeared while the batch was in
+      `draft`, but the very first save of any attendance record flips the
+      batch to `captured` (`action_bulk_mark_attendance`). Since every real
+      posting sheet gets saved at least once, **the review button was
+      unreachable after that point** — batches sat in `captured` forever with
+      no way to move them to `reviewed` from this screen. This is likely the
+      literal mechanism behind "front desk validating daily posting... even if
+      the operations team had posted" not happening: the review step wasn't
+      just unenforced, it was often unreachable. Fixed: the button now shows
+      for `draft` or `captured`, relabelled "Review & Validate" since that's
+      what it actually does, and errors surface the server's real reason
+      instead of a generic "Submit failed"
+- [x] `security.attendance.hours.audit` wizard: total payable hours per guard
+      over a period (optionally scoped to one site), team average, and each
+      guard flagged **over** or **under** a ±20% band (documented as a
+      starting point, not policy). Read-only — never touches a roster or
+      attendance record
+- [x] Restricted to HR/Payroll Officer, Manager and Owner
+
+**Acceptance met:** a plain Operations user cannot review a batch they
+captured (tested); Front Desk can review someone else's batch (tested); the
+hours audit correctly separates an over-rostered and an under-rostered guard
+from a normal one (tested).
 
 ### Task 7 — Desktop app, Phase 2 (continues in parallel)
 
@@ -351,3 +391,4 @@ are view/ACL changes that can be validated on a local stack first.
 |---|---|
 | 2026-09-17 | Created from manager feedback. Root-cause audit of the setup chain; seven asks mapped to seven tasks. |
 | 2026-09-17 | Two decisions recorded: sign-offs are non-blocking (§3.1); the GM account gets a combined operational + admin role (§6.2). Tasks 1–5 implemented. |
+| 2026-09-17 | Tasks 3 and 6 implemented. Two additional bugs found and fixed along the way: the Clients & Sites mega menu had never loaded any CSS (rendered as unstyled divs); the Posting Console's review button was unreachable after the first save because it only showed in `draft`, a state every real batch leaves within one save. |

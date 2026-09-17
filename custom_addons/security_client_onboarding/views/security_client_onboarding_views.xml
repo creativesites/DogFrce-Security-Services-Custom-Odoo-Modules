@@ -248,12 +248,15 @@
         groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 
+    <!-- The primary CTA: sequence 0 puts this above every other entry in
+         the Clients & Sites menu, per docs/ROSTERING_SIMPLIFICATION_PLAN.md
+         Task 3. This is the one supported way to onboard a new client. -->
     <menuitem
         id="menu_security_client_onboarding"
-        name="Client Setup &amp; Onboarding"
+        name="Set up a new client"
         parent="security_operations.menu_security_billing_root"
         action="action_security_client_onboarding_wizard"
-        sequence="2"
+        sequence="0"
         groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 
@@ -268,7 +271,7 @@
 
     <menuitem
         id="menu_security_client_onboarding_ops"
-        name="Onboard New Client"
+        name="Set up a new client"
         parent="security_operations.menu_security_roster"
         action="action_security_client_onboarding_wizard"
         sequence="37"

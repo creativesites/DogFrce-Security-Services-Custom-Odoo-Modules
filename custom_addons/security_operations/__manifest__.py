@@ -27,6 +27,7 @@
         "web.assets_backend": [
             "security_operations/static/src/css/ops_dashboard.css",
             "security_operations/static/src/css/site_hub.css",
+            "security_operations/static/src/css/clients_sites_mega_menu.css",
             "security_operations/static/src/xml/ops_dashboard.xml",
             "security_operations/static/src/xml/site_hub.xml",
             "security_operations/static/src/js/ops_dashboard.js",

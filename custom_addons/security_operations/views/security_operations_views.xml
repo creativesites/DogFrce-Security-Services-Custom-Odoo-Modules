@@ -424,10 +424,13 @@
         <field name="context">{'search_default_group_partner': 1, 'search_default_filter_production': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Onboard your first Client Site!
+                No client sites yet.
             </p>
             <p>
-                Client sites represent the physical security locations where guards, posts, vehicles, and equipment are deployed. Use the Quick Setup Wizard to configure posts in seconds.
+                Client sites are where guards, posts and equipment are deployed. Use
+                <strong>Set up a new client</strong> (Clients &amp; Sites menu) to create a
+                client, its sites and its shift requirements in one flow — or add a site
+                directly here if the client already exists.
             </p>
         </field>
     </record>
@@ -441,10 +444,10 @@
 
     <menuitem
         id="menu_security_clients_sites_mega_menu"
-        name="⚡ Command Center"
+        name="Clients &amp; Sites"
         parent="security_operations.menu_security_billing_root"
         action="action_clients_sites_mega_menu"
-        sequence="0"
+        sequence="5"
         groups="base.group_user"
     />
 

@@ -254,8 +254,15 @@ class AttendancePostingConsole extends Component {
     }
 
     get canSubmit() {
+        // Regression fix: this used to require batchState === "draft", but
+        // action_bulk_mark_attendance (called by saveAll) flips draft ->
+        // captured on the very first save. Since every real posting sheet
+        // gets saved at least once, "Submit for Review" was unreachable
+        // after that -- the button vanished for good and batches sat in
+        // "captured" forever with no way back to this action from here.
+        // "captured" is the state a finished posting sheet is actually in.
         return (
-            this.state.batchState === "draft" &&
+            (this.state.batchState === "draft" || this.state.batchState === "captured") &&
             this.allMarked &&
             this.state.dirtyIds.size === 0
         );
@@ -348,6 +355,14 @@ class AttendancePostingConsole extends Component {
     }
 
     async submitBatch() {
+        // This calls action_review directly (there is no separate "submitted"
+        // state) -- so this button is Front Desk's validation step, not
+        // Operations' submission step. The server enforces that: Operations
+        // can mark attendance and save (which reaches "captured" on its own),
+        // but action_review refuses anyone who is not Front Desk/manager/owner,
+        // and refuses the person who captured the batch reviewing it
+        // themselves. A user without that access sees the server's message
+        // below, not a silent no-op.
         if (!this.state.batchId) return;
         this.state.loading = true;
         try {
@@ -357,12 +372,15 @@ class AttendancePostingConsole extends Component {
                 [[this.state.batchId]]
             );
             await this._loadBatchMeta(this.state.batchId);
-            this.notification.add("Posting sheet submitted for review.", {
-                title: "Submitted",
+            this.notification.add("Posting sheet reviewed and marked as validated.", {
+                title: "Reviewed",
                 type: "success",
             });
         } catch (e) {
-            this.notification.add("Submit failed: " + (e.message || String(e)), { type: "danger" });
+            this.notification.add(e.message || e.data?.message || "Could not review this posting sheet.", {
+                title: "Review failed",
+                type: "danger",
+            });
         } finally {
             this.state.loading = false;
         }
