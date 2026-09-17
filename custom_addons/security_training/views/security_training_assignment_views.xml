@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_training_assignment_list" model="ir.ui.view">
+        <field name="name">security.training.assignment.list</field>
+        <field name="model">security.training.assignment</field>
+        <field name="arch" type="xml">
+            <list decoration-success="state == 'completed'" decoration-danger="state == 'failed'">
+                <field name="employee_id"/>
+                <field name="course_id"/>
+                <field name="course_version_id"/>
+                <field name="due_date"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_training_assignment_form" model="ir.ui.view">
+        <field name="name">security.training.assignment.form</field>
+        <field name="model">security.training.assignment</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="assigned,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="course_id"/>
+                            <field name="course_version_id" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="due_date"/>
+                            <field name="completed_at" readonly="1" invisible="not completed_at"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Lesson Progress" name="progress">
+                            <field name="lesson_progress_ids" readonly="1">
+                                <list>
+                                    <field name="lesson_id"/>
+                                    <field name="completed_at"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Attempts" name="attempts">
+                            <field name="attempt_ids" readonly="1">
+                                <list decoration-success="state == 'passed'" decoration-danger="state == 'failed'">
+                                    <field name="assessment_id"/>
+                                    <field name="attempt_number"/>
+                                    <field name="state" widget="badge"/>
+                                    <field name="score_pct"/>
+                                    <field name="submitted_at"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_training_assignment_search" model="ir.ui.view">
+        <field name="name">security.training.assignment.search</field>
+        <field name="model">security.training.assignment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="course_id"/>
+                <filter name="filter_mine" string="My Training" domain="[('employee_id.user_id', '=', uid)]"/>
+                <filter name="filter_not_completed" string="Not Completed" domain="[('state', '!=', 'completed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_course" string="Course" context="{'group_by': 'course_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_training_assignment" model="ir.actions.act_window">
+        <field name="name">Training Assignments</field>
+        <field name="res_model">security.training.assignment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_training_assignment_search"/>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No training assigned yet.</p></field>
+    </record>
+
+    <record id="action_security_training_assignment_my" model="ir.actions.act_window">
+        <field name="name">My Training</field>
+        <field name="res_model">security.training.assignment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_training_assignment_search"/>
+        <field name="context">{'search_default_filter_mine': 1}</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Nothing assigned to you right now.</p></field>
+    </record>
+</odoo>

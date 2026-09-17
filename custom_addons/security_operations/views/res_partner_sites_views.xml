@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Client-centric view of sites, tenders and shifts.
+      See docs/ROSTERING_SIMPLIFICATION_PLAN.md A3/A4: the GM wants to open a
+      client and see every site under it, which tender each belongs to, and the
+      shifts each site requires - without filtering a global list by hand.
+    -->
+    <record id="view_partner_form_security_sites" model="ir.ui.view">
+        <field name="name">res.partner.form.security.sites</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="groups_id" eval="[(4, ref('security_base.group_security_supervisor'))]"/>
+        <field name="arch" type="xml">
+
+            <div name="button_box" position="inside">
+                <button name="action_open_security_sites" type="object"
+                        class="oe_stat_button" icon="fa-building"
+                        invisible="not is_company or security_site_count == 0">
+                    <field name="security_site_count" widget="statinfo" string="Sites"/>
+                </button>
+            </div>
+
+            <notebook position="inside">
+                <page string="Security Sites" name="security_sites"
+                      invisible="not is_company">
+
+                    <separator string="Contracts / Tenders"/>
+                    <field name="security_contract_ids" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="site_id"/>
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <field name="monthly_value"/>
+                            <field name="state" widget="badge"/>
+                        </list>
+                    </field>
+
+                    <separator string="Sites &amp; Their Shift Requirements"/>
+                    <field name="security_site_ids" context="{'default_partner_id': id}">
+                        <list>
+                            <field name="code"/>
+                            <field name="name"/>
+                            <field name="location"/>
+                            <field name="supervisor_id"/>
+                            <field name="post_count" string="Posts"/>
+                            <field name="contract_status" widget="badge"
+                                   decoration-success="contract_status == 'valid'"
+                                   decoration-warning="contract_status == 'expiring_soon'"
+                                   decoration-danger="contract_status in ('expired', 'none')"/>
+                        </list>
+                        <form>
+                            <group>
+                                <group>
+                                    <field name="name"/>
+                                    <field name="code"/>
+                                    <field name="location"/>
+                                </group>
+                                <group>
+                                    <field name="supervisor_id"/>
+                                    <field name="site_type"/>
+                                </group>
+                            </group>
+                            <separator string="Shift Requirements"/>
+                            <field name="shift_requirement_ids">
+                                <list editable="bottom">
+                                    <field name="post_id"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="guard_count" sum="Guards"/>
+                                    <field name="bill_rate"/>
+                                    <field name="pay_rate"/>
+                                </list>
+                            </field>
+                        </form>
+                    </field>
+                </page>
+            </notebook>
+
+        </field>
+    </record>
+</odoo>

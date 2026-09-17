@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Settings page, restricted to base.group_system per DG-ADR-018 §6.
+      Deliberately plain Odoo form widgets, no custom OWL component — this
+      is an infrequently-used admin page, not something that needs the
+      design-system treatment the desktop app or the shell get.
+    -->
+    <record id="view_security_deployguard_config_form" model="ir.ui.view">
+        <field name="name">security.deployguard.config.form</field>
+        <field name="model">security.deployguard.config</field>
+        <field name="arch" type="xml">
+            <form string="DeployGuard Bridge">
+                <sheet>
+                    <div class="alert alert-warning" role="alert" invisible="master_key_configured">
+                        <strong>No master key configured.</strong> Set the
+                        <code>DEPLOYGUARD_MASTER_KEY</code> environment variable (or
+                        <code>deployguard_master_key</code> in odoo.conf) before generating a
+                        webhook secret or a signing keypair -- secrets cannot be encrypted
+                        at rest without it, and this module refuses to store them
+                        unencrypted.
+                    </div>
+
+                    <group string="Platform Connection">
+                        <field name="platform_base_url" placeholder="https://platform.deployguard.example"/>
+                        <field name="tenant_id"/>
+                        <field name="contract_version"/>
+                    </group>
+
+                    <group string="Integration User">
+                        <field name="integration_user_id" readonly="1"/>
+                        <div class="text-muted" colspan="2">
+                            Generate this user's API key under its My Profile &gt; Account
+                            Security, then hand the key to the DeployGuard Platform's Odoo
+                            integration settings. This module does not generate API keys
+                            itself -- see docs/deployguard/12-odoo-integration.md §2.
+                        </div>
+                    </group>
+
+                    <group string="Webhook Secret">
+                        <field name="webhook_secret_set" readonly="1" widget="boolean_toggle"/>
+                        <field name="webhook_secret_rotated_at" readonly="1"/>
+                        <button name="action_generate_webhook_secret" type="object"
+                                string="Generate / Rotate Webhook Secret"
+                                class="btn-secondary"
+                                confirm="This replaces the current webhook secret. The Platform's stored secret must be updated to match, or webhook signature verification will fail."/>
+                    </group>
+
+                    <group string="Bridge Signing Keypair">
+                        <field name="signing_key_id" readonly="1"/>
+                        <field name="signing_public_key" readonly="1"/>
+                        <field name="signing_key_rotated_at" readonly="1"/>
+                        <button name="action_generate_signing_keypair" type="object"
+                                string="Generate / Rotate Signing Keypair"
+                                class="btn-secondary"
+                                confirm="This replaces the current signing keypair. Not read by any endpoint yet (auth/SSO is not built) -- safe to rotate freely until then."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_deployguard_config" model="ir.actions.act_window">
+        <field name="name">DeployGuard Bridge</field>
+        <field name="res_model">security.deployguard.config</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_security_deployguard_root"
+        name="DeployGuard Bridge"
+        parent="security_base.menu_security_root"
+        sequence="90"
+        groups="base.group_system"
+    />
+
+    <menuitem
+        id="menu_security_deployguard_config"
+        name="Configuration"
+        parent="menu_security_deployguard_root"
+        action="action_security_deployguard_config"
+        sequence="10"
+        groups="base.group_system"
+    />
+</odoo>

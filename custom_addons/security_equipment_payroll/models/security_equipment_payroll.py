@@ -127,6 +127,8 @@ class SecurityEquipmentType(models.Model):
 
 class SecurityEquipmentPayrollBridge(models.AbstractModel):
     _name = "security.equipment.payroll.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Security Equipment and Payroll Intelligence Bridge"
 
     @api.model

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_deployguard_outbox_list" model="ir.ui.view">
+        <field name="name">security.deployguard.outbox.list</field>
+        <field name="model">security.deployguard.outbox</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="state == 'dead'" decoration-warning="state == 'failed'"
+                  decoration-success="state == 'sent'">
+                <field name="event_type"/>
+                <field name="model"/>
+                <field name="res_id"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'dead'"
+                       decoration-warning="state == 'failed'"
+                       decoration-success="state == 'sent'"/>
+                <field name="attempts"/>
+                <field name="next_attempt_at"/>
+                <field name="last_error" optional="show"/>
+                <field name="occurred_at"/>
+                <button name="action_requeue" type="object" string="Requeue" icon="fa-refresh"
+                        invisible="state not in ('failed', 'dead')"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_deployguard_outbox_search" model="ir.ui.view">
+        <field name="name">security.deployguard.outbox.search</field>
+        <field name="model">security.deployguard.outbox</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="event_type"/>
+                <filter name="filter_pending" string="Pending" domain="[('state', '=', 'pending')]"/>
+                <filter name="filter_failed" string="Failed" domain="[('state', '=', 'failed')]"/>
+                <filter name="filter_dead" string="Dead" domain="[('state', '=', 'dead')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_type" string="Event Type" context="{'group_by': 'event_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_deployguard_outbox" model="ir.actions.act_window">
+        <field name="name">Outbox</field>
+        <field name="res_model">security.deployguard.outbox</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_security_deployguard_outbox_search"/>
+        <field name="context">{'search_default_group_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nothing in the outbox.</p>
+            <p>
+                Events appear here once a domain bridge starts emitting them. Until the
+                DeployGuard Platform exists, delivery always retries with a clear
+                &quot;not implemented yet&quot; reason rather than failing silently.
+            </p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_deployguard_outbox"
+        name="Outbox"
+        parent="menu_security_deployguard_root"
+        action="action_security_deployguard_outbox"
+        sequence="20"
+        groups="base.group_system"
+    />
+</odoo>

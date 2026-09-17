@@ -7,3 +7,4 @@ access_security_work_checklist_item_def_user,security.work.checklist.item.def.us
 access_security_work_checklist_item_def_supervisor,security.work.checklist.item.def.supervisor,model_security_work_checklist_item_def,group_work_supervisor,1,1,1,1
 access_security_work_checklist_response_user,security.work.checklist.response.user,model_security_work_checklist_response,base.group_user,1,1,1,0
 access_security_work_checklist_response_supervisor,security.work.checklist.response.supervisor,model_security_work_checklist_response,group_work_supervisor,1,1,1,1
+access_security_work_schedule_rule_supervisor,security.work.schedule.rule.supervisor,model_security_work_schedule_rule,group_work_supervisor,1,1,1,1

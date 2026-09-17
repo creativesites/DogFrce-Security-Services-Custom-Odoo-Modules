@@ -1,0 +1,147 @@
+/*
+ * Client onboarding wizard.
+ *
+ * Built entirely on the --ds-* / --dgs-* design tokens (security_base's
+ * design_system.css and security_shell's shell_tokens.css). No raw hex values:
+ * per docs/DEPLOYGUARD_DESIGN_SYSTEM.md the tokens are the only source of
+ * colour, radius and shadow, so this wizard follows the theme automatically.
+ */
+
+.dgs-onboarding .o_form_sheet,
+.dgs-onboarding__sheet {
+    background: var(--ds-surface);
+    font-family: var(--ds-font);
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.dgs-onboarding__head {
+    margin-bottom: 1.25rem;
+}
+
+.dgs-onboarding__title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--ds-text);
+    margin: 0 0 .25rem;
+}
+
+.dgs-onboarding__subtitle {
+    color: var(--ds-text-muted);
+    font-size: .9rem;
+    margin: 0;
+    max-width: 52ch;
+}
+
+/* ── Step body ──────────────────────────────────────────────────────── */
+
+.dgs-onboarding__step {
+    padding-top: 1rem;
+}
+
+/* The one-line answer to "what am I being asked for here?". Every step has
+   one; it is the main defence against the ambiguity this rewrite addresses. */
+.dgs-onboarding__hint {
+    color: var(--ds-text-muted);
+    font-size: .9rem;
+    line-height: 1.5;
+    margin: 0 0 1rem;
+    max-width: 68ch;
+}
+
+.dgs-onboarding__note {
+    color: var(--ds-text-subtle);
+    font-size: .82rem;
+    line-height: 1.5;
+    margin: .75rem 0 0;
+    padding-left: .75rem;
+    border-left: 2px solid var(--ds-border-light);
+    max-width: 68ch;
+}
+
+/* ── Review panels ──────────────────────────────────────────────────── */
+
+.dgs-onboarding__panel {
+    background: var(--ds-bg);
+    border: 1px solid var(--ds-border-light);
+    border-radius: var(--ds-radius-md);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.dgs-onboarding__panel--summary {
+    background: var(--ds-surface);
+    border-color: var(--ds-border);
+}
+
+.dgs-onboarding__status {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: .9rem;
+    margin-bottom: .5rem;
+}
+
+.dgs-onboarding__status--blocking {
+    color: var(--ds-danger);
+}
+
+.dgs-onboarding__status--ok {
+    color: var(--ds-success);
+}
+
+.dgs-onboarding__panel ul {
+    font-size: .88rem;
+    line-height: 1.6;
+    color: var(--ds-text);
+}
+
+.dgs-onboarding__panel table th {
+    font-weight: 400;
+    color: var(--ds-text-muted);
+}
+
+.dgs-onboarding__panel table td {
+    color: var(--ds-text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Running tally ──────────────────────────────────────────────────── */
+
+/* Always-visible confirmation that the earlier steps actually recorded
+   something, so a user never reaches the end wondering if it took. */
+.dgs-onboarding__tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+    padding-top: .85rem;
+    border-top: 1px solid var(--ds-border-light);
+    font-size: .82rem;
+    color: var(--ds-text-subtle);
+}
+
+.dgs-onboarding__tally > span {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+}
+
+.dgs-onboarding__tally .o_field_widget {
+    font-weight: 700;
+    color: var(--ds-text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Statusbar ──────────────────────────────────────────────────────── */
+
+.dgs-onboarding .o_statusbar_status {
+    margin-bottom: .5rem;
+}
+
+/* ── Responsiveness ─────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+    .dgs-onboarding__title { font-size: 1.25rem; }
+    .dgs-onboarding__tally { gap: .75rem; }
+}

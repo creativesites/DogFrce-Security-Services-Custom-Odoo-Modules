@@ -1732,3 +1732,53 @@ class SecurityRosterRejectWizard(models.TransientModel):
         })
         return {"type": "ir.actions.act_window_close"}
 
+
+
+class ResPartnerSecuritySites(models.Model):
+    """Client-side view of the operations data.
+
+    The GM's ask (ROSTERING_SIMPLIFICATION_PLAN.md A3): "when I click on
+    Clients I should see all the sites, right? Along with all their
+    requirements, and all their shifts." Until now that meant opening the
+    Client Sites list and filtering by client by hand.
+    """
+
+    _inherit = "res.partner"
+
+    security_site_ids = fields.One2many(
+        "security.client.site", "partner_id", string="Security Sites"
+    )
+    security_site_count = fields.Integer(
+        compute="_compute_security_site_count", string="Sites"
+    )
+    security_contract_ids = fields.One2many(
+        "security.client.contract",
+        "partner_id",
+        string="Contracts / Tenders",
+    )
+
+    def _compute_security_site_count(self):
+        grouped = {}
+        if self.ids:
+            grouped = {
+                partner.id: count
+                for partner, count in self.env["security.client.site"]._read_group(
+                    [("partner_id", "in", self.ids)],
+                    groupby=["partner_id"],
+                    aggregates=["__count"],
+                )
+            }
+        for partner in self:
+            partner.security_site_count = grouped.get(partner.id, 0)
+
+    def action_open_security_sites(self):
+        """The vertical, client-scoped site list (A4)."""
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"{self.name} — Sites",
+            "res_model": "security.client.site",
+            "view_mode": "list,kanban,form",
+            "domain": [("partner_id", "=", self.id)],
+            "context": {"default_partner_id": self.id},
+        }

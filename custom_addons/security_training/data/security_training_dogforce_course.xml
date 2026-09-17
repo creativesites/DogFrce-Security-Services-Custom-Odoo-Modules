@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      DogForce's first real course: "Getting Live: Client Setup & Rostering".
+      Content plan and video-generation prompts:
+      docs/TRAINING_COURSE_GETTING_LIVE.md
+
+      noupdate="1": once a real course version is published, editing lesson
+      text here on a module upgrade must never silently rewrite content a
+      supervisor may have since revised through the UI. Treat this file as
+      the *initial* seed, not a managed template.
+
+      The version is created directly in the "published" state (bypassing
+      action_submit_for_review/action_approve, which model a human review
+      that a first seed load has no reviewer for) so it is immediately
+      assignable. Real course edits from here on should go through the
+      normal draft -> review -> publish workflow in the UI.
+    -->
+    <data noupdate="1">
+
+        <record id="course_getting_live" model="security.training.course">
+            <field name="name">Getting Live: Client Setup &amp; Rostering</field>
+            <field name="code">getting-live-setup-rostering</field>
+            <field name="sequence">1</field>
+            <field name="description">Everything Operations, Front Desk, HR, Finance and the Director need to get a client set up and a roster running end to end in DeployGuard ERP -- built directly from DogForce's own production system.</field>
+        </record>
+
+        <record id="course_getting_live_v1" model="security.training.course.version">
+            <field name="course_id" ref="course_getting_live"/>
+            <field name="state">published</field>
+        </record>
+
+        <!-- ═══════════════════ Section 1: Before You Start ═══════════════════ -->
+        <record id="section_orientation" model="security.training.section">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="sequence">10</field>
+            <field name="name">Before You Start</field>
+        </record>
+
+        <record id="lesson_welcome" model="security.training.lesson">
+            <field name="section_id" ref="section_orientation"/>
+            <field name="sequence">10</field>
+            <field name="name">Welcome &amp; What Changed</field>
+            <field name="content_type">text</field>
+            <field name="body"><![CDATA[
+<p>This course gets you rostering in DeployGuard ERP, end to end. It's built from our own system, not a generic tutorial -- every screen it shows is the one you'll actually use.</p>
+<p><strong>What changed recently, and why it matters:</strong></p>
+<ul>
+<li>The Clients &amp; Sites menu used to be a cluttered command center. It's now one button -- <strong>"Set up a new client"</strong> -- plus four simple destinations. If you remember it as complicated, that's fixed.</li>
+<li>Rosters now carry a <strong>sign-off sheet</strong>: Front Desk, the General Manager, HR, Finance and the Director each sign off on a roster once it's generated. This does <strong>not</strong> stop the roster from running -- guards get posted immediately. Sign-offs are accountability, not a gate.</li>
+<li>Daily attendance posting now needs <strong>Front Desk to review it</strong>, separately from whoever posted it. If you post attendance yourself, you can no longer also review your own posting.</li>
+</ul>
+<p>Work through this course in order. Each "Do it" lesson has a <strong>"Try it in DogForce ERP"</strong> button that takes you straight to the real screen -- do the real thing, then come back and mark the lesson done.</p>
+]]></field>
+        </record>
+
+        <record id="lesson_roles" model="security.training.lesson">
+            <field name="section_id" ref="section_orientation"/>
+            <field name="sequence">20</field>
+            <field name="name">Your Role in the Process</field>
+            <field name="content_type">text</field>
+            <field name="body"><![CDATA[
+<p>Six roles touch a roster from draft to paid. Find yours:</p>
+<ul>
+<li><strong>Operations</strong> drafts the roster. Once you generate it, it's live -- guards can be posted against it immediately.</li>
+<li><strong>Front Desk</strong> cross-checks the roster after it's generated, and separately reviews daily attendance postings that Operations makes. You cannot review a posting you made yourself.</li>
+<li><strong>General Manager</strong> validates the roster -- a second set of eyes before it goes further.</li>
+<li><strong>HR</strong> confirms the roster for payroll and checks hours are fairly shared across guards (the Hours Equity Audit).</li>
+<li><strong>Finance</strong> releases payments and audits the roster against billing.</li>
+<li><strong>Director</strong> has final oversight -- and, on this system, full operational and administrative access, since the Director also rosters personally when needed.</li>
+</ul>
+<p>Every sign-off is logged with who signed and when -- nothing here is anonymous, and nothing here blocks the guards from working while it happens.</p>
+]]></field>
+        </record>
+
+        <!-- ═══════════════════ Section 2: Setting Up a New Client ═══════════════════ -->
+        <record id="section_client_setup" model="security.training.section">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="sequence">20</field>
+            <field name="name">Setting Up a New Client</field>
+        </record>
+
+        <record id="lesson_client_setup_video" model="security.training.lesson">
+            <field name="section_id" ref="section_client_setup"/>
+            <field name="sequence">10</field>
+            <field name="name">Watch: Setting Up a New Client</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_1</field>
+        </record>
+
+        <record id="lesson_client_setup_do" model="security.training.lesson">
+            <field name="section_id" ref="section_client_setup"/>
+            <field name="sequence">20</field>
+            <field name="name">Do It: Set Up a New Client</field>
+            <field name="content_type">text</field>
+            <field name="deep_link_path">/odoo/action-security_client_onboarding.action_security_client_onboarding_wizard</field>
+            <field name="body"><![CDATA[
+<p>One wizard does the whole chain: client, sites, shift requirements, billing, and the first roster batch. Nothing is saved until the last step.</p>
+<ol>
+<li><strong>Step 1 -- Client.</strong> Pick an existing client, or type a new company name and its contact details.</li>
+<li><strong>Step 2 -- Sites.</strong> Add one row per site the client needs guarded. Just a name, code and address -- you can add more sites later.</li>
+<li><strong>Step 3 -- Shift Requirements.</strong> For each site, pick a post type (Static Guard, Gate, Patrol, Control Room, Site Supervisor), a shift (Day, Night, 8h, Relief), and how many guards. Bill/pay rates can be left at zero for now -- you'll still be able to roster, you'll just see a reminder that billing is incomplete.</li>
+<li><strong>Step 4 -- Billing.</strong> Set how this client is invoiced (fixed monthly, per shift, per hour, or milestone).</li>
+<li><strong>Step 5 -- Review.</strong> Check the summary. If anything is missing, it's listed here with which step to go back to. Tick "Create the first roster batch" and pick the month, then click <strong>Create client</strong>.</li>
+</ol>
+<p><strong>Now try it for real.</strong> Click "Try it in DogForce ERP" below, and either set up a real new client or walk through the wizard with one that already exists (you can cancel at the end without saving). Come back here and mark this lesson done once you've been through all five steps.</p>
+]]></field>
+        </record>
+
+        <!-- ═══════════════════ Section 3: Sites & Shift Requirements ═══════════════════ -->
+        <record id="section_sites" model="security.training.section">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="sequence">30</field>
+            <field name="name">Sites &amp; Shift Requirements</field>
+        </record>
+
+        <record id="lesson_sites_video" model="security.training.lesson">
+            <field name="section_id" ref="section_sites"/>
+            <field name="sequence">10</field>
+            <field name="name">Watch: Sites, Posts &amp; Shift Requirements</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_2</field>
+        </record>
+
+        <record id="lesson_sites_do" model="security.training.lesson">
+            <field name="section_id" ref="section_sites"/>
+            <field name="sequence">20</field>
+            <field name="name">Do It: Check Your Client's Sites</field>
+            <field name="content_type">text</field>
+            <field name="deep_link_path">/odoo/action-security_operations.action_security_client_site</field>
+            <field name="body"><![CDATA[
+<p>The Sites list opens as a plain list, grouped by client -- not a card grid. That's deliberate: it's meant to be scannable at a glance.</p>
+<ul>
+<li>Click into a client's name from the list, or open a client company directly, to see <strong>every site under that client</strong>, which contract/tender each belongs to, and every shift requirement, all in one place.</li>
+<li>Open a single site and you'll find three tabs: <strong>Posts &amp; Shifts</strong> (what's required and when), <strong>Contacts &amp; Location</strong> (site contact, optional GPS geofence), and <strong>Notes &amp; Exclusions</strong> (special instructions, and any guard barred from this site).</li>
+<li>To add a shift requirement to an existing site without running the whole wizard again, open the site and add a row directly under Posts &amp; Shifts.</li>
+</ul>
+<p><strong>Now try it.</strong> Open the Sites list, pick a client, and find its sites and shift requirements. Come back and mark this done once you can find your way around without help.</p>
+]]></field>
+        </record>
+
+        <!-- ═══════════════════ Section 4: Generating Your First Roster ═══════════════════ -->
+        <record id="section_roster_generate" model="security.training.section">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="sequence">40</field>
+            <field name="name">Generating Your First Roster</field>
+        </record>
+
+        <record id="lesson_roster_generate_video" model="security.training.lesson">
+            <field name="section_id" ref="section_roster_generate"/>
+            <field name="sequence">10</field>
+            <field name="name">Watch: Generating a Roster</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_3</field>
+        </record>
+
+        <record id="lesson_roster_generate_do" model="security.training.lesson">
+            <field name="section_id" ref="section_roster_generate"/>
+            <field name="sequence">20</field>
+            <field name="name">Do It: Generate This Week's Roster</field>
+            <field name="content_type">text</field>
+            <field name="deep_link_path">/odoo/action-security_operations.action_security_client_site</field>
+            <field name="body"><![CDATA[
+<p>If you set up a client with the onboarding wizard and ticked "Create the first roster batch," a draft batch already exists for that month. Otherwise, open Rostering from the main menu and create a batch for the client/site and date range you need.</p>
+<ol>
+<li>Open the roster batch (Draft state).</li>
+<li>Click <strong>Generate Roster Slots</strong>. This reads every active shift requirement for the site and creates one slot per guard, per shift, per day in the range.</li>
+<li>Unassigned slots show in red. Use <strong>Auto-Fill Open Slots</strong> to have the system assign the best eligible guard to each one, or assign guards by hand.</li>
+<li>Click <strong>Confirm Roster</strong> once you're happy. <strong>This roster is now live</strong> -- guards can be posted against it straight away. There is no separate "make it real" step after this.</li>
+</ol>
+<p>You do not need anyone else's sign-off to reach this point. The sign-offs described in the next section happen <em>after</em> the roster is already running, as a check, not a gate.</p>
+<p><strong>Now try it.</strong> Open a roster batch, generate slots, and confirm it (on a test client/site if you don't want to touch a live one yet). Mark this lesson done once you've seen a batch go from Draft to Confirmed.</p>
+]]></field>
+        </record>
+
+        <!-- ═══════════════════ Section 5: Roster Sign-Offs ═══════════════════ -->
+        <record id="section_signoffs" model="security.training.section">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="sequence">50</field>
+            <field name="name">Roster Sign-Offs</field>
+        </record>
+
+        <record id="lesson_signoffs_video" model="security.training.lesson">
+            <field name="section_id" ref="section_signoffs"/>
+            <field name="sequence">10</field>
+            <field name="name">Watch: Understanding Sign-Offs</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_4</field>
+        </record>
+
+        <record id="lesson_signoffs_do" model="security.training.lesson">
+            <field name="section_id" ref="section_signoffs"/>
+            <field name="sequence">20</field>
+            <field name="name">Do It: Check the Sign-Off Sheet</field>
+            <field name="content_type">text</field>
+            <field name="deep_link_path">/odoo/action-security_operations.action_security_roster_signoff</field>
+            <field name="body"><![CDATA[
+<p>The moment a roster batch is generated, a sign-off row appears for five roles: Front Desk, General Manager, HR, Finance and Director. Each starts <strong>Pending</strong>.</p>
+<ul>
+<li>If your role is on the list, open <strong>Roster Sign-Offs</strong> from the Rostering menu -- it defaults to showing what's waiting on someone.</li>
+<li>Click <strong>Sign off</strong> once you've checked your part of the roster. Add a comment if useful; it isn't required to sign.</li>
+<li>If something's wrong, click <strong>Flag</strong> instead. A reason is required. Flagging does <strong>not</strong> stop the roster -- it records that this needs following up, and the roster summary shows who flagged it.</li>
+<li>You can only sign for a role you actually hold, and you cannot sign a roster you yourself drafted and then also cross-check as Front Desk on the same batch.</li>
+</ul>
+<p><strong>Now try it.</strong> Open the Roster Sign-Offs list, find a row waiting on a role you hold, and sign it (or flag it with a reason, if you want to see that path). Mark this lesson done once you understand the difference between signing and flagging.</p>
+]]></field>
+        </record>
+
+        <!-- ═══════════════════ Section 6: Daily Attendance & Front-Desk Review ═══════════════════ -->
+        <record id="section_attendance" model="security.training.section">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="sequence">60</field>
+            <field name="name">Daily Attendance &amp; Front-Desk Review</field>
+        </record>
+
+        <record id="lesson_attendance_video" model="security.training.lesson">
+            <field name="section_id" ref="section_attendance"/>
+            <field name="sequence">10</field>
+            <field name="name">Watch: Posting &amp; Reviewing Attendance</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_5</field>
+        </record>
+
+        <record id="lesson_attendance_do" model="security.training.lesson">
+            <field name="section_id" ref="section_attendance"/>
+            <field name="sequence">20</field>
+            <field name="name">Do It: Review Today's Attendance</field>
+            <field name="content_type">text</field>
+            <field name="deep_link_path">/odoo/action-security_attendance.action_attendance_posting_console</field>
+            <field name="body"><![CDATA[
+<p><strong>If you're Operations:</strong> open the Posting Console, pick the site and today's date, and mark each guard Present, Absent or AWOL against their scheduled slot. Save. That's your part done.</p>
+<p><strong>If you're Front Desk:</strong> your job starts once Operations has posted. Open the same Posting Console for that site and date -- the status badge shows <strong>Captured</strong>. Check it against what you know actually happened, then click <strong>Review &amp; Validate</strong>. The batch moves to <strong>Reviewed</strong>.</p>
+<p>One rule holds regardless of role: <strong>whoever captured a posting cannot also review it.</strong> If you try, the system will tell you plainly why, and name who should review it instead.</p>
+<p><strong>Now try it.</strong> If you're Operations, post a day's attendance for a real or test site. If you're Front Desk, find a posted batch and review it. Mark this lesson done once you've completed your side of that handoff.</p>
+]]></field>
+        </record>
+
+        <!-- ═══════════════════ Assessment ═══════════════════ -->
+        <record id="assessment_getting_live" model="security.training.assessment">
+            <field name="course_version_id" ref="course_getting_live_v1"/>
+            <field name="name">Getting Live: Check Your Understanding</field>
+            <field name="pass_mark_pct">80.0</field>
+            <field name="max_attempts">3</field>
+        </record>
+
+        <record id="q1" model="security.training.question">
+            <field name="assessment_id" ref="assessment_getting_live"/>
+            <field name="sequence">10</field>
+            <field name="text">Once Operations confirms a roster, what has to happen before guards can be posted against it?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="q1_o1" model="security.training.question.option">
+            <field name="question_id" ref="q1"/><field name="sequence">10</field>
+            <field name="text">Nothing else -- the roster is already live and guards can be posted right away</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="q1_o2" model="security.training.question.option">
+            <field name="question_id" ref="q1"/><field name="sequence">20</field>
+            <field name="text">All five sign-offs must be completed first</field>
+        </record>
+        <record id="q1_o3" model="security.training.question.option">
+            <field name="question_id" ref="q1"/><field name="sequence">30</field>
+            <field name="text">The Director must personally approve it</field>
+        </record>
+
+        <record id="q2" model="security.training.question">
+            <field name="assessment_id" ref="assessment_getting_live"/>
+            <field name="sequence">20</field>
+            <field name="text">Which of these can flag a problem with a roster without stopping it from running? (select all that apply)</field>
+            <field name="question_type">multi</field>
+        </record>
+        <record id="q2_o1" model="security.training.question.option">
+            <field name="question_id" ref="q2"/><field name="sequence">10</field>
+            <field name="text">Front Desk</field><field name="is_correct">1</field>
+        </record>
+        <record id="q2_o2" model="security.training.question.option">
+            <field name="question_id" ref="q2"/><field name="sequence">20</field>
+            <field name="text">HR</field><field name="is_correct">1</field>
+        </record>
+        <record id="q2_o3" model="security.training.question.option">
+            <field name="question_id" ref="q2"/><field name="sequence">30</field>
+            <field name="text">A guard on the roster</field>
+        </record>
+        <record id="q2_o4" model="security.training.question.option">
+            <field name="question_id" ref="q2"/><field name="sequence">40</field>
+            <field name="text">Finance</field><field name="is_correct">1</field>
+        </record>
+
+        <record id="q3" model="security.training.question">
+            <field name="assessment_id" ref="assessment_getting_live"/>
+            <field name="sequence">30</field>
+            <field name="text">Who can review an attendance posting that Operations just made?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="q3_o1" model="security.training.question.option">
+            <field name="question_id" ref="q3"/><field name="sequence">10</field>
+            <field name="text">The same Operations user who captured it</field>
+        </record>
+        <record id="q3_o2" model="security.training.question.option">
+            <field name="question_id" ref="q3"/><field name="sequence">20</field>
+            <field name="text">Front Desk, a manager, or the owner -- but never the person who captured it</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="q3_o3" model="security.training.question.option">
+            <field name="question_id" ref="q3"/><field name="sequence">30</field>
+            <field name="text">Nobody -- attendance postings don't need review</field>
+        </record>
+
+        <record id="q4" model="security.training.question">
+            <field name="assessment_id" ref="assessment_getting_live"/>
+            <field name="sequence">40</field>
+            <field name="text">You're setting up a brand-new client and haven't agreed final billing rates yet. What should you do?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="q4_o1" model="security.training.question.option">
+            <field name="question_id" ref="q4"/><field name="sequence">10</field>
+            <field name="text">Wait until rates are finalised before creating the client at all</field>
+        </record>
+        <record id="q4_o2" model="security.training.question.option">
+            <field name="question_id" ref="q4"/><field name="sequence">20</field>
+            <field name="text">Leave bill/pay rates at zero for now -- you can still roster, and billing/payroll will flag them as incomplete until they're set</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="q4_o3" model="security.training.question.option">
+            <field name="question_id" ref="q4"/><field name="sequence">30</field>
+            <field name="text">Enter a guessed rate so the wizard doesn't complain</field>
+        </record>
+
+        <record id="q5" model="security.training.question">
+            <field name="assessment_id" ref="assessment_getting_live"/>
+            <field name="sequence">50</field>
+            <field name="text">Where do you go to see every site, contract and shift requirement for one client on a single screen?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="q5_o1" model="security.training.question.option">
+            <field name="question_id" ref="q5"/><field name="sequence">10</field>
+            <field name="text">Open the client company and check the Security Sites page</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="q5_o2" model="security.training.question.option">
+            <field name="question_id" ref="q5"/><field name="sequence">20</field>
+            <field name="text">There is no single screen for this -- you have to check each model separately</field>
+        </record>
+        <record id="q5_o3" model="security.training.question.option">
+            <field name="question_id" ref="q5"/><field name="sequence">30</field>
+            <field name="text">Ask IT to run a report</field>
+        </record>
+
+    </data>
+</odoo>

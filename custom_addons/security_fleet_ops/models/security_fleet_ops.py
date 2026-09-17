@@ -97,6 +97,8 @@ class SecurityVehicle(models.Model):
 
 class SecurityFleetOpsBridge(models.AbstractModel):
     _name = "security.fleet.ops.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Security Fleet and Operations Intelligence Bridge"
 
     @api.model

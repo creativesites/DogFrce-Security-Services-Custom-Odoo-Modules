@@ -5,8 +5,17 @@ from odoo.exceptions import UserError
 class SecurityWorkTask(models.Model):
     _name = "security.work.task"
     _description = "Work Task"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit = ["mail.thread", "mail.activity.mixin", "security.bus.subscriber"]
     _order = "due_at, id"
+
+    # Auto-completion (docs/deployguard/BUILD-STATUS-AND-PHASE-PLAN.md Phase
+    # 3.2): security_attendance emits these on the internal Intelligence Bus
+    # (security_attendance/models/security_attendance.py's action_review/
+    # action_lock). Only attendance is wired today -- security_discipline
+    # does not yet emit any incident lifecycle events, so incident-triggered
+    # auto-completion is not attempted here rather than built against
+    # nothing real.
+    _bus_events = ["attendance.batch.reviewed", "attendance.batch.locked"]
 
     name = fields.Char(required=True, tracking=True)
     description = fields.Text()
@@ -54,6 +63,12 @@ class SecurityWorkTask(models.Model):
     verified_at = fields.Datetime(readonly=True)
 
     note = fields.Text()
+
+    overdue_flagged_at = fields.Datetime(
+        readonly=True,
+        help="Set the first time the overdue sweep notices this task, so it "
+             "is only flagged once rather than every run.",
+    )
 
     @api.depends("due_at", "state")
     def _compute_is_overdue(self):
@@ -155,3 +170,76 @@ class SecurityWorkTask(models.Model):
         task back to work without recreating it from scratch."""
         self._check_transition(["could_not_complete", "cancelled"])
         self.write({"state": "open"})
+
+    # -- Auto-completion (security.bus.subscriber) --------------------------
+
+    # -- Overdue sweep (BUILD-STATUS-AND-PHASE-PLAN.md Phase 3.6) -----------
+
+    @api.model
+    def action_sweep_overdue(self):
+        """Cron entry point. Flags newly-overdue tasks once each -- a
+        chatter note plus a mail.activity for the assignee -- rather than
+        renotifying every run. This is a detection hook for Phase 6's
+        exception engine to consume later, not a full escalation ladder;
+        posting to the task's own chatter/activity is real signal today,
+        not a placeholder."""
+        overdue = self.search([
+            ("is_overdue", "=", True),
+            ("overdue_flagged_at", "=", False),
+        ])
+        for task in overdue:
+            task.message_post(
+                body=f"Overdue: this task was due {task.due_at} and has not been completed."
+            )
+            task.activity_schedule(
+                "mail.mail_activity_data_todo",
+                summary="Overdue work task",
+                note=f"'{task.name}' was due {task.due_at}.",
+                user_id=task.employee_id.user_id.id or self.env.user.id,
+            )
+            task.overdue_flagged_at = fields.Datetime.now()
+        return overdue
+
+    # -- Auto-completion (security.bus.subscriber) --------------------------
+
+    def _handle_bus_event(self, event_name, source_model, source_id, payload):
+        """Auto-verifies attendance.post tasks matching the reviewed/locked
+        batch's site and date. The matched fact is recorded as a chatter
+        note on the task (BUILD-STATUS-AND-PHASE-PLAN.md Phase 3.2's
+        "matched fact recorded as evidence").
+
+        Deliberately narrow matching: only tasks still open/submittable
+        (open, in_progress, submitted) using the attendance.post template,
+        for the same site and due date as the batch. A task already
+        verified, rejected or cancelled is left alone -- auto-completion
+        only ever moves a task forward, never overrides a human decision.
+        """
+        site_id = payload.get("site_id")
+        attendance_date = payload.get("attendance_date")
+        if not site_id or not attendance_date:
+            return
+
+        domain = [
+            ("site_id", "=", site_id),
+            ("checklist_template_id.code", "=", "attendance.post"),
+            ("state", "in", ("open", "in_progress", "submitted")),
+            ("due_at", ">=", f"{attendance_date} 00:00:00"),
+            ("due_at", "<=", f"{attendance_date} 23:59:59"),
+        ]
+        # sudo(): this runs as whoever reviewed/locked the attendance batch
+        # (often Front Desk, per the review gate in security_attendance),
+        # who has no reason to hold write access on another employee's task.
+        # The match itself, not the triggering user, is the authority here.
+        matching_tasks = self.sudo().search(domain)
+        for task in matching_tasks:
+            task.message_post(
+                body=(
+                    f"Auto-completed: matched attendance batch #{source_id} "
+                    f"({event_name}) for this site and date."
+                )
+            )
+            task.write({
+                "state": "verified",
+                "verified_by_id": self.env.ref("base.user_root").id,
+                "verified_at": fields.Datetime.now(),
+            })

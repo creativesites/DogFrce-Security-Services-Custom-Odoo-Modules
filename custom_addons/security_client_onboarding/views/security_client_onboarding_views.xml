@@ -2,43 +2,62 @@
 <odoo>
 
     <!-- ════════════════════════════════════════════════════════════════════
-         Client Onboarding Wizard — 6-step form
+         Client Onboarding Wizard — 5-step form
     ════════════════════════════════════════════════════════════════════ -->
 
     <record id="view_security_client_onboarding_wizard_form" model="ir.ui.view">
         <field name="name">security.client.onboarding.wizard.form</field>
         <field name="model">security.client.onboarding.wizard</field>
         <field name="arch" type="xml">
-            <form string="New Client Onboarding">
-                <sheet>
-                    <!-- Step progress bar (statusbar widget — no OWL template needed) -->
+            <form string="Set up a new client" class="dgs-onboarding">
+                <sheet class="dgs-onboarding__sheet">
+
+                    <div class="dgs-onboarding__head">
+                        <h1 class="dgs-onboarding__title">Set up a new client</h1>
+                        <p class="dgs-onboarding__subtitle">
+                            Five steps from a new client to a roster you can generate.
+                            Nothing is saved until the last step.
+                        </p>
+                    </div>
+
                     <field name="step" widget="statusbar"
-                           statusbar_visible="1_client,2_sites,3_requirements,4_billing,5_roster,6_confirm"
+                           statusbar_visible="1_client,2_sites,3_requirements,4_billing,5_confirm"
                            readonly="1"/>
 
-                    <!-- ── Step 1: Client &amp; Contract ── -->
-                    <group invisible="step != '1_client'">
-                        <group string="Select Existing Client">
-                            <field name="existing_partner_id" placeholder="Search existing clients…"/>
+                    <field name="is_ready" invisible="1"/>
+                    <field name="client_display_name" invisible="1"/>
+
+                    <!-- ══ Step 1 — Client ══ -->
+                    <div invisible="step != '1_client'" class="dgs-onboarding__step">
+                        <p class="dgs-onboarding__hint">
+                            Who is the client? Pick one that already exists, or enter a new one.
+                        </p>
+                        <group>
+                            <group string="Existing client">
+                                <field name="existing_partner_id" placeholder="Search clients…"
+                                       options="{'no_create': True}"/>
+                            </group>
+                            <group string="Or a new client"
+                                   invisible="existing_partner_id != False">
+                                <field name="new_partner_name" placeholder="Company name"
+                                       required="not existing_partner_id"/>
+                                <field name="new_partner_email" placeholder="accounts@client.com"/>
+                                <field name="new_partner_phone" placeholder="+264 …"/>
+                                <field name="new_partner_street" placeholder="Physical address"/>
+                            </group>
                         </group>
-                        <group string="Or Create New Client">
-                            <field name="new_partner_name" placeholder="Company / Client Name"
-                                   invisible="existing_partner_id != False"/>
-                            <field name="new_partner_email" invisible="existing_partner_id != False"/>
-                            <field name="new_partner_phone" invisible="existing_partner_id != False"/>
-                            <field name="new_partner_street" invisible="existing_partner_id != False"/>
-                        </group>
-                        <group string="Contract">
+                        <group>
                             <field name="contract_start"/>
                         </group>
-                    </group>
+                    </div>
 
-                    <!-- ── Step 2: Sites ── -->
-                    <group invisible="step != '2_sites'">
-                        <div class="text-muted small mb-2" colspan="2">
-                            Add one or more deployment sites for this client.
-                        </div>
-                        <field name="site_line_ids" nolabel="1" colspan="2">
+                    <!-- ══ Step 2 — Sites ══ -->
+                    <div invisible="step != '2_sites'" class="dgs-onboarding__step">
+                        <p class="dgs-onboarding__hint">
+                            Where will guards be deployed? Add one row per site. You can add
+                            more sites later without re-running this.
+                        </p>
+                        <field name="site_line_ids" nolabel="1">
                             <list editable="bottom">
                                 <field name="sequence" widget="handle"/>
                                 <field name="site_name" placeholder="e.g. Head Office"/>
@@ -46,62 +65,101 @@
                                 <field name="location" placeholder="Physical address"/>
                             </list>
                         </field>
-                    </group>
+                    </div>
 
-                    <!-- ── Step 3: Shift Requirements ── -->
-                    <group invisible="step != '3_requirements'">
-                        <div class="text-muted small mb-2" colspan="2">
-                            Define shift requirements. The <em>Site</em> column must match a site name from Step 2 exactly (leave blank to use the first site).
-                        </div>
-                        <field name="requirement_line_ids" nolabel="1" colspan="2">
+                    <!-- ══ Step 3 — Shift requirements ══ -->
+                    <div invisible="step != '3_requirements'" class="dgs-onboarding__step">
+                        <p class="dgs-onboarding__hint">
+                            What must be guarded, and when? Each row is a standing requirement:
+                            <em>this many guards, at this post, on this shift</em>. The roster is
+                            generated from these rows.
+                        </p>
+                        <field name="requirement_line_ids" nolabel="1">
                             <list editable="bottom">
                                 <field name="sequence" widget="handle"/>
-                                <field name="site_name" placeholder="Match site name from Step 2"/>
-                                <field name="post_id"/>
-                                <field name="shift_template_id"/>
-                                <field name="guard_count"/>
-                                <field name="bill_rate" string="Bill Rate"/>
-                                <field name="pay_rate" string="Pay Rate"/>
+                                <field name="site_line_id"
+                                       options="{'no_create': True, 'no_open': True}"/>
+                                <field name="post_type_id" options="{'no_open': True}"/>
+                                <field name="shift_template_id" options="{'no_open': True}"/>
+                                <field name="guard_count" sum="Guards per day"/>
+                                <field name="bill_rate"/>
+                                <field name="pay_rate"/>
                             </list>
                         </field>
-                    </group>
+                        <p class="dgs-onboarding__note">
+                            Rates can be left at zero for now — you will still be able to roster.
+                            Billing and payroll will flag them as incomplete until they are set.
+                        </p>
+                    </div>
 
-                    <!-- ── Step 4: Billing Plan ── -->
-                    <group invisible="step != '4_billing'" string="Billing Plan">
-                        <field name="billing_mode"/>
-                        <field name="billing_start"/>
-                        <field name="billing_payment_term_days"/>
-                        <field name="billing_vat_rate"/>
-                    </group>
+                    <!-- ══ Step 4 — Billing ══ -->
+                    <div invisible="step != '4_billing'" class="dgs-onboarding__step">
+                        <p class="dgs-onboarding__hint">
+                            How is this client invoiced? A billing plan is created with these
+                            settings; you can change any of it afterwards.
+                        </p>
+                        <group>
+                            <group>
+                                <field name="billing_mode"/>
+                                <field name="billing_start"/>
+                            </group>
+                            <group>
+                                <field name="billing_payment_term_days"/>
+                                <field name="billing_vat_rate"/>
+                            </group>
+                        </group>
+                    </div>
 
-                    <!-- ── Step 5: First Roster ── -->
-                    <group invisible="step != '5_roster'" string="First Roster Batch">
-                        <field name="generate_first_roster"/>
-                        <field name="roster_month" invisible="not generate_first_roster"
-                               help="Roster slots will be generated for this month based on shift requirements from Step 3."/>
-                    </group>
+                    <!-- ══ Step 5 — Review ══ -->
+                    <div invisible="step != '5_confirm'" class="dgs-onboarding__step">
+                        <p class="dgs-onboarding__hint">
+                            This is everything that will be created. Nothing has been saved yet.
+                        </p>
 
-                    <!-- ── Step 6: Confirm ── -->
-                    <group invisible="step != '6_confirm'">
-                        <div class="text-muted small mb-3" colspan="2">
-                            Review the summary below and click <strong>Create Client</strong> to create all records atomically.
+                        <!-- One panel, two meanings: `blocking_html` carries its
+                             own lead sentence, and the status strip above it says
+                             whether this is a blocker or just worth knowing. -->
+                        <div class="dgs-onboarding__panel" invisible="not blocking_html">
+                            <div class="dgs-onboarding__status dgs-onboarding__status--blocking"
+                                 invisible="is_ready">
+                                <i class="fa fa-exclamation-circle me-2" title="Not ready"/>Not ready yet
+                            </div>
+                            <div class="dgs-onboarding__status dgs-onboarding__status--ok"
+                                 invisible="not is_ready">
+                                <i class="fa fa-check-circle me-2" title="Ready"/>Ready to create
+                            </div>
+                            <field name="blocking_html" nolabel="1" readonly="1"/>
                         </div>
-                        <field name="summary_html" nolabel="1" widget="html" readonly="1" colspan="2"/>
-                    </group>
+
+                        <div class="dgs-onboarding__panel dgs-onboarding__panel--summary">
+                            <field name="summary_html" nolabel="1" readonly="1"/>
+                        </div>
+
+                        <group>
+                            <field name="generate_first_roster"/>
+                            <field name="roster_month" invisible="not generate_first_roster"/>
+                        </group>
+                    </div>
+
+                    <!-- Running totals, visible from step 2 onwards so the user
+                         always knows what they have built so far. -->
+                    <div class="dgs-onboarding__tally" invisible="step == '1_client'">
+                        <span><field name="site_count" nolabel="1" readonly="1"/> site(s)</span>
+                        <span><field name="requirement_count" nolabel="1" readonly="1"/> shift requirement(s)</span>
+                        <span><field name="total_guards" nolabel="1" readonly="1"/> guard(s) per day</span>
+                    </div>
 
                 </sheet>
 
                 <footer>
-                    <button name="action_back" type="object" string="← Back"
-                            class="btn-secondary"
-                            invisible="step == '1_client'"/>
-                    <button name="action_next" type="object" string="Next →"
-                            class="btn-primary"
-                            invisible="step == '6_confirm'"/>
-                    <button name="action_confirm" type="object" string="Create Client"
-                            class="btn-success"
-                            invisible="step != '6_confirm'"/>
-                    <button special="cancel" string="Cancel" class="btn-secondary"/>
+                    <button name="action_back" type="object" string="Back"
+                            class="btn-secondary" invisible="step == '1_client'"/>
+                    <button name="action_next" type="object" string="Continue"
+                            class="btn-primary" invisible="step == '5_confirm'"/>
+                    <button name="action_confirm" type="object" string="Create client"
+                            class="btn-primary" invisible="step != '5_confirm'"
+                            readonly="not is_ready"/>
+                    <button special="cancel" string="Cancel" class="btn-link"/>
                 </footer>
             </form>
         </field>
@@ -161,7 +219,6 @@
         <field name="res_model">security.roster.setup.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>
-        <field name="context">{'default_run_on_open': True}</field>
     </record>
 
     <!-- Menu items (Operations > Roster section &amp; Clients &amp; Sites section) -->
@@ -191,12 +248,15 @@
         groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 
+    <!-- The primary CTA: sequence 0 puts this above every other entry in
+         the Clients & Sites menu, per docs/ROSTERING_SIMPLIFICATION_PLAN.md
+         Task 3. This is the one supported way to onboard a new client. -->
     <menuitem
         id="menu_security_client_onboarding"
-        name="Client Setup &amp; Onboarding"
+        name="Set up a new client"
         parent="security_operations.menu_security_billing_root"
         action="action_security_client_onboarding_wizard"
-        sequence="2"
+        sequence="0"
         groups="hr.group_hr_user,security_base.group_security_supervisor"
     />
 
@@ -211,7 +271,7 @@
 
     <menuitem
         id="menu_security_client_onboarding_ops"
-        name="Onboard New Client"
+        name="Set up a new client"
         parent="security_operations.menu_security_roster"
         action="action_security_client_onboarding_wizard"
         sequence="37"

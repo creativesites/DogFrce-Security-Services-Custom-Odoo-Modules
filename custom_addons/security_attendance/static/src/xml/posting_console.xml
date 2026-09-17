@@ -97,7 +97,7 @@
                     t-on-click="() => this.submitBatch()"
                     style="background:#7c3aed;border:none;color:#ede9fe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
                 <i class="fa fa-paper-plane"/>
-                Submit Batch
+                Review &amp; Validate
             </button>
 
         </div>

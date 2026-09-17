@@ -12,6 +12,8 @@ _logger = logging.getLogger(__name__)
 
 class SecurityMobileBridge(models.AbstractModel):
     _name = "security.mobile.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Security Mobile and Push Notification Bridge"
 
     @api.model

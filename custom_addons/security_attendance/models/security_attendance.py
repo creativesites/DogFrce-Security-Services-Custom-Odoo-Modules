@@ -3,7 +3,7 @@ from datetime import datetime, time, timedelta
 import pytz
 
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 from odoo.addons.security_attendance.utils.shift_split import split_shift_by_boundaries
 
 
@@ -177,14 +177,67 @@ class SecurityAttendanceBatch(models.Model):
                 },
             }
 
+    def _assert_can_review(self):
+        """Front Desk validates daily posting; Operations cannot self-review.
+
+        docs/ROSTERING_SIMPLIFICATION_PLAN.md §3/A7a: front desk cross-checks
+        what operations posted and marked. Before this check, whoever had
+        access to the Posting Console (typically the person who just captured
+        attendance) could click "Submit Batch" and it silently reviewed its
+        own posting -- there was no separate checkpoint at all.
+        """
+        front_desk_groups = (
+            "security_operations.group_security_front_desk",
+            "security_base.group_security_manager",
+            "security_base.group_security_owner",
+        )
+        for batch in self:
+            if not any(self.env.user.has_group(g) for g in front_desk_groups):
+                raise UserError(
+                    "Only Front Desk (or a manager/owner) can review a posting "
+                    "sheet. Ask Front Desk to validate this batch."
+                )
+            if batch.captured_by_id and batch.captured_by_id == self.env.user:
+                raise UserError(
+                    "You captured this posting sheet, so you cannot also be "
+                    "the one who reviews it. Ask Front Desk to validate it."
+                )
+
     def action_review(self):
+        self._assert_can_review()
         for batch in self:
             batch.reviewed_by_id = self.env.user
             batch.state = "reviewed"
+            self._emit_bus_event("attendance.batch.reviewed", batch)
 
     def action_lock(self):
         for batch in self:
             batch.state = "locked"
+            self._emit_bus_event("attendance.batch.locked", batch)
+
+    def _emit_bus_event(self, event_name, batch):
+        """Internal Intelligence Bus event, per docs/deployguard/12-odoo-
+        integration.md §4's event catalogue. This is the internal bus
+        (security.event.log), not the DeployGuard outbox -- a domain bridge
+        can subscribe to these same events later to build outbox rows
+        without security_attendance depending on the bridge module.
+        Consumed today by security_work's auto-completion
+        (docs/ROSTERING_SIMPLIFICATION_PLAN.md is the client-facing plan;
+        the phase plan's Phase 3 is where this was scoped)."""
+        event_model = self.env.get("security.event.log")
+        if not event_model:
+            return
+        event_model.register_event(
+            event_name,
+            "security.attendance.batch",
+            batch.id,
+            {
+                "site_id": batch.site_id.id if batch.site_id else False,
+                "partner_id": batch.partner_id.id if batch.partner_id else False,
+                "attendance_date": fields.Date.to_string(batch.attendance_date) if batch.attendance_date else False,
+                "state": batch.state,
+            },
+        )
 
     def action_cancel(self):
         for batch in self:

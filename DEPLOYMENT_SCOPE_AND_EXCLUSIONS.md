@@ -57,9 +57,22 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 | `security_theme` | Custom branding, assets, login screen styling & color scheme |
 | `security_notifications` | Central alert-hub, bells, SMS triggers & critical thresholds |
 | `security_shell` | Custom client portal sidebar canvas, navigation rails, and Tauri app framework |
+| `security_client_onboarding` | Client/site/shift-requirement/billing onboarding wizard -- in active daily use (see docs/ROSTERING_SIMPLIFICATION_PLAN.md) |
 | `security_deployguard_bridge` | DeployGuard Desktop bridge -- session/session-info endpoints the desktop app talks to directly (see `desktop/DEVIATIONS.md`) |
 | `security_work` | Work management -- schedule rules, task assignment, checklists surfaced in DeployGuard Desktop's "My Work & Sweeps" |
 | `security_training` | Staff training tracking |
+
+> **`security_deployguard_bridge` was previously scoped out** of production
+> pending the desktop app having something to talk to it about (see
+> docs/deployguard/BUILD-STATUS-AND-PHASE-PLAN.md Phase 2) -- confirmed with
+> the client 2026-09-17 that it, alongside `security_work` and
+> `security_training`, now ships to `dogforce_prod`.
+>
+> `security_suite` (the old all-in-one installer) is deliberately **not**
+> listed here -- individual modules are installed directly instead. If
+> `scripts/setup_staging.sh` still references `security_suite`, that script
+> is stale and should be updated to match this list, not the other way
+> around.
 
 ---
 

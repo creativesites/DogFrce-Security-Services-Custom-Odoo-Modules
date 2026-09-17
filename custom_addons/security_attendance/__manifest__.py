@@ -14,6 +14,7 @@
         "views/security_attendance_grid_actions.xml",
         "views/security_attendance_liveops_views.xml",
         "views/attendance_history_actions.xml",
+        "views/security_attendance_hours_audit_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

@@ -379,7 +379,7 @@ def _tools_to_gemini() -> list:
 
 
 def _gemini_chat(messages: list, system: str, config) -> dict:
-    model = config.gemini_model or "gemini-2.5-flash"
+    model = config.gemini_model or "gemini-3.8-flash"
     resp = requests.post(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         params={"key": config.gemini_api_key or ""},
@@ -624,7 +624,7 @@ def _run_agent(session, user_message: str, context: dict, env) -> tuple:
         return [{"type": "alert", "variant": "danger", "title": "Not Configured",
                  "message": "AI Engine is not configured. Go to Configuration → AI Engine to add your API key."}], []
 
-    provider = config.active_provider or "claude"
+    provider = config.active_provider or "gemini"
     provider_labels = {"claude": "Anthropic Claude", "openai": "OpenAI", "gemini": "Google Gemini"}
     api_key = getattr(config, f"{provider}_api_key", False)
     if not api_key:
@@ -654,7 +654,7 @@ Guidelines:
 
 def _run_lite_agent(message: str, history: list, config) -> str:
     """Single API call, no tools, 30-second timeout — the Fast Chat engine."""
-    provider = config.active_provider or "claude"
+    provider = config.active_provider or "gemini"
 
     if provider == "gemini":
         # Build Gemini message list from history
@@ -665,9 +665,9 @@ def _run_lite_agent(message: str, history: list, config) -> str:
         contents.append({"role": "user", "parts": [{"text": message}]})
 
         # Use a fast model for lite mode
-        model = config.gemini_model or "gemini-2.0-flash"
-        if "2.5" in model:
-            model = "gemini-2.0-flash"
+        model = config.gemini_model or "gemini-3.6-flash"
+        if "3.8" in model:
+            model = "gemini-3.6-flash"
 
         try:
             resp = requests.post(

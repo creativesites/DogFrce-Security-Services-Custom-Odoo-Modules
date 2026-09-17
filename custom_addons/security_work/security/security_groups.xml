@@ -19,4 +19,24 @@
         <field name="domain_force">[(1, '=', 1)]</field>
         <field name="groups" eval="[(4, ref('group_work_supervisor'))]"/>
     </record>
+
+    <!-- Phase 3.10 audit finding (BUILD-STATUS-AND-PHASE-PLAN.md): the
+         response model had ir.model.access granting base.group_user
+         read+write+create with no row-level restriction at all — any
+         employee could read or edit any other employee's checklist
+         answers and evidence by record id. Task-level access was already
+         scoped by the two rules above; the response model had nothing. -->
+    <record id="rule_work_checklist_response_own" model="ir.rule">
+        <field name="name">Work Checklist Response: own task or supervise all</field>
+        <field name="model_id" ref="model_security_work_checklist_response"/>
+        <field name="domain_force">[('task_id.employee_id.user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_work_checklist_response_supervisor_all" model="ir.rule">
+        <field name="name">Work Checklist Response: supervisors see all</field>
+        <field name="model_id" ref="model_security_work_checklist_response"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_work_supervisor'))]"/>
+    </record>
 </odoo>

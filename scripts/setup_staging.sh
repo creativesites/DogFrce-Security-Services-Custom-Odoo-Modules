@@ -35,7 +35,7 @@ echo "🚀 Step 3/4: Installing approved Namibian DeployGuard Suite..."
 docker exec -i "${STAGING_CONTAINER}" odoo \
     -c /etc/odoo/odoo.conf \
     -d "${STAGING_DB}" \
-    -i security_suite,security_l10n_na,security_backup_vault \
+    -i security_base,security_operations,security_compliance_roster,security_attendance,security_leave,security_payroll_core,security_l10n_na,security_loans,security_discipline,security_equipment,security_billing,security_fleet,security_ai_engine,security_ai_whatsapp_bridge,security_backup_vault,security_theme,security_notifications,security_shell \
     --stop-after-init
 
 # Step 4: Verify Exclusion Policy on Staging

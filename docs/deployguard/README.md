@@ -2,7 +2,9 @@
 
 > Status: Planning baseline v1 · Date: 2026-09-15 · Owner: Platform architecture
 >
-> Source of truth for implementing **DeployGuard Platform** on top of **DeployGuard ERP** (Odoo 19). Planning only: no product code has been written. Start with this page, then [BUILD-ORDER](BUILD-ORDER.md).
+> Source of truth for implementing **DeployGuard Platform** on top of **DeployGuard ERP** (Odoo 19). Start with this page, then [BUILD-ORDER](BUILD-ORDER.md) for the intended sequence and [BUILD-STATUS-AND-PHASE-PLAN](BUILD-STATUS-AND-PHASE-PLAN.md) for where the build actually is today and the re-sequenced path to completion.
+>
+> (This page's original "planning only, no product code has been written" framing is out of date: the desktop pilot shell, `security_work`, and `packages/ai` are now real code — see the status document.)
 
 ---
 
@@ -212,6 +214,7 @@ Open questions, contradictions and assumptions: [32](32-open-questions.md).
 | 34 | [Feedback & support](34-feedback-and-support.md) | Taxonomy, context capture, support loop |
 | 35 | [Competitive analysis](35-competitive-analysis.md) | Categories, gap, positioning |
 | — | [BUILD-ORDER](BUILD-ORDER.md) | Phase-by-phase implementation sequence |
+| — | [BUILD-STATUS-AND-PHASE-PLAN](BUILD-STATUS-AND-PHASE-PLAN.md) | **Living status:** what is built, what is claimed-but-missing, blockers, and Phases 0–8 to pilot |
 | — | [adr/](adr/) | DG-ADR-001 … DG-ADR-019 |
 
 **Structure notes:**

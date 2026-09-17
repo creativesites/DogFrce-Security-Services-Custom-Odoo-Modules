@@ -5,7 +5,7 @@ from .base import AIProviderBase, AIResult
 _GEMINI_URL_TEMPLATE = (
     "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
 )
-_DEFAULT_MODEL = "gemini-1.5-pro"
+_DEFAULT_MODEL = "gemini-3.8-flash"
 
 
 class GeminiProvider(AIProviderBase):

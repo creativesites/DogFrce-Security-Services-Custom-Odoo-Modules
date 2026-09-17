@@ -300,12 +300,9 @@
         <field name="arch" type="xml">
             <form string="Client Site Command Center">
                 <header>
-                    <button name="action_open_site_hub" type="object" string="Launch Site Hub"
-                            class="btn-primary fw-bold"
-                            title="Open the interactive Site Management Hub"/>
-                    <button name="%(action_security_site_setup_wizard)d" type="action" string="Quick Onboarding Wizard"
+                    <button name="action_open_site_hub" type="object" string="Open Site Hub"
                             class="btn-secondary"
-                            title="Run automated post &amp; site setup wizard"/>
+                            title="Open the interactive Site Management Hub"/>
                 </header>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
@@ -344,22 +341,22 @@
                     </div>
 
                     <group>
-                        <group string="Client &amp; Site Classification">
+                        <group>
                             <field name="partner_id" placeholder="Select Client..." domain="[('is_company','=',True)]"/>
-                            <field name="company_id" groups="base.group_multi_company"/>
-                            <field name="site_type"/>
+                            <field name="location" placeholder="Physical address..."/>
                             <field name="supervisor_id" placeholder="Assign Security Supervisor..."/>
+                        </group>
+                        <group>
+                            <field name="site_type"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
                             <field name="is_demo" groups="base.group_system"/>
                             <field name="active" invisible="1"/>
-                        </group>
-                        <group string="Live Operational Metrics">
-                            <field name="site_coverage_today" readonly="1" widget="progressbar"/>
-                            <field name="site_coverage_month" readonly="1" widget="progressbar"/>
                         </group>
                     </group>
 
                     <notebook>
-                        <page string="Overview &amp; Post Positions" name="posts">
+                        <page string="Posts &amp; Shifts" name="posts">
+                            <separator string="Post Positions"/>
                             <field name="post_ids">
                                 <list editable="bottom">
                                     <field name="name"/>
@@ -369,9 +366,8 @@
                                     <field name="active" widget="boolean_toggle"/>
                                 </list>
                             </field>
-                        </page>
 
-                        <page string="Shift Requirements" name="requirements">
+                            <separator string="Shift Requirements"/>
                             <field name="shift_requirement_ids">
                                 <list editable="bottom">
                                     <field name="post_id"/>
@@ -386,15 +382,14 @@
                             </field>
                         </page>
 
-                        <page string="Location, Contacts &amp; Geofencing" name="location">
+                        <page string="Contacts &amp; Location" name="location">
                             <group>
-                                <group string="Physical Address &amp; Primary Contacts">
-                                    <field name="location" placeholder="Physical Address..."/>
+                                <group string="Site Contact">
                                     <field name="contact_name" placeholder="Contact Person Name..."/>
                                     <field name="contact_phone" placeholder="+260 97 ..."/>
                                     <field name="contact_email" placeholder="site.manager@client.com"/>
                                 </group>
-                                <group string="GPS Coordinates &amp; Clock-In Geofence">
+                                <group string="GPS &amp; Clock-In Geofence (optional)">
                                     <field name="gps_lat" placeholder="-12.123456"/>
                                     <field name="gps_lng" placeholder="28.123456"/>
                                     <field name="geofence_radius"/>
@@ -402,7 +397,10 @@
                             </group>
                         </page>
 
-                        <page string="Guard Exclusions &amp; Blacklists" name="exclusions">
+                        <page string="Notes &amp; Exclusions" name="exclusions">
+                            <separator string="Operational Notes"/>
+                            <field name="note" placeholder="Special emergency protocols, entry procedures, or access guidelines..."/>
+                            <separator string="Guard Exclusions"/>
                             <field name="exclusion_ids">
                                 <list editable="bottom">
                                     <field name="employee_id"/>
@@ -412,9 +410,6 @@
                             </field>
                         </page>
 
-                        <page string="Operational Notes" name="notes">
-                            <field name="note" placeholder="Special emergency protocols, entry procedures, or access guidelines..."/>
-                        </page>
                     </notebook>
                 </sheet>
             </form>
@@ -422,17 +417,20 @@
     </record>
 
     <record id="action_security_client_site" model="ir.actions.act_window">
-        <field name="name">Client Sites Command Matrix</field>
+        <field name="name">Client Sites</field>
         <field name="res_model">security.client.site</field>
-        <field name="view_mode">kanban,list,form</field>
+        <field name="view_mode">list,kanban,form</field>
         <field name="search_view_id" ref="view_security_client_site_search"/>
         <field name="context">{'search_default_group_partner': 1, 'search_default_filter_production': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Onboard your first Client Site!
+                No client sites yet.
             </p>
             <p>
-                Client sites represent the physical security locations where guards, posts, vehicles, and equipment are deployed. Use the Quick Setup Wizard to configure posts in seconds.
+                Client sites are where guards, posts and equipment are deployed. Use
+                <strong>Set up a new client</strong> (Clients &amp; Sites menu) to create a
+                client, its sites and its shift requirements in one flow — or add a site
+                directly here if the client already exists.
             </p>
         </field>
     </record>
@@ -446,10 +444,10 @@
 
     <menuitem
         id="menu_security_clients_sites_mega_menu"
-        name="⚡ Command Center"
+        name="Clients &amp; Sites"
         parent="security_operations.menu_security_billing_root"
         action="action_clients_sites_mega_menu"
-        sequence="0"
+        sequence="5"
         groups="base.group_user"
     />
 

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Starter shift templates and post types.
+
+      Why these exist (docs/ROSTERING_SIMPLIFICATION_PLAN.md §2.1): a brand-new
+      site could not be rostered until someone visited two separate
+      configuration menus to create a shift template and a post type. Both are
+      the same four or five records at every security company, so shipping them
+      removes two walls from the setup path.
+
+      noupdate="1": these are starting points, not managed config. Once a client
+      edits or deletes them, module updates leave them alone.
+    -->
+    <data noupdate="1">
+
+        <!-- ============ Shift templates ============ -->
+        <record id="shift_template_day_12h" model="security.shift.template">
+            <field name="name">Day Shift (06:00 – 18:00)</field>
+            <field name="start_hour">6.0</field>
+            <field name="end_hour">18.0</field>
+        </record>
+
+        <record id="shift_template_night_12h" model="security.shift.template">
+            <field name="name">Night Shift (18:00 – 06:00)</field>
+            <field name="start_hour">18.0</field>
+            <field name="end_hour">6.0</field>
+        </record>
+
+        <record id="shift_template_day_8h" model="security.shift.template">
+            <field name="name">Day Shift (08:00 – 16:00)</field>
+            <field name="start_hour">8.0</field>
+            <field name="end_hour">16.0</field>
+        </record>
+
+        <record id="shift_template_relief" model="security.shift.template">
+            <field name="name">Relief / Split (12:00 – 20:00)</field>
+            <field name="start_hour">12.0</field>
+            <field name="end_hour">20.0</field>
+        </record>
+
+        <!-- ============ Post types ============ -->
+        <record id="post_type_static_guard" model="security.post.type">
+            <field name="name">Static Guard</field>
+            <field name="code">STATIC</field>
+            <field name="description">General static guarding at a fixed position.</field>
+        </record>
+
+        <record id="post_type_gate" model="security.post.type">
+            <field name="name">Gate / Access Control</field>
+            <field name="code">GATE</field>
+            <field name="description">Entry and exit control, visitor and vehicle screening.</field>
+        </record>
+
+        <record id="post_type_patrol" model="security.post.type">
+            <field name="name">Patrol</field>
+            <field name="code">PATROL</field>
+            <field name="description">Roving patrol of a site perimeter or internal route.</field>
+        </record>
+
+        <record id="post_type_control_room" model="security.post.type">
+            <field name="name">Control Room / CCTV</field>
+            <field name="code">CONTROL</field>
+            <field name="description">Camera monitoring and radio control.</field>
+        </record>
+
+        <record id="post_type_supervisor" model="security.post.type">
+            <field name="name">Site Supervisor</field>
+            <field name="code">SUP</field>
+            <field name="description">On-site supervision of the deployed team.</field>
+        </record>
+
+    </data>
+</odoo>

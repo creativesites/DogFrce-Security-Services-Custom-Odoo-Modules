@@ -16,7 +16,7 @@ class SecurityAIConfig(models.Model):
             ("gemini", "Google Gemini"),
         ],
         string="Active Provider",
-        default="claude",
+        default="gemini",
         required=True,
     )
     claude_api_key = fields.Char(string="Anthropic API Key", copy=False)
@@ -34,8 +34,8 @@ class SecurityAIConfig(models.Model):
     gemini_api_key = fields.Char(string="Gemini API Key", copy=False)
     gemini_model = fields.Char(
         string="Gemini Model",
-        default="gemini-2.5-flash",
-        help="e.g. gemini-2.5-flash, gemini-2.0-flash, gemini-1.5-pro",
+        default="gemini-3.8-flash",
+        help="e.g. gemini-3.8-flash, gemini-3.6-flash, gemini-1.5-pro",
     )
 
     max_tokens = fields.Integer(

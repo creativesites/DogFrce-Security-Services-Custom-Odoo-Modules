@@ -17,6 +17,8 @@ class SecurityClientSite(models.Model):
 
 class SecurityPortalBridge(models.AbstractModel):
     _name = "security.portal.bridge"
+    _inherit = ["security.bus.subscriber"]
+    _bus_events = ["*"]
     _description = "Client Portal Operations and CRM Bridge"
 
     @api.model
