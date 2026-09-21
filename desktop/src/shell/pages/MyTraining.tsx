@@ -8,10 +8,10 @@ import {
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
 import { useSession } from "../../session/SessionContext";
 import {
-  ASSIGNMENT_STATE_LABELS, attemptsRemaining, isEverythingDone, isLessonDone, latestAttemptFor,
+  ASSIGNMENT_STATE_LABELS, adjacentLessons, attemptsRemaining, findLessonSection, isEverythingDone, isLessonDone, latestAttemptFor,
   lessonProgressSummary,
 } from "./myTraining.logic";
-import { CheckCircleIcon, ClipboardListIcon } from "../icons";
+import { CheckCircleIcon, ClipboardListIcon, SparklesIcon } from "../icons";
 
 type LoadState = "loading" | "ready" | "error";
 
@@ -104,10 +104,25 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
   if (employeeId == null) {
     return (
       <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
-        <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "var(--ds-text-2)", margin: "0 0 14px" }}>
           Your account isn't linked to an employee record yet, so there's no training to show. Ask your
           operations manager to link one.
         </p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void loadEmployee()}>
+            Check again
+          </button>
+          <button
+            type="button"
+            className="dg-btn dg-btn--secondary"
+            onClick={() => {
+              void invoke("navigate_odoo", { path: "/odoo/action-hr.open_view_employee_list_my" });
+              void invoke("app_view_close");
+            }}
+          >
+            Open Employees in DogForce ERP →
+          </button>
+        </div>
       </div>
     );
   }
@@ -147,9 +162,24 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
 
       {listState === "ready" && assignments.length === 0 && (
         <div className="dg-card dg-page-enter" style={{ maxWidth: 480 }}>
-          <p className="dg-empty" style={{ padding: "8px 0" }}>
+          <p className="dg-empty" style={{ padding: "8px 0 14px" }}>
             Nothing assigned to you right now. New courses will show up here.
           </p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button type="button" className="dg-btn dg-btn--secondary" onClick={() => void loadList()}>
+              Refresh
+            </button>
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              onClick={() => {
+                void invoke("navigate_odoo", { path: "/odoo/action-security_training.action_security_training_assignment_my" });
+                void invoke("app_view_close");
+              }}
+            >
+              Open Training in DogForce ERP →
+            </button>
+          </div>
         </div>
       )}
 
@@ -193,7 +223,7 @@ function AssignmentDetail({
   const [progress, setProgress] = useState<TrainingLessonProgress[]>([]);
   const [attempts, setAttempts] = useState<TrainingAttempt[]>([]);
 
-  const [openLesson, setOpenLesson] = useState<TrainingLesson | null>(null);
+  const [activeLesson, setActiveLesson] = useState<TrainingLesson | null>(null);
   const [openAssessment, setOpenAssessment] = useState<TrainingAssessment | null>(null);
 
   const load = useCallback(async () => {
@@ -245,6 +275,26 @@ function AssignmentDetail({
     );
   }
 
+  if (activeLesson) {
+    return (
+      <LessonView
+        lesson={activeLesson}
+        tree={tree}
+        progress={progress}
+        onBack={() => setActiveLesson(null)}
+        onSelectLesson={(lesson) => setActiveLesson(lesson)}
+        onMarkedDone={async () => {
+          await markLessonComplete(assignmentId, activeLesson.id);
+          await refreshAfterAction();
+        }}
+        onStartAssessment={(assessment) => {
+          setActiveLesson(null);
+          setOpenAssessment(assessment);
+        }}
+      />
+    );
+  }
+
   const { done, total } = lessonProgressSummary(tree, progress);
   const everythingDone = isEverythingDone(tree, progress, attempts);
 
@@ -281,7 +331,7 @@ function AssignmentDetail({
                   type="button"
                   className="dg-tile"
                   style={{ padding: "10px 12px" }}
-                  onClick={() => setOpenLesson(lesson)}
+                  onClick={() => setActiveLesson(lesson)}
                 >
                   <span className="dg-tile__icon">
                     {done_ ? <CheckCircleIcon size={16} /> : <ClipboardListIcon size={16} />}
@@ -321,19 +371,6 @@ function AssignmentDetail({
         );
       })}
 
-      {openLesson && (
-        <LessonModal
-          lesson={openLesson}
-          done={isLessonDone(openLesson.id, progress)}
-          onClose={() => setOpenLesson(null)}
-          onMarkedDone={async () => {
-            await markLessonComplete(assignmentId, openLesson.id);
-            setOpenLesson(null);
-            await refreshAfterAction();
-          }}
-        />
-      )}
-
       {openAssessment && (
         <AssessmentModal
           assignmentId={assignmentId}
@@ -371,13 +408,32 @@ function ModalShell({ title, onClose, children, footer }: { title: string; onClo
   );
 }
 
-function LessonModal({
-  lesson, done, onClose, onMarkedDone,
-}: { lesson: TrainingLesson; done: boolean; onClose: () => void; onMarkedDone: () => Promise<void> }) {
+interface LessonViewProps {
+  lesson: TrainingLesson;
+  tree: CourseTree;
+  progress: TrainingLessonProgress[];
+  onBack: () => void;
+  onSelectLesson: (lesson: TrainingLesson) => void;
+  onMarkedDone: () => Promise<void>;
+  onStartAssessment: (assessment: TrainingAssessment) => void;
+}
+
+function LessonView({
+  lesson,
+  tree,
+  progress,
+  onBack,
+  onSelectLesson,
+  onMarkedDone,
+  onStartAssessment,
+}: LessonViewProps) {
+  const done = isLessonDone(lesson.id, progress);
+  const { prev, next, index, total } = adjacentLessons(tree, lesson.id);
+  const section = findLessonSection(tree, lesson.id);
+
   const [marking, setMarking] = useState(false);
   const [markError, setMarkError] = useState<string | null>(null);
 
-  const [aiOpen, setAiOpen] = useState(false);
   const [aiQuestion, setAiQuestion] = useState("");
   const [aiAnswer, setAiAnswer] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState(false);
@@ -385,17 +441,28 @@ function LessonModal({
 
   const tryItInErp = useCallback(() => {
     if (!lesson.deep_link_path) return;
-    void invoke("navigate_odoo", { path: lesson.deep_link_path });
+    let path = lesson.deep_link_path;
+    if (path.includes("security_client_onboarding")) {
+      path += path.includes("?") ? "&dg_tour=tour_client_setup" : "?dg_tour=tour_client_setup";
+    } else if (path.includes("action_security_roster_signoff")) {
+      path += path.includes("?") ? "&dg_tour=tour_roster_signoff" : "?dg_tour=tour_roster_signoff";
+    } else if (path.includes("action_attendance_posting_console")) {
+      path += path.includes("?") ? "&dg_tour=tour_attendance_console" : "?dg_tour=tour_attendance_console";
+    } else if (path.includes("security_client_site")) {
+      path += path.includes("?") ? "&dg_tour=tour_client_sites" : "?dg_tour=tour_client_sites";
+    }
+    void invoke("navigate_odoo", { path });
     void invoke("app_view_close");
   }, [lesson.deep_link_path]);
 
-  const askAi = useCallback(async () => {
-    if (!aiQuestion.trim()) return;
+  const askAi = useCallback(async (questionText?: string) => {
+    const q = (questionText ?? aiQuestion).trim();
+    if (!q) return;
     setAiBusy(true);
     setAiError(null);
     setAiAnswer(null);
     try {
-      const answer = await askLessonAi(lesson.id, aiQuestion.trim());
+      const answer = await askLessonAi(lesson.id, q);
       setAiAnswer(answer);
     } catch (err) {
       setAiError(extractErrorMessage(err, "AI assist isn't available right now."));
@@ -404,86 +471,275 @@ function LessonModal({
     }
   }, [lesson.id, aiQuestion]);
 
+  const handleMarkDone = async () => {
+    setMarking(true);
+    setMarkError(null);
+    try {
+      await onMarkedDone();
+    } catch (err) {
+      setMarkError(extractErrorMessage(err, "Couldn't mark this lesson as completed."));
+    } finally {
+      setMarking(false);
+    }
+  };
+
+  const suggestedPrompts = [
+    "Summarize key workflow steps",
+    "What are common pitfalls or mistakes to avoid?",
+    "How does this connect to rosters, payroll, & billing?",
+  ];
+
   return (
-    <ModalShell
-      title={lesson.name}
-      onClose={onClose}
-      footer={
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+    <div className="dg-lesson-view">
+      {/* Top Navigation */}
+      <div className="dg-lesson-view__nav">
+        <button
+          type="button"
+          className="dg-btn dg-btn--secondary"
+          style={{ fontSize: 12.5, padding: "6px 14px" }}
+          onClick={onBack}
+        >
+          ← Back to Course Outline
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="dg-chip">Lesson {index + 1} of {total}</span>
+          {done ? (
+            <span className="dg-chip" style={{ color: "var(--ds-success)", borderColor: "var(--ds-success)" }}>
+              <CheckCircleIcon size={13} /> Completed
+            </span>
+          ) : (
+            <span className="dg-chip">In progress</span>
+          )}
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="dg-lesson-view__header">
+        {section && (
+          <div className="dg-lesson-view__section-label">
+            {section.name}
+          </div>
+        )}
+        <h1 className="dg-lesson-view__title">{lesson.name}</h1>
+        <div className="dg-lesson-view__meta">
+          <span className="dg-chip">
+            {lesson.deep_link_path
+              ? "Interactive Guide & Practice"
+              : lesson.content_type === "video_url"
+              ? "Video Walkthrough"
+              : "Step-by-Step Guide"}
+          </span>
           {lesson.deep_link_path && (
-            <button type="button" className="dg-btn dg-btn--secondary" onClick={tryItInErp}>
-              Try it in DogForce ERP →
+            <span className="dg-chip" style={{ color: "var(--ds-accent)" }}>
+              Live ERP Tour Available
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Interactive ERP Tour Hero Card */}
+      {lesson.deep_link_path && (
+        <div className="dg-lesson-view__hero">
+          <div className="dg-lesson-view__hero-info">
+            <div className="dg-lesson-view__hero-title">
+              <span aria-hidden="true">🎯</span>
+              Interactive Guidance in DogForce ERP
+            </div>
+            <div className="dg-lesson-view__hero-desc">
+              Learn by doing in the live system. Launches DogForce ERP with on-screen spotlight guidance walking you through this workflow step-by-step.
+            </div>
+          </div>
+          <button
+            type="button"
+            className="dg-btn dg-btn--primary"
+            style={{ fontSize: 12.5, padding: "8px 16px" }}
+            onClick={tryItInErp}
+          >
+            Start Interactive Guide in ERP →
+          </button>
+        </div>
+      )}
+
+      {/* Video Section (if applicable) */}
+      {lesson.content_type === "video_url" && (
+        lesson.video_url && !lesson.video_url.startsWith("REPLACE_WITH_") ? (
+          <div className="dg-lesson-video">
+            <iframe src={lesson.video_url} title={lesson.name} allowFullScreen />
+          </div>
+        ) : (
+          <div className="dg-lesson-video-notice">
+            <span style={{ fontSize: 18 }} aria-hidden="true">🎬</span>
+            <span>
+              <strong>Video walkthrough in production:</strong> Follow the full step-by-step illustrated guide below, then try it in the ERP.
+            </span>
+          </div>
+        )
+      )}
+
+      {/* Main Content Card */}
+      {lesson.body && (
+        <div className="dg-lesson-view__card">
+          <div className="dg-lesson-body" dangerouslySetInnerHTML={{ __html: lesson.body }} />
+        </div>
+      )}
+
+      {/* DeployGuard AI Tutor Card */}
+      <div className="dg-lesson-ai-card">
+        <div className="dg-lesson-ai-card__head">
+          <div className="dg-lesson-ai-card__title">
+            <SparklesIcon size={16} />
+            DeployGuard AI Assistant
+          </div>
+          <span style={{ fontSize: 11.5, color: "var(--ds-text-subtle)" }}>
+            Trained on DogForce operating procedures
+          </span>
+        </div>
+
+        <div className="dg-lesson-ai-card__suggestions">
+          {suggestedPrompts.map((prompt) => (
+            <button
+              key={prompt}
+              type="button"
+              className="dg-lesson-ai-chip"
+              onClick={() => {
+                setAiQuestion(prompt);
+                void askAi(prompt);
+              }}
+            >
+              {prompt}
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          className="dg-input"
+          rows={2}
+          placeholder="Ask a question about this lesson or operational edge cases..."
+          value={aiQuestion}
+          onChange={(e) => setAiQuestion(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "10px 12px",
+            borderRadius: "var(--dgs-r-control)",
+            border: "1px solid var(--ds-border)",
+            fontSize: 13,
+            fontFamily: "var(--dgs-font)",
+            resize: "vertical",
+            boxSizing: "border-box",
+          }}
+        />
+
+        <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "center" }}>
+          <button
+            type="button"
+            className="dg-btn dg-btn--primary"
+            disabled={aiBusy || !aiQuestion.trim()}
+            onClick={() => void askAi()}
+          >
+            {aiBusy ? "Thinking…" : "Ask AI Assistant"}
+          </button>
+          {aiAnswer && (
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              onClick={() => {
+                setAiAnswer(null);
+                setAiQuestion("");
+              }}
+            >
+              Clear
             </button>
           )}
-          {!done && (
+        </div>
+
+        {aiError && (
+          <p style={{ fontSize: 12.5, color: "var(--ds-danger)", margin: "12px 0 0" }}>{aiError}</p>
+        )}
+
+        {aiAnswer && (
+          <div className="dg-lesson-ai-card__answer dg-pop-in">
+            {aiAnswer}
+          </div>
+        )}
+      </div>
+
+      {markError && (
+        <p style={{ fontSize: 13, color: "var(--ds-danger)", margin: "0 0 14px" }}>{markError}</p>
+      )}
+
+      {/* Bottom Navigation & Actions */}
+      <div className="dg-lesson-view__footer">
+        <div>
+          {prev ? (
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              onClick={() => onSelectLesson(prev)}
+            >
+              ← Previous: {prev.name}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              onClick={onBack}
+            >
+              ← Course Outline
+            </button>
+          )}
+        </div>
+
+        <div>
+          {!done ? (
             <button
               type="button"
               className="dg-btn dg-btn--primary"
               disabled={marking}
-              onClick={async () => {
-                setMarking(true);
-                setMarkError(null);
-                try {
-                  await onMarkedDone();
-                } catch (err) {
-                  setMarkError(extractErrorMessage(err, "Couldn't mark this lesson done."));
-                } finally {
-                  setMarking(false);
-                }
-              }}
+              onClick={() => void handleMarkDone()}
             >
-              {marking ? "Saving…" : "Mark as done"}
+              {marking ? "Saving…" : "Mark Lesson Completed ✓"}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              disabled
+              style={{ color: "var(--ds-success)" }}
+            >
+              <CheckCircleIcon size={14} /> Completed
             </button>
           )}
-          {done && <span className="dg-chip">Done</span>}
         </div>
-      }
-    >
-      {markError && <p style={{ fontSize: 12.5, color: "var(--ds-danger)", margin: "0 0 12px" }}>{markError}</p>}
 
-      {lesson.content_type === "video_url" && lesson.video_url && (
-        <div className="dg-lesson-video">
-          <iframe src={lesson.video_url} title={lesson.name} allowFullScreen />
+        <div>
+          {next ? (
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              onClick={() => onSelectLesson(next)}
+            >
+              Next: {next.name} →
+            </button>
+          ) : tree.assessments.length > 0 ? (
+            <button
+              type="button"
+              className="dg-btn dg-btn--primary"
+              onClick={() => onStartAssessment(tree.assessments[0])}
+            >
+              Proceed to Assessment →
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="dg-btn dg-btn--secondary"
+              onClick={onBack}
+            >
+              Finish Course Outline →
+            </button>
+          )}
         </div>
-      )}
-
-      {lesson.content_type === "text" && lesson.body && (
-        // Lesson content is authored by training supervisors (group_
-        // training_supervisor), not arbitrary user input -- same trust
-        // level as any other Odoo-authored rich text field rendered in
-        // this app.
-        <div className="dg-lesson-body" dangerouslySetInnerHTML={{ __html: lesson.body }} />
-      )}
-
-      <div className="dg-lesson-ai">
-        <button type="button" className="dg-btn dg-btn--secondary" style={{ fontSize: 12 }} onClick={() => setAiOpen((v) => !v)}>
-          {aiOpen ? "Hide AI help" : "Ask AI about this lesson"}
-        </button>
-        {aiOpen && (
-          <div className="dg-lesson-ai__panel dg-pop-in">
-            <textarea
-              className="dg-input"
-              rows={2}
-              placeholder="e.g. What do I do if the client already exists?"
-              value={aiQuestion}
-              onChange={(e) => setAiQuestion(e.target.value)}
-              style={{ width: "100%", padding: "8px 10px", borderRadius: "var(--dgs-r-control)", border: "1px solid var(--ds-border)", fontSize: 13, fontFamily: "var(--dgs-font)", resize: "vertical" }}
-            />
-            <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
-              <button type="button" className="dg-btn dg-btn--primary" disabled={aiBusy || !aiQuestion.trim()} onClick={() => void askAi()}>
-                {aiBusy ? "Thinking…" : "Ask"}
-              </button>
-            </div>
-            {aiError && <p style={{ fontSize: 12, color: "var(--ds-danger)", margin: "10px 0 0" }}>{aiError}</p>}
-            {aiAnswer && (
-              <p className="dg-pop-in" style={{ fontSize: 13, color: "var(--ds-text-2)", lineHeight: 1.5, margin: "10px 0 0", padding: "10px 12px", background: "var(--ds-bg)", borderRadius: "var(--dgs-r-control)" }}>
-                {aiAnswer}
-              </p>
-            )}
-          </div>
-        )}
       </div>
-    </ModalShell>
+    </div>
   );
 }
 

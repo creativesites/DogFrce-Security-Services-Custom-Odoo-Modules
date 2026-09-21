@@ -15,6 +15,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+export PATH="$HOME/.cargo/bin:$PATH"
+
 ENV_FILE="${1:-.env}"
 if [ -f "$ENV_FILE" ]; then
   # shellcheck disable=SC1090

@@ -10,10 +10,16 @@ import { StatusBar } from "./StatusBar";
 import {
   OdooIcon, HelpIcon, BackIcon, ForwardIcon, ReloadIcon, ChevronDownIcon, HomeIcon,
   WindowMinimizeIcon, WindowMaximizeIcon, WindowRestoreIcon, WindowCloseIcon, ClipboardListIcon, BookIcon,
+  ChartBarIcon, LifeBuoyIcon, TrendingUpIcon, InboxIcon,
 } from "./icons";
 import { MyWork } from "./pages/MyWork";
 import { DiagnosticsPanel } from "./DiagnosticsPanel";
 import { MyTraining } from "./pages/MyTraining";
+import { OwnerOverview } from "./pages/OwnerOverview";
+import { AdoptionOverview } from "./pages/AdoptionOverview";
+import { ExceptionsInbox } from "./pages/ExceptionsInbox";
+import { ProblemReportDialog } from "./ProblemReportDialog";
+import { HelpDrawer } from "./HelpDrawer";
 import type { SessionEvent } from "../session/types";
 import dogforceLogo from "../assets/dogforce-logo-256.png";
 import "./toolbar.css";
@@ -21,7 +27,7 @@ import "./toolbar.css";
 function greeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
+  if (h < 17) return "Good afternoon";
   return "Good evening";
 }
 
@@ -42,16 +48,17 @@ function hueOf(seed: string): number {
 }
 
 /** The app's own pages, reachable from the left nav once the app view is
- * open. "home" and "work" exist today; this list is deliberately
- * structured so adding a real page later is "add an entry + a case in the
- * switch", not a redesign. */
-type AppPage = "home" | "work" | "training";
+ * open. */
+type AppPage = "home" | "work" | "training" | "adoption" | "inbox" | "owner";
 const NAV_ITEMS: { key: AppPage; label: string; icon: () => JSX.Element; available: true }[] = [
   { key: "home", label: "Home", icon: () => <HomeIcon size={18} />, available: true },
   { key: "work", label: "My Work & Sweeps", icon: () => <ClipboardListIcon size={18} />, available: true },
   { key: "training", label: "My Training", icon: () => <BookIcon size={18} />, available: true },
+  { key: "adoption", label: "Adoption", icon: () => <TrendingUpIcon size={18} />, available: true },
+  { key: "inbox", label: "Exceptions Inbox", icon: () => <InboxIcon size={18} />, available: true },
+  { key: "owner", label: "Owner Overview", icon: () => <ChartBarIcon size={18} />, available: true },
 ];
-const COMING_SOON_ITEMS = ["Adoption"];
+const COMING_SOON_ITEMS: string[] = [];
 
 /** Small local icon button with a CSS tooltip. */
 function IconButton({
@@ -85,6 +92,8 @@ export function Toolbar() {
   const [commandOpen, setCommandOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
   const [paletteIndex, setPaletteIndex] = useState(0);
+  const [problemReportOpen, setProblemReportOpen] = useState(false);
+  const [helpDrawerOpen, setHelpDrawerOpen] = useState(false);
   const brandButtonRef = useRef<HTMLButtonElement | null>(null);
   const paletteInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -232,9 +241,39 @@ export function Toolbar() {
         run: () => { openAppView(); setPage("home"); },
       },
       {
+        id: "work", group: "Navigate", label: "Go to My Work & Sweeps",
+        icon: <ClipboardListIcon size={16} />,
+        run: () => { openAppView(); setPage("work"); },
+      },
+      {
         id: "training", group: "Navigate", label: "Go to My Training",
         icon: <BookIcon size={16} />,
         run: () => { openAppView(); setPage("training"); },
+      },
+      {
+        id: "adoption", group: "Navigate", label: "Go to Adoption & Execution",
+        icon: <TrendingUpIcon size={16} />,
+        run: () => { openAppView(); setPage("adoption"); },
+      },
+      {
+        id: "inbox", group: "Navigate", label: "Go to Exceptions Inbox",
+        icon: <InboxIcon size={16} />,
+        run: () => { openAppView(); setPage("inbox"); },
+      },
+      {
+        id: "owner", group: "Navigate", label: "Go to Owner Overview",
+        icon: <ChartBarIcon size={16} />,
+        run: () => { openAppView(); setPage("owner"); },
+      },
+      {
+        id: "help", group: "Support", label: "Help Centre & Knowledge Base",
+        icon: <HelpIcon size={16} />,
+        run: () => setHelpDrawerOpen(true),
+      },
+      {
+        id: "report-issue", group: "Support", label: "Report a Problem / Something's Wrong",
+        icon: <LifeBuoyIcon size={16} />,
+        run: () => setProblemReportOpen(true),
       },
       {
         id: "odoo", group: "Navigate", label: "Open DogForce ERP",
@@ -318,6 +357,9 @@ export function Toolbar() {
           <span className="dg-toolbar__divider" aria-hidden="true" />
           <IconButton label="DogForce ERP home" onClick={() => goToOdoo()}>
             <OdooIcon size={16} />
+          </IconButton>
+          <IconButton label="Help Centre & Knowledge" onClick={() => setHelpDrawerOpen(true)}>
+            <HelpIcon size={16} />
           </IconButton>
         </div>
 
@@ -516,6 +558,48 @@ export function Toolbar() {
                     </span>
                     <span className="dg-tile__arrow" aria-hidden="true">→</span>
                   </button>
+
+                  <button
+                    type="button"
+                    className="dg-tile"
+                    style={{ animationDelay: "190ms" }}
+                    onClick={() => setPage("adoption")}
+                  >
+                    <span className="dg-tile__icon"><TrendingUpIcon /></span>
+                    <span className="dg-tile__body">
+                      <span className="dg-tile__title">Adoption & Execution</span>
+                      <span className="dg-tile__subline">Rolling score, 5-factor breakdown & assistance</span>
+                    </span>
+                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="dg-tile"
+                    style={{ animationDelay: "220ms" }}
+                    onClick={() => setPage("inbox")}
+                  >
+                    <span className="dg-tile__icon"><InboxIcon /></span>
+                    <span className="dg-tile__body">
+                      <span className="dg-tile__title">Exceptions & Triage</span>
+                      <span className="dg-tile__subline">Critical ops inbox, escalation policies & rapid resolution</span>
+                    </span>
+                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="dg-tile"
+                    style={{ animationDelay: "250ms" }}
+                    onClick={() => setPage("owner")}
+                  >
+                    <span className="dg-tile__icon"><ChartBarIcon /></span>
+                    <span className="dg-tile__body">
+                      <span className="dg-tile__title">Owner Overview</span>
+                      <span className="dg-tile__subline">Live metrics, adoption, SLAs and digests</span>
+                    </span>
+                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
+                  </button>
                 </div>
 
                 <footer className="dg-appview__footer">
@@ -526,19 +610,43 @@ export function Toolbar() {
                   >
                     Sign out
                   </button>
-                  <span className="dg-appview__help">
+                  <button
+                    type="button"
+                    className="dg-appview__help"
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", padding: 0, display: "inline-flex", alignItems: "center", gap: 6 }}
+                    onClick={() => setProblemReportOpen(true)}
+                  >
                     <HelpIcon size={16} />
-                    Something not working? Ask your operations manager for now.
-                  </span>
+                    Something not working? Report an issue
+                  </button>
                 </footer>
               </div>
             )}
 
             {status === "signed_in" && session && page === "work" && (
-              <MyWork reloadSignal={workReloadSignal} />
+              <div className="dg-appview__body">
+                <MyWork reloadSignal={workReloadSignal} />
+              </div>
             )}
             {status === "signed_in" && session && page === "training" && (
-              <MyTraining reloadSignal={trainingReloadSignal} />
+              <div className="dg-appview__body">
+                <MyTraining reloadSignal={trainingReloadSignal} />
+              </div>
+            )}
+            {status === "signed_in" && session && page === "adoption" && (
+              <div className="dg-appview__body">
+                <AdoptionOverview />
+              </div>
+            )}
+            {status === "signed_in" && session && page === "inbox" && (
+              <div className="dg-appview__body">
+                <ExceptionsInbox />
+              </div>
+            )}
+            {status === "signed_in" && session && page === "owner" && (
+              <div className="dg-appview__body">
+                <OwnerOverview />
+              </div>
             )}
           </div>
         </div>
@@ -616,6 +724,19 @@ export function Toolbar() {
           </div>
         </div>
       )}
+
+      <ProblemReportDialog
+        isOpen={problemReportOpen}
+        onClose={() => setProblemReportOpen(false)}
+        currentRoute={`/${page}`}
+      />
+
+      <HelpDrawer
+        isOpen={helpDrawerOpen}
+        onClose={() => setHelpDrawerOpen(false)}
+        currentRoute={`/${page}`}
+        onOpenReportProblem={() => setProblemReportOpen(true)}
+      />
     </div>
   );
 }

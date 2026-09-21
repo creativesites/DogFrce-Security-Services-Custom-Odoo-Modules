@@ -28,7 +28,9 @@ import {
   parseOdooDatetime,
   formatRosterRole,
 } from "./myWork.logic";
-import { AlertTriangleIcon, CheckCircleIcon, ClipboardListIcon } from "../icons";
+import { AlertTriangleIcon, CheckCircleIcon, ClipboardListIcon, HelpIcon } from "../icons";
+import { TaskFeedbackModal } from "./TaskFeedbackModal";
+import { ProblemReportDialog } from "../ProblemReportDialog";
 
 type LoadState = "loading" | "ready" | "error";
 
@@ -385,6 +387,8 @@ function TaskDetail({
 
   const actions = task ? availableActions(task.state) : [];
   const editableChecklist = task ? task.state === "open" || task.state === "in_progress" || task.state === "rejected" : false;
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [taskProblemReportOpen, setTaskProblemReportOpen] = useState(false);
 
   const runAction = useCallback(
     async (action: WorkAction, reason?: string) => {
@@ -396,6 +400,9 @@ function TaskDetail({
         setCncReason("");
         await load();
         onChanged();
+        if (action === "submit") {
+          setFeedbackModalOpen(true);
+        }
       } catch (err) {
         setActionError(extractErrorMessage(err, "That action didn't go through."));
       } finally {
@@ -635,7 +642,32 @@ function TaskDetail({
               {actionBusy === "cancel" ? "Cancelling…" : "Cancel"}
             </button>
           )}
+          <button
+            type="button"
+            className="dg-btn dg-btn--secondary"
+            style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.82rem" }}
+            onClick={() => setTaskProblemReportOpen(true)}
+          >
+            <HelpIcon size={14} /> Report Issue
+          </button>
         </div>
+      )}
+
+      {task && (
+        <TaskFeedbackModal
+          isOpen={feedbackModalOpen}
+          taskId={task.id}
+          taskName={task.name}
+          onClose={() => setFeedbackModalOpen(false)}
+        />
+      )}
+      {task && (
+        <ProblemReportDialog
+          isOpen={taskProblemReportOpen}
+          onClose={() => setTaskProblemReportOpen(false)}
+          currentRoute="/work"
+          taskContext={{ id: task.id, name: task.name }}
+        />
       )}
     </div>
   );

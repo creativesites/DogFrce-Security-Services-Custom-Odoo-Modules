@@ -70,3 +70,26 @@ export function isAnswerCorrect(question: { options: { id: number }[] }, correct
   const correctForThisQuestion = new Set([...correctOptionIds].filter((id) => questionOptionIds.has(id)));
   return selected.size === correctForThisQuestion.size && [...selected].every((id) => correctForThisQuestion.has(id));
 }
+
+/** Find preceding and following lessons for navigation within a course tree. */
+export function adjacentLessons(
+  tree: CourseTree,
+  currentLessonId: number,
+): { prev: TrainingLesson | null; next: TrainingLesson | null; index: number; total: number } {
+  const lessons = allLessons(tree);
+  const idx = lessons.findIndex((l) => l.id === currentLessonId);
+  return {
+    prev: idx > 0 ? lessons[idx - 1] : null,
+    next: idx >= 0 && idx < lessons.length - 1 ? lessons[idx + 1] : null,
+    index: idx >= 0 ? idx : 0,
+    total: lessons.length,
+  };
+}
+
+/** Find the section that contains a given lesson ID. */
+export function findLessonSection(
+  tree: CourseTree,
+  lessonId: number,
+): CourseTree["sections"][number] | null {
+  return tree.sections.find((s) => s.lessons.some((l) => l.id === lessonId)) ?? null;
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  allLessons, attemptsRemaining, attemptsUsed, isAnswerCorrect, isEverythingDone, isLessonDone,
+  adjacentLessons, allLessons, attemptsRemaining, attemptsUsed, findLessonSection, isAnswerCorrect, isEverythingDone, isLessonDone,
   latestAttemptFor, lessonProgressSummary,
 } from "./myTraining.logic";
 import type { CourseTree, TrainingAssessment, TrainingAttempt, TrainingLessonProgress } from "../../api/training";
@@ -154,5 +154,41 @@ describe("isAnswerCorrect", () => {
 
   it("is false for an empty selection against a non-empty answer key", () => {
     expect(isAnswerCorrect(question, new Set([1]), new Set())).toBe(false);
+  });
+});
+
+describe("adjacentLessons", () => {
+  it("returns null prev for the first lesson and correct next", () => {
+    const adj = adjacentLessons(tree, 11);
+    expect(adj.prev).toBeNull();
+    expect(adj.next?.id).toBe(12);
+    expect(adj.index).toBe(0);
+    expect(adj.total).toBe(3);
+  });
+
+  it("returns correct prev and next for a middle lesson", () => {
+    const adj = adjacentLessons(tree, 12);
+    expect(adj.prev?.id).toBe(11);
+    expect(adj.next?.id).toBe(21);
+    expect(adj.index).toBe(1);
+  });
+
+  it("returns correct prev and null next for the last lesson", () => {
+    const adj = adjacentLessons(tree, 21);
+    expect(adj.prev?.id).toBe(12);
+    expect(adj.next).toBeNull();
+    expect(adj.index).toBe(2);
+  });
+});
+
+describe("findLessonSection", () => {
+  it("finds section containing lesson", () => {
+    const s = findLessonSection(tree, 12);
+    expect(s?.id).toBe(1);
+    expect(s?.name).toBe("Section 1");
+  });
+
+  it("returns null when lesson is not found", () => {
+    expect(findLessonSection(tree, 999)).toBeNull();
   });
 });

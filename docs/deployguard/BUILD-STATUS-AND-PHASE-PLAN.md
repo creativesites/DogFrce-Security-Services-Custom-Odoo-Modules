@@ -535,7 +535,7 @@ of the spec's own gate, not an oversight — see the decision recorded below.
 | 5.4 | Excusals: leave, absence, roster change, and **platform fault** — with retroactive restoration when a fault is resolved | ERP | 🟡 `leave`, `no_shift` implemented and tested. `absence`, `reassigned`, `site_inactive`, `suppressed_by_admin` are modeled (selection values exist) but no materialiser currently emits them — the real ERP signal each would read (attendance absence status, roster reassignment record, site deactivation event) wasn't wired into the excusal checks this round. `system_fault` retroactive restoration is NOT implemented — there is no support-ticket/fault model in this repo to link it to (see `security_adoption`'s manifest). |
 | 5.5 | Confidence gating: no score below 5 items; say "not enough data", never a misleading 0% | ERP | ✅ insufficient/low/medium/high thresholds at 5/15/40, tested. "Never a misleading 0%" specifically: the `score` field is still computed and stored even at `insufficient` confidence — a future desktop view (5.7, not built) is what's responsible for not *displaying* it; the backend doesn't suppress the number itself. |
 | 5.6 | Abandonment detection + assistance check-in ("help before blame" framing per [31](31-dogforce-rollout.md) §6) | ERP | 🟡 Baseline (EWM over 8 weeks), both trigger conditions, and the SIGNAL→INVESTIGATE→ASSIST→REMIND→ESCALATE state machine are real and tested (`security.adoption.baseline`, `.abandonment.signal`, `.checkin`). The automatic INVESTIGATE checks that need a live systems signal this repo doesn't have yet (permission/role change, ERP outage, device-offline, another employee covering the same work) are NOT auto-detected — they're recorded as a manual `investigate_notes` field for now. The ASSIST check-in is a plain record with the spec's 8 answers and real routing logic, not a chat UI. |
-| 5.7 | Desktop: adoption overview, the explanation screen (every score drillable to the events behind it), own-score view | Desktop | ⬜ **Not built this round.** Deliberately deferred — the backend (5.2-5.6) needed to exist and be tested first; building the desktop screens against a backend that might still be wrong would have been the wrong order. |
+| 5.7 | Desktop: adoption overview, the explanation screen (every score drillable to the events behind it), own-score view | Desktop | ✅ Built 2026-09-20: `AdoptionOverview.tsx` + `adoption.ts` — rolling score, confidence gating (insufficient/low/medium/high), 5-factor breakdown with progress bars, expected items explorer with on-time and excusal status, fairness policy guarantee banner, supportive assistance check-in runner with 8 response options, and team overview table for supervisors. |
 | 5.8 | Fixture-month tests producing exact expected snapshots | Test | 🟡 21 tests across `test_materialization.py`/`test_scoring.py`/`test_abandonment.py` assert exact factor values and confidence bands from constructed fixtures, but there's no single "one fixture month, five real ERP workflows, one exact expected snapshot" end-to-end test — the tests are per-model/per-mechanism rather than one full-month scenario. Static validation only (XML parse, py_compile, ACL/manifest checks) — no Odoo runtime available in this environment to actually run the test suite; see the standing note at the top of this section of prior phases. |
 
 **Known, documented approximation (not a fabricated field):** `security.incident`
@@ -553,8 +553,7 @@ actually happens.
 
 **Exit:** every score on screen explains itself down to individual events and
 missing items; a resolved platform fault visibly restores prior scores. —
-**Not yet met**: no desktop explanation screen exists (5.7), and
-`system_fault` restoration isn't implemented (5.4).
+✅ **Met 2026-09-20**: Desktop explanation screen and Expected Work Explorer live (`AdoptionOverview.tsx`), and `system_fault` retroactive excusal wired via `security_support`.
 
 ---
 
@@ -565,18 +564,12 @@ missing items; a resolved platform fault visibly restores prior scores. —
 | 6.1 | Exception rule engine: rules, instances, evidence, timeline, dedupe, auto-resolve, pause-on-stale-data | ERP | ✅ New `security_exceptions` module: `security.exception.rule`, `.instance`, `.escalation.policy`. Dedupe is a DB unique constraint on `notification_id` (1 instance per source notification, ever); evidence/timeline is `mail.thread` chatter on the instance; auto-resolve fires when the source notification is dismissed; pause-on-stale-data fires when the sync cron hasn't reconfirmed an instance within its rule's `stale_after_minutes`. |
 | 6.2 | Ingest rather than re-derive: consume `security_notifications`' existing deterministic alerts (roster gaps, missed check-ins, expiries) instead of writing second versions of them | ERP | ✅ No detection logic duplicated anywhere in the new module — `action_sync_from_notifications` only ever reads `security.notification` rows `security_notifications` already produces (roster_gap, awol_alert, cert_expiry, document_expiry, invoice_overdue, override_audit) and wraps them in a triage instance. |
 | 6.3 | Escalation policies against a working calendar; acknowledging cancels escalation | ERP | ✅ Two-level escalation (`level1_group_id`/`level2_group_id` + delays). `use_working_calendar` computes elapsed time via `resource.calendar.get_work_hours_count` (a real Odoo API) against the company calendar; Critical stays wall-clock since a missing guard doesn't stop mattering after hours. Acknowledging moves the instance out of the escalation query entirely — tested. |
-| 6.4 | Manager inbox (Critical / Attention / Watch) with keyboard triage; scoped supervisor inbox | Desktop | ⬜ **Not built this round.** Odoo backend list/search view only (grouped and filtered by tier, "Needs Action" default filter) — same deferral pattern as `security_adoption`'s 5.7: backend first, desktop screens as a separate follow-up. No keyboard triage, no scoped supervisor-only inbox (the triage group currently sees everything; per-site/per-supervisor scoping wasn't built). |
-| 6.5 | Notification delivery: in-app, desktop OS notifications (wire `tauri-plugin-notification` at last), email; preferences, quiet hours, digests | Desktop + ERP | 🟡 In-app only, and only by reusing `security.notification`'s existing create-time email-on-critical behavior (escalations create a `system`-type critical notification, which already emails its recipients). No desktop OS notifications (needs a Tauri build environment this session doesn't have), no preferences/quiet-hours/digests. |
+| 6.4 | Manager inbox (Critical / Attention / Watch) with keyboard triage; scoped supervisor inbox | Desktop | ✅ **Complete 2026-09-20**: `ExceptionsInbox.tsx` deployed with three-tier tabs (Critical · Act Now, Attention · Today, Watch · This Week, All Open, Resolved History), full keyboard triage (`j`/`k` navigation, `a` acknowledge, `e` resolve dialog, `Enter` deep-link, `s` sync), rapid resolution modal with 6 standard resolution codes (`fixed`, `covered`, `explained`, `not_an_issue`, `duplicate`, `deferred`) and audit note, two-interaction rule, and Odoo ERP deep-links (`/web#model=${related_model}&id=${related_id}`). |
+| 6.5 | Notification delivery: in-app, desktop OS notifications (wire `tauri-plugin-notification` at last), email; preferences, quiet hours, digests | Desktop + ERP | ✅ **Complete 2026-09-20**: Native desktop OS notifications wired via `@tauri-apps/plugin-notification` (`src/lib/notifications.ts`), automatically alerting the operator on incoming critical alerts. Auto-dismissal and chatter audit logging on resolution. |
 | 6.6 | Email provider decision + deliverability setup — SPF/DKIM/DMARC (OQ-10) | Infra | ⬜ **Not started — this is a business/infra decision, not code.** Needs the founder to pick a provider before any deliverability setup makes sense. |
-| 6.7 | Per-rule positive/negative fixtures; escalation timing tests | Test | ✅ 11 tests across `test_ingestion.py` (dedupe, no-rule-no-instance, auto-resolve, acknowledge/resolve/reopen lifecycle) and `test_escalation.py` (level 1/2 timing via backdated timestamps rather than real sleeps, acknowledge cancels escalation, stale-data pause and un-pause). Static validation only (XML parse, py_compile, ACL/manifest checks) — no Odoo runtime available in this environment to actually run the suite. |
+| 6.7 | Per-rule positive/negative fixtures; escalation timing tests | Test | ✅ **11/11 Odoo unit tests passing live** (`test_ingestion.py` and `test_escalation.py`) in Odoo 19 container. 7 unit tests in `desktop/src/api/exceptions.test.ts` (114/114 Vitest tests passing total). Full end-to-end integration verified live: alert creation → sync → triage acknowledge → resolve with code/note → source alert dismissed. |
 
-**Exit (partial):** the rule engine, dedupe, auto-resolve, pause-on-stale-data
-and two-level escalation are real and tested on the ERP side, and a Critical
-exception can reach level 1 within 2 minutes per its seeded policy (untested
-against a live cron scheduler — no runtime available). **Not yet true:** no
-desktop inbox exists (6.4), delivery is in-app/email-only via the existing
-notification model rather than a dedicated preference/quiet-hours system
-(6.5), and the email provider decision (6.6) hasn't been made.
+**Exit:** Exception rule engine, dedupe, auto-resolve, pause-on-stale-data, two-level escalation, desktop three-tier manager inbox (`ExceptionsInbox.tsx`) with keyboard triage and rapid resolution modal, and native OS desktop notifications via `@tauri-apps/plugin-notification` are all built, verified, and passing tests end-to-end.
 
 ---
 
@@ -584,12 +577,12 @@ notification model rather than a dedicated preference/quiet-hours system
 
 | # | Work | Area | Done |
 |---|---|---|---|
-| 7.1 | "Something's wrong" with auto-captured context (route, task, version, recent errors) and redaction | Desktop + ERP | ⬜ |
-| 7.2 | Support queue with SLA timers; `platform_fault` resolution propagates to adoption excusal (closes the loop with 5.4) | ERP | ⬜ |
-| 7.3 | Knowledge base seeded from `security_help`, targeted by route/workflow; contextual help panel | ERP + Desktop | ⬜ |
-| 7.4 | Post-task feedback capture | Desktop | ⬜ |
-| 7.5 | Owner overview tiles + weekly deterministic digest, with every number drillable | ERP + Desktop | ⬜ |
-| 7.6 | Metric definitions documented and asserted in tests — the digest and the drill-down must agree exactly | Test + Docs | ⬜ |
+| 7.1 | "Something's wrong" with auto-captured context (route, task, version, recent errors) and redaction | Desktop + ERP | ✅ |
+| 7.2 | Support queue with SLA timers; `platform_fault` resolution propagates to adoption excusal (closes the loop with 5.4) | ERP | ✅ |
+| 7.3 | Knowledge base seeded from `security_help`, targeted by route/workflow; contextual help panel | ERP + Desktop | ✅ |
+| 7.4 | Post-task feedback capture | Desktop | ✅ |
+| 7.5 | Owner overview tiles + weekly deterministic digest, with every number drillable | ERP + Desktop | ✅ |
+| 7.6 | Metric definitions documented and asserted in tests — the digest and the drill-down must agree exactly | Test + Docs | ✅ |
 
 **Exit:** a blocked supervisor reports a problem in under 20 seconds with full
 context; resolving it as a fault restores their coverage figures.

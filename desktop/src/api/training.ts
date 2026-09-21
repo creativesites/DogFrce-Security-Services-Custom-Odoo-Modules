@@ -26,7 +26,7 @@ export interface TrainingAssignment {
 
 export interface TrainingLesson {
   id: number;
-  section_id: number;
+  section_id: number | [number, string];
   sequence: number;
   name: string;
   content_type: "text" | "video_url";
@@ -146,7 +146,10 @@ export async function fetchCourseTree(courseVersionId: number): Promise<CourseTr
 
   const resolvedSections: TrainingSection[] = sections.map((section) => ({
     ...section,
-    lessons: lessons.filter((l) => l.section_id === section.id),
+    lessons: lessons.filter((l) => {
+      const secId = Array.isArray(l.section_id) ? l.section_id[0] : l.section_id;
+      return secId === section.id;
+    }),
   }));
 
   const assessmentRows = await callKw<Array<{ id: number; name: string; pass_mark_pct: number; max_attempts: number }>>(
