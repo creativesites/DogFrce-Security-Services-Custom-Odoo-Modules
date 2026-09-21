@@ -20,6 +20,19 @@ import { AdoptionOverview } from "./pages/AdoptionOverview";
 import { ExceptionsInbox } from "./pages/ExceptionsInbox";
 import { ProblemReportDialog } from "./ProblemReportDialog";
 import { HelpDrawer } from "./HelpDrawer";
+import { FirstRunOnboarding } from "./FirstRunOnboarding";
+import {
+  type NoticeStatus,
+  acknowledgeNotice,
+  adoptionAllowed,
+  fetchNotice,
+  hasSeenWelcome,
+  markWelcomeSeen,
+  noticeStatusFrom,
+  noticeStatusFromError,
+  shouldShowOnboarding,
+} from "../api/onboarding";
+import { getVersion } from "@tauri-apps/api/app";
 import type { SessionEvent } from "../session/types";
 import dogforceLogo from "../assets/dogforce-logo-256.png";
 import "./toolbar.css";
@@ -97,6 +110,47 @@ export function Toolbar() {
   const brandButtonRef = useRef<HTMLButtonElement | null>(null);
   const paletteInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [noticeStatus, setNoticeStatus] = useState<NoticeStatus>({ kind: "loading" });
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+
+  // ---- Monitoring notice + first-run onboarding ---------------------------
+  useEffect(() => {
+    setOnboardingDismissed(false);
+    if (status !== "signed_in" || !session) {
+      setNoticeStatus({ kind: "loading" });
+      return;
+    }
+    let cancelled = false;
+    setNoticeStatus({ kind: "loading" });
+    fetchNotice()
+      .then((notice) => { if (!cancelled) setNoticeStatus(noticeStatusFrom(notice)); })
+      .catch((err) => { if (!cancelled) setNoticeStatus(noticeStatusFromError(err)); });
+    return () => { cancelled = true; };
+  }, [status, session]);
+
+  const showOnboarding =
+    status === "signed_in" &&
+    !!session &&
+    !onboardingDismissed &&
+    shouldShowOnboarding(noticeStatus, hasSeenWelcome(session.db, session.uid));
+
+  const handleAcknowledge = useCallback(async () => {
+    if (noticeStatus.kind !== "needs_ack") return;
+    let client = "DeployGuard Desktop";
+    try {
+      client = `DeployGuard Desktop ${await getVersion()}`;
+    } catch {
+      // Version lookup is only for the audit record's "client" note.
+    }
+    const updated = await acknowledgeNotice(noticeStatus.notice.version, client);
+    setNoticeStatus(noticeStatusFrom(updated));
+  }, [noticeStatus]);
+
+  const finishOnboarding = useCallback((target: "training" | "work") => {
+    if (session) markWelcomeSeen(session.db, session.uid);
+    setOnboardingDismissed(true);
+    setPage(target);
+  }, [session]);
 
   // ---- Avatar: cached first, then a background refresh from Odoo --------
   useEffect(() => {
@@ -163,6 +217,21 @@ export function Toolbar() {
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
+
+  // A first-run employee should land on the welcome, not on Odoo's home --
+  // once per sign-in. If they close it they can still use Odoo; the welcome
+  // is simply what the app view shows until they've been through it.
+  const onboardingAutoOpened = useRef(false);
+  useEffect(() => {
+    if (!showOnboarding) {
+      onboardingAutoOpened.current = false;
+      return;
+    }
+    if (!onboardingAutoOpened.current) {
+      onboardingAutoOpened.current = true;
+      if (!appViewOpen) openAppView();
+    }
+  }, [showOnboarding, appViewOpen, openAppView]);
 
   useEffect(() => {
     const unlistenPromise = listen<SessionEvent>("deployguard://session-changed", (event) => {
@@ -508,7 +577,18 @@ export function Toolbar() {
               </div>
             )}
 
-            {status === "signed_in" && session && page === "home" && (
+            {showOnboarding && session && (
+              <div className="dg-appview__body">
+                <FirstRunOnboarding
+                  firstName={session.name.split(" ")[0]}
+                  status={noticeStatus}
+                  onAcknowledge={handleAcknowledge}
+                  onFinish={finishOnboarding}
+                />
+              </div>
+            )}
+
+            {status === "signed_in" && session && !showOnboarding && page ==="home" && (
               <div className="dg-appview__body">
                 <h1 className="dg-greeting">
                   {greeting()}, <span>{session.name.split(" ")[0]}</span>
@@ -623,27 +703,44 @@ export function Toolbar() {
               </div>
             )}
 
-            {status === "signed_in" && session && page === "work" && (
+            {status === "signed_in" && session && !showOnboarding && page ==="work" && (
               <div className="dg-appview__body">
                 <MyWork reloadSignal={workReloadSignal} />
               </div>
             )}
-            {status === "signed_in" && session && page === "training" && (
+            {status === "signed_in" && session && !showOnboarding && page ==="training" && (
               <div className="dg-appview__body">
                 <MyTraining reloadSignal={trainingReloadSignal} />
               </div>
             )}
-            {status === "signed_in" && session && page === "adoption" && (
+            {status === "signed_in" && session && !showOnboarding && page ==="adoption" && (
               <div className="dg-appview__body">
-                <AdoptionOverview />
+                {adoptionAllowed(noticeStatus) ? (
+                  <AdoptionOverview />
+                ) : (
+                  <div className="dg-card dg-gatecard dg-page-enter">
+                    <h2 className="dg-onboarding__title">Adoption figures aren't shown yet</h2>
+                    {noticeStatus.kind === "unavailable" ? (
+                      <p>
+                        Your administrator still needs to finish setting up DeployGuard on the server
+                        (the DeployGuard Bridge module), so there's no way yet to record that you've been
+                        told what's collected. Until then, no adoption figures are shown here.
+                      </p>
+                    ) : noticeStatus.kind === "error" ? (
+                      <p>{noticeStatus.message}</p>
+                    ) : (
+                      <p>Checking whether you've seen the monitoring notice…</p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
-            {status === "signed_in" && session && page === "inbox" && (
+            {status === "signed_in" && session && !showOnboarding && page ==="inbox" && (
               <div className="dg-appview__body">
                 <ExceptionsInbox />
               </div>
             )}
-            {status === "signed_in" && session && page === "owner" && (
+            {status === "signed_in" && session && !showOnboarding && page ==="owner" && (
               <div className="dg-appview__body">
                 <OwnerOverview />
               </div>
