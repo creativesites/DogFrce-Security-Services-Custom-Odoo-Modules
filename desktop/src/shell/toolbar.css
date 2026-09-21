@@ -794,6 +794,10 @@
 .dg-gatecard {
   max-width: 520px;
 }
+.dg-gatecard .dg-onboarding__title {
+  margin-bottom: 10px;
+  font-size: 17px;
+}
 .dg-gatecard p {
   margin: 0 0 12px;
   font-size: 13.5px;

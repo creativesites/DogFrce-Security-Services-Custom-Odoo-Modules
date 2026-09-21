@@ -20,7 +20,9 @@ interface Props {
  * single obvious next step into their training.
  */
 export function FirstRunOnboarding({ firstName, status, onAcknowledge, onFinish }: Props) {
-  const needsNotice = status.kind === "needs_ack";
+  // Fixed at mount: acknowledging flips status mid-flow, and the step count
+  // shouldn't shrink under the person's feet.
+  const [needsNotice] = useState(status.kind === "needs_ack");
   const [step, setStep] = useState<Step>("welcome");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

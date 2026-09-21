@@ -128,11 +128,22 @@ export function Toolbar() {
     return () => { cancelled = true; };
   }, [status, session]);
 
-  const showOnboarding =
+  // Latched: acknowledging the notice flips it to "acknowledged" mid-flow,
+  // which would otherwise pull the onboarding away before its last step --
+  // the one with "Start my training" on it.
+  const [onboardingLatched, setOnboardingLatched] = useState(false);
+  const onboardingDue =
     status === "signed_in" &&
     !!session &&
-    !onboardingDismissed &&
     shouldShowOnboarding(noticeStatus, hasSeenWelcome(session.db, session.uid));
+  useEffect(() => {
+    if (onboardingDue) setOnboardingLatched(true);
+  }, [onboardingDue]);
+  useEffect(() => {
+    if (status !== "signed_in") setOnboardingLatched(false);
+  }, [status]);
+  const showOnboarding =
+    status === "signed_in" && !!session && !onboardingDismissed && (onboardingDue || onboardingLatched);
 
   const handleAcknowledge = useCallback(async () => {
     if (noticeStatus.kind !== "needs_ack") return;
@@ -515,7 +526,7 @@ export function Toolbar() {
               </button>
             ))}
 
-            <div className="dg-appview__nav-group">Upcoming</div>
+            {COMING_SOON_ITEMS.length > 0 && <div className="dg-appview__nav-group">Upcoming</div>}
             {COMING_SOON_ITEMS.map((label) => (
               <div
                 key={label}

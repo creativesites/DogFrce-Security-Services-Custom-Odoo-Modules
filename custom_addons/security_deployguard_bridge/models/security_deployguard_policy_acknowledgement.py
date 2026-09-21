@@ -12,11 +12,11 @@ from odoo.exceptions import UserError
 # DRAFT pending the privacy/legal review (BUILD-STATUS-AND-PHASE-PLAN.md 5.1).
 # Every statement below is true of the code as it stands; do not add a
 # promise here that the software doesn't keep.
-NOTICE_VERSION = "2026-09-draft-1"
+NOTICE_VERSION = "2026-09-draft-2"
 NOTICE_TITLE = "How DeployGuard uses your activity"
 NOTICE_BODY = [
-    "DeployGuard records the work you do in it -- tasks and checklists you "
-    "complete, training you finish, and attendance you post -- and compares "
+    "DeployGuard records the work you do in it: tasks and checklists you "
+    "complete, training you finish, and attendance you post. It compares "
     "that with the work expected of your role.",
     "This is used to find where the system, your training or your workload "
     "is letting you down, so you can get help. It is not a disciplinary tool, "
