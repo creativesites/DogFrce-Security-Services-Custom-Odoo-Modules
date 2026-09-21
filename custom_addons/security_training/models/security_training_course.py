@@ -36,6 +36,22 @@ class SecurityTrainingCourse(models.Model):
     )
     version_count = fields.Integer(compute="_compute_version_count")
 
+    auto_enroll = fields.Boolean(
+        string="Enrol automatically",
+        help="Assign this course to every eligible employee as soon as it is "
+             "published, and keep picking up anyone who becomes eligible later "
+             "(a new hire given a login, or a role change) within the hour.",
+    )
+    auto_enroll_group_ids = fields.Many2many(
+        "res.groups", "security_training_course_enroll_group_rel", "course_id", "group_id",
+        string="Only for these roles",
+        help="Leave empty to enrol everyone who has their own DeployGuard login.",
+    )
+    enroll_due_days = fields.Integer(
+        string="Due within (days)", default=14,
+        help="Due date set on automatic enrolments. 0 means no due date.",
+    )
+
     _code_unique = models.Constraint("unique(code)", "A course with this code already exists.")
 
     @api.depends("version_ids.state")
@@ -48,6 +64,76 @@ class SecurityTrainingCourse(models.Model):
     def _compute_version_count(self):
         for course in self:
             course.version_count = len(course.version_ids)
+
+    def action_assign_active_employees(self):
+        self.ensure_one()
+        if not self.published_version_id:
+            raise UserError("This course has no published version to assign.")
+        return self.published_version_id.action_assign_active_employees()
+
+    def write(self, vals):
+        res = super().write(vals)
+        if {"auto_enroll", "auto_enroll_group_ids", "active"} & set(vals):
+            self._auto_enroll()
+        return res
+
+    def _eligible_employees(self):
+        """Only people who can actually open the app. Enrolling a guard with
+        no login would hand them a due date they can never meet, and
+        security_adoption scores overdue training against them."""
+        self.ensure_one()
+        employees = self.env["hr.employee"].sudo().search([
+            ("active", "=", True),
+            ("user_id", "!=", False),
+            ("user_id.active", "=", True),
+            ("user_id.share", "=", False),
+        ])
+        if self.auto_enroll_group_ids:
+            employees = employees.filtered(
+                lambda e: e.user_id.all_group_ids & self.auto_enroll_group_ids
+            )
+        return employees
+
+    def _auto_enroll(self, employees=None):
+        """Idempotent: never gives anyone a second assignment for a course,
+        whatever state the first one is in -- a completed or failed course
+        is not silently handed back to them."""
+        Assignment = self.env["security.training.assignment"].sudo()
+        created = Assignment.browse()
+        for course in self.filtered(lambda c: c.auto_enroll and c.active and c.published_version_id):
+            candidates = course._eligible_employees()
+            if employees is not None:
+                candidates &= employees
+            if not candidates:
+                continue
+            already = set(Assignment.search([
+                ("course_id", "=", course.id), ("employee_id", "in", candidates.ids),
+            ]).mapped("employee_id").ids)
+            to_assign = candidates.filtered(lambda e: e.id not in already)
+            if not to_assign:
+                continue
+            created |= Assignment.create([{
+                "employee_id": emp.id,
+                "course_id": course.id,
+                "course_version_id": course.published_version_id.id,
+                "due_date": course._enroll_due_date(emp),
+            } for emp in to_assign])
+        return created
+
+    def _enroll_due_date(self, employee):
+        """Counted from the learner's own local date, not whoever triggered
+        the enrolment (a supervisor elsewhere, or the cron's system user) --
+        otherwise a due date lands a day early or late around midnight."""
+        self.ensure_one()
+        if self.enroll_due_days <= 0:
+            return False
+        tz = employee.user_id.tz or self.env.user.tz or "UTC"
+        today = fields.Date.context_today(self.with_context(tz=tz))
+        return fields.Date.add(today, days=self.enroll_due_days)
+
+    @api.model
+    def _cron_auto_enroll(self):
+        self.search([("auto_enroll", "=", True)])._auto_enroll()
 
 
 class SecurityTrainingCourseVersion(models.Model):
@@ -115,6 +201,7 @@ class SecurityTrainingCourseVersion(models.Model):
             v.course_id.version_ids.filtered(
                 lambda other: other.id != v.id and other.state == "published"
             ).write({"state": "archived"})
+        self.mapped("course_id")._auto_enroll()
 
     def action_reject(self):
         for v in self:
@@ -124,6 +211,55 @@ class SecurityTrainingCourseVersion(models.Model):
 
     def action_archive_version(self):
         self.write({"state": "archived"})
+
+    def action_assign_active_employees(self):
+        """Bulk assigns this published course version to all active employees who
+        do not already have an assignment for this course."""
+        self.ensure_one()
+        if self.state != "published":
+            raise UserError("Only a published course version can be assigned to employees.")
+
+        employees = self.env["hr.employee"].search([("active", "=", True)])
+        existing_assignments = self.env["security.training.assignment"].search([
+            ("course_id", "=", self.course_id.id),
+        ])
+        assigned_emp_ids = set(existing_assignments.mapped("employee_id").ids)
+
+        to_assign = employees.filtered(lambda e: e.id not in assigned_emp_ids)
+        if not to_assign:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "Training Assignment",
+                    "message": "All active employees already have an assignment for this course.",
+                    "type": "info",
+                    "sticky": False,
+                },
+            }
+
+        Assignment = self.env["security.training.assignment"]
+        vals_list = [
+            {
+                "employee_id": emp.id,
+                "course_id": self.course_id.id,
+                "course_version_id": self.id,
+                "state": "assigned",
+            }
+            for emp in to_assign
+        ]
+        Assignment.create(vals_list)
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Training Assignment Complete",
+                "message": f"Successfully assigned '{self.name}' to {len(to_assign)} active employee(s).",
+                "type": "success",
+                "sticky": False,
+            },
+        }
 
 
 class SecurityTrainingSection(models.Model):

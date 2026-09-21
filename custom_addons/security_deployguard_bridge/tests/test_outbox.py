@@ -54,14 +54,18 @@ class TestDeployguardOutbox(TransactionCase):
     def test_backoff_doubles_each_attempt(self):
         row = self.env["security.deployguard.outbox"].enqueue("test.event", {})
         delays = []
-        previous = row.next_attempt_at
         for _ in range(3):
-            row.action_dispatch_due()
-            row.invalidate_recordset()
-            delay = (row.next_attempt_at - previous).total_seconds() / 60.0
-            delays.append(round(delay))
-            previous = row.next_attempt_at
+            before = fields.Datetime.now()
+            row._reschedule("test")
+            delays.append(round((row.next_attempt_at - before).total_seconds() / 60.0))
         self.assertEqual(delays, [1, 2, 4])
+
+    def test_dispatch_leaves_rows_that_are_not_due_yet(self):
+        row = self.env["security.deployguard.outbox"].enqueue("test.event", {})
+        row.action_dispatch_due()
+        row.action_dispatch_due()
+        row.invalidate_recordset()
+        self.assertEqual(row.attempts, 1)
 
     def test_row_goes_dead_after_max_attempts(self):
         row = self.env["security.deployguard.outbox"].enqueue("test.event", {})

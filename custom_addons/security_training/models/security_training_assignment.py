@@ -52,7 +52,7 @@ class SecurityTrainingAssignment(models.Model):
         return super().create(vals_list)
 
     def action_mark_in_progress(self):
-        self.filtered(lambda a: a.state == "assigned").write({"state": "in_progress"})
+        self.sudo().filtered(lambda a: a.state == "assigned").write({"state": "in_progress"})
 
     def _check_completion(self):
         """An assignment completes once every lesson is progressed and every
@@ -77,8 +77,8 @@ class SecurityTrainingAssignment(models.Model):
             )
 
             if lessons_done and assessments_passed:
-                assignment.write({"state": "completed", "completed_at": fields.Datetime.now()})
-                assignment.env["security.training.competency"]._grant_from_assignment(assignment)
+                assignment.sudo().write({"state": "completed", "completed_at": fields.Datetime.now()})
+                self.env["security.training.competency"].sudo()._grant_from_assignment(assignment)
 
 
 class SecurityTrainingLessonProgress(models.Model):
@@ -96,8 +96,8 @@ class SecurityTrainingLessonProgress(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        records.assignment_id.write({"state": "in_progress"})
-        records.assignment_id._check_completion()
+        records.assignment_id.sudo().write({"state": "in_progress"})
+        records.assignment_id.sudo()._check_completion()
         return records
 
 
@@ -161,14 +161,14 @@ class SecurityTrainingAttempt(models.Model):
             "score_pct": score_pct,
             "submitted_at": fields.Datetime.now(),
         })
-        self.assignment_id._check_completion()
+        self.assignment_id.sudo()._check_completion()
 
         if not passed and self.assignment_id.state != "completed":
             attempts_used = len(self.assignment_id.attempt_ids.filtered(
                 lambda a: a.assessment_id == self.assessment_id
             ))
             if attempts_used >= self.assessment_id.max_attempts:
-                self.assignment_id.write({"state": "failed"})
+                self.assignment_id.sudo().write({"state": "failed"})
         return self.id  # RPC-safe: a bare recordset isn't JSON-serialisable
 
 

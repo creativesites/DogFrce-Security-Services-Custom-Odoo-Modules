@@ -30,4 +30,20 @@
             Never assign this group to a human user.
         </field>
     </record>
+
+    <!-- Acknowledgements are personal: each employee reads only their own.
+         Administrators see everyone's, as the audit trail of who was told. -->
+    <record id="rule_policy_ack_own" model="ir.rule">
+        <field name="name">Policy acknowledgement: own only</field>
+        <field name="model_id" ref="model_security_deployguard_policy_acknowledgement"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <record id="rule_policy_ack_system_all" model="ir.rule">
+        <field name="name">Policy acknowledgement: administrators see all</field>
+        <field name="model_id" ref="model_security_deployguard_policy_acknowledgement"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+    </record>
 </odoo>

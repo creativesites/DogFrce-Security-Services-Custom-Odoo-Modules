@@ -44,3 +44,26 @@ class TestDogforceCourseSeed(TransactionCase):
             "employee_id": employee.id, "course_id": course.id,
         })
         self.assertEqual(assignment.course_version_id, course.published_version_id)
+
+    def test_all_twelve_lessons_have_detailed_body(self):
+        course = self.env.ref("security_training.course_getting_live")
+        lessons = course.published_version_id.section_ids.mapped("lesson_ids")
+        self.assertEqual(len(lessons), 12)
+        for lesson in lessons:
+            self.assertTrue(
+                lesson.body and len(lesson.body.strip()) > 50,
+                f"lesson '{lesson.name}' has empty or insufficient body text",
+            )
+
+    def test_bulk_assign_active_employees(self):
+        course = self.env.ref("security_training.course_getting_live")
+        version = course.published_version_id
+        emp1 = self.env["hr.employee"].create({"name": "Bulk Test Guard 1", "active": True})
+        emp2 = self.env["hr.employee"].create({"name": "Bulk Test Guard 2", "active": True})
+        res = version.action_assign_active_employees()
+        self.assertEqual(res.get("type"), "ir.actions.client")
+        assignments = self.env["security.training.assignment"].search([
+            ("employee_id", "in", [emp1.id, emp2.id]),
+            ("course_id", "=", course.id),
+        ])
+        self.assertEqual(len(assignments), 2)

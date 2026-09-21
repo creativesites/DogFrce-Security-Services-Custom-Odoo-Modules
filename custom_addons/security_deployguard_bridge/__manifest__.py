@@ -42,13 +42,14 @@
           notifications) -- next once this core is reviewed and installed
           on a real (non-production) database.
     """,
-    "depends": ["security_base", "mail"],
+    "depends": ["security_base", "security_operations", "mail"],
     "data": [
         "security/security_groups.xml",
         "security/ir.model.access.csv",
         "data/security_deployguard_cron.xml",
         "views/security_deployguard_config_views.xml",
         "views/security_deployguard_outbox_views.xml",
+        "views/security_deployguard_policy_acknowledgement_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_deployguard_policy_ack_list" model="ir.ui.view">
+        <field name="name">security.deployguard.policy.acknowledgement.list</field>
+        <field name="model">security.deployguard.policy.acknowledgement</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="user_id"/>
+                <field name="notice_version"/>
+                <field name="acknowledged_at"/>
+                <field name="client" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_deployguard_policy_ack_search" model="ir.ui.view">
+        <field name="name">security.deployguard.policy.acknowledgement.search</field>
+        <field name="model">security.deployguard.policy.acknowledgement</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="user_id"/>
+                <field name="notice_version"/>
+                <group>
+                    <filter name="group_version" string="Notice version" context="{'group_by': 'notice_version'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_deployguard_policy_ack" model="ir.actions.act_window">
+        <field name="name">Monitoring Notice Acknowledgements</field>
+        <field name="res_model">security.deployguard.policy.acknowledgement</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_security_deployguard_policy_ack_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Nobody has acknowledged the monitoring notice yet.</p>
+            <p>Employees are shown the notice the first time they sign in to the DeployGuard desktop app.</p>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_security_deployguard_policy_ack"
+        name="Notice Acknowledgements"
+        parent="menu_security_deployguard_root"
+        action="action_security_deployguard_policy_ack"
+        sequence="30"
+        groups="base.group_system"
+    />
+</odoo>

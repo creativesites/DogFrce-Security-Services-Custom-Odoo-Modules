@@ -16,7 +16,7 @@
       assignable. Real course edits from here on should go through the
       normal draft -> review -> publish workflow in the UI.
     -->
-    <data noupdate="1">
+    <data noupdate="0">
 
         <record id="course_getting_live" model="security.training.course">
             <field name="name">Getting Live: Client Setup &amp; Rostering</field>
@@ -86,6 +86,52 @@
             <field name="name">Watch: Setting Up a New Client</field>
             <field name="content_type">video_url</field>
             <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_1</field>
+            <field name="body"><![CDATA[
+<div class="dg-lesson-content">
+  <h3>Video Walkthrough: Setting Up a New Client in 5 Steps</h3>
+  <p>In DeployGuard ERP, onboarding a client takes you through an integrated 5-step wizard. There's no need to manually visit five separate menus. Everything connects automatically.</p>
+
+  <div class="dg-callout dg-callout--info">
+    <strong>Starting Point:</strong> Open the <strong>Clients &amp; Sites</strong> menu and click the prominent <strong>"Set up a new client"</strong> button.
+  </div>
+
+  <h4>Step-by-Step Breakdown:</h4>
+  <ol>
+    <li>
+      <strong>Step 1 — Client Information:</strong>
+      Pick an existing partner or enter a new company name, primary contact person, email, and phone number.
+    </li>
+    <li>
+      <strong>Step 2 — Security Sites:</strong>
+      Add one row per physical site requiring security guards. Enter Site Name (e.g. <em>Head Office</em>, <em>Kalahari Mine Warehouse</em>), a short unique Site Code (e.g. <em>HQ</em>, <em>WH-1</em>), and street address. You can always add additional sites later.
+    </li>
+    <li>
+      <strong>Step 3 — Shift Requirements:</strong>
+      For each site, define the guarding requirements:
+      <ul>
+        <li><strong>Post Type:</strong> Static Guard, Gate / Access Control, Patrol, Control Room, or Site Supervisor.</li>
+        <li><strong>Shift Template:</strong> Day Shift (06:00–18:00), Night Shift (18:00–06:00), 8-Hour Day (08:00–16:00), or Relief.</li>
+        <li><strong>Guard Count:</strong> Number of guards required on duty during that shift.</li>
+      </ul>
+      <div class="dg-callout dg-callout--tip">
+        <strong>Billing Rates Flexibility:</strong> If client billing rates or guard wage rates are not finalized yet, leave them at zero! You can still generate and run rosters immediately. Billing and payroll will simply flag them as pending review.
+      </div>
+    </li>
+    <li>
+      <strong>Step 4 — Billing Mode:</strong>
+      Configure how the client will be invoiced: <em>Fixed Monthly Rate</em>, <em>Per Shift Rate</em>, <em>Per Hour</em>, or <em>Milestone</em>, along with payment terms (e.g. 30 days).
+    </li>
+    <li>
+      <strong>Step 5 — Summary Review &amp; Instant Roster Batch:</strong>
+      Check the review table. If any required information is missing, the wizard indicates the exact step to fix. Tick <strong>"Create the first roster batch"</strong> and select the starting month, then click <strong>Create client</strong>.
+    </li>
+  </ol>
+
+  <div class="dg-callout dg-callout--success">
+    <strong>Result:</strong> In one single click, the client record, security sites, shift requirements, billing terms, and first draft roster batch are generated and linked.
+  </div>
+</div>
+]]></field>
         </record>
 
         <record id="lesson_client_setup_do" model="security.training.lesson">
@@ -120,6 +166,44 @@
             <field name="name">Watch: Sites, Posts &amp; Shift Requirements</field>
             <field name="content_type">video_url</field>
             <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_2</field>
+            <field name="body"><![CDATA[
+<div class="dg-lesson-content">
+  <h3>Video Walkthrough: Sites, Posts &amp; Shift Requirements</h3>
+  <p>Every security operation is organized around physical sites and their contracted shift requirements. Here is how DeployGuard ERP structures them for effortless management.</p>
+
+  <h4>1. Grouped Sites List View</h4>
+  <p>The Sites list is grouped by client so you can scan all active sites at a glance. You can expand or collapse client groups or use the search bar to locate any site by name or code.</p>
+
+  <h4>2. Client 360 View — The Security Sites Tab</h4>
+  <p>Opening any client record reveals the <strong>Security Sites</strong> tab. This single view displays:</p>
+  <ul>
+    <li>All physical sites operated under that client.</li>
+    <li>Active security contracts, tender agreements, and start/end dates.</li>
+    <li>Live shift requirements and required guard headcounts.</li>
+  </ul>
+
+  <h4>3. The 3 Essential Tabs on a Site Form:</h4>
+  <ol>
+    <li>
+      <strong>Posts &amp; Shifts:</strong>
+      Shows all active posts and shift templates for this site.
+      <ul>
+        <li><strong>Post Types:</strong> Static Guard, Gate, Patrol, Control Room, Site Supervisor.</li>
+        <li><strong>Shift Templates:</strong> Day (06:00–18:00), Night (18:00–06:00), 8-Hour Day (08:00–16:00), Relief.</li>
+      </ul>
+      To adjust guard counts or add new shifts without re-running the onboarding wizard, simply add or edit rows directly in this tab.
+    </li>
+    <li>
+      <strong>Contacts &amp; Location:</strong>
+      Holds site contact names, emergency phone numbers, and optional GPS geofencing coordinates. GPS is never required to save a site.
+    </li>
+    <li>
+      <strong>Notes &amp; Exclusions:</strong>
+      Special site instructions (e.g., specific gate procedures) and the <strong>Guard Exclusion List</strong>. If a client requests that a guard not be deployed to their property, add the employee here; the system's rostering auto-allocation will automatically block that guard from being scheduled.
+    </li>
+  </ol>
+</div>
+]]></field>
         </record>
 
         <record id="lesson_sites_do" model="security.training.lesson">
@@ -152,6 +236,44 @@
             <field name="name">Watch: Generating a Roster</field>
             <field name="content_type">video_url</field>
             <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_3</field>
+            <field name="body"><![CDATA[
+<div class="dg-lesson-content">
+  <h3>Video Walkthrough: Generating and Confirming a Roster</h3>
+  <p>Once client sites and shift requirements are defined, rostering is fast, automated, and deterministic.</p>
+
+  <h4>What is a Roster Batch?</h4>
+  <p>A roster batch is a scheduling container for a site or client across a date range (e.g., an entire calendar month). It begins in the <strong>Draft</strong> state.</p>
+
+  <h4>The 4-Step Rostering Flow:</h4>
+  <ol>
+    <li>
+      <strong>Open Draft Batch:</strong>
+      Open an existing draft batch created by the wizard or click "New" under Rostering to create a batch for your target client/site and date range.
+    </li>
+    <li>
+      <strong>Click "Generate Roster Slots":</strong>
+      The system inspects every active shift requirement for the site and builds exact guard slots: <em>1 slot per guard, per shift, per day</em> across the whole date range.
+    </li>
+    <li>
+      <strong>Auto-Fill or Manual Assignment:</strong>
+      <ul>
+        <li><strong>Red Highlighted Slots:</strong> Indicate unassigned slots awaiting a guard.</li>
+        <li><strong>Auto-Fill Open Slots:</strong> The automated allocation algorithm evaluates active security officers, checks shift rest compliance, and enforces guard exclusions to assign eligible guards automatically.</li>
+        <li><strong>Manual Overrides:</strong> You can click any slot at any time to select or switch a guard manually.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Click "Confirm Roster":</strong>
+      Once satisfied with guard assignments, click <strong>Confirm Roster</strong>. The status advances to <strong>Confirmed</strong>.
+    </li>
+  </ol>
+
+  <div class="dg-callout dg-callout--success">
+    <strong>Immediate Field Deployment:</strong>
+    Confirmed means live! Guards can report for duty and be posted against confirmed slots immediately. You do <strong>not</strong> need to wait for sign-offs before guards start working.
+  </div>
+</div>
+]]></field>
         </record>
 
         <record id="lesson_roster_generate_do" model="security.training.lesson">
@@ -186,6 +308,38 @@
             <field name="name">Watch: Understanding Sign-Offs</field>
             <field name="content_type">video_url</field>
             <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_4</field>
+            <field name="body"><![CDATA[
+<div class="dg-lesson-content">
+  <h3>Video Walkthrough: Understanding Roster Sign-Offs</h3>
+  <p>The moment a roster batch is generated, a 5-role sign-off sheet is initialized. Here is how sign-offs protect operational integrity without creating bottlenecks.</p>
+
+  <div class="dg-callout dg-callout--warning">
+    <strong>Sign-Offs Do Not Stop Guards:</strong>
+    Guards are already working in the field! Sign-offs exist for accountability, quality control, and cross-departmental auditing -- not as an operational roadblock.
+  </div>
+
+  <h4>The 5 Sign-Off Roles:</h4>
+  <ol>
+    <li><strong>Front Desk:</strong> Cross-checks guard assignments against customer post requirements and daily logs.</li>
+    <li><strong>General Manager:</strong> High-level operational validation and site coverage sign-off.</li>
+    <li><strong>HR:</strong> Audits hours equity, guard fatigue rules, and fair shift allocation.</li>
+    <li><strong>Finance:</strong> Validates billable rates and approves payroll readiness.</li>
+    <li><strong>Director:</strong> Retains full executive visibility and oversight.</li>
+  </ol>
+
+  <h4>How Sign-Offs Work:</h4>
+  <ul>
+    <li><strong>Review:</strong> Filter the Roster Sign-Offs menu to view batches awaiting your role's approval.</li>
+    <li><strong>Sign Off:</strong> Click <strong>"Sign off"</strong> if your review passes. You can add an optional comment (e.g. <em>"Checked, guard allocations compliant"</em>). The record stamps your name and date.</li>
+    <li><strong>Flag an Issue:</strong> If an irregularity exists (e.g. short-staffed shift, uncertified guard), click <strong>"Flag"</strong>. A written reason is <strong>mandatory</strong>.</li>
+  </ul>
+
+  <div class="dg-callout dg-callout--info">
+    <strong>Why Flagging Keeps Operations Running:</strong>
+    Flagging a roster records the specific issue for management follow-up while allowing guards to continue protecting the client's premises uninterrupted.
+  </div>
+</div>
+]]></field>
         </record>
 
         <record id="lesson_signoffs_do" model="security.training.lesson">
@@ -219,6 +373,32 @@
             <field name="name">Watch: Posting &amp; Reviewing Attendance</field>
             <field name="content_type">video_url</field>
             <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_5</field>
+            <field name="body"><![CDATA[
+<div class="dg-lesson-content">
+  <h3>Video Walkthrough: Posting &amp; Reviewing Daily Attendance</h3>
+  <p>Accurate billing and payroll depend on reliable daily attendance recording. DeployGuard ERP uses the <strong>Posting Console</strong> to manage this workflow.</p>
+
+  <h4>1. Operations Posts the Shift (Capture)</h4>
+  <ol>
+    <li>Operations opens the <strong>Posting Console</strong>, selects the Site, and chooses the target date.</li>
+    <li>Every guard scheduled for that shift appears automatically with status <em>Not Marked</em>.</li>
+    <li>Operations marks each guard as <strong>Present</strong>, <strong>Absent</strong>, or <strong>AWOL</strong>.</li>
+    <li>Click <strong>Save Changes</strong>. The batch status becomes <strong>Captured</strong>.</li>
+  </ol>
+
+  <h4>2. Front Desk Reviews the Shift (Validation)</h4>
+  <ol>
+    <li>Front Desk opens the same Posting Console for that site and date.</li>
+    <li>The batch displays the <em>Captured</em> badge. Front Desk cross-checks the attendance against guard call-ins and incident reports.</li>
+    <li>Front Desk clicks <strong>Review &amp; Validate</strong>. The batch moves to <strong>Reviewed</strong>.</li>
+  </ol>
+
+  <div class="dg-callout dg-callout--danger">
+    <strong>The Segregation-of-Duties Gate:</strong>
+    Whoever captures a posting <strong>cannot review or validate their own posting</strong>. If the same user attempts to perform both actions, the system displays a clear refusal message instructing an independent reviewer to sign off.
+  </div>
+</div>
+]]></field>
         </record>
 
         <record id="lesson_attendance_do" model="security.training.lesson">

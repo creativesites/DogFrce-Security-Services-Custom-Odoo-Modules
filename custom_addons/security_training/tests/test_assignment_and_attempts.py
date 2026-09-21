@@ -80,7 +80,14 @@ class TestAttemptScoring(TransactionCase):
             "group_ids": [(6, 0, [cls.env.ref("security_training.group_training_supervisor").id])],
         })
         env = cls.env(user=cls.author)
-        cls.employee = cls.env["hr.employee"].create({"name": "Attempt Test Guard"})
+        cls.regular_user = cls.env["res.users"].create({
+            "name": "Regular Employee User", "login": "regular-guard@access-control.test",
+            "group_ids": [(6, 0, [cls.env.ref("base.group_user").id])],
+        })
+        cls.employee = cls.env["hr.employee"].create({
+            "name": "Attempt Test Guard",
+            "user_id": cls.regular_user.id,
+        })
 
         course = env["security.training.course"].create({"name": "Quiz Course"})
         version = course.version_ids[:1] or env["security.training.course.version"].create({"course_id": course.id})
@@ -170,3 +177,36 @@ class TestAttemptScoring(TransactionCase):
             [("assignment_id", "=", self.assignment.id)]
         )
         self.assertTrue(competency)
+
+    def test_regular_user_without_supervisor_group_can_progress_and_complete(self):
+        """Learners (base.group_user without group_training_supervisor) must be able
+        to mark lessons done and submit quiz attempts without hitting AccessError on
+        security.training.assignment."""
+        env = self.env(user=self.regular_user)
+        lesson = self.env["security.training.lesson"].with_user(
+            self.author
+        ).create({
+            "section_id": self.assignment.course_version_id.section_ids[0].id, "name": "Regular Guard Lesson",
+        })
+        # Regular user records lesson progress
+        progress = env["security.training.lesson.progress"].create({
+            "assignment_id": self.assignment.id, "lesson_id": lesson.id,
+        })
+        self.assertTrue(progress)
+        self.assignment.invalidate_recordset()
+        self.assertEqual(self.assignment.state, "in_progress")
+
+        # Regular user starts and submits attempt
+        attempt_id = env["security.training.attempt"].action_start_attempt(
+            self.assignment.id, self.assessment.id
+        )
+        attempt = env["security.training.attempt"].browse(attempt_id)
+        attempt.action_submit({self.question.id: [self.correct_option.id]})
+
+        self.assignment.invalidate_recordset()
+        self.assertEqual(self.assignment.state, "completed")
+        competency = self.env["security.training.competency"].search(
+            [("assignment_id", "=", self.assignment.id)]
+        )
+        self.assertTrue(competency)
+

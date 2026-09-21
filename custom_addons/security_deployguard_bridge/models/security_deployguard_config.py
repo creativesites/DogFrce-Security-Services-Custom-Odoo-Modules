@@ -97,6 +97,7 @@ class SecurityDeployguardConfig(models.Model):
              "until this is true.",
     )
 
+    @api.depends("webhook_secret_encrypted")
     def _compute_webhook_secret_set(self):
         for rec in self:
             rec.webhook_secret_set = bool(rec.webhook_secret_encrypted)

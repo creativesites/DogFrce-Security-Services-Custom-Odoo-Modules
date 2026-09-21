@@ -6,6 +6,11 @@
         <field name="comment">Can author, submit for review, approve/reject course versions, and assign training to employees.</field>
     </record>
 
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_training_supervisor'))]"/>
+    </record>
+
+
     <record id="rule_training_version_published_only" model="ir.rule">
         <field name="name">Course Version: employees see published only</field>
         <field name="model_id" ref="model_security_training_course_version"/>

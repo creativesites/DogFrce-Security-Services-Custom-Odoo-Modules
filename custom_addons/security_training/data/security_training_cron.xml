@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Catches anyone who became eligible after a course was published:
+             a new hire given a login, or a role change that now matches a
+             course's "Only for these roles". Publishing enrols immediately;
+             this is the sweep for everything that happens afterwards. -->
+        <record id="cron_security_training_auto_enroll" model="ir.cron">
+            <field name="name">Training: auto-enrol eligible employees</field>
+            <field name="model_id" ref="model_security_training_course"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_auto_enroll()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active">True</field>
+        </record>
+    </data>
+</odoo>

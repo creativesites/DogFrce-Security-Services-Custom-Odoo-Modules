@@ -20,6 +20,11 @@
         <field name="model">security.training.course</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_assign_active_employees" type="object" string="Assign to Active Employees"
+                            invisible="not published_version_id" class="btn-primary"
+                            groups="security_training.group_training_supervisor"/>
+                </header>
                 <sheet>
                     <div class="oe_title"><h1><field name="name" placeholder="e.g. Using DeployGuard ERP — Attendance"/></h1></div>
                     <group>
@@ -31,6 +36,23 @@
                             <field name="published_version_id" readonly="1"/>
                             <field name="active"/>
                         </group>
+                    </group>
+                    <group string="Automatic enrolment" groups="security_training.group_training_supervisor">
+                        <group>
+                            <field name="auto_enroll"/>
+                            <field name="enroll_due_days" invisible="not auto_enroll"/>
+                        </group>
+                        <group>
+                            <field name="auto_enroll_group_ids" widget="many2many_tags"
+                                   invisible="not auto_enroll"
+                                   placeholder="Everyone with a DeployGuard login"/>
+                        </group>
+                        <div class="text-muted" colspan="2" invisible="not auto_enroll">
+                            Enrols everyone eligible when the course is published, then picks up
+                            new hires and role changes every hour. Only employees with their own
+                            login are enrolled: people who can't open the app are never handed a
+                            due date they can't meet.
+                        </div>
                     </group>
                     <group string="Description">
                         <field name="description" nolabel="1"/>
@@ -75,6 +97,9 @@
                             groups="security_training.group_training_supervisor"/>
                     <button name="action_reject" type="object" string="Send Back to Draft"
                             invisible="state != 'in_review'"
+                            groups="security_training.group_training_supervisor"/>
+                    <button name="action_assign_active_employees" type="object" string="Assign to Active Employees"
+                            invisible="state != 'published'" class="btn-primary"
                             groups="security_training.group_training_supervisor"/>
                     <button name="action_archive_version" type="object" string="Archive"
                             invisible="state == 'archived'"

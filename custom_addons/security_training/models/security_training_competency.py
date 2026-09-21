@@ -29,13 +29,14 @@ class SecurityTrainingCompetency(models.Model):
 
     @api.model
     def _grant_from_assignment(self, assignment):
+        self = self.sudo()
         if self.search_count([("assignment_id", "=", assignment.id)]):
             return self.browse()
 
         evidence_certification = False
         cert_type = assignment.course_id.grants_certification_id
         if cert_type:
-            evidence_certification = self.env["security.employee.certification"].create({
+            evidence_certification = self.env["security.employee.certification"].sudo().create({
                 "employee_id": assignment.employee_id.id,
                 "certification_id": cert_type.id,
                 "issue_date": fields.Date.context_today(self),

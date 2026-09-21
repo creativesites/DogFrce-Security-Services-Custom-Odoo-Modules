@@ -23,3 +23,16 @@ access_training_attempt_answer_user,security.training.attempt.answer.user,model_
 access_training_attempt_answer_supervisor,security.training.attempt.answer.supervisor,model_security_training_attempt_answer,group_training_supervisor,1,1,1,1
 access_training_competency_user,security.training.competency.user,model_security_training_competency,base.group_user,1,0,0,0
 access_training_competency_supervisor,security.training.competency.supervisor,model_security_training_competency,group_training_supervisor,1,1,1,1
+access_training_course_system,security.training.course.system,model_security_training_course,base.group_system,1,1,1,1
+access_training_course_version_system,security.training.course.version.system,model_security_training_course_version,base.group_system,1,1,1,1
+access_training_section_system,security.training.section.system,model_security_training_section,base.group_system,1,1,1,1
+access_training_lesson_system,security.training.lesson.system,model_security_training_lesson,base.group_system,1,1,1,1
+access_training_assessment_system,security.training.assessment.system,model_security_training_assessment,base.group_system,1,1,1,1
+access_training_question_system,security.training.question.system,model_security_training_question,base.group_system,1,1,1,1
+access_training_question_option_system,security.training.question.option.system,model_security_training_question_option,base.group_system,1,1,1,1
+access_training_assignment_system,security.training.assignment.system,model_security_training_assignment,base.group_system,1,1,1,1
+access_training_lesson_progress_system,security.training.lesson.progress.system,model_security_training_lesson_progress,base.group_system,1,1,1,1
+access_training_attempt_system,security.training.attempt.system,model_security_training_attempt,base.group_system,1,1,1,1
+access_training_attempt_answer_system,security.training.attempt.answer.system,model_security_training_attempt_answer,base.group_system,1,1,1,1
+access_training_competency_system,security.training.competency.system,model_security_training_competency,base.group_system,1,1,1,1
+
