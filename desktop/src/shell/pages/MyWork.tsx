@@ -816,7 +816,7 @@ function RosterSignoffSection({
               justifyContent: "space-between",
               gap: 12,
               padding: "12px 16px",
-              borderColor: "var(--ds-warning-border, var(--ds-border))",
+              borderColor: "color-mix(in oklab, var(--ds-warning) 35%, transparent)",
             }}
           >
             <div style={{ flex: 1, minWidth: 0 }}>

@@ -74,7 +74,7 @@ export function TaskFeedbackModal({
     <div className="dg-modal-backdrop" role="dialog" aria-modal="true" aria-label="Task Feedback">
       <div className="dg-modal" style={{ maxWidth: 440, padding: 24, textAlign: "center" }}>
         <h3 style={{ margin: "0 0 4px 0", fontSize: "1.1rem", fontWeight: 600 }}>Task Completed</h3>
-        <p style={{ margin: "0 0 16px 0", fontSize: "0.85rem", color: "var(--dg-text-secondary, #64748b)" }}>
+        <p style={{ margin: "0 0 16px 0", fontSize: "0.85rem", color: "var(--ds-text-muted)" }}>
           {taskName}
         </p>
 
@@ -121,7 +121,7 @@ export function TaskFeedbackModal({
             </div>
             <button
               type="button"
-              style={{ background: "none", border: "none", color: "#64748b", fontSize: "0.82rem", cursor: "pointer" }}
+              style={{ background: "none", border: "none", color: "var(--ds-text-subtle)", fontSize: "0.82rem", cursor: "pointer" }}
               onClick={onClose}
               disabled={submitting}
             >

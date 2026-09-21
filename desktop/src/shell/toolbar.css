@@ -791,6 +791,33 @@
   font-size: 11.5px;
   color: var(--dg-text-3);
 }
+/* Update offer in the toolbar (UpdateNotice.tsx). Sits on the dark rail. */
+.dg-update {
+  height: 26px;
+  padding: 0 12px;
+  margin-right: 6px;
+  border: 1px solid color-mix(in oklab, var(--dg-success) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--dg-success) 22%, transparent);
+  color: var(--dg-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dg-update:hover { background: color-mix(in oklab, var(--dg-success) 34%, transparent); }
+.dg-update:focus-visible { outline: 2px solid var(--dg-accent-2); outline-offset: 2px; }
+.dg-update--busy {
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+}
+.dg-update--failed {
+  border-color: color-mix(in oklab, var(--dg-danger) 60%, transparent);
+  background: color-mix(in oklab, var(--dg-danger) 22%, transparent);
+}
+
 .dg-gatecard {
   max-width: 520px;
 }
@@ -1300,7 +1327,7 @@
 }
 
 .dg-lesson-ai-chip:hover {
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   border-color: var(--ds-accent-mid);
   color: var(--ds-text);
 }
@@ -1386,7 +1413,7 @@
   height: 32px;
   border-radius: var(--ds-radius-sm);
   background: var(--ds-accent-light);
-  color: var(--ds-accent-deep);
+  color: var(--ds-accent-hover);
 }
 
 .dg-adoption__title {
@@ -1445,7 +1472,7 @@
 }
 
 .dg-adoption__tab-btn.is-active {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   color: var(--ds-text);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
@@ -1463,7 +1490,7 @@
 }
 
 .dg-adoption__refresh-btn:hover:not(:disabled) {
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   color: var(--ds-text);
 }
 
@@ -1598,7 +1625,7 @@
 /* Score hero card */
 .dg-adoption__hero-card {
   display: flex;
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px solid var(--ds-border-light);
   border-radius: var(--dgs-r-card);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -1614,7 +1641,7 @@
   align-items: center;
   text-align: center;
   min-width: 220px;
-  background: linear-gradient(180deg, var(--ds-surface) 0%, var(--ds-card) 100%);
+  background: linear-gradient(180deg, var(--ds-surface) 0%, var(--ds-surface) 100%);
   border-right: 1px solid var(--ds-border-light);
   flex: 1;
 }
@@ -1780,7 +1807,7 @@
 }
 
 .dg-adoption__factor-card {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px solid var(--ds-border-light);
   border-radius: var(--dgs-r-control);
   padding: 16px;
@@ -1876,12 +1903,12 @@
 .dg-adoption__chip.is-active {
   background: var(--ds-accent-light);
   border-color: var(--ds-accent-mid);
-  color: var(--ds-accent-deep);
+  color: var(--ds-accent-hover);
 }
 
 /* Table */
 .dg-adoption__table-wrap {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px solid var(--ds-border-light);
   border-radius: var(--dgs-r-control);
   overflow-x: auto;
@@ -1916,7 +1943,7 @@
 }
 
 .dg-adoption__table tr:hover td {
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
 }
 
 .dg-adoption__item-title {
@@ -1939,13 +1966,13 @@
 .dg-adoption__score-pill {
   font-family: var(--dgs-mono);
   font-size: 13px;
-  color: var(--ds-accent-deep);
+  color: var(--ds-accent-hover);
 }
 
 .dg-adoption__empty-box {
   padding: 36px 20px;
   text-align: center;
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px dashed var(--ds-border-light);
   border-radius: var(--dgs-r-control);
   color: var(--ds-text-subtle);
@@ -2032,12 +2059,12 @@
 }
 
 .dg-inbox-tab:hover {
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   color: var(--ds-text);
 }
 
 .dg-inbox-tab.is-active {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   color: var(--ds-text);
   border-color: var(--ds-border);
   font-weight: 600;
@@ -2066,7 +2093,7 @@
 
 .dg-inbox-tab__badge--watch {
   background: color-mix(in oklab, var(--ds-accent) 15%, transparent);
-  color: var(--ds-accent-deep);
+  color: var(--ds-accent-hover);
 }
 
 .dg-inbox-hotkeys {
@@ -2076,13 +2103,13 @@
   font-size: 11.5px;
   color: var(--ds-text-subtle);
   padding: 8px 14px;
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   border-radius: var(--dgs-r-control);
   border: 1px solid var(--ds-border-light);
 }
 
 .dg-inbox-hotkeys kbd {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px solid var(--ds-border);
   padding: 1px 5px;
   border-radius: 4px;
@@ -2135,7 +2162,7 @@
 }
 
 .dg-inbox-card {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px solid var(--ds-border-light);
   border-radius: var(--dgs-r-card);
   padding: 14px 16px;
@@ -2204,7 +2231,7 @@
 
 .dg-tier-tag--watch {
   background: color-mix(in oklab, var(--ds-accent) 15%, transparent);
-  color: var(--ds-accent-deep);
+  color: var(--ds-accent-hover);
 }
 
 .dg-escalation-tag {
@@ -2221,7 +2248,7 @@
   font-weight: 600;
   padding: 2px 6px;
   border-radius: 4px;
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   color: var(--ds-text-subtle);
   border: 1px solid var(--ds-border-light);
 }
@@ -2231,7 +2258,7 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   color: var(--ds-text-2);
   text-transform: capitalize;
 }
@@ -2278,12 +2305,12 @@
   font-size: 10.5px;
   text-transform: capitalize;
   padding: 1px 6px;
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   border-radius: 4px;
 }
 
 .dg-inbox-detail {
-  background: var(--ds-card);
+  background: var(--ds-surface);
   border: 1px solid var(--ds-border-light);
   border-radius: var(--dgs-r-card);
   padding: 24px;
@@ -2321,13 +2348,13 @@
   font-size: 12.5px;
   color: var(--ds-text-2);
   padding: 8px 12px;
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   border-radius: var(--dgs-r-control);
   border: 1px solid var(--ds-border-light);
 }
 
 .dg-inbox-detail__body-box {
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   border-radius: var(--dgs-r-control);
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -2369,7 +2396,7 @@
 
 .dg-inbox-detail__audit-row--highlight {
   padding: 8px 10px;
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
   border-radius: var(--dgs-r-control);
 }
 
@@ -2474,18 +2501,18 @@
   align-items: flex-start;
   gap: 8px;
   cursor: pointer;
-  background: var(--ds-card);
+  background: var(--ds-surface);
   transition: all 0.15s ease;
 }
 
 .dg-resolution-choice:hover {
   border-color: var(--ds-accent);
-  background: var(--ds-surface-hover);
+  background: var(--ds-slate);
 }
 
 .dg-resolution-choice.is-selected {
   border-color: var(--ds-accent);
-  background: color-mix(in oklab, var(--ds-accent) 8%, var(--ds-card));
+  background: color-mix(in oklab, var(--ds-accent) 8%, var(--ds-surface));
   box-shadow: 0 0 0 1px var(--ds-accent);
 }
 

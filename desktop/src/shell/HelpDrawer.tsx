@@ -82,7 +82,7 @@ export function HelpDrawer({
           bottom: 0,
           width: 480,
           maxWidth: "100vw",
-          background: "var(--dg-bg-surface, #ffffff)",
+          background: "var(--ds-surface)",
           boxShadow: "-4px 0 24px rgba(0,0,0,0.15)",
           display: "flex",
           flexDirection: "column",
@@ -93,7 +93,7 @@ export function HelpDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid var(--dg-border, #e2e8f0)",
+            borderBottom: "1px solid var(--ds-border)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -101,7 +101,7 @@ export function HelpDrawer({
         >
           <div>
             <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600 }}>Help Centre & Knowledge</h2>
-            <div style={{ fontSize: "0.8rem", color: "var(--dg-text-secondary, #64748b)" }}>
+            <div style={{ fontSize: "0.8rem", color: "var(--ds-text-muted)" }}>
               Context for <strong>{currentRoute}</strong>
             </div>
           </div>
@@ -116,7 +116,7 @@ export function HelpDrawer({
         </div>
 
         {/* Search bar */}
-        <form onSubmit={handleSearch} style={{ padding: "12px 20px", borderBottom: "1px solid var(--dg-border, #e2e8f0)" }}>
+        <form onSubmit={handleSearch} style={{ padding: "12px 20px", borderBottom: "1px solid var(--ds-border)" }}>
           <div style={{ display: "flex", gap: 8 }}>
             <input
               type="search"
@@ -127,7 +127,7 @@ export function HelpDrawer({
                 flex: 1,
                 padding: "8px 12px",
                 borderRadius: 6,
-                border: "1px solid var(--dg-border, #cbd5e1)",
+                border: "1px solid var(--ds-border)",
                 fontSize: "0.88rem",
               }}
             />
@@ -151,7 +151,7 @@ export function HelpDrawer({
               </button>
               <h3 style={{ margin: "0 0 8px 0", fontSize: "1.2rem", fontWeight: 600 }}>{selectedArticle.title}</h3>
               {selectedArticle.summary && (
-                <p style={{ color: "var(--dg-text-secondary, #64748b)", fontStyle: "italic", marginBottom: 16 }}>
+                <p style={{ color: "var(--ds-text-muted)", fontStyle: "italic", marginBottom: 16 }}>
                   {selectedArticle.summary}
                 </p>
               )}
@@ -162,14 +162,14 @@ export function HelpDrawer({
             </div>
           ) : (
             <div>
-              {loading && <div style={{ padding: 20, textAlign: "center", color: "#64748b" }}>Loading articles...</div>}
+              {loading && <div style={{ padding: 20, textAlign: "center", color: "var(--ds-text-subtle)" }}>Loading articles...</div>}
               {error && (
-                <div style={{ background: "#fef2f2", color: "#991b1b", padding: 10, borderRadius: 6, marginBottom: 12 }}>
+                <div style={{ background: "var(--ds-danger-bg)", color: "var(--ds-danger)", padding: 10, borderRadius: 6, marginBottom: 12 }}>
                   {error}
                 </div>
               )}
               {!loading && articles.length === 0 && (
-                <div style={{ textAlign: "center", padding: "30px 10px", color: "#64748b" }}>
+                <div style={{ textAlign: "center", padding: "30px 10px", color: "var(--ds-text-subtle)" }}>
                   <p>No matching articles found.</p>
                 </div>
               )}
@@ -181,17 +181,17 @@ export function HelpDrawer({
                     style={{
                       padding: "12px 14px",
                       borderRadius: 8,
-                      border: "1px solid var(--dg-border, #e2e8f0)",
-                      background: "var(--dg-bg-card, #f8fafc)",
+                      border: "1px solid var(--ds-border)",
+                      background: "var(--ds-surface)",
                       cursor: "pointer",
                       transition: "border-color 0.15s ease",
                     }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: "0.92rem", marginBottom: 4, color: "var(--dg-primary, #1a3a5c)" }}>
+                    <div style={{ fontWeight: 600, fontSize: "0.92rem", marginBottom: 4, color: "var(--ds-accent)" }}>
                       {art.title}
                     </div>
                     {art.summary && (
-                      <div style={{ fontSize: "0.82rem", color: "var(--dg-text-secondary, #64748b)", lineHeight: 1.4 }}>
+                      <div style={{ fontSize: "0.82rem", color: "var(--ds-text-muted)", lineHeight: 1.4 }}>
                         {art.summary}
                       </div>
                     )}
@@ -206,14 +206,14 @@ export function HelpDrawer({
         <div
           style={{
             padding: "14px 20px",
-            borderTop: "1px solid var(--dg-border, #e2e8f0)",
-            background: "var(--dg-bg-subtle, #f8fafc)",
+            borderTop: "1px solid var(--ds-border)",
+            background: "var(--ds-bg)",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
           }}
         >
-          <span style={{ fontSize: "0.82rem", color: "var(--dg-text-secondary, #64748b)" }}>
+          <span style={{ fontSize: "0.82rem", color: "var(--ds-text-muted)" }}>
             Didn't find what you need?
           </span>
           <button

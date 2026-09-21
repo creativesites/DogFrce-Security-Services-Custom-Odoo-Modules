@@ -89,7 +89,7 @@ export function ProblemReportDialog({
           <div className="dg-modal__body" style={{ textAlign: "center", padding: "32px 16px" }}>
             <div style={{ fontSize: 42, marginBottom: 12 }}>✓</div>
             <h2 id={titleId} style={{ margin: "0 0 8px 0" }}>Report Submitted</h2>
-            <p style={{ color: "var(--dg-text-secondary, #64748b)", margin: "0 0 16px 0" }}>
+            <p style={{ color: "var(--ds-text-muted)", margin: "0 0 16px 0" }}>
               Reference <strong>{submittedRef}</strong> has been logged. Our operations team and support have been notified.
             </p>
             <button
@@ -102,7 +102,7 @@ export function ProblemReportDialog({
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <div className="dg-modal__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--dg-border, #e2e8f0)" }}>
+            <div className="dg-modal__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--ds-border)" }}>
               <h2 id={titleId} style={{ margin: 0, fontSize: "1.15rem", fontWeight: 600 }}>Report a Problem / Something's Wrong</h2>
               <button
                 type="button"
@@ -117,13 +117,13 @@ export function ProblemReportDialog({
 
             <div className="dg-modal__body" style={{ padding: "20px", maxHeight: "75vh", overflowY: "auto" }}>
               {submitError && (
-                <div style={{ background: "#fef2f2", color: "#991b1b", padding: "10px 14px", borderRadius: 6, marginBottom: 16, fontSize: "0.9rem" }}>
+                <div style={{ background: "var(--ds-danger-bg)", color: "var(--ds-danger)", padding: "10px 14px", borderRadius: 6, marginBottom: 16, fontSize: "0.9rem" }}>
                   {submitError}
                 </div>
               )}
 
               {taskContext && (
-                <div style={{ background: "var(--dg-bg-muted, #f1f5f9)", padding: "8px 12px", borderRadius: 6, marginBottom: 16, fontSize: "0.85rem" }}>
+                <div style={{ background: "var(--ds-slate)", padding: "8px 12px", borderRadius: 6, marginBottom: 16, fontSize: "0.85rem" }}>
                   Active task: <strong>{taskContext.name}</strong> (ID #{taskContext.id})
                 </div>
               )}
@@ -143,9 +143,9 @@ export function ProblemReportDialog({
                         padding: "6px 12px",
                         borderRadius: 16,
                         border: "1px solid",
-                        borderColor: category === c.key ? "var(--dg-primary, #1a3a5c)" : "var(--dg-border, #cbd5e1)",
-                        background: category === c.key ? "var(--dg-primary, #1a3a5c)" : "transparent",
-                        color: category === c.key ? "#ffffff" : "inherit",
+                        borderColor: category === c.key ? "var(--ds-accent)" : "var(--ds-border)",
+                        background: category === c.key ? "var(--ds-accent)" : "transparent",
+                        color: category === c.key ? "var(--ds-surface)" : "inherit",
                         fontSize: "0.85rem",
                         cursor: "pointer",
                       }}
@@ -160,12 +160,12 @@ export function ProblemReportDialog({
               {/* Subject */}
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: 6 }}>
-                  Summary <span style={{ color: "#e11d48" }}>*</span>
+                  Summary <span style={{ color: "var(--ds-danger)" }}>*</span>
                 </label>
                 <input
                   type="text"
                   className="dg-input"
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--dg-border, #cbd5e1)" }}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--ds-border)" }}
                   placeholder="e.g. Cannot complete checklist item #3 or submit attendance"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
@@ -180,7 +180,7 @@ export function ProblemReportDialog({
                 </label>
                 <textarea
                   className="dg-textarea"
-                  style={{ width: "100%", minHeight: 80, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--dg-border, #cbd5e1)" }}
+                  style={{ width: "100%", minHeight: 80, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--ds-border)" }}
                   placeholder="Tell us what happened, what you expected, or any steps to reproduce..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -202,7 +202,7 @@ export function ProblemReportDialog({
               </div>
 
               {/* Diagnostics & Redaction (docs/deployguard/34-feedback-and-support.md §1.3) */}
-              <div style={{ borderTop: "1px solid var(--dg-border, #e2e8f0)", paddingTop: 14 }}>
+              <div style={{ borderTop: "1px solid var(--ds-border)", paddingTop: 14 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", cursor: "pointer" }}>
                     <input
@@ -214,7 +214,7 @@ export function ProblemReportDialog({
                   </label>
                   <button
                     type="button"
-                    style={{ background: "none", border: "none", color: "var(--dg-primary, #1a3a5c)", fontSize: "0.8rem", cursor: "pointer", textDecoration: "underline" }}
+                    style={{ background: "none", border: "none", color: "var(--ds-accent)", fontSize: "0.8rem", cursor: "pointer", textDecoration: "underline" }}
                     onClick={() => setShowDiagnosticsPreview(!showDiagnosticsPreview)}
                   >
                     {showDiagnosticsPreview ? "Hide details" : "Inspect details"}
@@ -226,8 +226,8 @@ export function ProblemReportDialog({
                     style={{
                       marginTop: 10,
                       padding: 10,
-                      background: "#0f172a",
-                      color: "#94a3b8",
+                      background: "var(--ds-text)",
+                      color: "var(--ds-text-subtle)",
                       borderRadius: 6,
                       fontSize: "0.75rem",
                       maxHeight: 140,
@@ -240,7 +240,7 @@ export function ProblemReportDialog({
               </div>
             </div>
 
-            <div className="dg-modal__foot" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid var(--dg-border, #e2e8f0)", background: "var(--dg-bg-subtle, #f8fafc)" }}>
+            <div className="dg-modal__foot" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid var(--ds-border)", background: "var(--ds-bg)" }}>
               <button
                 type="button"
                 className="dg-btn dg-btn--secondary"

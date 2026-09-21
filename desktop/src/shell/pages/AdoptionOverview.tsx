@@ -516,7 +516,7 @@ export function AdoptionOverview() {
               <tbody>
                 {teamSnapshots.length === 0 ? (
                   <tr>
-                    <td colSpan={6} style={{ textAlign: "center", padding: 24, color: "#64748b" }}>
+                    <td colSpan={6} style={{ textAlign: "center", padding: 24, color: "var(--ds-text-subtle)" }}>
                       No team adoption snapshots computed yet. Click &quot;Refresh Metrics&quot; above.
                     </td>
                   </tr>
@@ -539,7 +539,7 @@ export function AdoptionOverview() {
                         </td>
                         <td>
                           {snap.confidence === "insufficient" ? (
-                            <span style={{ color: "#94a3b8" }}>N/A (low items)</span>
+                            <span style={{ color: "var(--ds-text-subtle)" }}>N/A (low items)</span>
                           ) : (
                             <strong className="dg-adoption__score-pill">{snap.score} / 100</strong>
                           )}

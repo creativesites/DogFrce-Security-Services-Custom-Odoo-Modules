@@ -121,7 +121,7 @@ export function ExceptionsInbox() {
   }, [loadData]);
 
   // Handle manual sync from source notifications
-  const handleSync = async () => {
+  const handleSync = useCallback(async () => {
     setSyncing(true);
     try {
       await syncExceptions();
@@ -131,10 +131,10 @@ export function ExceptionsInbox() {
     } finally {
       setSyncing(false);
     }
-  };
+  }, [loadData]);
 
   // Triage: Acknowledge
-  const handleAcknowledge = async (item: ExceptionInstance) => {
+  const handleAcknowledge = useCallback(async (item: ExceptionInstance) => {
     setActionLoading(true);
     try {
       await acknowledgeException(item.id);
@@ -144,7 +144,7 @@ export function ExceptionsInbox() {
     } finally {
       setActionLoading(false);
     }
-  };
+  }, [loadData]);
 
   // Triage: Dismiss as non-issue
   const handleDismiss = async (item: ExceptionInstance) => {
@@ -160,11 +160,11 @@ export function ExceptionsInbox() {
   };
 
   // Triage: Open Resolution Dialog
-  const openResolveModal = (item: ExceptionInstance) => {
+  const openResolveModal = useCallback((item: ExceptionInstance) => {
     setResolvingItem(item);
     setResolutionCode("fixed");
     setResolutionNote("");
-  };
+  }, []);
 
   // Triage: Submit Resolution
   const handleResolveSubmit = async () => {
@@ -182,7 +182,7 @@ export function ExceptionsInbox() {
   };
 
   // Deep link into Odoo record
-  const handleOpenRecord = async (item: ExceptionInstance) => {
+  const handleOpenRecord = useCallback(async (item: ExceptionInstance) => {
     let path = "/odoo/action-security_exceptions.action_exception_instance";
     if (item.related_model && item.related_id) {
       path = `/web#model=${item.related_model}&id=${item.related_id}`;
@@ -192,7 +192,7 @@ export function ExceptionsInbox() {
     } catch (err) {
       console.warn("Could not navigate in desktop webview:", err);
     }
-  };
+  }, []);
 
   // Keyboard navigation
   useEffect(() => {
@@ -242,7 +242,7 @@ export function ExceptionsInbox() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [resolvingItem, items, selectedIndex]);
+  }, [resolvingItem, items, selectedIndex, handleAcknowledge, handleSync, handleOpenRecord, openResolveModal]);
 
   const activeItem = items[selectedIndex] || null;
 
