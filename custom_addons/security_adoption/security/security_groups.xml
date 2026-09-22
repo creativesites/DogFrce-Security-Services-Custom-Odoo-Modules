@@ -6,8 +6,12 @@
         <field name="comment">Configures Expected Work Definitions, sees every employee's snapshots and abandonment signals, and is the only role that can suppress an expected item (spec §8: supervisors cannot suppress their own items).</field>
     </record>
 
-    <record id="group_adoption_admin_implied" model="res.groups">
-        <field name="id" ref="security_base.group_security_manager"/>
+    <record id="security_base.group_security_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_adoption_admin'))]"/>
+    </record>
+
+    <record id="base.group_system" model="res.groups">
         <field name="implied_ids" eval="[(4, ref('group_adoption_admin'))]"/>
     </record>
 </odoo>
+
