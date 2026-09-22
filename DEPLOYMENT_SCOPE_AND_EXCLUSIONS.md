@@ -61,6 +61,12 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 | `security_deployguard_bridge` | DeployGuard Desktop bridge -- session/session-info endpoints the desktop app talks to directly (see `desktop/DEVIATIONS.md`) |
 | `security_work` | Work management -- schedule rules, task assignment, checklists surfaced in DeployGuard Desktop's "My Work & Sweeps" |
 | `security_training` | Staff training tracking |
+| `security_armed_response` | Armed response dispatch board and live callout map |
+| `security_telephony` | Call logging linked to armed response and the WhatsApp bridge |
+| `security_support` | In-app support requests, help panel and owner digest (Owner Overview) |
+| `security_exceptions` | Exception triage and escalation (Exceptions Inbox) |
+| `security_tour` | Guided in-Odoo tours for first-time users |
+| `security_adoption` | Adoption scoring -- **installed on an explicit founder override, see note below** |
 
 > **`security_deployguard_bridge` was previously scoped out** of production
 > pending the desktop app having something to talk to it about (see
@@ -68,18 +74,16 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 > the client 2026-09-17 that it, alongside `security_work` and
 > `security_training`, now ships to `dogforce_prod`.
 >
-> **`security_adoption` is also explicitly NOT in this list**, for a
-> different and more serious reason: docs/deployguard/09-adoption-engine.md
-> itself gates everything past §5.2 on a privacy/legal review and an
-> employment-contract notice that do not exist yet. It was built anyway on
-> an explicit, logged product-owner override that accepts that risk (see
-> BUILD-STATUS-AND-PHASE-PLAN.md Phase 5's decisions section) -- the module
-> is real and tested, but installing it on `dogforce_prod` or `dogforce_
-> staging` before that review happens would mean measuring and scoring real
-> employees' work without the legal groundwork the spec's own author
-> required. Do not add it to this list, or to any deployment script's
-> module argument, until that review exists and someone updates this note
-> to say so.
+> **`security_adoption` -- explicit founder override (2026-09-22).** The
+> spec (docs/deployguard/09-adoption-engine.md) gates adoption measurement on
+> a privacy/legal review and an employee notice. The review has not happened;
+> Winston chose to install it on production anyway, with that risk stated to
+> him. Mitigations in place: the desktop app shows the monitoring notice at
+> first sign-in and records each acknowledgement
+> (`security.deployguard.policy.acknowledgement`), and hides adoption figures
+> until the viewer has acknowledged. Not mitigated: scoring itself still runs
+> for employees who haven't acknowledged. `security_support` depends on this
+> module, so it can't be left out while support is installed.
 >
 > `security_suite` (the old all-in-one installer) is deliberately **not**
 > listed here -- individual modules are installed directly instead. If
