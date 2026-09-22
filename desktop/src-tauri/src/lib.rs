@@ -3,18 +3,16 @@ mod config;
 mod connectivity;
 mod diagnostics;
 mod errors;
+mod logging;
 mod odoo;
 mod state;
 mod windowing;
 
 use state::AppState;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tracing_subscriber::fmt()
-        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-        .init();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_notification::init())
@@ -23,6 +21,9 @@ pub fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(AppState::default())
         .setup(|app| {
+            let log_dir = logging::init(app.path().app_log_dir().ok());
+            tracing::info!(version = env!("CARGO_PKG_VERSION"), "DeployGuard Desktop starting");
+            *app.state::<AppState>().log_dir.lock().unwrap() = log_dir.map(|d| d.display().to_string());
             windowing::build(app.handle())?;
             Ok(())
         })

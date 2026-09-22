@@ -9,6 +9,7 @@ interface Diagnostics {
   odoo_reachable: boolean;
   signed_in: boolean;
   last_sync_note: string | null;
+  log_dir: string | null;
   generated_at: string;
 }
 
@@ -20,6 +21,7 @@ function formatDiagnostics(d: Diagnostics): string {
     `Server reachable: ${d.odoo_reachable ? "yes" : "no"}`,
     `Signed in: ${d.signed_in ? "yes" : "no"}`,
     `Last sign-in check: ${d.last_sync_note ?? "(no attempt yet this session)"}`,
+    `Log files: ${d.log_dir ?? "(not available on this machine)"}`,
     `Generated: ${d.generated_at}`,
   ].join("\n");
 }

@@ -21,6 +21,7 @@ import { ExceptionsInbox } from "./pages/ExceptionsInbox";
 import { ProblemReportDialog } from "./ProblemReportDialog";
 import { HelpDrawer } from "./HelpDrawer";
 import { FirstRunOnboarding } from "./FirstRunOnboarding";
+import { UpdateNotice } from "./UpdateNotice";
 import {
   type NoticeStatus,
   acknowledgeNotice,
@@ -462,6 +463,8 @@ export function Toolbar() {
         <div className="dg-toolbar__status">
           <StatusBar compact />
         </div>
+
+        <UpdateNotice />
 
         {status === "signed_in" && session ? (
           <div className="dg-toolbar__profile" title={session.name}>

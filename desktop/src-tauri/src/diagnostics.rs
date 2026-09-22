@@ -18,10 +18,13 @@ pub struct Diagnostics {
     /// the Odoo webview (e.g. why a login attempt didn't take) -- `None`
     /// if that's never run yet this session. See `state::AppState`.
     pub last_sync_note: Option<String>,
+    /// Folder holding the rotating log files (logging.rs); `None` if the
+    /// app couldn't create it and is logging to stdout only.
+    pub log_dir: Option<String>,
     pub generated_at: String,
 }
 
-pub async fn collect(signed_in: bool, last_sync_note: Option<String>) -> Diagnostics {
+pub async fn collect(signed_in: bool, last_sync_note: Option<String>, log_dir: Option<String>) -> Diagnostics {
     Diagnostics {
         app_version: env!("CARGO_PKG_VERSION").to_string(),
         os: tauri_plugin_os::type_().to_string(),
@@ -30,6 +33,7 @@ pub async fn collect(signed_in: bool, last_sync_note: Option<String>) -> Diagnos
         odoo_reachable: odoo::health_check().await,
         signed_in,
         last_sync_note,
+        log_dir,
         generated_at: chrono::Utc::now().to_rfc3339(),
     }
 }

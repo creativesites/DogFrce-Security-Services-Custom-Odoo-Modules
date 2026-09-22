@@ -37,4 +37,7 @@ pub struct AppState {
     /// "it didn't work" -- see 2026-09-17's owner's-laptop incident, where
     /// this info didn't exist and there was nothing to diagnose from.
     pub last_sync_note: Mutex<Option<String>>,
+    /// Where logging.rs is writing the rotating log file, so diagnostics can
+    /// tell a person (or support) exactly where to find it.
+    pub log_dir: Mutex<Option<String>>,
 }

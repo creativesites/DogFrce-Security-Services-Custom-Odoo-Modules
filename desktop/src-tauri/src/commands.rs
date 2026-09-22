@@ -127,5 +127,6 @@ pub async fn connectivity_check() -> connectivity::ConnectivityReport {
 pub async fn diagnostics_get(state: State<'_, AppState>) -> Result<diagnostics::Diagnostics, ()> {
     let signed_in = state.session.lock().unwrap().is_some();
     let last_sync_note = state.last_sync_note.lock().unwrap().clone();
-    Ok(diagnostics::collect(signed_in, last_sync_note).await)
+    let log_dir = state.log_dir.lock().unwrap().clone();
+    Ok(diagnostics::collect(signed_in, last_sync_note, log_dir).await)
 }
