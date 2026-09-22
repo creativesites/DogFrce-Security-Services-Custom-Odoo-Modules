@@ -13,6 +13,7 @@
 # Usage:
 #   bash scripts/run-light.sh            # build if sources changed, then launch
 #   bash scripts/run-light.sh --rebuild  # force a rebuild
+#   bash scripts/run-light.sh --prod     # against PRODUCTION (real data)
 #
 # Trade-off: no hot reload. After changing code, run it again -- it only
 # rebuilds when something under src/ or src-tauri/ is newer than the app.
@@ -27,8 +28,22 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export DEPLOYGUARD_ODOO_BASE_URL="${DEPLOYGUARD_ODOO_BASE_URL:-http://localhost:8069}"
 export DEPLOYGUARD_ODOO_DB="${DEPLOYGUARD_ODOO_DB:-odoo-security}"
 
+if [ "${1:-}" = "--prod" ]; then
+  export DEPLOYGUARD_ODOO_BASE_URL="https://dogforcesecurityservices.com"
+  export DEPLOYGUARD_ODOO_DB="dogforce_prod"
+  echo "!!  PRODUCTION: everything you do in this app is real DogForce data."
+fi
+
+# The server is baked in at build time, so remember which one this .app was
+# built for -- otherwise a later local run would silently launch a
+# production build (or the reverse).
+STAMP="$DESKTOP_DIR/src-tauri/target/debug/bundle/.light-target"
+TARGET="$DEPLOYGUARD_ODOO_BASE_URL|$DEPLOYGUARD_ODOO_DB"
+
 needs_build=0
 if [ "${1:-}" = "--rebuild" ] || [ ! -d "$APP" ]; then
+  needs_build=1
+elif [ "$(cat "$STAMP" 2>/dev/null)" != "$TARGET" ]; then
   needs_build=1
 elif [ -n "$(find src src-tauri/src src-tauri/tauri.conf.json src-tauri/Cargo.toml index.html -newer "$APP" -print -quit 2>/dev/null)" ]; then
   needs_build=1
@@ -43,6 +58,7 @@ if [ "$needs_build" = 1 ]; then
     npx tauri build --debug --bundles app \
       --config '{"bundle":{"createUpdaterArtifacts":false}}'
   touch "$APP"
+  echo "$TARGET" > "$STAMP"
 fi
 
 if ! curl -sf -o /dev/null --max-time 3 "$DEPLOYGUARD_ODOO_BASE_URL/web/health"; then

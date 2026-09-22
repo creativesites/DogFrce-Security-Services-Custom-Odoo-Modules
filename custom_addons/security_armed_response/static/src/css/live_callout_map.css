@@ -1,4 +1,4 @@
-/* Live Callout Map — --ds-*/--dgs-* tokens only, no new hex values.
+/* Live Callout Map — --ds-* and --dgs-* tokens only, no new hex values.
    Marker colors in live_callout_map.js read these same custom properties
    at runtime, so the legend below and the pins on the map always match. */
 

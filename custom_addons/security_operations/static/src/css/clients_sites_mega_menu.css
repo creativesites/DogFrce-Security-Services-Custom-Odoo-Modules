@@ -1,7 +1,7 @@
 /*
  * Clients & Sites command center overlay.
  *
- * Written from scratch on the --ds-*/--dgs-* tokens (no raw hex — see
+ * Written from scratch on the --ds-* and --dgs-* tokens (no raw hex — see
  * docs/DEPLOYGUARD_DESIGN_SYSTEM.md). Not shared with the other mega menus
  * (security_shift_planner's rostering_mega_menu.css, reused informally by
  * fleet/equipment/base): that file hardcodes hex values and this module does

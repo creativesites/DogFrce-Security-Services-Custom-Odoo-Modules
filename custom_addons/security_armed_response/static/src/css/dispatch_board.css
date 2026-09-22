@@ -1,5 +1,5 @@
 /* Armed Response — Dispatch Board
-   Uses --ds-*/--dgs-* tokens exclusively, per docs/DEPLOYGUARD_DESIGN_SYSTEM.md.
+   Uses --ds-* and --dgs-* tokens exclusively, per docs/DEPLOYGUARD_DESIGN_SYSTEM.md.
    No new hex values, no third dark surface. */
 
 .ar-dispatch-board .o_kanban_group {
