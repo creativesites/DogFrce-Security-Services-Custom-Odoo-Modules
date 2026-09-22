@@ -23,6 +23,7 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
 } from "../icons";
+import { extractErrorMessage } from "../../lib/extractErrorMessage";
 
 type InboxTab = "critical" | "attention" | "watch" | "all_open" | "history";
 
@@ -102,7 +103,7 @@ export function ExceptionsInbox() {
       initialLoadDone.current = true;
     } catch (err) {
       console.error("Failed to load exceptions:", err);
-      setError(err instanceof Error ? err.message : "Failed to load exceptions");
+      setError(extractErrorMessage(err, "Failed to load exceptions"));
     } finally {
       if (!isBackground) setLoading(false);
     }
@@ -127,7 +128,7 @@ export function ExceptionsInbox() {
       await syncExceptions();
       await loadData(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Sync failed");
+      setError(extractErrorMessage(err, "Sync failed"));
     } finally {
       setSyncing(false);
     }
@@ -140,7 +141,7 @@ export function ExceptionsInbox() {
       await acknowledgeException(item.id);
       await loadData(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Acknowledge failed");
+      setError(extractErrorMessage(err, "Acknowledge failed"));
     } finally {
       setActionLoading(false);
     }
@@ -153,7 +154,7 @@ export function ExceptionsInbox() {
       await dismissException(item.id, "Dismissed via Manager Inbox");
       await loadData(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Dismissal failed");
+      setError(extractErrorMessage(err, "Dismissal failed"));
     } finally {
       setActionLoading(false);
     }
@@ -175,7 +176,7 @@ export function ExceptionsInbox() {
       setResolvingItem(null);
       await loadData(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Resolution failed");
+      setError(extractErrorMessage(err, "Resolution failed"));
     } finally {
       setActionLoading(false);
     }

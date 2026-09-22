@@ -142,6 +142,9 @@ pub async fn call_kw(
         .send()
         .await?;
 
+    if resp.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(crate::errors::AppError::ModuleNotInstalled);
+    }
     if !resp.status().is_success() {
         return Err(crate::errors::AppError::ServerError);
     }
@@ -150,32 +153,36 @@ pub async fn call_kw(
 
     if let Some(err) = parsed.error {
         tracing::warn!(error = %err, model, method, "odoo call_kw returned an error");
-        if let Some(code) = err.get("code").and_then(|c| c.as_i64()) {
-            if code == 100 {
-                return Err(crate::errors::AppError::SessionExpired);
-            }
-        }
-        if let Some(subname) = err.get("data").and_then(|d| d.get("name")).and_then(|n| n.as_str()) {
-            if subname.contains("SessionExpiredException") {
-                return Err(crate::errors::AppError::SessionExpired);
-            }
-        }
-        // Odoo's JSON-RPC error shape nests the actual UserError/
-        // ValidationError text in error.data.message; error.message is
-        // just "Odoo Server Error" and not useful to show. Fall back to
-        // the generic message if the shape doesn't match (e.g. a raw
-        // traceback with no `data.message`, which we don't want to leak).
-        let user_message = err
-            .get("data")
-            .and_then(|d| d.get("message"))
-            .and_then(|m| m.as_str());
-        return Err(match user_message {
-            Some(message) => crate::errors::AppError::RequestFailed(message.to_string()),
-            None => crate::errors::AppError::ServerError,
-        });
+        return Err(classify_rpc_error(&err));
     }
 
     parsed.result.ok_or(crate::errors::AppError::ServerError)
+}
+
+/// Maps an Odoo JSON-RPC `error` object onto what the app can act on.
+fn classify_rpc_error(err: &serde_json::Value) -> crate::errors::AppError {
+    use crate::errors::AppError;
+    if err.get("code").and_then(|c| c.as_i64()) == Some(100) {
+        return AppError::SessionExpired;
+    }
+    let name = err.get("data").and_then(|d| d.get("name")).and_then(|n| n.as_str()).unwrap_or("");
+    if name.contains("SessionExpiredException") {
+        return AppError::SessionExpired;
+    }
+    // Odoo 19's call_kw looks the model up in the registry first and raises
+    // werkzeug NotFound when it isn't there -- i.e. the module isn't installed.
+    if name == "werkzeug.exceptions.NotFound" {
+        return AppError::ModuleNotInstalled;
+    }
+    // Odoo's JSON-RPC error shape nests the actual UserError/ValidationError
+    // text in error.data.message; error.message is just "Odoo Server Error"
+    // and not useful to show. Fall back to the generic message if the shape
+    // doesn't match (e.g. a raw traceback with no `data.message`, which we
+    // don't want to leak).
+    match err.get("data").and_then(|d| d.get("message")).and_then(|m| m.as_str()) {
+        Some(message) => AppError::RequestFailed(message.to_string()),
+        None => AppError::ServerError,
+    }
 }
 
 /// Fetches the signed-in user's Odoo avatar (`res.users.avatar_128`) and
@@ -250,6 +257,39 @@ pub fn is_unauthenticated_path(path: &str) -> bool {
         "/web/health",
     ];
     UNAUTH_PREFIXES.iter().any(|p| path.starts_with(p))
+}
+
+#[cfg(test)]
+mod rpc_error_tests {
+    use super::classify_rpc_error;
+    use crate::errors::AppError;
+    use serde_json::json;
+
+    #[test]
+    fn missing_module_is_recognised_from_odoo_19s_not_found() {
+        let err = json!({"code": 404, "message": "404: Not Found", "data": {
+            "name": "werkzeug.exceptions.NotFound",
+            "message": "404 Not Found: The requested URL was not found on the server."}});
+        assert!(matches!(classify_rpc_error(&err), AppError::ModuleNotInstalled));
+    }
+
+    #[test]
+    fn expired_session_by_code_or_name() {
+        assert!(matches!(classify_rpc_error(&json!({"code": 100})), AppError::SessionExpired));
+        let by_name = json!({"code": 200, "data": {"name": "odoo.http.SessionExpiredException"}});
+        assert!(matches!(classify_rpc_error(&by_name), AppError::SessionExpired));
+    }
+
+    #[test]
+    fn business_errors_keep_their_message() {
+        let err = json!({"code": 200, "data": {"name": "odoo.exceptions.UserError", "message": "No attempts left."}});
+        assert!(matches!(classify_rpc_error(&err), AppError::RequestFailed(m) if m == "No attempts left."));
+    }
+
+    #[test]
+    fn no_message_means_generic_error_not_a_leaked_traceback() {
+        assert!(matches!(classify_rpc_error(&json!({"code": 200, "data": {}})), AppError::ServerError));
+    }
 }
 
 #[cfg(test)]

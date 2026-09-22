@@ -5,6 +5,7 @@ import {
   type OwnerOverviewData,
   type OwnerMetricTile,
 } from "../../api/support";
+import { extractErrorMessage } from "../../lib/extractErrorMessage";
 
 interface DrillDownState {
   title: string;
@@ -30,7 +31,7 @@ export function OwnerOverview() {
         if (!cancelled) setData(res);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(extractErrorMessage(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -64,7 +65,7 @@ export function OwnerOverview() {
           ? {
               ...prev,
               loading: false,
-              error: err instanceof Error ? err.message : String(err),
+              error: extractErrorMessage(err),
             }
           : null,
       );

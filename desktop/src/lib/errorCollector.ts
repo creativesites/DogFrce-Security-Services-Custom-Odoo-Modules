@@ -1,3 +1,5 @@
+import { extractErrorMessage } from "./extractErrorMessage";
+
 /**
  * In-memory ring buffer for the last 5 client errors and system diagnostics.
  * docs/deployguard/34-feedback-and-support.md §1.3
@@ -33,8 +35,9 @@ export function sanitizeErrorMessage(raw: string): string {
 }
 
 export function recordClientError(err: unknown, context?: string): void {
-  const message = err instanceof Error ? err.message : String(err);
-  const code = (err as { code?: string })?.code || (err as { name?: string })?.name;
+  const message = extractErrorMessage(err, "Unknown error");
+  // Tauri command errors carry their category as `kind` (errors.rs).
+  const code = (err as { code?: string })?.code || (err as { kind?: string })?.kind || (err as { name?: string })?.name;
 
   const captured: CapturedError = {
     timestamp: new Date().toISOString(),

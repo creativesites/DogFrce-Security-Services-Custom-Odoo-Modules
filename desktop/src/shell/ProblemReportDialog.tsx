@@ -1,6 +1,7 @@
 import { useState, useId } from "react";
 import { getClientDiagnostics, type ClientDiagnostics } from "../lib/errorCollector";
 import { createSupportRequest, type ClientCategory } from "../api/support";
+import { extractErrorMessage } from "../lib/extractErrorMessage";
 
 interface ProblemReportDialogProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ export function ProblemReportDialog({
       setSubmittedRef(res.name);
       onSuccess?.(res.name);
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : String(err));
+      setSubmitError(extractErrorMessage(err));
     } finally {
       setSubmitting(false);
     }

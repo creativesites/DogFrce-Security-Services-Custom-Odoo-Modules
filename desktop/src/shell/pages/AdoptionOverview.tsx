@@ -17,6 +17,7 @@ import {
 } from "../../api/adoption";
 import { resolveEmployeeId } from "../../api/work";
 import { useSession } from "../../session/SessionContext";
+import { extractErrorMessage } from "../../lib/extractErrorMessage";
 import {
   TrendingUpIcon,
   ShieldCheckIcon,
@@ -87,7 +88,7 @@ export function AdoptionOverview() {
         setTeamSnapshots(team);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(extractErrorMessage(err));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -116,7 +117,7 @@ export function AdoptionOverview() {
         setTeamSnapshots(team);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(extractErrorMessage(err));
     } finally {
       setRefreshing(false);
     }
@@ -133,7 +134,7 @@ export function AdoptionOverview() {
         setCheckinSuccess(false);
       }, 2500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(extractErrorMessage(err));
     } finally {
       setCheckinSubmitting(false);
     }

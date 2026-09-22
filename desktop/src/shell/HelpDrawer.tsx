@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchContextualArticles, searchHelpArticles, type HelpArticle } from "../api/support";
+import { extractErrorMessage } from "../lib/extractErrorMessage";
 
 interface HelpDrawerProps {
   isOpen: boolean;
@@ -41,7 +42,7 @@ export function HelpDrawer({
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : String(err));
+          setError(extractErrorMessage(err));
         }
       })
       .finally(() => {
@@ -65,7 +66,7 @@ export function HelpDrawer({
     setLoading(true);
     searchHelpArticles(query.trim())
       .then((res) => setArticles(res || []))
-      .catch((err) => setError(err instanceof Error ? err.message : String(err)))
+      .catch((err) => setError(extractErrorMessage(err)))
       .finally(() => setLoading(false));
   }
 

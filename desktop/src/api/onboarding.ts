@@ -1,4 +1,5 @@
 import { callKw } from "./odoo";
+import { isModuleNotInstalled } from "./capabilities";
 import { extractErrorMessage } from "../lib/extractErrorMessage";
 
 /** security_deployguard_bridge's record of who was shown the monitoring notice. */
@@ -20,15 +21,9 @@ export type NoticeStatus =
   | { kind: "unavailable" }
   | { kind: "error"; message: string };
 
-/**
- * Odoo answers a call on a model that isn't installed with a KeyError whose
- * message is the model name itself -- which is how "the server hasn't been
- * set up for this" is told apart from a network blip or an expired session.
- */
+/** "The server hasn't got the bridge module", as opposed to a network blip or an expired session. */
 export function isNoticeModelMissing(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false;
-  const { kind, message } = err as { kind?: unknown; message?: unknown };
-  return kind === "request_failed" && typeof message === "string" && message.includes(NOTICE_MODEL);
+  return isModuleNotInstalled(err, NOTICE_MODEL);
 }
 
 export function noticeStatusFrom(notice: MonitoringNotice): NoticeStatus {

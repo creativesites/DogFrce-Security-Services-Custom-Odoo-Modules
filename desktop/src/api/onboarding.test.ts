@@ -18,7 +18,11 @@ const notice = (acknowledged: boolean): MonitoringNotice => ({
 });
 
 describe("isNoticeModelMissing", () => {
-  it("recognises Odoo's KeyError for a model that isn't installed", () => {
+  it("recognises a module that isn't installed (Odoo 19's NotFound, as classified in Rust)", () => {
+    expect(isNoticeModelMissing({ kind: "module_not_installed", message: "This feature isn't installed on DogForce ERP yet." })).toBe(true);
+  });
+
+  it("still recognises an older server's KeyError naming the model", () => {
     expect(isNoticeModelMissing({ kind: "request_failed", message: `'${NOTICE_MODEL}'` })).toBe(true);
   });
 

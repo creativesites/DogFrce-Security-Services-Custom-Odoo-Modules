@@ -34,6 +34,7 @@ import {
   shouldShowOnboarding,
 } from "../api/onboarding";
 import { getVersion } from "@tauri-apps/api/app";
+import { type Capabilities, type Feature, isAvailable, probeCapabilities } from "../api/capabilities";
 import type { SessionEvent } from "../session/types";
 import dogforceLogo from "../assets/dogforce-logo-256.png";
 import "./toolbar.css";
@@ -73,6 +74,18 @@ const NAV_ITEMS: { key: AppPage; label: string; icon: () => JSX.Element; availab
   { key: "owner", label: "Owner Overview", icon: () => <ChartBarIcon size={18} />, available: true },
 ];
 const COMING_SOON_ITEMS: string[] = [];
+const HOME_TILES: { key: AppPage; title: string; subline: string; icon: () => JSX.Element }[] = [
+  { key: "work", title: "My Work & Sweeps", subline: "Tasks, checklists, and sweep sign-offs", icon: () => <ClipboardListIcon /> },
+  { key: "training", title: "My Training", subline: "Courses, lessons and assessments", icon: () => <BookIcon /> },
+  { key: "adoption", title: "Adoption & Execution", subline: "Rolling score, 5-factor breakdown & assistance", icon: () => <TrendingUpIcon /> },
+  { key: "inbox", title: "Exceptions & Triage", subline: "Critical ops inbox, escalation policies & rapid resolution", icon: () => <InboxIcon /> },
+  { key: "owner", title: "Owner Overview", subline: "Live metrics, adoption, SLAs and digests", icon: () => <ChartBarIcon /> },
+];
+
+/** Which server module each page needs; pages without one are always available. */
+const PAGE_FEATURE: Partial<Record<AppPage, Feature>> = {
+  work: "work", training: "training", adoption: "adoption", inbox: "inbox", owner: "owner",
+};
 
 /** Small local icon button with a CSS tooltip. */
 function IconButton({
@@ -112,6 +125,28 @@ export function Toolbar() {
   const paletteInputRef = useRef<HTMLInputElement | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [noticeStatus, setNoticeStatus] = useState<NoticeStatus>({ kind: "loading" });
+  const [capabilities, setCapabilities] = useState<Capabilities>({});
+
+  // Hide screens the connected server can't support (module not installed)
+  // rather than letting them fail with a raw 404.
+  useEffect(() => {
+    setCapabilities({});
+    if (status !== "signed_in" || !session) return;
+    let cancelled = false;
+    probeCapabilities()
+      .then((caps) => { if (!cancelled) setCapabilities(caps); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [status, session]);
+
+  const pageAvailable = useCallback((p: AppPage) => {
+    const feature = PAGE_FEATURE[p];
+    return !feature || isAvailable(capabilities, feature);
+  }, [capabilities]);
+
+  useEffect(() => {
+    if (!pageAvailable(page)) setPage("home");
+  }, [page, pageAvailable]);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
 
   // ---- Monitoring notice + first-run onboarding ---------------------------
@@ -404,8 +439,10 @@ export function Toolbar() {
         run: () => void signOut(),
       });
     }
-    return list;
+    // Page commands share their id with the page they open.
+    return list.filter((c) => !(c.id in PAGE_FEATURE) || pageAvailable(c.id as AppPage));
   }, [
+    pageAvailable,
     appViewOpen, isMaximized, status, openAppView, goToOdoo, goBack, goForward,
     reload, toggleAppView, minimizeWindow, toggleMaximizeWindow, closeWindow, signOut,
   ]);
@@ -516,7 +553,7 @@ export function Toolbar() {
         <div className="dg-appview" role="dialog" aria-modal="false" aria-label="DogForce">
           <nav className="dg-appview__nav" aria-label="DogForce sections">
             <div className="dg-appview__nav-group">Workspace</div>
-            {NAV_ITEMS.map((item) => (
+            {NAV_ITEMS.filter((item) => pageAvailable(item.key)).map((item) => (
               <button
                 key={item.key}
                 type="button"
@@ -625,75 +662,22 @@ export function Toolbar() {
                     <span className="dg-tile__arrow" aria-hidden="true">→</span>
                   </button>
 
-                  <button
-                    type="button"
-                    className="dg-tile"
-                    style={{ animationDelay: "90ms" }}
-                    onClick={() => setPage("work")}
-                  >
-                    <span className="dg-tile__icon"><ClipboardListIcon /></span>
-                    <span className="dg-tile__body">
-                      <span className="dg-tile__title">My Work & Sweeps</span>
-                      <span className="dg-tile__subline">Tasks, checklists, and sweep sign-offs</span>
-                    </span>
-                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="dg-tile"
-                    style={{ animationDelay: "140ms" }}
-                    onClick={() => setPage("training")}
-                  >
-                    <span className="dg-tile__icon"><BookIcon /></span>
-                    <span className="dg-tile__body">
-                      <span className="dg-tile__title">My Training</span>
-                      <span className="dg-tile__subline">Courses, lessons and assessments</span>
-                    </span>
-                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="dg-tile"
-                    style={{ animationDelay: "190ms" }}
-                    onClick={() => setPage("adoption")}
-                  >
-                    <span className="dg-tile__icon"><TrendingUpIcon /></span>
-                    <span className="dg-tile__body">
-                      <span className="dg-tile__title">Adoption & Execution</span>
-                      <span className="dg-tile__subline">Rolling score, 5-factor breakdown & assistance</span>
-                    </span>
-                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="dg-tile"
-                    style={{ animationDelay: "220ms" }}
-                    onClick={() => setPage("inbox")}
-                  >
-                    <span className="dg-tile__icon"><InboxIcon /></span>
-                    <span className="dg-tile__body">
-                      <span className="dg-tile__title">Exceptions & Triage</span>
-                      <span className="dg-tile__subline">Critical ops inbox, escalation policies & rapid resolution</span>
-                    </span>
-                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="dg-tile"
-                    style={{ animationDelay: "250ms" }}
-                    onClick={() => setPage("owner")}
-                  >
-                    <span className="dg-tile__icon"><ChartBarIcon /></span>
-                    <span className="dg-tile__body">
-                      <span className="dg-tile__title">Owner Overview</span>
-                      <span className="dg-tile__subline">Live metrics, adoption, SLAs and digests</span>
-                    </span>
-                    <span className="dg-tile__arrow" aria-hidden="true">→</span>
-                  </button>
+                  {HOME_TILES.filter((tile) => pageAvailable(tile.key)).map((tile, i) => (
+                    <button
+                      key={tile.key}
+                      type="button"
+                      className="dg-tile"
+                      style={{ animationDelay: `${90 + i * 50}ms` }}
+                      onClick={() => setPage(tile.key)}
+                    >
+                      <span className="dg-tile__icon">{tile.icon()}</span>
+                      <span className="dg-tile__body">
+                        <span className="dg-tile__title">{tile.title}</span>
+                        <span className="dg-tile__subline">{tile.subline}</span>
+                      </span>
+                      <span className="dg-tile__arrow" aria-hidden="true">→</span>
+                    </button>
+                  ))}
                 </div>
 
                 <footer className="dg-appview__footer">
