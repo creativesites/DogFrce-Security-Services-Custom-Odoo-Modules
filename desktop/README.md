@@ -115,41 +115,52 @@ statically verified against the real `tauri-apps/tauri-action` inputs and
 this project's actual scripts/config — no known bugs are blocking it once
 billing is fixed.
 
-### Locally, cross-compiling isn't supported
+### Locally, from macOS
 
-Tauri does not support cross-compiling a Windows bundle from macOS. If you
-need a local Windows build, run on an actual Windows machine or a Windows
-VM:
+`scripts/build-windows-xcompile.sh` cross-compiles with `cargo-xwin` and
+builds the **NSIS installer** (MSI needs WiX, which only runs on Windows),
+signed for the in-app updater, plus the `latest.json` manifest the updater
+reads. One-time setup and the publish command are in the script's header.
 
-```powershell
-cd desktop
-npm install
-npm run tauri build -- --target x86_64-pc-windows-msvc
+```bash
+bash scripts/build-windows-xcompile.sh "Release notes users will see"
 ```
 
-Output: `desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/`
-(`nsis/*.exe` and `msi/*.msi`).
+Output lands in `desktop/dist-windows/`. If bundling fails with
+`timeout: global`, Tauri couldn't download an NSIS helper from GitHub in
+time on a slow connection. Re-run it; the compiled binary is reused.
+
+On a real Windows machine the usual `npm run tauri build -- --target
+x86_64-pc-windows-msvc` also works and builds the MSI too.
+
+## Updates
+
+Installed copies check for a signed update on launch and every 6 hours,
+then offer "Update to x.y.z" in the toolbar. They never restart on their
+own. Updates are served from the public releases-only repo
+`creativesites/dogforce-desktop-releases` (`latest.json` on its latest
+release), kept separate from this source repo so the source can go private
+without cutting off installed apps.
+
+The update-signing key is `~/.tauri/dogforce-updater.key` on the build
+machine, with its password in the macOS Keychain (service
+`dogforce-desktop-updater-key`). **Back both up.** If the key is lost,
+installed copies can never auto-update again, and every machine needs a
+manual reinstall.
 
 ## Code signing
 
-**Not yet configured.** Current builds are unsigned, which means:
+**Windows code signing is not configured yet** (plan 1.2/1.3, OQ-7). Update
+signing (above) is a different thing: installers still trigger Windows
+SmartScreen ("Windows protected your PC") on first install until a
+certificate or Azure Trusted Signing enrolment exists. Then:
 
-- Windows SmartScreen will warn on first run ("Windows protected your PC").
-- The Tauri auto-updater is disabled (`"active": false` in
-  `tauri.conf.json`) because signing is what makes update verification
-  meaningful.
-
-This is tracked as `docs/deployguard/32-open-questions.md` OQ-7. Once a
-certificate (or Azure Trusted Signing enrollment) exists:
-
-1. Add `WINDOWS_CERTIFICATE` / `WINDOWS_CERTIFICATE_PASSWORD` (or the
-   Trusted Signing equivalents) as GitHub Actions secrets.
-2. Generate a Tauri updater keypair (`npm run tauri signer generate`),
-   store the private key as a secret, put the public key in
-   `tauri.conf.json`'s `plugins.updater.pubkey`.
-3. Uncomment the signing env vars in
-   `.github/workflows/desktop-build.yml` (search `TODO(signing)`).
-4. Flip `plugins.updater.active` to `true`.
+1. Add the certificate (or Trusted Signing) credentials as GitHub Actions
+   secrets, or set `bundle.windows.signCommand` for local builds.
+2. Uncomment the signing env vars in
+   `.github/workflows/desktop-build.yml` (search `TODO(signing)`), adding
+   the updater key as `TAURI_SIGNING_PRIVATE_KEY` /
+   `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` secrets.
 
 ## Environment configuration
 
