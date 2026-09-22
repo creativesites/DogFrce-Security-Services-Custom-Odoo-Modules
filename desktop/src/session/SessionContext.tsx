@@ -16,6 +16,11 @@ interface SessionContextValue extends SessionState {
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
+export function sameSession(a: SessionInfo | null, b: SessionInfo | null): boolean {
+  if (!a || !b) return a === b;
+  return a.uid === b.uid && a.db === b.db && a.login === b.login && a.name === b.name;
+}
+
 /**
  * There is no sign-IN action here — authentication happens entirely inside
  * Odoo's own login page, rendered in the separate "odoo" webview (see
@@ -46,7 +51,16 @@ export function SessionProviderRoot({ children }: { children: ReactNode }) {
       if (cancelled) return;
       const payload = event.payload;
       if (payload.status === "signed_in") {
-        setState({ status: "signed_in", session: payload.session, isExpired: false });
+        // Rust re-announces "signed in" after every Odoo page load. Keep the
+        // existing state when nothing changed -- a fresh object each time
+        // made every effect keyed on `session` re-run as if someone had just
+        // signed in (onboarding reappearing, the module probe flickering the
+        // menu, the app view re-opening).
+        setState((prev) =>
+          prev.status === "signed_in" && !prev.isExpired && sameSession(prev.session, payload.session)
+            ? prev
+            : { status: "signed_in", session: payload.session, isExpired: false },
+        );
       } else {
         setState((prev) => ({
           status: "signed_out",

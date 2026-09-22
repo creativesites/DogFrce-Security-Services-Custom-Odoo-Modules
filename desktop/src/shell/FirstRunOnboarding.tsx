@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { NoticeStatus } from "../api/onboarding";
 import { extractErrorMessage } from "../lib/extractErrorMessage";
-import { BookIcon, ClipboardListIcon, LifeBuoyIcon, ShieldCheckIcon } from "./icons";
+import { BookIcon, ClipboardListIcon, LifeBuoyIcon, OdooIcon, ShieldCheckIcon } from "./icons";
 
 type Step = "welcome" | "notice" | "ready";
 
@@ -10,7 +10,9 @@ interface Props {
   status: NoticeStatus;
   /** Records the acknowledgement server-side; rejects with a user-facing message. */
   onAcknowledge: () => Promise<void>;
-  onFinish: (page: "training" | "work") => void;
+  /** Which destinations this server actually supports (module installed). */
+  available: { work: boolean; training: boolean };
+  onFinish: (target: "training" | "work" | "odoo") => void;
 }
 
 /**
@@ -19,7 +21,7 @@ interface Props {
  * recorded on the server, no way past it without reading it), then a
  * single obvious next step into their training.
  */
-export function FirstRunOnboarding({ firstName, status, onAcknowledge, onFinish }: Props) {
+export function FirstRunOnboarding({ firstName, status, onAcknowledge, available, onFinish }: Props) {
   // Fixed at mount: acknowledging flips status mid-flow, and the step count
   // shouldn't shrink under the person's feet.
   const [needsNotice] = useState(status.kind === "needs_ack");
@@ -54,16 +56,24 @@ export function FirstRunOnboarding({ firstName, status, onAcknowledge, onFinish 
           <h1 className="dg-greeting">
             Welcome to DogForce, <span>{firstName}</span>
           </h1>
-          <p className="dg-onboarding__lead">This app is where you'll do three things:</p>
+          <p className="dg-onboarding__lead">This app is where you'll:</p>
           <ul className="dg-onboarding__list">
             <li>
-              <span className="dg-onboarding__icon"><ClipboardListIcon size={18} /></span>
-              <span><strong>My Work &amp; Sweeps</strong>: the tasks and checklists assigned to you.</span>
+              <span className="dg-onboarding__icon"><OdooIcon size={18} /></span>
+              <span><strong>DogForce ERP</strong>: rosters, clients and sites, attendance and everything else, in one window.</span>
             </li>
-            <li>
-              <span className="dg-onboarding__icon"><BookIcon size={18} /></span>
-              <span><strong>My Training</strong>: short courses that teach you the system, at your own pace.</span>
-            </li>
+            {available.work && (
+              <li>
+                <span className="dg-onboarding__icon"><ClipboardListIcon size={18} /></span>
+                <span><strong>My Work &amp; Sweeps</strong>: the tasks and checklists assigned to you.</span>
+              </li>
+            )}
+            {available.training && (
+              <li>
+                <span className="dg-onboarding__icon"><BookIcon size={18} /></span>
+                <span><strong>My Training</strong>: short courses that teach you the system, at your own pace.</span>
+              </li>
+            )}
             <li>
               <span className="dg-onboarding__icon"><LifeBuoyIcon size={18} /></span>
               <span><strong>Report a problem</strong>: if something's wrong, tell us from inside the app.</span>
@@ -104,15 +114,31 @@ export function FirstRunOnboarding({ firstName, status, onAcknowledge, onFinish 
         <>
           <h1 className="dg-greeting">You're all set, <span>{firstName}</span></h1>
           <p className="dg-onboarding__lead">
-            The best place to start is your training. It walks you through the system step by step,
-            and you can try each step for real as you go.
+            {available.training
+              ? "The best place to start is your training. It walks you through the system step by step, and you can try each step for real as you go."
+              : "Everything you need is in DogForce ERP. Guided tours inside it show you each step the first time you do it."}
           </p>
           <div className="dg-onboarding__actions">
-            <button type="button" className="dg-btn dg-btn--primary" onClick={() => onFinish("training")}>
-              <BookIcon size={16} /> Start my training
-            </button>
-            <button type="button" className="dg-btn dg-btn--secondary" onClick={() => onFinish("work")}>
-              Go to My Work
+            {available.training && (
+              <button type="button" className="dg-btn dg-btn--primary" onClick={() => onFinish("training")}>
+                <BookIcon size={16} /> Start my training
+              </button>
+            )}
+            {available.work && (
+              <button
+                type="button"
+                className={`dg-btn ${available.training ? "dg-btn--secondary" : "dg-btn--primary"}`}
+                onClick={() => onFinish("work")}
+              >
+                Go to My Work
+              </button>
+            )}
+            <button
+              type="button"
+              className={`dg-btn ${available.training || available.work ? "dg-btn--secondary" : "dg-btn--primary"}`}
+              onClick={() => onFinish("odoo")}
+            >
+              <OdooIcon size={16} /> Open DogForce ERP
             </button>
           </div>
         </>

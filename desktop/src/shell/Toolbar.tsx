@@ -126,18 +126,21 @@ export function Toolbar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [noticeStatus, setNoticeStatus] = useState<NoticeStatus>({ kind: "loading" });
   const [capabilities, setCapabilities] = useState<Capabilities>({});
+  // Keyed on who is signed in, not on the session object.
+  const sessionUid = status === "signed_in" ? session?.uid ?? null : null;
+  const sessionDb = session?.db ?? null;
 
   // Hide screens the connected server can't support (module not installed)
   // rather than letting them fail with a raw 404.
   useEffect(() => {
     setCapabilities({});
-    if (status !== "signed_in" || !session) return;
+    if (sessionUid == null) return;
     let cancelled = false;
     probeCapabilities()
       .then((caps) => { if (!cancelled) setCapabilities(caps); })
       .catch(() => {});
     return () => { cancelled = true; };
-  }, [status, session]);
+  }, [sessionUid, sessionDb]);
 
   const pageAvailable = useCallback((p: AppPage) => {
     const feature = PAGE_FEATURE[p];
@@ -152,17 +155,14 @@ export function Toolbar() {
   // ---- Monitoring notice + first-run onboarding ---------------------------
   useEffect(() => {
     setOnboardingDismissed(false);
-    if (status !== "signed_in" || !session) {
-      setNoticeStatus({ kind: "loading" });
-      return;
-    }
-    let cancelled = false;
     setNoticeStatus({ kind: "loading" });
+    if (sessionUid == null) return;
+    let cancelled = false;
     fetchNotice()
       .then((notice) => { if (!cancelled) setNoticeStatus(noticeStatusFrom(notice)); })
       .catch((err) => { if (!cancelled) setNoticeStatus(noticeStatusFromError(err)); });
     return () => { cancelled = true; };
-  }, [status, session]);
+  }, [sessionUid, sessionDb]);
 
   // Latched: acknowledging the notice flips it to "acknowledged" mid-flow,
   // which would otherwise pull the onboarding away before its last step --
@@ -176,8 +176,8 @@ export function Toolbar() {
     if (onboardingDue) setOnboardingLatched(true);
   }, [onboardingDue]);
   useEffect(() => {
-    if (status !== "signed_in") setOnboardingLatched(false);
-  }, [status]);
+    setOnboardingLatched(false);
+  }, [sessionUid, sessionDb]);
   const showOnboarding =
     status === "signed_in" && !!session && !onboardingDismissed && (onboardingDue || onboardingLatched);
 
@@ -193,26 +193,27 @@ export function Toolbar() {
     setNoticeStatus(noticeStatusFrom(updated));
   }, [noticeStatus]);
 
-  const finishOnboarding = useCallback((target: "training" | "work") => {
-    if (session) markWelcomeSeen(session.db, session.uid);
+  const finishOnboarding = useCallback((target: AppPage) => {
+    if (sessionUid != null && sessionDb) markWelcomeSeen(sessionDb, sessionUid);
     setOnboardingDismissed(true);
     setPage(target);
-  }, [session]);
+  }, [sessionUid, sessionDb]);
 
   // ---- Avatar: cached first, then a background refresh from Odoo --------
   useEffect(() => {
-    if (status !== "signed_in" || !session) {
+    if (sessionUid == null) {
       setAvatarUrl(null);
       return;
     }
-    const cached = getCachedAvatar(session.uid);
+    const uid = sessionUid;
+    const cached = getCachedAvatar(uid);
     setAvatarUrl(cached);
 
     let cancelled = false;
     invoke<string | null>("odoo_fetch_avatar")
       .then((dataUrl) => {
         if (cancelled || !dataUrl) return;
-        setCachedAvatar(session.uid, dataUrl);
+        setCachedAvatar(uid, dataUrl);
         setAvatarUrl(dataUrl);
       })
       .catch(() => {
@@ -221,7 +222,7 @@ export function Toolbar() {
         // error for a cosmetic feature.
       });
     return () => { cancelled = true; };
-  }, [status, session]);
+  }, [sessionUid]);
 
   // ---- Window state (unchanged behavior) ---------------------------------
   useEffect(() => {
@@ -634,7 +635,15 @@ export function Toolbar() {
                   firstName={session.name.split(" ")[0]}
                   status={noticeStatus}
                   onAcknowledge={handleAcknowledge}
-                  onFinish={finishOnboarding}
+                  available={{ work: pageAvailable("work"), training: pageAvailable("training") }}
+                  onFinish={(target) => {
+                    if (target === "odoo") {
+                      finishOnboarding("home");
+                      goToOdoo();
+                    } else {
+                      finishOnboarding(target);
+                    }
+                  }}
                 />
               </div>
             )}
