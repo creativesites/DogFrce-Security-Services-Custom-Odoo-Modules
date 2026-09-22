@@ -60,7 +60,7 @@
                 <filter name="watch" string="Watch" domain="[('tier', '=', 'watch')]"/>
                 <separator/>
                 <filter name="needs_action" string="Needs Action" domain="[('state', 'in', ('open', 'stale_paused'))]"/>
-                <group expand="1" string="Group By">
+                <group>
                     <filter name="group_tier" string="Tier" context="{'group_by': 'tier'}"/>
                     <filter name="group_state" string="State" context="{'group_by': 'state'}"/>
                 </group>

@@ -6,8 +6,11 @@
         <field name="comment">Sees every exception instance and can acknowledge/resolve/reopen them -- the manager/supervisor inbox role.</field>
     </record>
 
-    <record id="group_exception_triage_implied" model="res.groups">
-        <field name="id" ref="security_base.group_security_manager"/>
+    <record id="security_base.group_security_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_exception_triage'))]"/>
+    </record>
+
+    <record id="base.group_system" model="res.groups">
         <field name="implied_ids" eval="[(4, ref('group_exception_triage'))]"/>
     </record>
 </odoo>

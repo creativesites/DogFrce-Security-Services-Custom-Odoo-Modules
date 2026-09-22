@@ -8,7 +8,6 @@
             <field name="code">model.action_materialize_all()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
             <field name="active">True</field>
         </record>
 
@@ -19,7 +18,6 @@
             <field name="code">model.action_compute_all()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
             <field name="active">True</field>
         </record>
 
@@ -30,7 +28,6 @@
             <field name="code">model.action_compute_all()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
             <field name="active">True</field>
         </record>
 
@@ -41,7 +38,6 @@
             <field name="code">model.action_detect_all()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
             <field name="active">True</field>
         </record>
     </data>
