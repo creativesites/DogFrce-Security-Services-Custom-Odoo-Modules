@@ -8,7 +8,9 @@
 # refuses to continue if the backup is empty. Odoo is unavailable for the
 # few minutes the upgrade takes.
 #
-# Access: key-based SSH as root. No password is stored or read here.
+# Access: key-based SSH as root, or run it on the server itself:
+#   cd /opt/dogforce && DOGFORCE_PROD_HOST=local bash scripts/deploy_production.sh --plan
+# No password is stored or read here.
 # Module scope: DEPLOYMENT_SCOPE_AND_EXCLUSIONS.md. The Zambia modules are
 # refused outright, same blocklist as promote_staging_to_prod.sh.
 
@@ -28,10 +30,16 @@ for bad in $EXCLUDED; do
   case ",$NEW_MODULES," in *",$bad,"*) echo "refusing: $bad is excluded from production"; exit 1;; esac
 done
 
-ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST" true || {
-  echo "Can't SSH to $HOST with a key. Authorise this machine's key first (see desktop/README or ask)."; exit 1; }
-
-remote() { ssh -o BatchMode=yes "$HOST" "$@"; }
+if [ "$HOST" = "local" ]; then
+  # Running on the production server itself: same steps, no SSH.
+  [ -d "$APP_DIR/.git" ] || { echo "error: local mode must run on the server ($APP_DIR not found)"; exit 1; }
+  cd "$APP_DIR"
+  remote() { bash -c "$*"; }
+else
+  ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST" true || {
+    echo "Can't SSH to $HOST with a key. Authorise this machine's key first, or run this on the server with DOGFORCE_PROD_HOST=local."; exit 1; }
+  remote() { ssh -o BatchMode=yes "$HOST" "$@"; }
+fi
 
 echo "==> Discovering production layout"
 ODOO_C=$(remote "docker ps --format '{{.Names}}' | grep -i odoo | grep -viE 'db|postgres|whatsapp|staging' | head -1")
@@ -39,6 +47,22 @@ DB_C=$(remote "docker ps --format '{{.Names}}' | grep -iE 'db|postgres' | grep -
 echo "    odoo container: ${ODOO_C:-NOT FOUND}"
 echo "    db container:   ${DB_C:-NOT FOUND}"
 [ -n "$ODOO_C" ] && [ -n "$DB_C" ] || { echo "error: couldn't identify the production containers"; exit 1; }
+
+# A restart re-creates bind mounts from the host. If a mounted file has gone
+# (odoo.conf stopped being tracked in git, so a pull deletes it), Odoo would
+# not come back. Check before anything restarts.
+echo "==> Host files mounted into $ODOO_C"
+MISSING_MOUNTS=""
+while read -r src dst; do
+  [ -n "$src" ] || continue
+  if remote "test -e '$src'"; then echo "    ok       $src -> $dst"; else echo "    MISSING  $src -> $dst"; MISSING_MOUNTS="$MISSING_MOUNTS $src"; fi
+done < <(remote "docker inspect -f '{{range .Mounts}}{{if eq .Type \"bind\"}}{{.Source}} {{.Destination}}{{println}}{{end}}{{end}}' $ODOO_C")
+if [ -n "$MISSING_MOUNTS" ]; then
+  echo "error: mounted file(s) missing on the host:$MISSING_MOUNTS"
+  echo "       Odoo won't restart without them. If it's $APP_DIR/odoo.conf, restore it from"
+  echo "       the last commit that tracked it:  cd $APP_DIR && git show e756270:odoo.conf > odoo.conf"
+  exit 1
+fi
 
 echo "==> Code on the server"
 remote "cd $APP_DIR && git rev-parse --abbrev-ref HEAD && git log -1 --oneline && git status --short | head -20"
