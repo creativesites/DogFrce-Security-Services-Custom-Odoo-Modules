@@ -145,14 +145,21 @@ Vitest and `cargo test` on `windows-latest` and builds unsigned installers.
 
 ## G. Must fix before DogForce rollout
 
-1. Security items D-1 to D-9 (done in this recovery; see git log).
-2. Correctness items D-10 to D-22 (done in this recovery).
-3. `security_support` present in the repo and installed (done in this recovery).
-4. **Rotate** the credentials previously committed (`never_deploy.md`, `CLAUDE.md` history, `odoo.conf`). *Owner: Winston.*
-5. Updater signing key backed up off the single laptop and stored as a CI secret (`TAURI_SIGNING_PRIVATE_KEY`). *Owner: Winston.*
-6. One clean-VM Windows 10/11 install → sign in → N→N+1 update pass (`desktop/RELEASING.md`). *Owner: Winston.*
-7. The V2 first slice (Roster → Attendance-posting task → Training → Guided task → Completion → Team Today) installed on staging and walked through end to end.
-8. Responsibilities configured for the four office users on production.
+Done in this recovery (see `git log` on `claude/relaxed-allen-qbvh6q`):
+1. Security items D-1 to D-9.
+2. Correctness items D-10 to D-22.
+3. `security_support` rebuilt in the repo (D-23).
+4. Business rules moved to the server (D-24 to D-26).
+5. The V2 slice (roster → Register/Confirm/Verify → guided task → Team Today),
+   with HR's missing "verify & lock" screen added and roster approval
+   gated to HR/GM, per the revised roles matrix.
+
+Still open (owner: Winston unless noted):
+6. **Rotate** the credentials previously committed (`never_deploy.md`, `CLAUDE.md` history, `odoo.conf`). *Owner: Winston.*
+7. Updater signing key backed up off the single laptop and stored as a CI secret (`TAURI_SIGNING_PRIVATE_KEY`). *Owner: Winston.*
+8. One clean-VM Windows 10/11 install → sign in → N→N+1 update pass (`desktop/RELEASING.md`). *Owner: Winston.*
+9. The V2 slice installed on **staging**, set up with the pipeline wizard, and walked through end to end (RELEASING.md, Manual QA).
+10. Give the GM's production user the Security Owner group (full access, as agreed with Kuume and Wilbert).
 
 ## H. Belongs to the future Platform
 

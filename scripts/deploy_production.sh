@@ -18,7 +18,7 @@ HOST="${DOGFORCE_PROD_HOST:-root@199.192.23.46}"
 DB="dogforce_prod"
 APP_DIR="/opt/dogforce"
 # Installed if missing; everything already installed is upgraded (-u all).
-NEW_MODULES="security_work,security_training,security_deployguard_bridge,security_armed_response,security_support,security_exceptions,security_telephony,security_adoption,security_tour"
+NEW_MODULES="security_work,security_training,security_deployguard_bridge,security_armed_response,security_support,security_exceptions,security_telephony,security_adoption,security_tour,security_guidance,security_deployguard_ops"
 EXCLUDED="security_l10n_zm security_zra_invoice security_demo_data_zm security_demo_zambia_site"
 
 MODE="${1:-}"
