@@ -210,7 +210,24 @@ class SecurityAttendanceBatch(models.Model):
             batch.state = "reviewed"
             self._emit_bus_event("attendance.batch.reviewed", batch)
 
+    def _assert_can_lock(self):
+        """HR verifies attendance (DogForce roles matrix, step 3 -- see
+        docs/deployguard/dogforce-roles-and-pipeline.md). Locking is what
+        payroll reads from, so it is limited to HR, the GM and the owner."""
+        if self.env.su:
+            return
+        verifier_groups = (
+            "security_base.group_security_hr_payroll_officer",
+            "security_base.group_security_manager",
+            "security_base.group_security_owner",
+        )
+        if not any(self.env.user.has_group(g) for g in verifier_groups):
+            raise UserError(
+                "Only HR (or the GM/owner) can verify and lock a posting sheet."
+            )
+
     def action_lock(self):
+        self._assert_can_lock()
         for batch in self:
             batch.state = "locked"
             self._emit_bus_event("attendance.batch.locked", batch)
@@ -265,6 +282,9 @@ class SecurityAttendanceBatch(models.Model):
             record.write(vals)
         if self.state == "draft":
             self.state = "captured"
+        # Lets DeployGuard notice the register step is done (every guard
+        # marked) without waiting for review.
+        self._emit_bus_event("attendance.batch.marked", self)
 
     def action_open_posting_console(self):
         return {

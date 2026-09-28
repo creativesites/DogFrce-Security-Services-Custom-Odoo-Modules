@@ -3,8 +3,8 @@
 //! but has none of these.
 
 use crate::errors::AppError;
-use crate::state::{AppState, SessionInfo};
-use crate::{connectivity, diagnostics, odoo, windowing};
+use crate::state::{AppState, SessionInfo, ViewMode};
+use crate::{connectivity, diagnostics, guard, odoo, windowing};
 use tauri::{AppHandle, State};
 
 #[tauri::command]
@@ -13,14 +13,17 @@ pub fn get_current_session(state: State<AppState>) -> Option<SessionInfo> {
 }
 
 /// Lets the "shell" webview's React state resync with the *actual* native
-/// webview size on mount — including after a dev-server HMR reload, which
-/// resets React state but not the native bounds Rust already set. Without
-/// this, an auto-reveal (see windowing::open_app_view) that happens to race a
-/// reload leaves the native webview big while React renders the toolbar
-/// only, or vice versa.
+/// layout on mount — including after a dev-server HMR reload, which resets
+/// React state but not the native bounds Rust already set. Changes after that
+/// arrive as `deployguard://view-mode` events.
 #[tauri::command]
-pub fn get_app_view_open(state: State<AppState>) -> bool {
-    *state.overlay_expanded.lock().unwrap()
+pub fn get_view_mode(state: State<AppState>) -> ViewMode {
+    *state.view_mode.lock().unwrap()
+}
+
+#[tauri::command]
+pub fn set_view_mode(app: AppHandle, mode: ViewMode) {
+    windowing::set_view_mode(&app, mode);
 }
 
 #[tauri::command]
@@ -29,18 +32,8 @@ pub async fn auth_sign_out(app: AppHandle) {
 }
 
 #[tauri::command]
-pub fn app_view_open(app: AppHandle) {
-    windowing::open_app_view(&app);
-}
-
-#[tauri::command]
-pub fn app_view_close(app: AppHandle) {
-    windowing::close_app_view(&app);
-}
-
-#[tauri::command]
-pub fn navigate_odoo(app: AppHandle, path: Option<String>) -> Result<(), String> {
-    windowing::navigate_odoo(&app, path.as_deref().unwrap_or("/odoo")).map_err(|e| e.to_string())
+pub fn navigate_odoo(app: AppHandle, path: Option<String>) -> Result<(), AppError> {
+    windowing::navigate_odoo(&app, path.as_deref().unwrap_or("/odoo"))
 }
 
 #[tauri::command]
@@ -81,6 +74,7 @@ pub fn window_close(app: AppHandle) -> Result<(), String> {
 /// Odoo model reads/writes can reuse it rather than growing a new command.
 #[tauri::command]
 pub async fn odoo_call_kw(
+    app: AppHandle,
     state: State<'_, AppState>,
     model: String,
     method: String,
@@ -93,7 +87,12 @@ pub async fn odoo_call_kw(
         .unwrap()
         .clone()
         .ok_or(AppError::SessionExpired)?;
-    odoo::call_kw(&session_id, &model, &method, args, kwargs).await
+    guard::validate_call_kw(&model, &method)?;
+    let result = odoo::call_kw(&session_id, &model, &method, args, kwargs).await;
+    if matches!(result, Err(AppError::SessionExpired)) {
+        windowing::session_expired(&app);
+    }
+    result
 }
 
 /// Fetches the signed-in user's Odoo avatar as a `data:` URL. The

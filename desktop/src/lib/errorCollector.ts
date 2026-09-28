@@ -60,12 +60,19 @@ export function clearRecentErrors(): void {
   errorBuffer.length = 0;
 }
 
+/** Set once at startup from Tauri's `getVersion()` (see main.tsx). Until then
+ * the report says "unknown" rather than a made-up version. */
+let appVersion = "unknown";
+export function setDiagnosticsAppVersion(version: string): void {
+  appVersion = version;
+}
+
 export function getClientDiagnostics(
   route: string = "/home",
   taskContext?: { id: number; name: string },
 ): ClientDiagnostics {
   return {
-    appVersion: "0.1.0",
+    appVersion,
     route,
     task: taskContext,
     online: typeof navigator !== "undefined" ? navigator.onLine : true,

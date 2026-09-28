@@ -22,6 +22,10 @@ export const FEATURE_MODELS = {
   owner: "security.owner.digest",
   help: "security.help.article",
   support: "security.support.request",
+  /** Roster-driven responsibilities: Today and Team Today. */
+  team_today: "security.work.responsibility",
+  /** Guided tasks (security_guidance): "Guide me" and "Practice it now". */
+  guidance: "security.guidance.session",
 } as const;
 
 export type Feature = keyof typeof FEATURE_MODELS;

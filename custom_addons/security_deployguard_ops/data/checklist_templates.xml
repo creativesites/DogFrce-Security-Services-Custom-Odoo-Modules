@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- The attendance pipeline's tasks carry no checklist items: the evidence
+         is the posting sheet itself, which DeployGuard reads. Distinct codes
+         from the legacy attendance.post template, so security_work's older
+         auto-verify never touches these. -->
+    <record id="template_attendance_register" model="security.work.checklist.template">
+        <field name="name">Register attendance</field>
+        <field name="code">attendance.register</field>
+    </record>
+    <record id="template_attendance_confirm" model="security.work.checklist.template">
+        <field name="name">Confirm attendance</field>
+        <field name="code">attendance.confirm</field>
+    </record>
+    <record id="template_attendance_verify" model="security.work.checklist.template">
+        <field name="name">Verify attendance</field>
+        <field name="code">attendance.verify</field>
+    </record>
+</odoo>

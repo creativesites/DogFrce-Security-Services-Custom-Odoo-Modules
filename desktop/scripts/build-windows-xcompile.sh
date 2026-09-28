@@ -81,19 +81,9 @@ mkdir -p "$OUT_DIR"
 cp "$INSTALLER" "$OUT_DIR/$ASSET"
 cp "$INSTALLER.sig" "$OUT_DIR/$ASSET.sig"
 
-node - "$VERSION" "$NOTES" "$OUT_DIR/$ASSET.sig" "https://github.com/$RELEASES_REPO/releases/download/v$VERSION/$ASSET" "$OUT_DIR/latest.json" <<'EOF'
-const fs = require("fs");
-const [version, notes, sigPath, url, outPath] = process.argv.slice(2);
-const manifest = {
-  version,
-  notes,
-  pub_date: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
-  platforms: {
-    "windows-x86_64": { signature: fs.readFileSync(sigPath, "utf8").trim(), url },
-  },
-};
-fs.writeFileSync(outPath, JSON.stringify(manifest, null, 2) + "\n");
-EOF
+node scripts/release-manifest.mjs check-version >/dev/null
+node scripts/release-manifest.mjs latest-json "$VERSION" "$NOTES" "$OUT_DIR/$ASSET.sig" \
+  "https://github.com/$RELEASES_REPO/releases/download/v$VERSION/$ASSET" "$OUT_DIR/latest.json"
 
 echo "==> Installer:  $OUT_DIR/$ASSET"
 echo "==> Signature:  $OUT_DIR/$ASSET.sig"

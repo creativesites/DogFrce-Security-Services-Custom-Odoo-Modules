@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_pipeline_setup_supervisor,security.deployguard.pipeline.setup,model_security_deployguard_pipeline_setup,security_work.group_work_supervisor,1,1,1,1

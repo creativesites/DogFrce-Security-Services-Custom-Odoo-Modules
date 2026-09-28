@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_support_request_list" model="ir.ui.view">
+        <field name="name">security.support.request.list</field>
+        <field name="model">security.support.request</field>
+        <field name="arch" type="xml">
+            <list decoration-danger="priority == '3' and state != 'resolved'" decoration-muted="state == 'resolved'">
+                <field name="name"/>
+                <field name="subject"/>
+                <field name="user_id"/>
+                <field name="client_category"/>
+                <field name="priority" widget="priority"/>
+                <field name="work_task_id" optional="show"/>
+                <field name="system_fault" optional="show"/>
+                <field name="state" widget="badge"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_support_request_form" model="ir.ui.view">
+        <field name="name">security.support.request.form</field>
+        <field name="model">security.support.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_start" type="object" string="Start" invisible="state != 'new'" groups="security_support.group_support_agent"/>
+                    <button name="action_resolve" type="object" string="Resolve" class="btn-primary" invisible="state == 'resolved'" groups="security_support.group_support_agent"/>
+                    <button name="action_reopen" type="object" string="Reopen" invisible="state != 'resolved'" groups="security_support.group_support_agent"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title"><h1><field name="name" readonly="1"/></h1></div>
+                    <group>
+                        <group>
+                            <field name="subject"/>
+                            <field name="client_category"/>
+                            <field name="priority" widget="priority"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group>
+                            <field name="route"/>
+                            <field name="work_task_id"/>
+                            <field name="system_fault" groups="security_support.group_support_agent"/>
+                            <field name="resolved_at"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="What happened?"/>
+                    <group string="Resolution" groups="security_support.group_support_agent">
+                        <field name="resolution_note" nolabel="1" colspan="2"/>
+                    </group>
+                    <group string="Diagnostics (sanitised)">
+                        <field name="diagnostics" nolabel="1" colspan="2" widget="text"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_task_feedback_list" model="ir.ui.view">
+        <field name="name">security.task.feedback.list</field>
+        <field name="model">security.task.feedback</field>
+        <field name="arch" type="xml">
+            <list create="false">
+                <field name="create_date"/>
+                <field name="task_id"/>
+                <field name="responsibility_name"/>
+                <field name="user_id"/>
+                <field name="rating"/>
+                <field name="difficulty_reason"/>
+                <field name="notes"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_support_request" model="ir.actions.act_window">
+        <field name="name">Problem Reports</field>
+        <field name="res_model">security.support.request</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_task_feedback" model="ir.actions.act_window">
+        <field name="name">Task Feedback</field>
+        <field name="res_model">security.task.feedback</field>
+        <field name="view_mode">list</field>
+    </record>
+
+    <menuitem id="menu_support_root" name="Staff Support" parent="security_work.menu_security_work_root" sequence="80" groups="security_support.group_support_agent"/>
+    <menuitem id="menu_support_request" name="Problem Reports" parent="menu_support_root" action="action_support_request" sequence="10"/>
+    <menuitem id="menu_task_feedback" name="Task Feedback" parent="menu_support_root" action="action_task_feedback" sequence="20"/>
+</odoo>

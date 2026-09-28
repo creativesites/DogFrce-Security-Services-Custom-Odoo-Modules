@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pipeline_setup_form" model="ir.ui.view">
+        <field name="name">security.deployguard.pipeline.setup.form</field>
+        <field name="model">security.deployguard.pipeline.setup</field>
+        <field name="arch" type="xml">
+            <form string="Set up the attendance pipeline">
+                <p>
+                    Choose who does each step. From then on, every site with guards on the roster gets its three tasks each day,
+                    and each person sees theirs in DeployGuard with a guide.
+                </p>
+                <group>
+                    <group string="1. Register (Operations Supervisor)">
+                        <field name="register_employee_id"/>
+                        <field name="register_due" widget="float_time"/>
+                    </group>
+                    <group string="2. Confirm (Admin)">
+                        <field name="confirm_employee_id"/>
+                        <field name="confirm_due" widget="float_time"/>
+                    </group>
+                    <group string="3. Verify (HR)">
+                        <field name="verify_employee_id"/>
+                        <field name="verify_due" widget="float_time"/>
+                    </group>
+                    <group string="Sites">
+                        <field name="site_ids" widget="many2many_tags"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_apply" type="object" string="Set up" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_pipeline_setup" model="ir.actions.act_window">
+        <field name="name">Set up attendance pipeline</field>
+        <field name="res_model">security.deployguard.pipeline.setup</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_pipeline_setup" name="Set up attendance pipeline" parent="security_work.menu_security_work_root"
+              action="action_pipeline_setup" sequence="36" groups="security_work.group_work_supervisor"/>
+</odoo>

@@ -16,7 +16,7 @@ import {
   saveChecklistResponse,
 } from "../../api/work";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
-import { invoke } from "../../lib/tauri";
+import { useViewMode } from "../../app/viewMode";
 import { useSession } from "../../session/SessionContext";
 import {
   STATE_LABELS,
@@ -83,10 +83,13 @@ interface MyWorkProps {
    * initial mount already fetches on its own, so that first value is
    * ignored. */
   reloadSignal?: number;
+  /** Open this task straight away (Today's "Details"). */
+  focusTaskId?: number | null;
 }
 
-export function MyWork({ reloadSignal }: MyWorkProps) {
+export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
   const { session } = useSession();
+  const { openInOdoo } = useViewMode();
   const [employeeState, setEmployeeState] = useState<LoadState>("loading");
   const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [employeeError, setEmployeeError] = useState<string | null>(null);
@@ -99,7 +102,7 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
   const [signoffBusyId, setSignoffBusyId] = useState<number | null>(null);
   const [signoffFeedback, setSignoffFeedback] = useState<{ id: number; message: string } | null>(null);
 
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(focusTaskId);
 
   const loadSignoffs = useCallback(async () => {
     if (!session) return;
@@ -125,7 +128,7 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
         setSignoffFeedback(null);
       }, 1200);
     } catch (err) {
-      alert(extractErrorMessage(err, "Failed to sign off roster batch."));
+      setSignoffFeedback({ id: signoffId, message: extractErrorMessage(err, "The sign-off didn't go through. Try again.") });
     } finally {
       setSignoffBusyId(null);
     }
@@ -133,8 +136,7 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
 
   const handleReviewRoster = async (signoff: RosterSignoff) => {
     const batchId = signoff.batch_id[0];
-    await invoke("navigate_odoo", { path: `/odoo/action-security_operations.action_security_roster_batch/${batchId}` });
-    await invoke("app_view_close");
+    await openInOdoo(`/odoo/action-security_operations.action_security_roster_batch/${batchId}`);
   };
 
   const loadEmployee = useCallback(async () => {
@@ -250,17 +252,17 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
         onReview={(s) => void handleReviewRoster(s)}
       />
 
-      <div
-        className="dg-page-enter"
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 20px" }}
-      >
-        <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "var(--ds-text)" }}>My Work</h1>
-        {tasksState === "ready" && (
-          <span className="dg-chip">
-            {taskCount} {taskCount === 1 ? "task" : "tasks"}
-          </span>
-        )}
-      </div>
+      <header className="dg-hero dg-page-enter">
+        <div className="dg-hero__text">
+          <p className="dg-eyebrow">Everything assigned to you</p>
+          <h1 className="dg-display">My work</h1>
+          <p className="dg-subline">
+            {tasksState === "ready"
+              ? taskCount === 0 ? "Nothing open. New work shows up here when it's assigned." : `${taskCount} open ${taskCount === 1 ? "task" : "tasks"}, soonest first.`
+              : "Checking what's assigned to you…"}
+          </p>
+        </div>
+      </header>
 
       {tasksState === "loading" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -335,7 +337,7 @@ function TaskDetail({
   const [showCncPicker, setShowCncPicker] = useState(false);
   const [cncReason, setCncReason] = useState("");
 
-  const [draft, setDraft] = useState<Record<number, { value_bool?: boolean; value_text?: string; value_number?: number }>>({});
+  const [draft, setDraft] = useState<Record<number, { value_bool?: boolean; value_text?: string; value_number?: number | false }>>({});
   const [savingChecklist, setSavingChecklist] = useState(false);
   const [checklistSaved, setChecklistSaved] = useState(false);
 
@@ -653,17 +655,15 @@ function TaskDetail({
         </div>
       )}
 
-      {task && (
+      {task && feedbackModalOpen && (
         <TaskFeedbackModal
-          isOpen={feedbackModalOpen}
           taskId={task.id}
           taskName={task.name}
           onClose={() => setFeedbackModalOpen(false)}
         />
       )}
-      {task && (
+      {task && taskProblemReportOpen && (
         <ProblemReportDialog
-          isOpen={taskProblemReportOpen}
           onClose={() => setTaskProblemReportOpen(false)}
           currentRoute="/work"
           taskContext={{ id: task.id, name: task.name }}
@@ -682,9 +682,9 @@ function ChecklistItemRow({
 }: {
   item: ChecklistItemDef;
   existing: ChecklistResponse | undefined;
-  pending: { value_bool?: boolean; value_text?: string; value_number?: number } | undefined;
+  pending: { value_bool?: boolean; value_text?: string; value_number?: number | false } | undefined;
   disabled: boolean;
-  onChange: (value: { value_bool?: boolean; value_text?: string; value_number?: number }) => void;
+  onChange: (value: { value_bool?: boolean; value_text?: string; value_number?: number | false }) => void;
 }) {
   const label = (
     <span style={{ fontSize: 13, color: "var(--ds-text-2)" }}>
@@ -719,7 +719,9 @@ function ChecklistItemRow({
           className="dg-input"
           value={value === false ? "" : value}
           disabled={disabled}
-          onChange={(e) => onChange({ value_number: e.target.value === "" ? undefined : Number(e.target.value) })}
+          // Clearing sends `false` (Odoo's "empty"), not `undefined`: undefined fell
+          // back to the saved value, so a number could never be cleared.
+          onChange={(e) => onChange({ value_number: e.target.value === "" ? false : Number(e.target.value) })}
           style={{
             padding: "6px 10px",
             borderRadius: "var(--dgs-r-control)",

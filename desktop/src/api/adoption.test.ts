@@ -119,12 +119,11 @@ describe("adoption API", () => {
     expect(checkin).toEqual(mockCheckins[0]);
   });
 
-  it("FACTOR_CONFIG weights sum to 1.0 (100%)", () => {
-    const totalWeight = Object.values(FACTOR_CONFIG).reduce(
-      (acc, curr) => acc + curr.weight,
-      0
+  it("FACTOR_CONFIG only labels the five server factors; weights are the server's", () => {
+    expect(Object.keys(FACTOR_CONFIG).sort()).toEqual(
+      ["f1_coverage", "f2_timeliness", "f3_training", "f4_responsiveness", "f5_quality"],
     );
-    expect(Math.round(totalWeight * 100) / 100).toBe(1.0);
+    for (const cfg of Object.values(FACTOR_CONFIG)) expect(cfg).not.toHaveProperty("weight");
   });
 
   it("CHECKIN_OPTION_LABELS contains all 8 spec answers", () => {

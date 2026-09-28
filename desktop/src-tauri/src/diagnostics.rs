@@ -24,7 +24,11 @@ pub struct Diagnostics {
     pub generated_at: String,
 }
 
-pub async fn collect(signed_in: bool, last_sync_note: Option<String>, log_dir: Option<String>) -> Diagnostics {
+pub async fn collect(
+    signed_in: bool,
+    last_sync_note: Option<String>,
+    log_dir: Option<String>,
+) -> Diagnostics {
     Diagnostics {
         app_version: env!("CARGO_PKG_VERSION").to_string(),
         os: tauri_plugin_os::type_().to_string(),

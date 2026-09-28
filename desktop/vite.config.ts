@@ -11,7 +11,9 @@ export default defineConfig(async () => ({
     strictPort: true,
     watch: { ignored: ["**/src-tauri/**"] },
   },
-  envPrefix: ["VITE_", "DEPLOYGUARD_"],
+  // Only VITE_* reaches the bundle. Anything else (e.g. a DEPLOYGUARD_* secret
+  // in a CI environment) must never be baked into shipped JavaScript.
+  envPrefix: ["VITE_"],
   // Pre-bundle these up front instead of discovering them lazily on first
   // import — a lazy discovery forces Vite to full-reload every connected
   // webview mid-session, which in the "shell" overlay webview visibly

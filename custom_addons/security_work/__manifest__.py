@@ -34,11 +34,18 @@
         - Record rules on security.work.checklist.response, which
           previously had none -- any employee could read or edit any other
           employee's checklist answers by record id.
+        V2 (2026-09-28, docs/deployguard/dogforce-roles-and-pipeline.md):
+        - security.work.responsibility: a duty someone owns, turned into
+          tasks by the roster (one per rostered site-day), chained into a
+          pipeline (Register -> Confirm -> Verify) so each task knows whether
+          it can be done yet.
+        - get_my_today / get_team_today / get_viewer_context: the desktop's
+          Today, Team Today and role gating, computed here, not in the UI.
         Still not here: offline sync (needs the desktop's own SQLCipher/
         outbox work, BUILD-STATUS-AND-PHASE-PLAN.md Phase 3.7-3.9) and
         site-event-based recurrence.
     """,
-    "version": "19.0.1.0.0",
+    "version": "19.0.1.1.0",
     "category": "Security/Operations",
     "author": "Winston Zulu",
     "license": "LGPL-3",
@@ -50,6 +57,7 @@
         "views/security_work_checklist_views.xml",
         "views/security_work_schedule_rule_views.xml",
         "views/security_work_menu.xml",
+        "views/security_work_responsibility_views.xml",
         "data/security_work_checklist_templates.xml",
         "data/security_work_cron.xml",
     ],

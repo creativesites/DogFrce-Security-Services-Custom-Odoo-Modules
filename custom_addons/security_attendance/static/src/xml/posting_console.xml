@@ -27,7 +27,7 @@
         <!-- Date picker -->
         <div style="display:flex;flex-direction:column;gap:3px;">
             <label style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Date</label>
-            <input type="date"
+            <input type="date" data-dg-anchor="pc-date"
                    t-att-value="state.date"
                    t-on-change="onDateChange"
                    style="background:#1e3a5f;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:5px 10px;font-size:13px;outline:none;cursor:pointer;"/>
@@ -36,7 +36,7 @@
         <!-- Site selector -->
         <div style="display:flex;flex-direction:column;gap:3px;min-width:200px;">
             <label style="font-size:10px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Client Site</label>
-            <select t-on-change="onSiteChange"
+            <select t-on-change="onSiteChange" data-dg-anchor="pc-site"
                     style="background:#1e3a5f;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:5px 10px;font-size:13px;outline:none;cursor:pointer;">
                 <option value="">-- Select Site --</option>
                 <t t-foreach="state.sites" t-as="site" t-key="site.id">
@@ -65,6 +65,7 @@
 
             <!-- Generate from Roster: only when batch exists but no records -->
             <button t-if="state.batchId and state.records.length === 0 and !state.loading"
+                    data-dg-anchor="pc-generate"
                     t-on-click="() => this.generateFromRoster()"
                     style="background:#0369a1;border:none;color:#e0f2fe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
                 <i class="fa fa-magic"/>
@@ -73,6 +74,7 @@
 
             <!-- Mark All Present -->
             <button t-if="state.batchId and state.records.length > 0"
+                    data-dg-anchor="pc-mark-all"
                     t-on-click="() => this.markAllPresent()"
                     style="background:#064e3b;border:1px solid #065f46;color:#6ee7b7;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
                 <i class="fa fa-check-double"/>
@@ -81,6 +83,7 @@
 
             <!-- Save Changes -->
             <button t-if="state.batchId"
+                    data-dg-anchor="pc-save"
                     t-on-click="() => this.saveAll()"
                     t-att-disabled="state.saving or state.dirtyIds.size === 0"
                     style="background:#1d4ed8;border:none;color:#dbeafe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;position:relative;">
@@ -94,6 +97,7 @@
 
             <!-- Submit Batch -->
             <button t-if="canSubmit"
+                    data-dg-anchor="pc-review"
                     t-on-click="() => this.submitBatch()"
                     style="background:#7c3aed;border:none;color:#ede9fe;border-radius:6px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;">
                 <i class="fa fa-paper-plane"/>
@@ -210,7 +214,7 @@
                         There is no posting sheet for this date and site. Create one and generate records from the roster.
                     </div>
                 </div>
-                <button t-on-click="() => this.createBatch()"
+                <button t-on-click="() => this.createBatch()" data-dg-anchor="pc-create-batch"
                         style="background:linear-gradient(135deg,#1d4ed8,#0ea5e9);border:none;color:#fff;border-radius:8px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;">
                     <i class="fa fa-magic"/>
                     Create Batch &amp; Generate from Roster
@@ -256,7 +260,7 @@
             </t>
 
             <!-- Card grid -->
-            <div class="pc-card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+            <div class="pc-card-grid" data-dg-anchor="pc-records" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
                 <t t-foreach="visibleRecords" t-as="rec" t-key="rec.id">
 
                     <!-- Guard card -->

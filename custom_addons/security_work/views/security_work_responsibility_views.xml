@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_security_work_responsibility_list" model="ir.ui.view">
+        <field name="name">security.work.responsibility.list</field>
+        <field name="model">security.work.responsibility</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="trigger"/>
+                <field name="depends_on_id"/>
+                <field name="due_hour" widget="float_time"/>
+                <field name="guidance_flow_code" optional="hide"/>
+                <field name="last_materialized_date" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_work_responsibility_form" model="ir.ui.view">
+        <field name="name">security.work.responsibility.form</field>
+        <field name="model">security.work.responsibility</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Register attendance"/></h1>
+                    </div>
+                    <group>
+                        <group string="Who and when">
+                            <field name="employee_id"/>
+                            <field name="trigger"/>
+                            <field name="site_ids" widget="many2many_tags" invisible="trigger != 'rostered_site_day'"/>
+                            <field name="due_hour" widget="float_time"/>
+                            <field name="depends_on_id"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group string="The task">
+                            <field name="checklist_template_id"/>
+                            <field name="task_name_template"/>
+                            <field name="odoo_path"/>
+                            <field name="guidance_flow_code"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    <group string="Why it matters (shown to the employee)">
+                        <field name="why_it_matters" nolabel="1" colspan="2"
+                               placeholder="Payroll and client billing are calculated from this. If it isn't done, guards may be paid wrongly."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_work_responsibility" model="ir.actions.act_window">
+        <field name="name">Responsibilities</field>
+        <field name="res_model">security.work.responsibility</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Give each recurring duty an owner.</p>
+            <p>Tasks are created from the roster: a duty set to "every rostered site" gets one task per site that has guards rostered that day.</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_security_work_responsibilities" name="Responsibilities" parent="menu_security_work_root"
+              action="action_security_work_responsibility" sequence="35" groups="security_work.group_work_supervisor"/>
+</odoo>

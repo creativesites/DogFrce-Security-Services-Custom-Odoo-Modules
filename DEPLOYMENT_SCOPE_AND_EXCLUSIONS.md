@@ -67,6 +67,16 @@ The following modules comprise the authorized DeployGuard Namibia suite:
 | `security_exceptions` | Exception triage and escalation (Exceptions Inbox) |
 | `security_tour` | Guided in-Odoo tours for first-time users |
 | `security_adoption` | Adoption scoring -- **installed on an explicit founder override, see note below** |
+| `security_guidance` | DeployGuard guided tasks: state-aware guidance inside the ERP, verified against records (**proposed 2026-09-28, needs approval**) |
+| `security_deployguard_ops` | DeployGuard V2 attendance pipeline: roster -> register/confirm/verify tasks, guided flows, Daily Attendance course (**proposed 2026-09-28, needs approval**) |
+
+> **2026-09-28:** `security_support` source was missing from the repository
+> (the desktop and this list assumed it existed); it has been rebuilt. If a
+> copy exists on the production server, compare it before upgrading.
+> `security_guidance` and `security_deployguard_ops` are in
+> `scripts/deploy_production.sh` but **run it only after the staging
+> walkthrough in `desktop/RELEASING.md` passes** and Winston approves them
+> here.
 
 > **`security_deployguard_bridge` was previously scoped out** of production
 > pending the desktop app having something to talk to it about (see

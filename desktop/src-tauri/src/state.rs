@@ -18,13 +18,28 @@ pub struct SessionInfo {
     pub db: String,
 }
 
+/// Which layout the single window is in. Rust owns this; the shell mirrors it
+/// (`get_view_mode` + the `deployguard://view-mode` event) so React and the
+/// native webview bounds can never disagree.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ViewMode {
+    /// Toolbar strip on top, Odoo fills the rest. The default.
+    #[default]
+    Odoo,
+    /// The DeployGuard app covers the whole window (Odoo keeps running underneath).
+    App,
+    /// Guided task: Odoo on the left, a DeployGuard side panel on the right.
+    GuideDock,
+}
+
 #[derive(Default)]
 pub struct AppState {
     pub session: Mutex<Option<SessionInfo>>,
     /// The raw Odoo `session_id` cookie value, used only server-side (Rust)
     /// to call `/web/session/destroy` on sign-out. Never sent over IPC.
     pub(crate) session_cookie: Mutex<Option<String>>,
-    pub overlay_expanded: Mutex<bool>,
+    pub view_mode: Mutex<ViewMode>,
     /// True once we've auto-revealed the DeployGuard overlay for the
     /// current signed-in session, so we don't pop it open again on every
     /// Odoo page navigation — only on the None → Some transition.

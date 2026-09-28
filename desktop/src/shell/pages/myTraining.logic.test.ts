@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  adjacentLessons, allLessons, attemptsRemaining, attemptsUsed, findLessonSection, isAnswerCorrect, isEverythingDone, isLessonDone,
+  adjacentLessons, allLessons, attemptsRemaining, attemptsUsed, findLessonSection, isAnswerCorrect, nextAssessmentToTake, isLessonDone,
   latestAttemptFor, lessonProgressSummary,
 } from "./myTraining.logic";
 import type { CourseTree, TrainingAssessment, TrainingAttempt, TrainingLessonProgress } from "../../api/training";
@@ -114,26 +114,20 @@ describe("attemptsUsed / attemptsRemaining", () => {
   });
 });
 
-describe("isEverythingDone", () => {
-  it("is false when lessons remain", () => {
-    expect(isEverythingDone(tree, [], [])).toBe(false);
+describe("nextAssessmentToTake", () => {
+  it("offers the first assessment that isn't passed yet", () => {
+    expect(nextAssessmentToTake(tree, [])?.id).toBe(tree.assessments[0].id);
   });
 
-  it("is false when lessons are done but the assessment isn't passed", () => {
-    const progress = [lessonProgress(11), lessonProgress(12), lessonProgress(21)];
-    expect(isEverythingDone(tree, progress, [])).toBe(false);
+  it("offers nothing once it's passed", () => {
+    const attempts = [attempt({ assessment_id: tree.assessments[0].id, attempt_number: 1, state: "passed" })];
+    expect(nextAssessmentToTake(tree, attempts)).toBeNull();
   });
 
-  it("is true once every lesson is done and every assessment passed", () => {
-    const progress = [lessonProgress(11), lessonProgress(12), lessonProgress(21)];
-    const attempts = [attempt({ assessment_id: 100, state: "passed" })];
-    expect(isEverythingDone(tree, progress, attempts)).toBe(true);
-  });
-
-  it("is true with no assessments at all once lessons are done", () => {
-    const noAssessmentTree: CourseTree = { ...tree, assessments: [] };
-    const progress = [lessonProgress(11), lessonProgress(12), lessonProgress(21)];
-    expect(isEverythingDone(noAssessmentTree, progress, [])).toBe(true);
+  it("offers nothing when the attempts are used up", () => {
+    const a = tree.assessments[0];
+    const attempts = Array.from({ length: a.max_attempts }, (_, i) => attempt({ assessment_id: a.id, attempt_number: i + 1, state: "failed" }));
+    expect(nextAssessmentToTake(tree, attempts)).toBeNull();
   });
 });
 

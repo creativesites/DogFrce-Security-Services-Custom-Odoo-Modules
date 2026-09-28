@@ -12,22 +12,30 @@ ships, and why.
 
 ## What it does today
 
-- **Single login, on Odoo's own page.** No DeployGuard-branded login form:
-  the app loads Odoo's real `/web/login` directly, and once you're signed
-  in there, the app knows who you are (read from the session cookie).
-- **A persistent toolbar** docked to the top of the window — real Back /
-  Forward / Reload controls for Odoo (driving its own browser history),
-  a Home button, connection status, and your name — always visible, not
-  hidden behind a hover gesture.
-- **A DeployGuard mega menu** — click the brand button to drop down a
-  panel with your DeployGuard home content, overlaying the top of Odoo
-  without resizing it. Closes on click-again, click-outside, or Escape.
-- Odoo fills the rest of the window below the toolbar — it's the primary
-  surface, not something hidden behind DeployGuard's own chrome.
-- Honest connection status (online / DeployGuard System unavailable) —
-  never a silent failure.
-- Home content shows only real information; features that don't exist yet
-  (My Work, Training) say so plainly instead of showing fake data.
+> The authoritative description of the desktop is
+> [`RECONCILIATION.md`](./RECONCILIATION.md); the prioritised backlog is
+> [`IMPLEMENTATION-ROADMAP.md`](./IMPLEMENTATION-ROADMAP.md).
+
+- **Single login, on Odoo's own page.** Employees sign in with their DogForce
+  (Odoo) credentials on Odoo's real `/web/login`. The native layer reads the
+  resulting session; no password ever touches app code.
+- **Odoo is the main surface.** It fills the window below a 48 px toolbar
+  (back / forward / reload, connection status, the employee's name, help).
+  The Odoo webview has **zero** Tauri IPC and can only navigate within the
+  Odoo origin; other links open in the system browser.
+- **The DeployGuard app view** takes over the window when opened and holds:
+  Home ("what do I need to do today?"), My Work & Sweeps, My Training,
+  Exceptions, Team Today (managers), Adoption, and Owner Overview.
+- **Guided tasks.** "Guide me" on a task docks a DeployGuard side panel next
+  to Odoo, while `security_guidance` (an Odoo module) highlights the real Odoo
+  controls and verifies each step from Odoo's own state.
+- **Degrades gracefully.** Screens whose Odoo module isn't installed are
+  hidden, not broken.
+- **Honest status:** connecting / online / ERP unreachable / offline /
+  session expired. Connectivity is required; there is no offline mode.
+- First-run onboarding with the monitoring notice, signed auto-updates that
+  the employee chooses to install, a local rotating log, and in-app problem
+  reports.
 
 ## Prerequisites
 

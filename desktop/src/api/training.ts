@@ -33,6 +33,9 @@ export interface TrainingLesson {
   body: string | false;
   video_url: string | false;
   deep_link_path: string | false;
+  /** security_deployguard_ops: the guided practice for this lesson. Only
+   * requested when the server has guidance (see fetchCourseTree). */
+  guidance_flow_code?: string | false;
 }
 
 export interface TrainingSection {
@@ -126,7 +129,11 @@ export async function fetchAttempts(assignmentId: number): Promise<TrainingAttem
 /** The full content tree for a course version: sections with their
  * lessons, and assessments with their questions and options — composed
  * from flat reads since call_kw has no nested-prefetch equivalent. */
-export async function fetchCourseTree(courseVersionId: number): Promise<CourseTree> {
+export async function fetchCourseTree(courseVersionId: number, opts: { withGuidance?: boolean } = {}): Promise<CourseTree> {
+  const lessonFields = ["section_id", "sequence", "name", "content_type", "body", "video_url", "deep_link_path"];
+  // The field only exists when security_deployguard_ops is installed; asking
+  // for it on a server without it would fail the whole read.
+  if (opts.withGuidance) lessonFields.push("guidance_flow_code");
   const sections = await callKw<Array<{ id: number; sequence: number; name: string }>>(
     "security.training.section",
     "search_read",
@@ -139,7 +146,7 @@ export async function fetchCourseTree(courseVersionId: number): Promise<CourseTr
     ? await callKw<TrainingLesson[]>(
         "security.training.lesson",
         "search_read",
-        [[["section_id", "in", sectionIds]], ["section_id", "sequence", "name", "content_type", "body", "video_url", "deep_link_path"]],
+        [[["section_id", "in", sectionIds]], lessonFields],
         { order: "sequence asc" },
       )
     : [];

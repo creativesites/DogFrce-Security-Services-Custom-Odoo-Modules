@@ -143,7 +143,7 @@ body {
 .dg-btn:active { transform: scale(.97); }
 
 .dg-btn--primary {
-  background: linear-gradient(180deg, #24487F, var(--ds-accent) 65%);
+  background: linear-gradient(180deg, color-mix(in oklab, var(--ds-accent) 86%, white 14%), var(--ds-accent) 65%);
   box-shadow: var(--dgs-glow-accent), 0 1px 0 rgba(255,255,255,.2) inset;
 }
 .dg-btn--primary:hover:not(:disabled)  { filter: brightness(1.07); transform: translateY(-1px); }
@@ -189,7 +189,7 @@ body {
   content: "";
   width: 10px;
   height: 10px;
-  background: #fff;
+  background: var(--ds-surface);
   transform: scale(0);
   transition: transform var(--dgs-dur-fast) var(--dgs-ease-pop);
   clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 44% 63%);

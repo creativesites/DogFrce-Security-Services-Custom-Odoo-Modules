@@ -111,19 +111,20 @@ describe("exceptions API", () => {
     );
   });
 
-  it("getExceptionCounts aggregates open exceptions by tier", async () => {
-    vi.spyOn(odooApi, "callKw").mockResolvedValue([
-      { tier: "critical", state: "open" },
-      { tier: "critical", state: "open" },
-      { tier: "attention", state: "acknowledged" },
-      { tier: "watch", state: "stale_paused" },
-    ]);
+  it("getExceptionCounts asks the server to count open exceptions per tier", async () => {
+    const spy = vi.spyOn(odooApi, "callKw").mockImplementation(async (_model, method, args) => {
+      expect(method).toBe("search_count");
+      const domain = (args as unknown[][][])[0];
+      const tier = domain.find((leaf) => leaf[0] === "tier")?.[2];
+      return ({ critical: 2, attention: 1, watch: 1 } as Record<string, number>)[tier as string] ?? 4;
+    });
 
     const counts = await getExceptionCounts();
     expect(counts.critical).toBe(2);
     expect(counts.attention).toBe(1);
     expect(counts.watch).toBe(1);
     expect(counts.totalOpen).toBe(4);
+    expect(spy).toHaveBeenCalledTimes(4);
   });
 
   it("acknowledgeException executes action_acknowledge", async () => {

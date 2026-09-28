@@ -125,9 +125,11 @@ class TestExpectedWorkItemMaterialization(TransactionCase):
             "name": "Materialize Training Author", "login": "materialize-training@access-control.test",
             "group_ids": [(6, 0, [self.env.ref("security_training.group_training_supervisor").id])],
         })
-        env = self.env.with_user(author)
+        env = self.env(user=author)
         course = env["security.training.course"].create({"name": "Materialize Course"})
-        version = course.version_ids
+        # Courses don't create a version by themselves (see
+        # security_training/tests/test_course_authoring.py).
+        version = course.version_ids[:1] or env["security.training.course.version"].create({"course_id": course.id})
         env["security.training.section"].create({"course_version_id": version.id, "name": "S1"})
         version.action_submit_for_review()
         version.with_user(self.env.ref("base.user_admin")).action_approve()

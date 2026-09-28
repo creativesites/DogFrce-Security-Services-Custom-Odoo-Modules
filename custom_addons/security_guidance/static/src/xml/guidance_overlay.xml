@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="security_guidance.Overlay">
+        <div class="o_dg_guidance" t-if="step" aria-live="polite">
+            <div t-if="pos.ring" t-att-class="'o_dg_guidance__ring' + (pos.pulse ? ' is-pulsing' : '')" t-att-style="ringStyle"/>
+            <div t-ref="callout"
+                 t-att-class="'o_dg_guidance__callout' + (pos.ring ? '' : ' is-docked') + (session.off_track ? ' is-off-track' : '')"
+                 t-att-style="calloutStyle" role="note">
+                <div class="o_dg_guidance__meta">
+                    DeployGuard · Step <t t-esc="step.index"/> of <t t-esc="session.total"/>
+                </div>
+                <t t-if="session.off_track">
+                    <div class="o_dg_guidance__title">You're on a different screen</div>
+                    <div class="o_dg_guidance__text" t-esc="step.deviation_hint or 'Go back to where this step happens. The DeployGuard panel on the right shows how.'"/>
+                </t>
+                <t t-else="">
+                    <div class="o_dg_guidance__title" t-esc="step.title"/>
+                    <div class="o_dg_guidance__text" t-esc="step.instruction"/>
+                    <div t-if="!pos.found" class="o_dg_guidance__hint">Can't see it here? Scroll, or check the DeployGuard panel.</div>
+                    <button t-if="step.why" type="button" class="o_dg_guidance__why" t-on-click="() => this.pos.whyOpen = !this.pos.whyOpen">
+                        <t t-esc="pos.whyOpen ? 'Hide why' : 'Why?'"/>
+                    </button>
+                    <div t-if="pos.whyOpen and step.why" class="o_dg_guidance__text o_dg_guidance__whytext" t-esc="step.why"/>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

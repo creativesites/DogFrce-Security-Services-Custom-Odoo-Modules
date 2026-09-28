@@ -56,13 +56,25 @@ const TASK_FIELDS = [
 /** Resolves the `hr.employee` record for the given Odoo user id, or `null`
  * if this user has no linked employee (e.g. a pure back-office login). */
 export async function resolveEmployeeId(uid: number): Promise<number | null> {
-  const rows = await callKw<Array<{ id: number }>>(
+  const cached = employeeIdCache.get(uid);
+  if (cached) return cached;
+  const lookup = callKw<Array<{ id: number }>>(
     "hr.employee",
     "search_read",
     [[["user_id", "=", uid]], ["id"]],
     { limit: 1 },
-  );
-  return rows[0]?.id ?? null;
+  ).then((rows) => rows[0]?.id ?? null);
+  employeeIdCache.set(uid, lookup);
+  // A failed lookup must not be cached, or the page could never recover.
+  lookup.catch(() => employeeIdCache.delete(uid));
+  return lookup;
+}
+
+/** Three pages used to look this up independently on every mount. */
+const employeeIdCache = new Map<number, Promise<number | null>>();
+
+export function clearEmployeeIdCache(): void {
+  employeeIdCache.clear();
 }
 
 /** All tasks assigned to `employeeId`, soonest due date first. */
@@ -141,7 +153,7 @@ export async function saveChecklistResponse(
   taskId: number,
   itemDefId: number,
   existingResponseId: number | null,
-  value: { value_bool?: boolean; value_text?: string; value_number?: number; note?: string },
+  value: { value_bool?: boolean; value_text?: string; value_number?: number | false; note?: string },
 ): Promise<void> {
   if (existingResponseId) {
     await callKw<boolean>("security.work.checklist.response", "write", [[existingResponseId], value]);
@@ -204,3 +216,24 @@ export async function flagRosterBatch(signoffId: number, note: string): Promise<
   );
 }
 
+
+/**
+ * What the signed-in employee is allowed to see, decided by the server from
+ * their Odoo groups (`security.work.task.get_viewer_context`). The desktop
+ * never infers roles from names or logins.
+ */
+export interface ViewerContext {
+  is_supervisor: boolean;
+  is_manager: boolean;
+  is_owner: boolean;
+}
+
+/** `null` when the server predates the endpoint: callers then fall back to
+ * showing the page and letting the server's own access rules answer. */
+export async function fetchViewerContext(): Promise<ViewerContext | null> {
+  try {
+    return await callKw<ViewerContext>("security.work.task", "get_viewer_context");
+  } catch {
+    return null;
+  }
+}

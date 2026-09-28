@@ -11,6 +11,18 @@
             <field name="active">True</field>
         </record>
 
+        <!-- Hourly, not daily: the roster changes during the day, and a site
+             that gets guards rostered at 07:00 should have its tasks by 08:00. -->
+        <record id="cron_security_work_materialize_responsibilities" model="ir.cron">
+            <field name="name">Work: create tasks from the roster (responsibilities)</field>
+            <field name="model_id" ref="model_security_work_responsibility"/>
+            <field name="state">code</field>
+            <field name="code">model.action_materialize_all()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="active">True</field>
+        </record>
+
         <record id="cron_security_work_overdue_sweep" model="ir.cron">
             <field name="name">Work: sweep overdue tasks</field>
             <field name="model_id" ref="model_security_work_task"/>

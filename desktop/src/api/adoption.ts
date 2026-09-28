@@ -91,33 +91,28 @@ export const WORKFLOW_LABELS: Record<WorkflowKey, string> = {
   "shift.handover": "Shift Handover",
 };
 
-export const FACTOR_CONFIG: Record<
-  ScoreFactorKey,
-  { label: string; weight: number; description: string }
-> = {
+/** Display labels only. Weights, raw values and points come from the
+ * server's `security.adoption.score.factor` rows (see the adoption engine's
+ * rule_version); the client never re-derives a score. */
+export const FACTOR_CONFIG: Record<ScoreFactorKey, { label: string; description: string }> = {
   f1_coverage: {
     label: "Workflow Coverage",
-    weight: 0.4,
     description: "Expected operational tasks actually executed in the system.",
   },
   f2_timeliness: {
     label: "Timeliness",
-    weight: 0.2,
     description: "Tasks fulfilled at or before deadline.",
   },
   f3_training: {
     label: "Training & Currency",
-    weight: 0.15,
     description: "Mandatory course currency and certification standing.",
   },
   f4_responsiveness: {
     label: "Responsiveness",
-    weight: 0.15,
     description: "Actioning verifications and assigned task submissions.",
   },
   f5_quality: {
     label: "Reporting Quality",
-    weight: 0.1,
     description: "Submissions completed first time without return for rework.",
   },
 };

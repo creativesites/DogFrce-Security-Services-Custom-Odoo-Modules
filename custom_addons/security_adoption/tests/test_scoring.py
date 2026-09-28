@@ -40,8 +40,10 @@ class TestScoreSnapshot(TransactionCase):
         for i in range(1, 16):
             self._item(i, "fulfilled", on_time=True)
         window_end = fields.Date.context_today(self.Item) - timedelta(days=1)
+        # The 15 items span 15 days, so the window must too. A 7-day window
+        # only ever saw 7 of them, which is "low" confidence by design.
         snapshot = self.Snapshot._compute_for_employee(
-            self.employee.id, window_end - timedelta(days=6), window_end
+            self.employee.id, window_end - timedelta(days=14), window_end
         )
         self.assertEqual(snapshot.confidence, "medium")
         self.assertEqual(snapshot.expected_total, 15)

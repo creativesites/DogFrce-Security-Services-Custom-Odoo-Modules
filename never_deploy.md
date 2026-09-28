@@ -1,5 +1,8 @@
-IP / Host: 199.192.23.46
-User: root
-Password: 4Li02oO6R5mCT6Uyhx
+# Never deploy
 
-/opt/dogforce
+The production host address, user, and credentials that used to be written here
+have been removed. They are in the password vault.
+
+**Rotate the credentials that were previously committed to this file.** They
+remain readable in git history until the history is rewritten, so removing them
+from the current tree does not make them secret again.

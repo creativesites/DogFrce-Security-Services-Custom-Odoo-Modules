@@ -890,9 +890,11 @@
                     <button name="action_submit" type="object" string="Submit for Approval"
                             invisible="state not in ('draft', 'generated')"/>
                     <button name="action_approve" type="object" string="Approve"
-                            invisible="state != 'submitted'"/>
+                            invisible="state != 'submitted'"
+                            groups="security_base.group_security_hr_payroll_officer,security_base.group_security_manager"/>
                     <button name="action_reject" type="object" string="Reject"
-                            invisible="state != 'submitted'"/>
+                            invisible="state != 'submitted'"
+                            groups="security_base.group_security_hr_payroll_officer,security_base.group_security_manager"/>
                     <button name="action_auto_fill_open_slots" type="object" string="Auto-Fill Open Slots"
                             invisible="state not in ('generated', 'confirmed')"
                             title="Automatically assign the best eligible guard to every unassigned slot"/>
