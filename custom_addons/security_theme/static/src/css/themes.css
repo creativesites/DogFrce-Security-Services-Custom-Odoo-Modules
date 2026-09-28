@@ -123,3 +123,17 @@ body.dg_login_branded {
 
 /* High-visibility secondary text is already enforced unconditionally by
    security_base/design_system.css — no need to repeat it per-theme here. */
+
+/* Native dropdown lists. Many DogForce screens style a <select> dark with
+   light text inline; the opened list inherits that light text but Windows
+   draws it on a white panel, so options were white on white. Give every
+   opened list explicit readable colours, whatever the closed control looks
+   like. */
+select option,
+select optgroup {
+    background-color: #ffffff;
+    color: #1e293b;
+}
+select option:disabled {
+    color: #94a3b8;
+}

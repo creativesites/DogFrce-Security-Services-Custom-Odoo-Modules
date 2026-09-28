@@ -18,6 +18,7 @@ class AttendancePostingConsole extends Component {
     setup() {
         this.orm = useService("orm");
         this.notification = useService("notification");
+        this.action = useService("action");
 
         const today = new Date().toISOString().slice(0, 10);
         const ctx = this.props.action?.context || {};
@@ -37,6 +38,8 @@ class AttendancePostingConsole extends Component {
             quickCreate: {
                 open: false,
                 posts: [],
+                unlinkedPosts: 0,
+                siteName: "",
                 shiftTemplates: [],
                 employees: [],
                 form: {
@@ -69,7 +72,7 @@ class AttendancePostingConsole extends Component {
         const sites = await this.orm.searchRead(
             "security.client.site",
             [["active", "=", true]],
-            ["id", "name"],
+            ["id", "name", "partner_id"],
             { order: "name" }
         );
         this.state.sites = sites;
@@ -387,25 +390,58 @@ class AttendancePostingConsole extends Component {
     }
 
     async openQuickCreate() {
-        if (!this.state.quickCreate.posts.length) {
-            const domain = this.state.selectedSiteId
-                ? [["site_id", "=", this.state.selectedSiteId], ["active", "=", true]]
-                : [["active", "=", true]];
-            const [posts, templates, employees] = await Promise.all([
-                this.orm.searchRead("security.post", domain, ["id", "name"], { order: "name", limit: 100 }),
-                this.orm.searchRead("security.shift.template", [], ["id", "name"], { order: "name" }),
-                this.orm.searchRead(
-                    "hr.employee",
-                    [["security_guard", "=", true], ["active", "=", true]],
-                    ["id", "name"],
-                    { order: "name", limit: 300 }
-                ),
-            ]);
-            this.state.quickCreate.posts = posts;
-            this.state.quickCreate.shiftTemplates = templates;
-            this.state.quickCreate.employees = employees;
-        }
+        // Posts are reloaded every time: they depend on the site picked in the
+        // header, and a post added in another tab should show up. Only posts
+        // at this site are offered because a roster slot takes its site from
+        // its post; a post without a site would create a slot that never
+        // reaches this site's sheet.
+        const siteId = this.state.selectedSiteId;
+        const postDomain = siteId
+            ? [["site_id", "=", siteId], ["active", "=", true]]
+            : [["active", "=", true]];
+        const site = this.state.sites.find((s) => s.id === siteId);
+        const partnerId = site && site.partner_id ? site.partner_id[0] : null;
+        const [posts, templates, employees, unlinked] = await Promise.all([
+            this.orm.searchRead("security.post", postDomain, ["id", "name"], { order: "name", limit: 200 }),
+            this.orm.searchRead("security.shift.template", [], ["id", "name"], { order: "name" }),
+            this.orm.searchRead(
+                "hr.employee",
+                [["security_guard", "=", true], ["active", "=", true]],
+                ["id", "name"],
+                { order: "name", limit: 300 }
+            ),
+            siteId && partnerId
+                ? this.orm.searchCount("security.post", [
+                      ["partner_id", "=", partnerId],
+                      ["site_id", "=", false],
+                      ["active", "=", true],
+                  ])
+                : Promise.resolve(0),
+        ]);
+        this.state.quickCreate.posts = posts;
+        this.state.quickCreate.shiftTemplates = templates;
+        this.state.quickCreate.employees = employees;
+        this.state.quickCreate.unlinkedPosts = unlinked;
+        this.state.quickCreate.siteName = site ? site.name : "";
+        this.state.quickCreate.form = { post_id: null, shift_template_id: null, employee_id: null, count: 1 };
         this.state.quickCreate.open = true;
+    }
+
+    /** Opens the post list for this site's client so a post can be added or
+     * linked to the site, then the operator comes back and reopens the dialog. */
+    openPostsForSite() {
+        const siteId = this.state.selectedSiteId;
+        const site = this.state.sites.find((s) => s.id === siteId);
+        const partnerId = site && site.partner_id ? site.partner_id[0] : false;
+        this.closeQuickCreate();
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: site ? `Posts: ${site.name}` : "Posts",
+            res_model: "security.post",
+            views: [[false, "list"], [false, "form"]],
+            domain: partnerId ? [["partner_id", "=", partnerId]] : [],
+            context: { default_site_id: siteId || false, default_partner_id: partnerId },
+        });
     }
 
     closeQuickCreate() {
