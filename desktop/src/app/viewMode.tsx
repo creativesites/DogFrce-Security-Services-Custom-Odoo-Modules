@@ -10,6 +10,9 @@ interface ViewModeValue {
   setMode: (mode: ViewMode) => void;
   /** Navigate the Odoo webview to a same-origin path and show it. */
   openInOdoo: (path?: string) => Promise<void>;
+  /** Load the path in Odoo (a full page load, which wakes the guidance runner)
+   * with the DeployGuard guide panel beside it. */
+  openGuide: (path?: string) => Promise<void>;
 }
 
 const ViewModeContext = createContext<ViewModeValue | null>(null);
@@ -50,7 +53,12 @@ export function ViewModeProvider({ children }: { children: ReactNode }) {
     setMode("odoo");
   }, [setMode]);
 
-  const value = useMemo(() => ({ mode, setMode, openInOdoo }), [mode, setMode, openInOdoo]);
+  const openGuide = useCallback(async (path?: string) => {
+    await invoke("navigate_odoo", { path: path || "/odoo" });
+    setMode("guide_dock");
+  }, [setMode]);
+
+  const value = useMemo(() => ({ mode, setMode, openInOdoo, openGuide }), [mode, setMode, openInOdoo, openGuide]);
   return <ViewModeContext.Provider value={value}>{children}</ViewModeContext.Provider>;
 }
 

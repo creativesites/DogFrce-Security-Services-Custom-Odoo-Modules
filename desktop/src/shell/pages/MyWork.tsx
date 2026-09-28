@@ -83,9 +83,11 @@ interface MyWorkProps {
    * initial mount already fetches on its own, so that first value is
    * ignored. */
   reloadSignal?: number;
+  /** Open this task straight away (Today's "Details"). */
+  focusTaskId?: number | null;
 }
 
-export function MyWork({ reloadSignal }: MyWorkProps) {
+export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
   const { session } = useSession();
   const { openInOdoo } = useViewMode();
   const [employeeState, setEmployeeState] = useState<LoadState>("loading");
@@ -100,7 +102,7 @@ export function MyWork({ reloadSignal }: MyWorkProps) {
   const [signoffBusyId, setSignoffBusyId] = useState<number | null>(null);
   const [signoffFeedback, setSignoffFeedback] = useState<{ id: number; message: string } | null>(null);
 
-  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(focusTaskId);
 
   const loadSignoffs = useCallback(async () => {
     if (!session) return;

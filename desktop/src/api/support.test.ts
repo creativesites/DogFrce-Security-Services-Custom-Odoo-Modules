@@ -80,20 +80,21 @@ describe("support API", () => {
     expect(res.id).toBe(55);
   });
 
-  it("fetches owner overview and drilldown records", async () => {
+  it("fetches the owner overview and exactly the records behind a tile", async () => {
+    const tile = {
+      key: "overdue", label: "Overdue work", value: 2, total: null, detail: "", tone: "danger" as const, trend: null,
+      drill: { model: "security.work.task", domain: [["is_overdue", "=", true]], fields: ["name", "state"], title: "Overdue work" },
+    };
     const spy = vi.spyOn(odooApi, "callKw").mockResolvedValue({
-      period_start: "2026-09-10",
-      period_end: "2026-09-17",
-      workflow_coverage: { value: 95.0, drill_down_model: "security.adoption.expected.work.item", drill_down_domain: [] },
+      period_start: "2026-09-28", period_end: "2026-09-28", generated_at: "2026-09-28 08:00:00", tiles: [tile],
     });
-
     const overview = await fetchOwnerOverview();
     expect(spy).toHaveBeenCalledWith("security.owner.digest", "get_owner_overview", []);
-    expect(overview.workflow_coverage.value).toBe(95.0);
+    expect(overview.tiles[0].value).toBe(2);
 
     const drillSpy = vi.spyOn(odooApi, "callKw").mockResolvedValue([{ id: 1, name: "Task 1" }]);
-    const drill = await fetchDrillDownRecords("security.work.task", [["state", "=", "open"]], ["id", "name"], 10);
-    expect(drillSpy).toHaveBeenCalledWith("security.work.task", "search_read", [[["state", "=", "open"]], ["id", "name"]], { limit: 10 });
-    expect(drill.length).toBe(1);
+    await fetchDrillDownRecords(tile.drill, 10);
+    expect(drillSpy).toHaveBeenCalledWith("security.work.task", "search_read", [[["is_overdue", "=", true]], ["name", "state"]], { limit: 10 });
   });
+
 });

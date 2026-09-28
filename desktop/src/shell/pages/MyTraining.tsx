@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useViewMode } from "../../app/viewMode";
+import { useStartGuidance } from "../../app/useStartGuidance";
 import { SafeHtml } from "../../components/SafeHtml";
 import {
   CourseTree, TrainingAssessment, TrainingAssignment, TrainingAttempt, TrainingLesson, TrainingLessonProgress,
@@ -32,9 +33,13 @@ type LoadState = "loading" | "ready" | "error";
  */
 interface MyTrainingProps {
   reloadSignal?: number;
+  /** Open this assignment straight away (Today's "Learn this first"). */
+  focusAssignmentId?: number | null;
+  /** The server has guided tasks (security_guidance), so lessons can offer "Practice it now". */
+  canGuide?: boolean;
 }
 
-export function MyTraining({ reloadSignal }: MyTrainingProps) {
+export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = false }: MyTrainingProps) {
   const { openInOdoo } = useViewMode();
   const { session } = useSession();
   const [employeeState, setEmployeeState] = useState<LoadState>("loading");
@@ -45,7 +50,7 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
   const [assignments, setAssignments] = useState<TrainingAssignment[]>([]);
   const [listError, setListError] = useState<string | null>(null);
 
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(focusAssignmentId);
 
   const loadEmployee = useCallback(async () => {
     if (!session) return;
@@ -132,6 +137,7 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
     return (
       <AssignmentDetail
         assignmentId={selectedId}
+        canGuide={canGuide}
         onBack={() => setSelectedId(null)}
         onChanged={() => void loadList()}
       />
@@ -214,8 +220,8 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
 }
 
 function AssignmentDetail({
-  assignmentId, onBack, onChanged,
-}: { assignmentId: number; onBack: () => void; onChanged: () => void }) {
+  assignmentId, onBack, onChanged, canGuide,
+}: { assignmentId: number; onBack: () => void; onChanged: () => void; canGuide: boolean }) {
   const [state, setState] = useState<LoadState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [assignment, setAssignment] = useState<TrainingAssignment | null>(null);
@@ -232,7 +238,7 @@ function AssignmentDetail({
     try {
       const a = await fetchAssignment(assignmentId);
       const [courseTree, lessonProgress, attemptRows] = await Promise.all([
-        fetchCourseTree(a.course_version_id[0]),
+        fetchCourseTree(a.course_version_id[0], { withGuidance: canGuide }),
         fetchLessonProgress(assignmentId),
         fetchAttempts(assignmentId),
       ]);
@@ -245,7 +251,7 @@ function AssignmentDetail({
       setError(extractErrorMessage(err, "Couldn't load this course."));
       setState("error");
     }
-  }, [assignmentId]);
+  }, [assignmentId, canGuide]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -463,6 +469,7 @@ function LessonView({
   // The `dg_tour=` parameters this used to append had no handler anywhere in
   // Odoo. Guided practice is now `security_guidance` (see onPractice).
   const { openInOdoo } = useViewMode();
+  const guidance = useStartGuidance();
   const tryItInErp = useCallback(() => {
     if (lesson.deep_link_path) void openInOdoo(lesson.deep_link_path);
   }, [lesson.deep_link_path, openInOdoo]);
@@ -535,42 +542,40 @@ function LessonView({
         <h1 className="dg-lesson-view__title">{lesson.name}</h1>
         <div className="dg-lesson-view__meta">
           <span className="dg-chip">
-            {lesson.deep_link_path
-              ? "Interactive Guide & Practice"
+            {lesson.guidance_flow_code
+              ? "Guided practice"
               : lesson.content_type === "video_url"
-              ? "Video Walkthrough"
-              : "Step-by-Step Guide"}
+              ? "Video walkthrough"
+              : "Step by step"}
           </span>
-          {lesson.deep_link_path && (
-            <span className="dg-chip" style={{ color: "var(--ds-accent)" }}>
-              Live ERP Tour Available
-            </span>
-          )}
         </div>
       </div>
 
-      {/* Interactive ERP Tour Hero Card */}
-      {lesson.deep_link_path && (
+      {/* Guided practice: only claimed when a real guided flow exists. */}
+      {lesson.guidance_flow_code ? (
         <div className="dg-lesson-view__hero">
           <div className="dg-lesson-view__hero-info">
-            <div className="dg-lesson-view__hero-title">
-              <span aria-hidden="true">🎯</span>
-              Interactive Guidance in DogForce ERP
-            </div>
+            <div className="dg-lesson-view__hero-title">Practise it in the real ERP</div>
             <div className="dg-lesson-view__hero-desc">
-              Learn by doing in the live system. Launches DogForce ERP with on-screen spotlight guidance walking you through this workflow step-by-step.
+              DeployGuard opens the ERP with a guide beside it and highlights each control as you reach it. You do every
+              step yourself. If you have a real task for this today, the guide uses it, so practising is doing.
             </div>
+            {!!guidance.error && <p className="dg-alert dg-alert--danger">{extractErrorMessage(guidance.error, "The guide couldn't start.")}</p>}
           </div>
-          <button
-            type="button"
-            className="dg-btn dg-btn--primary"
-            style={{ fontSize: 12.5, padding: "8px 16px" }}
-            onClick={tryItInErp}
-          >
-            Start Interactive Guide in ERP →
+          <button type="button" className="dg-btn dg-btn--primary" disabled={guidance.starting}
+            onClick={() => lesson.guidance_flow_code && void guidance.start(lesson.guidance_flow_code, { path: lesson.deep_link_path })}>
+            {guidance.starting ? "Starting…" : "Practice it now"}
           </button>
         </div>
-      )}
+      ) : lesson.deep_link_path ? (
+        <div className="dg-lesson-view__hero">
+          <div className="dg-lesson-view__hero-info">
+            <div className="dg-lesson-view__hero-title">Try it in the ERP</div>
+            <div className="dg-lesson-view__hero-desc">Opens the screen this lesson is about. Come back here to mark the lesson done.</div>
+          </div>
+          <button type="button" className="dg-btn dg-btn--primary" onClick={tryItInErp}>Open the screen →</button>
+        </div>
+      ) : null}
 
       {/* Video Section (if applicable) */}
       {lesson.content_type === "video_url" && (

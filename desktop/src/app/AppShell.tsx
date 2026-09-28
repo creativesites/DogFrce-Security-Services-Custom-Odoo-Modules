@@ -6,6 +6,7 @@ import { useViewMode } from "./viewMode";
 import { PAGES, type AppPage } from "./pages";
 import { CommandPalette, type Command } from "./CommandPalette";
 import { Home } from "./Home";
+import { GuideDock } from "./GuideDock";
 import { Toolbar } from "../shell/Toolbar";
 import { StatusBar } from "../shell/StatusBar";
 import { DiagnosticsPanel } from "../shell/DiagnosticsPanel";
@@ -17,6 +18,7 @@ import { MyTraining } from "../shell/pages/MyTraining";
 import { AdoptionOverview } from "../shell/pages/AdoptionOverview";
 import { ExceptionsInbox } from "../shell/pages/ExceptionsInbox";
 import { OwnerOverview } from "../shell/pages/OwnerOverview";
+import { TeamToday } from "../shell/pages/TeamToday";
 import { HelpIcon, LifeBuoyIcon, OdooIcon } from "../shell/icons";
 import {
   type NoticeStatus, acknowledgeNotice, adoptionAllowed, fetchNotice, hasSeenWelcome, markWelcomeSeen,
@@ -45,6 +47,9 @@ export function AppShell() {
   const appOpen = mode === "app";
 
   const [page, setPage] = useState<AppPage>("home");
+  // Where Today's "Details" / "Learn this first" should land.
+  const [focusTaskId, setFocusTaskId] = useState<number | null>(null);
+  const [focusAssignmentId, setFocusAssignmentId] = useState<number | null>(null);
   const [reloadSignal, setReloadSignal] = useState(0);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [problemReportOpen, setProblemReportOpen] = useState(false);
@@ -134,9 +139,12 @@ export function AppShell() {
 
   // ---- Navigation -----------------------------------------------------------
   const goTo = useCallback((p: AppPage) => {
+    setFocusTaskId(null);
+    setFocusAssignmentId(null);
     setPage(p);
     setMode("app");
   }, [setMode]);
+  const canGuide = isAvailable(capabilities, "guidance");
 
   const toggleApp = useCallback(() => setMode(appOpen ? "odoo" : "app"), [appOpen, setMode]);
   const goToOdoo = useCallback((path?: string) => void openInOdoo(path), [openInOdoo]);
@@ -188,6 +196,11 @@ export function AppShell() {
 
   const signedIn = status === "signed_in" && !!session && !showOnboarding;
 
+  // Guided task: the shell is only the right-hand panel; Odoo has the rest.
+  if (mode === "guide_dock") {
+    return <GuideDock onFinished={() => { setPage("home"); setReloadSignal((n) => n + 1); }} />;
+  }
+
   return (
     <div className="dg-shell">
       <Toolbar
@@ -211,7 +224,7 @@ export function AppShell() {
                 type="button"
                 className={`dg-appview__navitem${page === p.key ? " is-active" : ""}`}
                 aria-current={page === p.key ? "page" : undefined}
-                onClick={() => setPage(p.key)}
+                onClick={() => { setFocusTaskId(null); setFocusAssignmentId(null); setPage(p.key); }}
               >
                 <span className="dg-appview__navitem-icon">{p.icon()}</span>
                 <span className="dg-appview__navitem-label">{p.label}</span>
@@ -283,14 +296,21 @@ export function AppShell() {
                   <Home
                     reloadSignal={reloadSignal}
                     pageAvailable={pageAvailable}
+                    canGuide={canGuide}
+                    viewer={viewer}
                     onGoTo={goTo}
+                    onOpenTask={(id) => { setFocusTaskId(id); setPage("work"); }}
+                    onOpenCourse={(assignmentId) => { setFocusAssignmentId(assignmentId || null); setPage("training"); }}
                     onReportProblem={openReport}
                   />
                 )}
-                {page === "work" && <MyWork reloadSignal={reloadSignal} />}
-                {page === "training" && <MyTraining reloadSignal={reloadSignal} />}
+                {page === "work" && <MyWork reloadSignal={reloadSignal} focusTaskId={focusTaskId} />}
+                {page === "training" && (
+                  <MyTraining reloadSignal={reloadSignal} focusAssignmentId={focusAssignmentId} canGuide={canGuide} />
+                )}
+                {page === "team" && <TeamToday reloadSignal={reloadSignal} />}
                 {page === "inbox" && <ExceptionsInbox />}
-                {page === "owner" && <OwnerOverview />}
+                {page === "owner" && <OwnerOverview reloadSignal={reloadSignal} />}
                 {page === "adoption" && (
                   adoptionAllowed(noticeStatus) ? (
                     <AdoptionOverview viewer={viewer} />

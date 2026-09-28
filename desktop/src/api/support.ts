@@ -54,24 +54,24 @@ export interface TaskFeedbackPayload {
   notes?: string;
 }
 
+/** Mirrors security.owner.digest.get_owner_overview(). Every tile carries
+ * the drill domain of exactly the records it counts. */
 export interface OwnerMetricTile {
+  key: string;
+  label: string;
   value: number;
-  numerator?: number;
-  denominator?: number;
-  is_sufficient?: boolean;
-  drill_down_model: string;
-  drill_down_domain: unknown[];
+  total: number | null;
+  detail: string;
+  tone: "success" | "warning" | "danger" | "neutral";
+  trend: { direction: "up" | "down" | "flat"; current_pct: number; previous_pct: number; explanation: string } | null;
+  drill: { model: string; domain: unknown[]; fields: string[]; title: string };
 }
 
 export interface OwnerOverviewData {
   period_start: string;
   period_end: string;
-  workflow_coverage: OwnerMetricTile;
-  on_time_rate: OwnerMetricTile;
-  overdue_open: OwnerMetricTile;
-  support_load: OwnerMetricTile;
-  friction_rate: OwnerMetricTile;
-  coverage_gap: OwnerMetricTile;
+  generated_at: string;
+  tiles: OwnerMetricTile[];
 }
 
 export async function createSupportRequest(
@@ -113,10 +113,8 @@ export async function fetchOwnerOverview(): Promise<OwnerOverviewData> {
 }
 
 export async function fetchDrillDownRecords<T = Record<string, unknown>>(
-  model: string,
-  domain: unknown[],
-  fields: string[],
-  limit: number = 50,
+  drill: OwnerMetricTile["drill"],
+  limit: number = 100,
 ): Promise<T[]> {
-  return callKw<T[]>(model, "search_read", [domain, fields], { limit });
+  return callKw<T[]>(drill.model, "search_read", [drill.domain, drill.fields], { limit });
 }

@@ -10,6 +10,7 @@ import "./styles/ds.css";
 import "./styles/dgs.css";
 import "./styles/shell.css";
 import "./styles/components.css";
+import "./styles/work.css";
 
 getVersion().then(setDiagnosticsAppVersion).catch(() => {});
 
