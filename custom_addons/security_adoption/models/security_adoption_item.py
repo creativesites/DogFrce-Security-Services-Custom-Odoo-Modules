@@ -109,13 +109,39 @@ class SecurityAdoptionExpectedWorkItem(models.Model):
         })
         return self.create(vals)
 
+    def _attendance_owner(self, site):
+        """Who owed the day's attendance for this site. When the roster-driven
+        "Register attendance" responsibility exists (security_deployguard_ops),
+        that owner, so adoption and DeployGuard's Today agree on whose work it
+        was. Otherwise the site supervisor, as before."""
+        Resp = self.env["security.work.responsibility"].sudo()
+        resp = Resp.search([
+            ("checklist_template_id.code", "=", "attendance.register"),
+            "|", ("site_ids", "=", False), ("site_ids", "in", site.id),
+        ], limit=1)
+        return resp.employee_id if resp else site.supervisor_id
+
+    def _attendance_registered(self, site, day):
+        """Registered means every rostered guard is marked. Confirmation by
+        someone else is their work, not the registrar's, so a late confirm
+        must not count against the person who registered on time."""
+        Task = self.env["security.work.task"]
+        if hasattr(Task, "_attendance_stage"):
+            stage, batch = Task._attendance_stage(site.id, day)
+            return batch if stage in ("marked", "reviewed", "locked") else None
+        batch = self.env["security.attendance.batch"].search([
+            ("site_id", "=", site.id), ("attendance_date", "=", day),
+            ("state", "in", ("reviewed", "locked")),
+        ], limit=1)
+        return batch or None
+
     def _materialize_attendance_post(self, definition):
         target_date = fields.Date.context_today(self) - timedelta(days=1)
-        sites = self.env["security.client.site"].search([
-            ("active", "=", True), ("supervisor_id", "!=", False),
-        ])
+        sites = self.env["security.client.site"].search([("active", "=", True)])
         for site in sites:
-            employee = site.supervisor_id
+            employee = self._attendance_owner(site)
+            if not employee:
+                continue
             if self.search_count([
                 ("definition_id", "=", definition.id), ("employee_id", "=", employee.id),
                 ("site_id", "=", site.id), ("period_date", "=", target_date),
@@ -137,10 +163,7 @@ class SecurityAdoptionExpectedWorkItem(models.Model):
                                          state="excused", excusal_reason=leave_reason)
                 continue
 
-            batch = self.env["security.attendance.batch"].search([
-                ("site_id", "=", site.id), ("attendance_date", "=", target_date),
-                ("state", "in", ("reviewed", "locked")),
-            ], limit=1)
+            batch = self._attendance_registered(site, target_date)
             if batch:
                 self._create_if_missing(
                     definition, employee, site, target_date,

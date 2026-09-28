@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="rule_task_overdue" model="security.exception.rule">
+        <field name="notification_type">task_overdue</field>
+        <field name="tier">attention</field>
+        <field name="escalation_policy_id" ref="security_exceptions.policy_attention"/>
+        <field name="stale_after_minutes">120</field>
+    </record>
+</odoo>

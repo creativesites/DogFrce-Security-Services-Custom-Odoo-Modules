@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Guided flows for DogForce's attendance pipeline. They are written from
+      the real screens: the Posting Console (security_attendance, with its
+      data-dg-anchor attributes) and Posting Sheets. Each step's "done" is
+      either a screen reached or a check against the posting sheet itself.
+      Nothing here clicks for the employee.
+    -->
+
+    <!-- ═══════════ Register attendance (Operations Supervisor) ═══════════ -->
+    <record id="flow_attendance_register" model="security.guidance.flow">
+        <field name="code">attendance_register</field>
+        <field name="name">Register today's attendance</field>
+        <field name="objective">Every guard rostered at the site today is marked Present, Absent or AWOL, and saved.</field>
+        <field name="why">Payroll, client billing and AWOL follow-up are all worked out from this register. If it's missing or wrong, guards get paid wrongly and clients get billed wrongly.</field>
+    </record>
+
+    <record id="step_register_open" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_register"/>
+        <field name="sequence">10</field>
+        <field name="name">Open the Posting Console</field>
+        <field name="instruction">At the top of the screen, open Workforce, then choose Posting Console.</field>
+        <field name="why">The Posting Console is where each site's attendance for the day is recorded, in one place.</field>
+        <field name="target_json">[{"menu": "security_attendance.menu_attendance_posting_console"}, {"menu": "security_operations.menu_security_workforce"}, {"text": "Workforce"}]</field>
+        <field name="done_ui_json">{"client_tag": "security_attendance.posting_console"}</field>
+        <field name="deviation_hint">Open Workforce in the top menu and choose Posting Console.</field>
+        <field name="help_html"><![CDATA[<p>Can't see <strong>Workforce</strong> in the top menu? You may be in a different app. Click the grid icon at the top left, open <strong>Security</strong>, then Workforce → Posting Console.</p><p>Still missing? Your account may not have attendance access. Use <em>Report a problem</em> in DeployGuard.</p>]]></field>
+    </record>
+
+    <record id="step_register_sheet" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_register"/>
+        <field name="sequence">20</field>
+        <field name="name">Open {site}'s sheet for {date}</field>
+        <field name="instruction">Set the date to {date} and choose {site}. If there's no sheet yet, press "Create Batch &amp; Generate from Roster".</field>
+        <field name="why">The sheet is filled from the roster, so every guard who should be there is listed. Nobody is forgotten and nobody is added by hand.</field>
+        <field name="where_json">{"client_tag": "security_attendance.posting_console"}</field>
+        <field name="target_json">[{"anchor": "pc-create-batch"}, {"anchor": "pc-generate"}, {"anchor": "pc-site"}]</field>
+        <field name="done_check">attendance_sheet_generated</field>
+        <field name="success_message">The sheet lists everyone rostered.</field>
+        <field name="deviation_hint">Go back to Workforce → Posting Console.</field>
+        <field name="help_html"><![CDATA[<p><strong>"No roster slots found"?</strong> Nobody is rostered at this site today, so there is nothing to register. Check the date and site. If guards really are working there, the roster needs fixing first: tell the Operations Supervisor.</p><p><strong>"Guards not assigned"?</strong> The roster has shifts but no guard names. Assign guards in the Roster Board, then come back.</p>]]></field>
+    </record>
+
+    <record id="step_register_mark" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_register"/>
+        <field name="sequence">30</field>
+        <field name="name">Mark every guard, then save</field>
+        <field name="instruction">For each guard press Present, Absent or AWOL. When nobody shows "Not Marked", press Save Changes.</field>
+        <field name="why">Each mark decides what a guard is paid for today, and an AWOL mark starts the follow-up. Mark what actually happened.</field>
+        <field name="where_json">{"client_tag": "security_attendance.posting_console"}</field>
+        <field name="target_json">[{"anchor": "pc-records"}, {"anchor": "pc-save"}]</field>
+        <field name="done_check">attendance_all_marked</field>
+        <field name="success_message">Attendance registered. Admin can now confirm it.</field>
+        <field name="deviation_hint">Go back to the Posting Console for {site} on {date}.</field>
+        <field name="help_html"><![CDATA[<ul><li><strong>Present</strong>: the guard came to the post. Add the times if they came late or left early.</li><li><strong>Absent</strong>: they told you they couldn't come (sick, leave).</li><li><strong>AWOL</strong>: they didn't come and didn't tell anyone.</li></ul><p>Only use <em>Mark All Present</em> after you've checked that every guard really came.</p><p>Nothing is saved until you press <strong>Save Changes</strong>. The orange number on it shows unsaved marks.</p>]]></field>
+    </record>
+
+    <!-- ═══════════ Confirm attendance (Admin / Front Desk) ═══════════ -->
+    <record id="flow_attendance_confirm" model="security.guidance.flow">
+        <field name="code">attendance_confirm</field>
+        <field name="name">Confirm today's attendance</field>
+        <field name="objective">The site's registered attendance has been checked by a second person and confirmed.</field>
+        <field name="why">A second person checking the register catches mistakes before they reach payroll. You can't confirm a sheet you registered yourself.</field>
+    </record>
+
+    <record id="step_confirm_open" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_confirm"/>
+        <field name="sequence">10</field>
+        <field name="name">Open the Posting Console</field>
+        <field name="instruction">Open Workforce, then Posting Console.</field>
+        <field name="target_json">[{"menu": "security_attendance.menu_attendance_posting_console"}, {"menu": "security_operations.menu_security_workforce"}, {"text": "Workforce"}]</field>
+        <field name="done_ui_json">[{"client_tag": "security_attendance.posting_console"}, {"model": "security.attendance.batch"}]</field>
+        <field name="deviation_hint">Open Workforce in the top menu and choose Posting Console.</field>
+    </record>
+
+    <record id="step_confirm_check" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_confirm"/>
+        <field name="sequence">20</field>
+        <field name="name">Check {site} for {date}, then confirm</field>
+        <field name="instruction">Choose {site} and {date}. Check each mark against what you know (call-ins, leave, incidents). If it's right, press "Review &amp; Validate".</field>
+        <field name="why">Once confirmed, HR can verify the day and send it to payroll.</field>
+        <field name="where_json">[{"client_tag": "security_attendance.posting_console"}, {"model": "security.attendance.batch"}]</field>
+        <field name="target_json">[{"anchor": "pc-review"}, {"button": "action_review"}, {"anchor": "pc-site"}]</field>
+        <field name="done_check">attendance_reviewed</field>
+        <field name="success_message">Confirmed. HR can now verify it.</field>
+        <field name="deviation_hint">Go back to Workforce → Posting Console.</field>
+        <field name="help_html"><![CDATA[<p><strong>No "Review &amp; Validate" button?</strong> It only appears once every guard is marked and saved. If guards still show "Not Marked", the register isn't finished: ask the Operations Supervisor to finish it.</p><p><strong>Something looks wrong?</strong> Don't confirm it. Tell the Operations Supervisor what's wrong so they can correct it first.</p>]]></field>
+    </record>
+
+    <!-- ═══════════ Verify attendance (HR) ═══════════ -->
+    <record id="flow_attendance_verify" model="security.guidance.flow">
+        <field name="code">attendance_verify</field>
+        <field name="name">Verify confirmed attendance</field>
+        <field name="objective">The confirmed attendance is verified and locked for payroll.</field>
+        <field name="why">Locking is what payroll reads from. After it, the day can't be changed by accident.</field>
+    </record>
+
+    <record id="step_verify_open" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_verify"/>
+        <field name="sequence">10</field>
+        <field name="name">Open Posting Sheets</field>
+        <field name="instruction">Open Workforce, then Posting Sheets.</field>
+        <field name="target_json">[{"menu": "security_attendance.menu_security_attendance_batch"}, {"menu": "security_operations.menu_security_workforce"}, {"text": "Workforce"}]</field>
+        <field name="done_ui_json">{"model": "security.attendance.batch"}</field>
+        <field name="deviation_hint">Open Workforce in the top menu and choose Posting Sheets.</field>
+    </record>
+
+    <record id="step_verify_open_sheet" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_verify"/>
+        <field name="sequence">20</field>
+        <field name="name">Open {site}'s sheet for {date}</field>
+        <field name="instruction">Find {site} on {date} (the "Waiting for HR verification" filter shows only confirmed sheets) and open it.</field>
+        <field name="where_json">{"model": "security.attendance.batch"}</field>
+        <field name="target_json">[{"css": ".o_list_renderer .o_data_row"}]</field>
+        <field name="done_ui_json">{"model": "security.attendance.batch", "view_type": "form"}</field>
+        <field name="deviation_hint">Go back to Workforce → Posting Sheets.</field>
+    </record>
+
+    <record id="step_verify_lock" model="security.guidance.step">
+        <field name="flow_id" ref="flow_attendance_verify"/>
+        <field name="sequence">30</field>
+        <field name="name">Verify and lock</field>
+        <field name="instruction">Check the guards, absences and AWOLs are consistent with leave and HR records, then press "Verify &amp; lock".</field>
+        <field name="why">This is the last check before payroll. Absences and AWOLs here affect people's pay.</field>
+        <field name="where_json">{"model": "security.attendance.batch", "view_type": "form"}</field>
+        <field name="target_json">[{"button": "action_lock"}]</field>
+        <field name="done_check">attendance_locked</field>
+        <field name="success_message">Verified and locked for payroll.</field>
+        <field name="deviation_hint">Open {site}'s posting sheet for {date} from Workforce → Posting Sheets.</field>
+        <field name="help_html"><![CDATA[<p><strong>No "Verify &amp; lock" button?</strong> The sheet hasn't been confirmed by Admin yet, or your account isn't in the HR group.</p><p><strong>Something doesn't match leave records?</strong> Don't lock it. Ask Admin to reopen it with the Operations Supervisor.</p>]]></field>
+    </record>
+</odoo>

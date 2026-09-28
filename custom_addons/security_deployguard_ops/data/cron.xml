@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="cron_sync_attendance_pipeline" model="ir.cron">
+        <field name="name">DeployGuard: sync attendance tasks with posting sheets</field>
+        <field name="model_id" ref="security_work.model_security_work_task"/>
+        <field name="state">code</field>
+        <field name="code">model.action_sync_attendance_pipeline()</field>
+        <field name="interval_number">15</field>
+        <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+</odoo>

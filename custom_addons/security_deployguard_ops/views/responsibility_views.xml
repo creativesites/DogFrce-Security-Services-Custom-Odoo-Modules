@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_responsibility_form_ops" model="ir.ui.view">
+        <field name="name">security.work.responsibility.form.ops</field>
+        <field name="model">security.work.responsibility</field>
+        <field name="inherit_id" ref="security_work.view_security_work_responsibility_form"/>
+        <field name="arch" type="xml">
+            <field name="guidance_flow_code" position="after">
+                <field name="completes_at_stage"/>
+                <field name="required_course_id"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

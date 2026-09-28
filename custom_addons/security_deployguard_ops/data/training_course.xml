@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      "Daily Attendance: Register, Confirm, Verify".
+      Source: DogForce's roles matrix (docs/deployguard/dogforce-roles-and-pipeline.md)
+      and the real Posting Console / Posting Sheets screens. Media (10-second
+      clip prompts per lesson): docs/deployguard/training/daily-attendance/.
+
+      One operational question per lesson. The "Do it" lessons open the
+      guided task ("Practice it now") rather than describing clicks.
+
+      noupdate: this is the initial seed. Content edits after go-live happen
+      through the course's normal draft -> review -> publish workflow.
+    -->
+    <data noupdate="1">
+        <record id="course_daily_attendance" model="security.training.course">
+            <field name="name">Daily Attendance: Register, Confirm, Verify</field>
+            <field name="code">daily-attendance</field>
+            <field name="sequence">2</field>
+            <field name="description">How DogForce's daily attendance gets from the roster to payroll: who registers it, who confirms it, who verifies it, and what to do when something doesn't match. About 12 minutes, with guided practice in the real ERP.</field>
+            <field name="auto_enroll" eval="True"/>
+            <field name="auto_enroll_group_ids" eval="[(6, 0, [ref('security_base.group_security_supervisor'), ref('security_operations.group_security_front_desk'), ref('security_base.group_security_hr_payroll_officer')])]"/>
+            <field name="enroll_due_days">7</field>
+        </record>
+
+        <record id="course_daily_attendance_v1" model="security.training.course.version">
+            <field name="course_id" ref="course_daily_attendance"/>
+            <field name="state">published</field>
+        </record>
+
+        <!-- ─────────── Section 1: Why ─────────── -->
+        <record id="da_section_why" model="security.training.section">
+            <field name="course_version_id" ref="course_daily_attendance_v1"/>
+            <field name="sequence">10</field>
+            <field name="name">Why daily attendance matters</field>
+        </record>
+
+        <record id="da_lesson_why" model="security.training.lesson">
+            <field name="section_id" ref="da_section_why"/>
+            <field name="sequence">10</field>
+            <field name="name">Why does today's attendance have to be done today?</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_DA1</field>
+            <field name="body"><![CDATA[
+<h3>Every guard's pay starts here</h3>
+<p>At the end of the month, payroll pays each guard for the shifts the attendance register says they worked. Client invoices are worked out the same way. When the register is late or wrong:</p>
+<ul>
+  <li>a guard who worked can be paid too little,</li>
+  <li>a guard who didn't come can be paid anyway,</li>
+  <li>a client can be billed for a post nobody stood at,</li>
+  <li>and a guard who went AWOL isn't followed up.</li>
+</ul>
+<h3>Three people, one handover each</h3>
+<ol>
+  <li><strong>Operations Supervisor</strong> registers it: marks every rostered guard.</li>
+  <li><strong>Admin</strong> confirms it: a second person checks it.</li>
+  <li><strong>HR</strong> verifies it: the last check, which locks it for payroll.</li>
+</ol>
+<p>Each step waits for the one before. DeployGuard shows you when it's your turn, and shows the GM where each site's attendance has got to.</p>
+]]></field>
+        </record>
+
+        <!-- ─────────── Section 2: Register ─────────── -->
+        <record id="da_section_register" model="security.training.section">
+            <field name="course_version_id" ref="course_daily_attendance_v1"/>
+            <field name="sequence">20</field>
+            <field name="name">Register (Operations Supervisor)</field>
+        </record>
+
+        <record id="da_lesson_register_how" model="security.training.lesson">
+            <field name="section_id" ref="da_section_register"/>
+            <field name="sequence">10</field>
+            <field name="name">How do I register a site's attendance?</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_DA2</field>
+            <field name="body"><![CDATA[
+<ol>
+  <li>Open <strong>Workforce → Posting Console</strong>.</li>
+  <li>Set the <strong>Date</strong> and choose the <strong>Client Site</strong>.</li>
+  <li>If there's no sheet yet, press <strong>Create Batch &amp; Generate from Roster</strong>. Every guard rostered at that site that day appears as <em>Not Marked</em>.</li>
+  <li>Press <strong>Present</strong>, <strong>Absent</strong> or <strong>AWOL</strong> for each guard. Add times if someone came late or left early.</li>
+  <li>Press <strong>Save Changes</strong>. Nothing counts until you save.</li>
+</ol>
+<p>When nobody is left <em>Not Marked</em> and it's saved, DeployGuard marks your task done by itself. You don't tick anything.</p>
+]]></field>
+        </record>
+
+        <record id="da_lesson_register_marks" model="security.training.lesson">
+            <field name="section_id" ref="da_section_register"/>
+            <field name="sequence">20</field>
+            <field name="name">Present, Absent or AWOL: which one?</field>
+            <field name="content_type">text</field>
+            <field name="body"><![CDATA[
+<ul>
+  <li><strong>Present</strong>: the guard came to the post.</li>
+  <li><strong>Absent</strong>: they told us they couldn't come (sick, approved leave, emergency).</li>
+  <li><strong>AWOL</strong>: they didn't come and didn't tell anyone. AWOL starts a follow-up, so only use it when that's true.</li>
+</ul>
+<p><strong>Mark All Present</strong> is a shortcut for days when you've checked that everyone came. It is not a way to finish quickly. A wrong "Present" means someone is paid for a shift they didn't work.</p>
+]]></field>
+        </record>
+
+        <record id="da_lesson_register_do" model="security.training.lesson">
+            <field name="section_id" ref="da_section_register"/>
+            <field name="sequence">30</field>
+            <field name="name">Do it: register today's attendance with DeployGuard beside you</field>
+            <field name="content_type">text</field>
+            <field name="deep_link_path">/odoo/action-security_attendance.action_attendance_posting_console</field>
+            <field name="guidance_flow_code">attendance_register</field>
+            <field name="body"><![CDATA[
+<p>Press <strong>Practice it now</strong>. DeployGuard opens the ERP beside a guide panel and highlights each control as you reach it. You do every step yourself; DeployGuard checks the posting sheet to confirm each one.</p>
+<p>If you have a real "Register attendance" task today, the guide uses it, so practising is doing.</p>
+]]></field>
+        </record>
+
+        <!-- ─────────── Section 3: Confirm and verify ─────────── -->
+        <record id="da_section_confirm" model="security.training.section">
+            <field name="course_version_id" ref="course_daily_attendance_v1"/>
+            <field name="sequence">30</field>
+            <field name="name">Confirm (Admin) and verify (HR)</field>
+        </record>
+
+        <record id="da_lesson_confirm" model="security.training.lesson">
+            <field name="section_id" ref="da_section_confirm"/>
+            <field name="sequence">10</field>
+            <field name="name">How do I confirm a registered sheet?</field>
+            <field name="content_type">video_url</field>
+            <field name="video_url">REPLACE_WITH_HOSTED_VIDEO_URL_DA3</field>
+            <field name="guidance_flow_code">attendance_confirm</field>
+            <field name="body"><![CDATA[
+<ol>
+  <li>Open <strong>Workforce → Posting Console</strong>, and choose the site and date.</li>
+  <li>Check each mark against what you know: call-ins, approved leave, incident reports.</li>
+  <li>If it's right, press <strong>Review &amp; Validate</strong>. The sheet becomes <em>Reviewed</em>.</li>
+</ol>
+<p><strong>You can't confirm a sheet you registered yourself.</strong> The ERP refuses, on purpose: two people must have looked at it.</p>
+<p>The button only appears once every guard is marked and saved. If it's missing, the register isn't finished yet.</p>
+]]></field>
+        </record>
+
+        <record id="da_lesson_verify" model="security.training.lesson">
+            <field name="section_id" ref="da_section_confirm"/>
+            <field name="sequence">20</field>
+            <field name="name">How does HR verify and lock a day?</field>
+            <field name="content_type">text</field>
+            <field name="guidance_flow_code">attendance_verify</field>
+            <field name="body"><![CDATA[
+<ol>
+  <li>Open <strong>Workforce → Posting Sheets</strong> and use the <em>Waiting for HR verification</em> filter.</li>
+  <li>Open the site's sheet for the day.</li>
+  <li>Check absences and AWOLs against leave and HR records.</li>
+  <li>Press <strong>Verify &amp; lock</strong>. Payroll reads from locked sheets.</li>
+</ol>
+]]></field>
+        </record>
+
+        <record id="da_lesson_wrong" model="security.training.lesson">
+            <field name="section_id" ref="da_section_confirm"/>
+            <field name="sequence">30</field>
+            <field name="name">What if something doesn't match?</field>
+            <field name="content_type">text</field>
+            <field name="body"><![CDATA[
+<ul>
+  <li><strong>A guard is missing from the sheet:</strong> they aren't on the roster for that day. The roster needs fixing first; tell the Operations Supervisor.</li>
+  <li><strong>"No roster slots found":</strong> nobody is rostered at that site that day. Check the date and site.</li>
+  <li><strong>A mark is wrong and the sheet is already confirmed:</strong> don't lock it. Tell Admin and the Operations Supervisor so it can be corrected.</li>
+  <li><strong>You can't do your step today:</strong> open the task in DeployGuard and choose <em>Couldn't complete</em> with the reason. The GM sees it straight away instead of finding out at payroll.</li>
+</ul>
+]]></field>
+        </record>
+
+        <!-- ─────────── Assessment ─────────── -->
+        <record id="da_assessment" model="security.training.assessment">
+            <field name="course_version_id" ref="course_daily_attendance_v1"/>
+            <field name="name">Daily attendance check</field>
+            <field name="pass_mark_pct">80</field>
+            <field name="max_attempts">3</field>
+        </record>
+
+        <record id="da_q1" model="security.training.question">
+            <field name="assessment_id" ref="da_assessment"/>
+            <field name="sequence">10</field>
+            <field name="text">What happens to a guard's pay if today's attendance is never registered?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="da_q1_o1" model="security.training.question.option">
+            <field name="question_id" ref="da_q1"/><field name="sequence">10</field>
+            <field name="text">Nothing: payroll uses the roster instead</field>
+        </record>
+        <record id="da_q1_o2" model="security.training.question.option">
+            <field name="question_id" ref="da_q1"/><field name="sequence">20</field>
+            <field name="text">Payroll has nothing reliable to pay them from, so they may be paid wrongly</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="da_q1_o3" model="security.training.question.option">
+            <field name="question_id" ref="da_q1"/><field name="sequence">30</field>
+            <field name="text">They are automatically marked AWOL</field>
+        </record>
+
+        <record id="da_q2" model="security.training.question">
+            <field name="assessment_id" ref="da_assessment"/>
+            <field name="sequence">20</field>
+            <field name="text">A guard didn't come and nobody heard from them. How do you mark them?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="da_q2_o1" model="security.training.question.option">
+            <field name="question_id" ref="da_q2"/><field name="sequence">10</field>
+            <field name="text">Absent</field>
+        </record>
+        <record id="da_q2_o2" model="security.training.question.option">
+            <field name="question_id" ref="da_q2"/><field name="sequence">20</field>
+            <field name="text">AWOL</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="da_q2_o3" model="security.training.question.option">
+            <field name="question_id" ref="da_q2"/><field name="sequence">30</field>
+            <field name="text">Leave them Not Marked</field>
+        </record>
+
+        <record id="da_q3" model="security.training.question">
+            <field name="assessment_id" ref="da_assessment"/>
+            <field name="sequence">30</field>
+            <field name="text">You registered today's sheet for a site. Who can confirm it?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="da_q3_o1" model="security.training.question.option">
+            <field name="question_id" ref="da_q3"/><field name="sequence">10</field>
+            <field name="text">You, once you've double-checked it</field>
+        </record>
+        <record id="da_q3_o2" model="security.training.question.option">
+            <field name="question_id" ref="da_q3"/><field name="sequence">20</field>
+            <field name="text">Admin (or the GM/owner), never the person who registered it</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="da_q3_o3" model="security.training.question.option">
+            <field name="question_id" ref="da_q3"/><field name="sequence">30</field>
+            <field name="text">Any guard on the roster</field>
+        </record>
+
+        <record id="da_q4" model="security.training.question">
+            <field name="assessment_id" ref="da_assessment"/>
+            <field name="sequence">40</field>
+            <field name="text">When is your "Register attendance" task done in DeployGuard? (select all that apply)</field>
+            <field name="question_type">multi</field>
+        </record>
+        <record id="da_q4_o1" model="security.training.question.option">
+            <field name="question_id" ref="da_q4"/><field name="sequence">10</field>
+            <field name="text">Every rostered guard is marked Present, Absent or AWOL</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="da_q4_o2" model="security.training.question.option">
+            <field name="question_id" ref="da_q4"/><field name="sequence">20</field>
+            <field name="text">The marks are saved</field>
+            <field name="is_correct">1</field>
+        </record>
+        <record id="da_q4_o3" model="security.training.question.option">
+            <field name="question_id" ref="da_q4"/><field name="sequence">30</field>
+            <field name="text">You tick "done" on the task yourself</field>
+        </record>
+
+        <record id="da_q5" model="security.training.question">
+            <field name="assessment_id" ref="da_assessment"/>
+            <field name="sequence">50</field>
+            <field name="text">You can't register a site today because the roster for it is wrong. What should you do?</field>
+            <field name="question_type">single</field>
+        </record>
+        <record id="da_q5_o1" model="security.training.question.option">
+            <field name="question_id" ref="da_q5"/><field name="sequence">10</field>
+            <field name="text">Mark everyone present so the task is done</field>
+        </record>
+        <record id="da_q5_o2" model="security.training.question.option">
+            <field name="question_id" ref="da_q5"/><field name="sequence">20</field>
+            <field name="text">Leave it. Someone will notice eventually</field>
+        </record>
+        <record id="da_q5_o3" model="security.training.question.option">
+            <field name="question_id" ref="da_q5"/><field name="sequence">30</field>
+            <field name="text">Mark the task "Couldn't complete" with the reason, so the GM sees it straight away</field>
+            <field name="is_correct">1</field>
+        </record>
+    </data>
+</odoo>
