@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- DogForce bills, pays and reports in one currency (NAD). This keeps
+         every security_* record on it and archives other currencies.
+         Set the system parameter dogforce.single_currency to "off" to stop it. -->
+    <record id="ir_cron_single_currency" model="ir.cron">
+        <field name="name">DogForce: keep one currency (NAD)</field>
+        <field name="model_id" ref="base.model_res_company"/>
+        <field name="state">code</field>
+        <field name="code">model._dg_enforce_single_currency()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>
