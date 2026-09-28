@@ -41,6 +41,16 @@ fn client() -> Option<reqwest::Client> {
         .ok()
 }
 
+/// Why a session couldn't be resolved. The distinction matters: only
+/// `Anonymous` is evidence the employee is signed out. `Unverifiable` (network,
+/// HTTP 5xx, garbled response) must not sign anyone out, or a Wi-Fi blip throws
+/// the whole app back to the sign-in screen.
+#[derive(Debug)]
+pub enum SessionCheckError {
+    Anonymous,
+    Unverifiable(String),
+}
+
 /// Resolves who a session cookie belongs to.
 ///
 /// Returns `Err(reason)` rather than collapsing every failure into `None`
@@ -49,9 +59,12 @@ fn client() -> Option<reqwest::Client> {
 /// and got rejected vs. reached it and the session just isn't signed in).
 /// `reason` is safe to show a user or put in diagnostics: it's a network/
 /// protocol description, never the cookie value or any credential.
-pub async fn fetch_session_info(session_id: &str) -> Result<crate::state::SessionInfo, String> {
+pub async fn fetch_session_info(
+    session_id: &str,
+) -> Result<crate::state::SessionInfo, SessionCheckError> {
+    use SessionCheckError::Unverifiable;
     let base_url = config::odoo_base_url();
-    let c = client().ok_or_else(|| "could not build an HTTP client".to_string())?;
+    let c = client().ok_or_else(|| Unverifiable("could not build an HTTP client".to_string()))?;
 
     let resp = c
         .post(format!("{base_url}/web/session/get_session_info"))
@@ -59,26 +72,29 @@ pub async fn fetch_session_info(session_id: &str) -> Result<crate::state::Sessio
         .json(&json!({ "jsonrpc": "2.0", "method": "call", "params": {} }))
         .send()
         .await
-        .map_err(|e| format!("couldn't reach {base_url}: {e}"))?;
+        .map_err(|e| Unverifiable(format!("couldn't reach {base_url}: {e}")))?;
 
     if !resp.status().is_success() {
-        return Err(format!("{base_url} responded with HTTP {}", resp.status()));
+        return Err(Unverifiable(format!(
+            "{base_url} responded with HTTP {}",
+            resp.status()
+        )));
     }
 
     let parsed: JsonRpcResponse<SessionInfoResult> = resp
         .json()
         .await
-        .map_err(|e| format!("couldn't parse the response from {base_url}: {e}"))?;
+        .map_err(|e| Unverifiable(format!("couldn't parse the response from {base_url}: {e}")))?;
     let result = parsed
         .result
-        .ok_or_else(|| "Odoo's response had no result".to_string())?;
+        .ok_or_else(|| Unverifiable("Odoo's response had no result".to_string()))?;
 
     // Odoo represents "not logged in" as uid: false, not a missing field.
     let uid = match result.uid {
         Some(serde_json::Value::Number(n)) => n
             .as_i64()
-            .ok_or_else(|| "Odoo returned a non-integer uid".to_string())?,
-        _ => return Err("that session isn't signed in (anonymous session)".to_string()),
+            .ok_or_else(|| Unverifiable("Odoo returned a non-integer uid".to_string()))?,
+        _ => return Err(SessionCheckError::Anonymous),
     };
 
     Ok(crate::state::SessionInfo {
@@ -149,10 +165,30 @@ pub async fn call_kw(
         return Err(crate::errors::AppError::ServerError);
     }
 
-    let parsed: CallKwResponse = resp.json().await.map_err(|_| crate::errors::AppError::ServerError)?;
+    let parsed: CallKwResponse = resp
+        .json()
+        .await
+        .map_err(|_| crate::errors::AppError::ServerError)?;
 
     if let Some(err) = parsed.error {
-        tracing::warn!(error = %err, model, method, "odoo call_kw returned an error");
+        // Only the exception class and its user-facing message: `data.debug`
+        // is a full server traceback and can include business data.
+        let data = err.get("data");
+        let name = data
+            .and_then(|d| d.get("name"))
+            .and_then(|n| n.as_str())
+            .unwrap_or("");
+        let message = data
+            .and_then(|d| d.get("message"))
+            .and_then(|m| m.as_str())
+            .unwrap_or("");
+        tracing::warn!(
+            model,
+            method,
+            error_name = name,
+            error_message = message,
+            "odoo call_kw returned an error"
+        );
         return Err(classify_rpc_error(&err));
     }
 
@@ -165,7 +201,11 @@ fn classify_rpc_error(err: &serde_json::Value) -> crate::errors::AppError {
     if err.get("code").and_then(|c| c.as_i64()) == Some(100) {
         return AppError::SessionExpired;
     }
-    let name = err.get("data").and_then(|d| d.get("name")).and_then(|n| n.as_str()).unwrap_or("");
+    let name = err
+        .get("data")
+        .and_then(|d| d.get("name"))
+        .and_then(|n| n.as_str())
+        .unwrap_or("");
     if name.contains("SessionExpiredException") {
         return AppError::SessionExpired;
     }
@@ -179,7 +219,11 @@ fn classify_rpc_error(err: &serde_json::Value) -> crate::errors::AppError {
     // and not useful to show. Fall back to the generic message if the shape
     // doesn't match (e.g. a raw traceback with no `data.message`, which we
     // don't want to leak).
-    match err.get("data").and_then(|d| d.get("message")).and_then(|m| m.as_str()) {
+    match err
+        .get("data")
+        .and_then(|d| d.get("message"))
+        .and_then(|m| m.as_str())
+    {
         Some(message) => AppError::RequestFailed(message.to_string()),
         None => AppError::ServerError,
     }
@@ -195,7 +239,10 @@ fn classify_rpc_error(err: &serde_json::Value) -> crate::errors::AppError {
 /// this doesn't try to detect and reject that specifically, so such
 /// users will see Odoo's placeholder rather than the initials fallback.
 /// Not worth the fragility of fingerprinting a "no avatar" image.
-pub async fn fetch_avatar_data_url(session_id: &str, uid: i64) -> Result<Option<String>, crate::errors::AppError> {
+pub async fn fetch_avatar_data_url(
+    session_id: &str,
+    uid: i64,
+) -> Result<Option<String>, crate::errors::AppError> {
     let base_url = config::odoo_base_url();
     let c = client().ok_or(crate::errors::AppError::Unknown)?;
 
@@ -216,7 +263,10 @@ pub async fn fetch_avatar_data_url(session_id: &str, uid: i64) -> Result<Option<
         .unwrap_or("image/png")
         .to_string();
 
-    let bytes = resp.bytes().await.map_err(|_| crate::errors::AppError::ServerError)?;
+    let bytes = resp
+        .bytes()
+        .await
+        .map_err(|_| crate::errors::AppError::ServerError)?;
     if bytes.is_empty() {
         return Ok(None);
     }
@@ -270,25 +320,39 @@ mod rpc_error_tests {
         let err = json!({"code": 404, "message": "404: Not Found", "data": {
             "name": "werkzeug.exceptions.NotFound",
             "message": "404 Not Found: The requested URL was not found on the server."}});
-        assert!(matches!(classify_rpc_error(&err), AppError::ModuleNotInstalled));
+        assert!(matches!(
+            classify_rpc_error(&err),
+            AppError::ModuleNotInstalled
+        ));
     }
 
     #[test]
     fn expired_session_by_code_or_name() {
-        assert!(matches!(classify_rpc_error(&json!({"code": 100})), AppError::SessionExpired));
+        assert!(matches!(
+            classify_rpc_error(&json!({"code": 100})),
+            AppError::SessionExpired
+        ));
         let by_name = json!({"code": 200, "data": {"name": "odoo.http.SessionExpiredException"}});
-        assert!(matches!(classify_rpc_error(&by_name), AppError::SessionExpired));
+        assert!(matches!(
+            classify_rpc_error(&by_name),
+            AppError::SessionExpired
+        ));
     }
 
     #[test]
     fn business_errors_keep_their_message() {
         let err = json!({"code": 200, "data": {"name": "odoo.exceptions.UserError", "message": "No attempts left."}});
-        assert!(matches!(classify_rpc_error(&err), AppError::RequestFailed(m) if m == "No attempts left."));
+        assert!(
+            matches!(classify_rpc_error(&err), AppError::RequestFailed(m) if m == "No attempts left.")
+        );
     }
 
     #[test]
     fn no_message_means_generic_error_not_a_leaked_traceback() {
-        assert!(matches!(classify_rpc_error(&json!({"code": 200, "data": {}})), AppError::ServerError));
+        assert!(matches!(
+            classify_rpc_error(&json!({"code": 200, "data": {}})),
+            AppError::ServerError
+        ));
     }
 }
 

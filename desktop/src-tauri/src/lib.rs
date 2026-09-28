@@ -3,6 +3,7 @@ mod config;
 mod connectivity;
 mod diagnostics;
 mod errors;
+mod guard;
 mod logging;
 mod odoo;
 mod state;
@@ -22,17 +23,20 @@ pub fn run() {
         .manage(AppState::default())
         .setup(|app| {
             let log_dir = logging::init(app.path().app_log_dir().ok());
-            tracing::info!(version = env!("CARGO_PKG_VERSION"), "DeployGuard Desktop starting");
-            *app.state::<AppState>().log_dir.lock().unwrap() = log_dir.map(|d| d.display().to_string());
+            tracing::info!(
+                version = env!("CARGO_PKG_VERSION"),
+                "DeployGuard Desktop starting"
+            );
+            *app.state::<AppState>().log_dir.lock().unwrap() =
+                log_dir.map(|d| d.display().to_string());
             windowing::build(app.handle())?;
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_current_session,
-            commands::get_app_view_open,
+            commands::get_view_mode,
+            commands::set_view_mode,
             commands::auth_sign_out,
-            commands::app_view_open,
-            commands::app_view_close,
             commands::navigate_odoo,
             commands::odoo_call_kw,
             commands::odoo_fetch_avatar,

@@ -34,7 +34,10 @@ pub fn init(log_dir: Option<PathBuf>) -> Option<PathBuf> {
     // process (release builds use panic = "abort") -- exactly the line
     // that would matter most.
     let (dir, file_layer) = match file {
-        Some((dir, appender)) => (Some(dir), Some(fmt::layer().with_ansi(false).with_writer(appender))),
+        Some((dir, appender)) => (
+            Some(dir),
+            Some(fmt::layer().with_ansi(false).with_writer(appender)),
+        ),
         None => (None, None),
     };
 
@@ -71,8 +74,14 @@ mod tests {
             .expect("log folder was created")
             .filter_map(|e| std::fs::read_to_string(e.ok()?.path()).ok())
             .collect();
-        assert!(contents.contains("marker-line-for-test"), "log file didn't receive the line");
-        assert!(!contents.contains("\u{1b}["), "ANSI colour codes leaked into the file");
+        assert!(
+            contents.contains("marker-line-for-test"),
+            "log file didn't receive the line"
+        );
+        assert!(
+            !contents.contains("\u{1b}["),
+            "ANSI colour codes leaked into the file"
+        );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
