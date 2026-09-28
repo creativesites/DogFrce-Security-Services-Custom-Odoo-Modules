@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_support_request_user,security.support.request.user,model_security_support_request,base.group_user,1,0,1,0
+access_support_request_agent,security.support.request.agent,model_security_support_request,group_support_agent,1,1,1,0
+access_task_feedback_user,security.task.feedback.user,model_security_task_feedback,base.group_user,1,0,1,0
+access_task_feedback_agent,security.task.feedback.agent,model_security_task_feedback,group_support_agent,1,1,1,1

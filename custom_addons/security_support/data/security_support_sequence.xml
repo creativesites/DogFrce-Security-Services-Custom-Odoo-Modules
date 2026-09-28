@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_support_request" model="ir.sequence">
+        <field name="name">Support Request</field>
+        <field name="code">security.support.request</field>
+        <field name="prefix">SUPP/%(year)s/</field>
+        <field name="padding">5</field>
+    </record>
+</odoo>

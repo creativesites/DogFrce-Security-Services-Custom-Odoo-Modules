@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="group_support_agent" model="res.groups">
+        <field name="name">DeployGuard Support / Agent</field>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        <field name="comment">Handles problem reports from staff and marks system faults.</field>
+    </record>
+
+    <!-- Managers and the owner handle staff problem reports. -->
+    <record id="security_base.group_security_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_support_agent'))]"/>
+    </record>
+    <record id="security_base.group_security_owner" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_support_agent'))]"/>
+    </record>
+
+    <record id="rule_support_request_own" model="ir.rule">
+        <field name="name">Support request: own</field>
+        <field name="model_id" ref="model_security_support_request"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_support_request_agent" model="ir.rule">
+        <field name="name">Support request: agents see all</field>
+        <field name="model_id" ref="model_security_support_request"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_support_agent'))]"/>
+    </record>
+
+    <record id="rule_task_feedback_own" model="ir.rule">
+        <field name="name">Task feedback: own</field>
+        <field name="model_id" ref="model_security_task_feedback"/>
+        <field name="domain_force">[('user_id', '=', user.id)]</field>
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+    <record id="rule_task_feedback_agent" model="ir.rule">
+        <field name="name">Task feedback: agents see all</field>
+        <field name="model_id" ref="model_security_task_feedback"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="groups" eval="[(4, ref('group_support_agent'))]"/>
+    </record>
+</odoo>
