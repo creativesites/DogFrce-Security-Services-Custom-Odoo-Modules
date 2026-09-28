@@ -146,12 +146,17 @@ export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = 
 
   return (
     <>
-      <div className="dg-page-enter" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 20px" }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "var(--ds-text)" }}>My Training</h1>
-        {listState === "ready" && (
-          <span className="dg-chip">{assignments.length} {assignments.length === 1 ? "course" : "courses"}</span>
-        )}
-      </div>
+      <header className="dg-hero dg-page-enter">
+        <div className="dg-hero__text">
+          <p className="dg-eyebrow">Short lessons for the work you do</p>
+          <h1 className="dg-display">My training</h1>
+          <p className="dg-subline">
+            {listState === "ready"
+              ? `${assignments.length} ${assignments.length === 1 ? "course" : "courses"} assigned. A few minutes each, then practise on the real screens.`
+              : "Loading your courses…"}
+          </p>
+        </div>
+      </header>
 
       {listState === "loading" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

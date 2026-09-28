@@ -69,7 +69,7 @@ describe("Today", () => {
   it("shows what to do, why, and offers the guide", async () => {
     serve({ get_my_today: () => ({ employee: { id: 1, name: "Grace" }, tasks: [register] }) });
     wrap(<Home {...homeProps} />);
-    const card = (await screen.findByText("Register attendance")).closest("li")!;
+    const card = (await screen.findByText("Register attendance")).closest<HTMLElement>("li, section")!;
     expect(within(card).getByText(/Payroll, client billing/)).toBeTruthy();
     expect(within(card).getByRole("button", { name: /Guide me/ })).toBeTruthy();
     expect(within(card).getByRole("button", { name: /I know how/ })).toBeTruthy();
@@ -145,7 +145,7 @@ describe("Guide dock", () => {
     await screen.findByRole("heading", { name: "Mark every guard, then save" });
     active = false;
     await act(async () => { await new Promise((r) => setTimeout(r, 1600)); });
-    expect(await screen.findByRole("heading", { name: "Done" })).toBeTruthy();
+    expect(await screen.findByRole("heading", { name: /^Done/ })).toBeTruthy();
   });
 });
 

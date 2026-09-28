@@ -21,7 +21,6 @@ import {
   CheckCheckIcon,
   ClockIcon,
   ExternalLinkIcon,
-  ShieldCheckIcon,
   SparklesIcon,
 } from "../icons";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
@@ -261,13 +260,10 @@ export function ExceptionsInbox() {
       {/* Header */}
       <header className="dg-inbox-header">
         <div className="dg-inbox-header__titles">
-          <div className="dg-inbox-header__eyebrow">
-            <ShieldCheckIcon size={16} />
-            <span>Operational Reliability Engine</span>
-          </div>
-          <h1 className="dg-inbox-header__title">Exceptions & Triage Inbox</h1>
-          <p className="dg-inbox-header__subline">
-            Rule-driven ingest from alerts · Escalation working hours · Two-interaction resolution
+          <p className="dg-eyebrow">Things that went wrong or are late</p>
+          <h1 className="dg-display">What needs attention</h1>
+          <p className="dg-subline">
+            Each item has an owner and the records behind it. Deal with it, or pass it on with a note.
           </p>
         </div>
 
@@ -277,10 +273,10 @@ export function ExceptionsInbox() {
             className="dg-btn dg-btn--secondary"
             onClick={() => void handleSync()}
             disabled={syncing}
-            title="Ingest open notifications and refresh escalation clock (Press 's')"
+            title="Check for new alerts (press S)"
           >
             <ClockIcon size={15} />
-            {syncing ? "Syncing..." : "Sync Alerts"}
+            {syncing ? "Checking…" : "Check for new"}
           </button>
           <button
             type="button"
@@ -289,7 +285,7 @@ export function ExceptionsInbox() {
             title="Open native Odoo backend exceptions table"
           >
             <ExternalLinkIcon size={15} />
-            Odoo Table
+            All in ERP
           </button>
         </div>
       </header>
@@ -372,7 +368,7 @@ export function ExceptionsInbox() {
           <kbd>↵</kbd> Open ERP Record
         </span>
         <span className="dg-inbox-hotkeys__hint">
-          <kbd>s</kbd> Sync
+          <kbd>s</kbd> Check for new
         </span>
       </div>
 

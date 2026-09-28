@@ -32,3 +32,18 @@ describe("Today card", () => {
     expect(progress([base, { ...base, id: 2, state: "verified" }, { ...base, id: 3, state: "cancelled" }])).toEqual({ done: 1, total: 2 });
   });
 });
+
+describe("arranging the day", () => {
+  it("puts the first actionable task up next, skipping ones waiting on others", async () => {
+    const { arrangeDay, daySentence } = await import("./today");
+    const waiting = { ...base, id: 2, readiness: "waiting" as const };
+    const ready = { ...base, id: 3, is_overdue: true };
+    const done = { ...base, id: 4, state: "verified" as const };
+    const day = arrangeDay([waiting, ready, done], true);
+    expect(day.upNext?.id).toBe(3);
+    expect(day.later.map((t) => t.id)).toEqual([2]);
+    expect(day.done.map((t) => t.id)).toEqual([4]);
+    expect(daySentence([waiting, ready, done])).toBe("2 things left today, 1 overdue.");
+    expect(daySentence([done])).toBe("Everything on your list today is done. Thank you.");
+  });
+});

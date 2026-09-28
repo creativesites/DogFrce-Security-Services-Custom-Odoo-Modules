@@ -20,7 +20,6 @@ import { parseOdooDatetime } from "./myWork.logic";
 import { useSession } from "../../session/SessionContext";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
 import {
-  TrendingUpIcon,
   ShieldCheckIcon,
   CheckCircleIcon,
   AlertTriangleIcon,
@@ -160,19 +159,12 @@ export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
       {/* Header bar */}
       <header className="dg-adoption__header">
         <div className="dg-adoption__header-titles">
-          <div className="dg-adoption__header-top">
-            <span className="dg-adoption__icon-wrap">
-              <TrendingUpIcon size={20} />
-            </span>
-            <h1 className="dg-adoption__title">Adoption & Operational Execution</h1>
-            {snapshot && (
-              <span className="dg-adoption__window-badge">
-                Window: {snapshot.window_start} → {snapshot.window_end} (7 days)
-              </span>
-            )}
-          </div>
-          <p className="dg-adoption__subtitle">
-            Measuring operational work executed through DogForce systems — finding where processes need support.
+          <p className="dg-eyebrow">
+            {snapshot ? `Last 7 days · ${snapshot.window_start} to ${snapshot.window_end}` : "Last 7 days"}
+          </p>
+          <h1 className="dg-display">Is the system being used?</h1>
+          <p className="dg-subline">
+            Work that was expected, against work recorded in DogForce. It shows where a process needs support, not who to blame.
           </p>
         </div>
 

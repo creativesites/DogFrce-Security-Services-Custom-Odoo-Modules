@@ -252,17 +252,17 @@ export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
         onReview={(s) => void handleReviewRoster(s)}
       />
 
-      <div
-        className="dg-page-enter"
-        style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "4px 0 20px" }}
-      >
-        <h1 style={{ fontSize: 20, fontWeight: 700, margin: 0, color: "var(--ds-text)" }}>My Work</h1>
-        {tasksState === "ready" && (
-          <span className="dg-chip">
-            {taskCount} {taskCount === 1 ? "task" : "tasks"}
-          </span>
-        )}
-      </div>
+      <header className="dg-hero dg-page-enter">
+        <div className="dg-hero__text">
+          <p className="dg-eyebrow">Everything assigned to you</p>
+          <h1 className="dg-display">My work</h1>
+          <p className="dg-subline">
+            {tasksState === "ready"
+              ? taskCount === 0 ? "Nothing open. New work shows up here when it's assigned." : `${taskCount} open ${taskCount === 1 ? "task" : "tasks"}, soonest first.`
+              : "Checking what's assigned to you…"}
+          </p>
+        </div>
+      </header>
 
       {tasksState === "loading" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

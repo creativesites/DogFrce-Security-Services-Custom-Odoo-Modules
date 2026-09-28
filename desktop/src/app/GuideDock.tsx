@@ -79,11 +79,30 @@ export function GuideDock({ onFinished }: { onFinished: () => void }) {
 
   const finished = session === false && lastCompleted;
 
+  const active = session && session.step ? session : null;
+
   return (
     <aside className="dg-guide" aria-label="DeployGuard guide">
-      <header className="dg-guide__head" data-tauri-drag-region>
-        <span className="dg-guide__brand" data-tauri-drag-region><CompassIcon size={16} /> Guide</span>
-        <WindowControls />
+      <header className="dg-guide__head">
+        <div className="dg-guide__bar" data-tauri-drag-region>
+          <span className="dg-guide__brand" data-tauri-drag-region><CompassIcon size={15} /> DeployGuard guide</span>
+          <WindowControls />
+        </div>
+        {active && (
+          <div className="dg-guide__hero">
+            <div className="dg-guide__flow">{active.flow.name}</div>
+            {(active.site || active.date) && (
+              <div className="dg-guide__where">{[active.site, active.date && new Date(`${active.date}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })].filter(Boolean).join(" · ")}</div>
+            )}
+            <div className="dg-guide__segments" role="progressbar" aria-valuemin={0} aria-valuemax={active.total}
+              aria-valuenow={active.steps.filter((s) => s.done).length} aria-label="Progress">
+              {active.steps.map((s, i) => (
+                <span key={i} className={`dg-guide__seg${s.done ? " is-done" : ""}${active.step && active.step.index === i + 1 ? " is-current" : ""}`} />
+              ))}
+            </div>
+            {active.practice && <div className="dg-guide__practice">Practice: you have no real task for this today</div>}
+          </div>
+        )}
       </header>
 
       <div className="dg-guide__body">
@@ -92,11 +111,11 @@ export function GuideDock({ onFinished }: { onFinished: () => void }) {
 
         {finished && (
           <div className="dg-guide__done" role="status">
-            <CheckCircleIcon size={28} />
-            <h2>Done</h2>
+            <span className="dg-guide__doneicon"><CheckCircleIcon size={34} /></span>
+            <h2>Done. Well done.</h2>
             <p>{lastCompleted.flow.objective || `${lastCompleted.flow.name}: complete.`}</p>
             {lastCompleted.task && <p className="dg-field__hint">DeployGuard checked the records. Your task is marked done.</p>}
-            <button type="button" className="dg-btn dg-btn--primary" onClick={() => { setMode("app"); onFinished(); }}>
+            <button type="button" className="dg-guide__primary" onClick={() => { setMode("app"); onFinished(); }}>
               Back to today
             </button>
           </div>
@@ -105,67 +124,50 @@ export function GuideDock({ onFinished }: { onFinished: () => void }) {
         {session === false && !lastCompleted && (
           <div className="dg-guide__done">
             <p>No guided task is running.</p>
-            <button type="button" className="dg-btn" onClick={() => { setMode("app"); onFinished(); }}>Back to DeployGuard</button>
+            <button type="button" className="dg-guide__secondary" onClick={() => { setMode("app"); onFinished(); }}>Back to DeployGuard</button>
           </div>
         )}
 
-        {session && session.step && (
+        {active && active.step && (
           <>
-            <div className="dg-guide__task">
-              <div className="dg-guide__flow">{session.flow.name}</div>
-              {(session.site || session.date) && (
-                <div className="dg-field__hint">{[session.site, session.date].filter(Boolean).join(" · ")}</div>
-              )}
-              {session.practice && (
-                <div className="dg-badge dg-badge--info">Practice: no real task today</div>
-              )}
-            </div>
-
-            <ol className="dg-guide__steps" aria-label="Steps">
-              {session.steps.map((s, i) => (
-                <li
-                  key={s.title + i}
-                  className={`dg-guide__stepdot${s.done ? " is-done" : ""}${session.step && session.step.index === i + 1 ? " is-current" : ""}`}
-                  aria-current={session.step && session.step.index === i + 1 ? "step" : undefined}
-                >
-                  <span className="dg-sr-only">{s.done ? "Done: " : ""}</span>{s.title}
-                </li>
-              ))}
-            </ol>
-
-            <section className={`dg-guide__now${session.off_track ? " is-off-track" : ""}`} aria-live="polite">
-              <div className="dg-guide__stepno">Step {session.step.index} of {session.total}</div>
-              {session.off_track ? (
+            <section className={`dg-guide__now${active.off_track ? " is-off-track" : ""}`} aria-live="polite">
+              <div className="dg-guide__stepno">Step {active.step.index} of {active.total}</div>
+              {active.off_track ? (
                 <>
                   <h2 className="dg-guide__title">You're on a different screen</h2>
-                  <p>{session.step.deviation_hint || "Go back to where this step happens."}</p>
+                  <p className="dg-guide__instruction">{active.step.deviation_hint || "Go back to where this step happens."}</p>
+                  <p className="dg-field__hint">Nothing is lost. When you're back, the guide carries on from here.</p>
                 </>
               ) : (
                 <>
-                  <h2 className="dg-guide__title">{session.step.title}</h2>
-                  <p className="dg-guide__instruction">{session.step.instruction}</p>
+                  <h2 className="dg-guide__title">{active.step.title}</h2>
+                  <p className="dg-guide__instruction">{active.step.instruction}</p>
                 </>
-              )}
-              {session.step.why && (
-                <p className="dg-guide__why"><strong>Why: </strong>{session.step.why}</p>
               )}
             </section>
 
+            {active.step.why && !active.off_track && (
+              <div className="dg-guide__why">
+                <span className="dg-guide__whylabel">Why this matters</span>
+                {active.step.why}
+              </div>
+            )}
+
             <div className="dg-guide__actions">
-              <button type="button" className="dg-btn dg-btn--primary" onClick={() => void showMe().then((s) => s && setSession(s))}>
-                Show me
+              <button type="button" className="dg-guide__primary" onClick={() => void showMe().then((s) => s && setSession(s))}>
+                Show me where
               </button>
-              <button type="button" className="dg-btn" onClick={() => void requestHelp().then((h) => h && setHelp(h))}>
+              <button type="button" className="dg-guide__secondary" onClick={() => void requestHelp().then((h) => h && setHelp(h))}>
                 <HelpIcon size={15} /> I'm stuck
               </button>
-              {session.step.confirmable && (
-                <button type="button" className="dg-btn" onClick={() => void confirmStep().then(setSession).catch(setError)}>
-                  I've done this
+              {active.step.confirmable && (
+                <button type="button" className="dg-guide__secondary" onClick={() => void confirmStep().then(setSession).catch(setError)}>
+                  I've done this step
                 </button>
               )}
             </div>
-            {session.step.confirmable && (
-              <p className="dg-field__hint">Practice mode: DeployGuard can't check this step without a real task, so tell it when you're done.</p>
+            {active.step.confirmable && (
+              <p className="dg-field__hint">Practice mode: without a real task DeployGuard can't check this step, so tell it when you're done.</p>
             )}
 
             {help && (
@@ -178,11 +180,11 @@ export function GuideDock({ onFinished }: { onFinished: () => void }) {
                     className="dg-textarea"
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="e.g. What do I do if a guard came but left early?"
+                    placeholder="e.g. What if a guard came but left early?"
                     maxLength={500}
                   />
-                  <button type="submit" className="dg-btn" disabled={asking || !question.trim()}>
-                    {asking ? "Thinking…" : "Ask"}
+                  <button type="submit" className="dg-guide__secondary" disabled={asking || !question.trim()}>
+                    <SparklesIcon size={14} /> {asking ? "Thinking…" : "Ask"}
                   </button>
                 </form>
                 {answer && (
@@ -196,13 +198,26 @@ export function GuideDock({ onFinished }: { onFinished: () => void }) {
                 )}
               </section>
             )}
+
+            <ol className="dg-guide__steps" aria-label="All steps">
+              {active.steps.map((s, i) => {
+                const current = active.step && active.step.index === i + 1;
+                return (
+                  <li key={s.title + i} className={`dg-guide__stepitem${s.done ? " is-done" : ""}${current ? " is-current" : ""}`}
+                    aria-current={current ? "step" : undefined}>
+                    <span className="dg-guide__stepmark" aria-hidden="true">{s.done ? "✓" : i + 1}</span>
+                    <span><span className="dg-sr-only">{s.done ? "Done: " : ""}</span>{s.title}</span>
+                  </li>
+                );
+              })}
+            </ol>
           </>
         )}
       </div>
 
       {session && (
         <footer className="dg-guide__foot">
-          <button type="button" className="dg-btn dg-btn--ghost" onClick={() => void stop()}>Stop guiding me</button>
+          <button type="button" className="dg-guide__stop" onClick={() => void stop()}>Stop guiding me</button>
         </footer>
       )}
     </aside>

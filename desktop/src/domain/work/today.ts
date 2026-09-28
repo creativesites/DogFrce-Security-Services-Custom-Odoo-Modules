@@ -51,3 +51,40 @@ export function progress(tasks: TodayTask[]): { done: number; total: number } {
   const live = tasks.filter((t) => t.state !== "cancelled");
   return { done: live.filter(isDone).length, total: live.length };
 }
+
+/**
+ * Splits Today into what the employee should look at first. The order within
+ * each group is the server's (overdue first, then by due time).
+ * - upNext: the first task they can act on now
+ * - later: everything else still to do, including tasks waiting on others
+ * - done: finished today
+ */
+export function arrangeDay(tasks: TodayTask[], canGuide: boolean): { upNext: TodayTask | null; later: TodayTask[]; done: TodayTask[] } {
+  const live = tasks.filter((t) => t.state !== "cancelled");
+  const done = live.filter((t) => isDone(t) || t.state === "could_not_complete");
+  const open = live.filter((t) => !done.includes(t));
+  const upNext = open.find((t) => {
+    const a = nextAction(t, canGuide);
+    return a !== "wait" && a !== "none";
+  }) ?? null;
+  return { upNext, later: open.filter((t) => t !== upNext), done };
+}
+
+/** "3 things left today, 1 overdue." Plain words for the header. */
+export function daySentence(tasks: TodayTask[]): string {
+  const live = tasks.filter((t) => t.state !== "cancelled");
+  if (live.length === 0) return "Nothing on your list today.";
+  const left = live.filter((t) => !isDone(t) && t.state !== "could_not_complete");
+  const overdue = left.filter((t) => t.is_overdue).length;
+  if (left.length === 0) return "Everything on your list today is done. Thank you.";
+  const things = `${left.length} ${left.length === 1 ? "thing" : "things"} left today`;
+  return overdue ? `${things}, ${overdue} overdue.` : `${things}.`;
+}
+
+/** Title and site for display, without repeating the site when the task's
+ * own name already contains it ("Weekly site visit · ABC Mall"). */
+export function titleAndSite(task: TodayTask): { title: string; site: string | null } {
+  const title = task.responsibility || task.name;
+  const site = task.site && !title.includes(task.site) ? task.site : null;
+  return { title, site };
+}

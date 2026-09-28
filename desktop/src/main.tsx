@@ -11,6 +11,7 @@ import "./styles/dgs.css";
 import "./styles/shell.css";
 import "./styles/components.css";
 import "./styles/work.css";
+import "./styles/desk.css";
 
 getVersion().then(setDiagnosticsAppVersion).catch(() => {});
 

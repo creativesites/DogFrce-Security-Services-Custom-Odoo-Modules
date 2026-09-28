@@ -215,36 +215,40 @@ export function AppShell() {
       />
 
       {appOpen && (
-        <div className="dg-appview" aria-label="DeployGuard">
-          <nav className="dg-appview__nav" aria-label="DeployGuard sections">
-            <div className="dg-appview__nav-group">Workspace</div>
-            {PAGES.filter((p) => pageAvailable(p.key)).map((p) => (
-              <button
-                key={p.key}
-                type="button"
-                className={`dg-appview__navitem${page === p.key ? " is-active" : ""}`}
-                aria-current={page === p.key ? "page" : undefined}
-                onClick={() => { setFocusTaskId(null); setFocusAssignmentId(null); setPage(p.key); }}
-              >
-                <span className="dg-appview__navitem-icon">{p.icon()}</span>
-                <span className="dg-appview__navitem-label">{p.label}</span>
+        <div className="dg-appview dg-desk" aria-label="DeployGuard">
+          <nav className="dg-rail" aria-label="DeployGuard sections">
+            <img className="dg-rail__logo" src={dogforceLogo} alt="DogForce" />
+            <div className="dg-rail__divider" aria-hidden="true" />
+            <div className="dg-rail__items">
+              {PAGES.filter((p) => pageAvailable(p.key)).map((p) => (
+                <button
+                  key={p.key}
+                  type="button"
+                  className={`dg-rail__item${page === p.key ? " is-active" : ""}`}
+                  aria-current={page === p.key ? "page" : undefined}
+                  onClick={() => { setFocusTaskId(null); setFocusAssignmentId(null); setPage(p.key); }}
+                >
+                  <span className="dg-rail__icon">{p.icon(19)}</span>
+                  <span className="dg-rail__label">{p.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="dg-rail__foot">
+              <button type="button" className="dg-rail__item dg-rail__item--quiet" onClick={openHelp}>
+                <span className="dg-rail__icon"><HelpIcon size={19} /></span>
+                <span className="dg-rail__label">Help</span>
               </button>
-            ))}
-            <div className="dg-appview__nav-foot">
-              <button type="button" className="dg-palette-hint" onClick={openPalette}>
-                <span>Quick actions</span>
-                <kbd>Ctrl K</kbd>
+              <button type="button" className="dg-rail__kbd" onClick={openPalette} aria-label="Quick actions (Ctrl K)" title="Quick actions">
+                Ctrl K
               </button>
             </div>
           </nav>
 
-          <main className="dg-appview__content">
-            <header className="dg-appview__topbar">
-              <StatusBar />
-            </header>
+          <main className="dg-canvas">
+            <StatusBar />
 
             {status === "checking" && (
-              <div className="dg-appview__body">
+              <div className="dg-canvas__body">
                 <div className="dg-skeleton dg-skeleton--title" />
                 <div className="dg-appview__grid">
                   <div className="dg-skeleton dg-skeleton--tile" />
@@ -254,7 +258,7 @@ export function AppShell() {
             )}
 
             {(status === "signed_out" || status === "expired") && (
-              <div className="dg-appview__body">
+              <div className="dg-canvas__body">
                 <div className="dg-emptystate">
                   <img className="dg-emptystate__glyph" src={dogforceLogo} alt="" aria-hidden="true" />
                   <h2>{status === "expired" ? "Your session expired" : "Sign in to continue"}</h2>
@@ -272,7 +276,7 @@ export function AppShell() {
             )}
 
             {showOnboarding && session && (
-              <div className="dg-appview__body">
+              <div className="dg-canvas__body">
                 <FirstRunOnboarding
                   firstName={session.name.split(" ")[0]}
                   status={noticeStatus}
@@ -291,7 +295,7 @@ export function AppShell() {
             )}
 
             {signedIn && (
-              <div className="dg-appview__body" key={page}>
+              <div className="dg-canvas__body" key={page}>
                 {page === "home" && (
                   <Home
                     reloadSignal={reloadSignal}
@@ -302,6 +306,7 @@ export function AppShell() {
                     onOpenTask={(id) => { setFocusTaskId(id); setPage("work"); }}
                     onOpenCourse={(assignmentId) => { setFocusAssignmentId(assignmentId || null); setPage("training"); }}
                     onReportProblem={openReport}
+                    onHelp={openHelp}
                   />
                 )}
                 {page === "work" && <MyWork reloadSignal={reloadSignal} focusTaskId={focusTaskId} />}

@@ -1,0 +1,256 @@
+/* =============================================================================
+   DeployGuard Desktop: the "desk" (2026-09-28 redesign).
+
+   Visual parity with security_shell (custom_addons/security_shell/static/src/
+   css/shell_layout.css + shell_home.css), which is the canonical DogForce look
+   (DG-ADR-017):
+     - a grey desk (--dgs-desk) with 12px gutters
+     - a near-black ink rail (--dgs-rail), rounded like the shell
+     - one large soft canvas (--dgs-canvas, --dgs-r-shell) that scrolls
+     - white panels (--dgs-panel) with the shell's radii and lift
+     - 34px bold display titles, tight tracking, tabular numerals
+   Tokens only. The one gradient is --dgs-ramp, on progress bars only.
+   ============================================================================= */
+
+/* ── Frame ─────────────────────────────────────────────────────────────── */
+
+.dg-appview.dg-desk {
+  position: absolute;
+  inset: 44px 0 0 0;
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  background: var(--dgs-desk);
+  animation: dg-desk-in 220ms var(--dg-ease-out) both;
+}
+@keyframes dg-desk-in { from { opacity: 0; } to { opacity: 1; } }
+
+.dg-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 0 12px;
+  background: var(--dgs-rail);
+  border-radius: var(--dgs-r-shell);
+  font-family: var(--dgs-font);
+  min-height: 0;
+}
+.dg-rail__logo { width: 40px; height: 40px; object-fit: contain; border-radius: 12px; background: var(--dgs-panel); padding: 4px; }
+.dg-rail__divider { width: 28px; height: 1px; background: var(--dgs-rail-divider); margin: 4px 0; }
+.dg-rail__items { display: flex; flex-direction: column; gap: 4px; overflow-y: auto; scrollbar-width: none; padding: 0 8px; width: 100%; }
+.dg-rail__items::-webkit-scrollbar { display: none; }
+
+.dg-rail__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 2px 7px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--dgs-rail-icon);
+  font: inherit;
+  cursor: pointer;
+  transition: background 150ms, color 150ms;
+}
+.dg-rail__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 32px;
+  border-radius: 12px;
+  transition: background 150ms, color 150ms;
+}
+.dg-rail__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  text-align: center;
+  max-width: 76px;
+}
+.dg-rail__item:hover { color: var(--dgs-rail-active); }
+.dg-rail__item:hover .dg-rail__icon { background: var(--dgs-rail-hover); }
+.dg-rail__item:focus-visible { outline: 2px solid var(--dgs-rail-active); outline-offset: -2px; }
+.dg-rail__item.is-active { color: var(--dgs-rail-active); }
+.dg-rail__item.is-active .dg-rail__icon { background: var(--dgs-rail-active); color: var(--dgs-rail); }
+
+.dg-rail__foot { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; padding: 0 8px; }
+.dg-rail__kbd {
+  padding: 4px 8px;
+  border: 1px solid var(--dgs-rail-divider);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dgs-rail-icon);
+  font-family: var(--dgs-mono);
+  font-size: 10px;
+  cursor: pointer;
+}
+.dg-rail__kbd:hover { color: var(--dgs-rail-active); border-color: var(--dgs-rail-icon); }
+
+.dg-canvas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--dgs-canvas);
+  border-radius: var(--dgs-r-shell);
+  overflow: hidden;
+}
+.dg-canvas > .dg-statusbar { margin: 14px 28px 0; border-radius: var(--dgs-r-control); }
+.dg-canvas__body {
+  flex: 1;
+  overflow: auto;
+  padding: 30px 36px 36px;
+  animation: dg-body-in 260ms var(--dg-ease-out) both;
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────── */
+
+.dg-eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ds-text-subtle);
+}
+.dg-display {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  line-height: 1.1;
+  color: var(--ds-text);
+}
+.dg-subline { margin: 8px 0 0; font-size: 15px; color: var(--ds-text-2); }
+.dg-num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.dg-mono { font-family: var(--dgs-mono); font-variant-numeric: tabular-nums; }
+
+/* The page title used by every screen (replaces .dg-greeting/.dg-page-title). */
+.dg-appview .dg-page-title,
+.dg-appview .dg-greeting {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -1.2px;
+  line-height: 1.1;
+  color: var(--ds-text);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+}
+.dg-appview .dg-greeting span { color: var(--ds-accent); -webkit-text-fill-color: currentColor; }
+
+/* ── Panels & controls on the canvas ───────────────────────────────────── */
+
+.dg-panel {
+  background: var(--dgs-panel);
+  border-radius: var(--dgs-r-card);
+  box-shadow: var(--dgs-lift);
+  padding: 20px 22px;
+}
+.dg-panel__title { margin: 0 0 12px; font-size: 13px; font-weight: 700; color: var(--ds-text); letter-spacing: -0.1px; }
+
+.dg-appview .dg-btn {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--dgs-r-pill);
+  border: 1px solid var(--ds-border);
+  background: var(--dgs-panel);
+  color: var(--ds-text);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: none;
+  cursor: pointer;
+  filter: none;
+}
+.dg-appview .dg-btn:hover { border-color: var(--ds-text-subtle); transform: none; }
+.dg-appview .dg-btn:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; box-shadow: none; }
+.dg-appview .dg-btn--primary {
+  background: var(--dgs-rail);
+  border-color: var(--dgs-rail);
+  color: var(--dgs-rail-active);
+}
+.dg-appview .dg-btn--primary:hover { background: var(--ds-accent); border-color: var(--ds-accent); filter: none; transform: none; }
+.dg-appview .dg-btn--primary:disabled { background: var(--ds-border); border-color: var(--ds-border); color: var(--ds-text-subtle); }
+.dg-appview .dg-btn--ghost { border-color: transparent; background: transparent; color: var(--ds-text-2); }
+.dg-appview .dg-btn--ghost:hover { background: var(--ds-slate); border-color: transparent; }
+.dg-appview .dg-btn--secondary { background: var(--dgs-panel); color: var(--ds-text); }
+.dg-appview .dg-btn--sm { height: 28px; padding: 0 12px; font-size: 12px; }
+
+/* The one gradient: progress (shell's metric ramp). */
+.dg-ramp {
+  position: relative;
+  height: 8px;
+  border-radius: var(--dgs-r-pill);
+  background: var(--ds-slate);
+  overflow: hidden;
+}
+.dg-ramp__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--dgs-ramp);
+  background-size: 100% 100%;
+  transition: width 600ms var(--dg-ease-out);
+}
+
+/* ── Toolbar refinements (dark strip over Odoo) ───────────────────────── */
+
+.dg-toolbar { background: var(--dgs-rail); box-shadow: none; border-bottom: 1px solid var(--dgs-rail-divider); }
+.dg-toolbar__brand {
+  border-radius: var(--dgs-r-pill);
+  background: var(--dgs-rail-hover);
+  border: 1px solid var(--dgs-rail-divider);
+  color: var(--dgs-rail-active);
+}
+.dg-toolbar__brand.is-open { background: var(--dgs-rail-active); color: var(--dgs-rail); border-color: var(--dgs-rail-active); }
+.dg-toolbar__brand.is-open svg { transform: rotate(180deg); }
+
+/* ── Empty / signed-out / onboarding on the desk ──────────────────────── */
+
+.dg-appview .dg-emptystate {
+  max-width: 460px;
+  margin: 10vh auto 0;
+  padding: 36px 34px 28px;
+  background: var(--dgs-panel);
+  border-radius: var(--dgs-r-card);
+  box-shadow: var(--dgs-lift-hover);
+  color: var(--ds-text);
+}
+.dg-appview .dg-emptystate h2 { margin: 6px 0 0; font-size: 24px; letter-spacing: -0.6px; }
+.dg-appview .dg-emptystate p { margin: 0 0 10px; color: var(--ds-text-2); line-height: 1.5; }
+.dg-appview .dg-emptystate__glyph { width: 56px; height: 56px; border-radius: 16px; background: var(--dgs-desk); padding: 6px; }
+
+/* ── Lists and page headers on the desk ───────────────────────────────── */
+
+.dg-appview .dg-inbox-header,
+.dg-appview .dg-adoption__header { align-items: flex-end; margin-bottom: 22px; }
+.dg-appview .dg-tasklist { gap: 10px; max-width: 880px; }
+.dg-appview .dg-tile {
+  padding: 16px 18px;
+  border-radius: var(--dgs-r-card);
+  box-shadow: var(--dgs-lift);
+  gap: 14px;
+}
+.dg-appview .dg-tile:hover { box-shadow: var(--dgs-lift-hover); transform: translateY(-1px); }
+.dg-appview .dg-tile__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--dgs-desk);
+  color: var(--ds-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dg-appview.dg-desk, .dg-canvas__body { animation: none; }
+  .dg-ramp__fill { transition: none; }
+}
