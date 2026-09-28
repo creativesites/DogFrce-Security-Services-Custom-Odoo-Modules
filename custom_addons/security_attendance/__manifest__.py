@@ -10,6 +10,7 @@
         "security/ir.model.access.csv",
         "views/security_attendance_views.xml",
         "views/security_attendance_client_actions.xml",
+        "views/security_attendance_batch_views.xml",
         "views/security_awol_heatmap_actions.xml",
         "views/security_attendance_grid_actions.xml",
         "views/security_attendance_liveops_views.xml",

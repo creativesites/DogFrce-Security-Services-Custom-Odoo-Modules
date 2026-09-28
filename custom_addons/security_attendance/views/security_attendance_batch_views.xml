@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Posting sheets. Before 2026-09-28 a batch could only be reached from
+         inside the Posting Console, and HR's "verify" step (action_lock) had
+         no button anywhere, so the Register -> Confirm -> Verify pipeline in
+         DogForce's roles matrix could not be completed in the UI. -->
+    <record id="view_security_attendance_batch_list" model="ir.ui.view">
+        <field name="name">security.attendance.batch.list</field>
+        <field name="model">security.attendance.batch</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state in ('locked', 'cancelled')" decoration-info="state == 'captured'" decoration-success="state == 'reviewed'">
+                <field name="attendance_date"/>
+                <field name="site_id"/>
+                <field name="record_count" string="Guards"/>
+                <field name="absent_count" optional="show"/>
+                <field name="awol_count" optional="show"/>
+                <field name="captured_by_id" optional="show"/>
+                <field name="reviewed_by_id" optional="show"/>
+                <field name="state" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_security_attendance_batch_form" model="ir.ui.view">
+        <field name="name">security.attendance.batch.form</field>
+        <field name="model">security.attendance.batch</field>
+        <field name="arch" type="xml">
+            <form create="false">
+                <header>
+                    <button name="action_open_posting_console" type="object" string="Open in Posting Console"
+                            class="btn-primary" invisible="state not in ('draft', 'captured')"/>
+                    <button name="action_review" type="object" string="Confirm attendance"
+                            class="btn-primary" invisible="state != 'captured'"
+                            groups="security_operations.group_security_front_desk,security_base.group_security_manager,security_base.group_security_owner"
+/>
+                    <button name="action_lock" type="object" string="Verify &amp; lock"
+                            class="btn-primary" invisible="state != 'reviewed'"
+                            groups="security_base.group_security_hr_payroll_officer,security_base.group_security_manager,security_base.group_security_owner"
+                            confirm="Locking sends this attendance to payroll. Continue?"
+/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,captured,reviewed,locked"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="attendance_date" readonly="state != 'draft'"/>
+                            <field name="site_id" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="captured_by_id" readonly="1"/>
+                            <field name="reviewed_by_id" readonly="1"/>
+                            <field name="record_count" string="Guards"/>
+                            <field name="absent_count"/>
+                            <field name="awol_count"/>
+                        </group>
+                    </group>
+                    <field name="attendance_record_ids" readonly="1">
+                        <list>
+                            <field name="employee_id"/>
+                            <field name="post_id"/>
+                            <field name="manual_presence"/>
+                            <field name="check_in"/>
+                            <field name="check_out"/>
+                            <field name="status" widget="badge"/>
+                        </list>
+                    </field>
+                    <field name="note" placeholder="Anything payroll or the GM should know about this day"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_attendance_batch_search" model="ir.ui.view">
+        <field name="name">security.attendance.batch.search</field>
+        <field name="model">security.attendance.batch</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="site_id"/>
+                <field name="attendance_date"/>
+                <filter name="to_confirm" string="Waiting for confirmation" domain="[('state', '=', 'captured')]"/>
+                <filter name="to_verify" string="Waiting for HR verification" domain="[('state', '=', 'reviewed')]"/>
+                <separator/>
+                <filter name="today" string="Today" domain="[('attendance_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_security_attendance_batch" model="ir.actions.act_window">
+        <field name="name">Posting Sheets</field>
+        <field name="res_model">security.attendance.batch</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_security_attendance_batch_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No posting sheets yet.</p>
+            <p>Operations registers attendance in the Posting Console. Sheets then appear here to be confirmed (Admin) and verified (HR).</p>
+        </field>
+    </record>
+
+    <menuitem id="menu_security_attendance_batch" name="Posting Sheets" parent="security_operations.menu_security_workforce"
+              action="action_security_attendance_batch" sequence="6" groups="hr.group_hr_user"/>
+</odoo>
