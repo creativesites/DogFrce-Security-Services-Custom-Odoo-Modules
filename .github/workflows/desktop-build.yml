@@ -1,108 +1,196 @@
-name: DeployGuard Desktop — Windows build
+name: DeployGuard Desktop
 
-# Produces a real, installable Windows artifact (NSIS + MSI) from macOS
-# development, per docs/deployguard/26-deployment-strategy.md §4 and the
-# desktop build mission's §11 ("prefer GitHub Actions for Windows builds
-# rather than requiring the developer to own a Windows machine").
+# Windows is the target platform: every check runs on windows-latest.
 #
-# This workflow builds UNSIGNED installers (see desktop/DEVIATIONS.md D-5
-# and docs/deployguard/32-open-questions.md OQ-7). Code signing is added
-# as a follow-up once a certificate / Azure Trusted Signing is in place —
-# search this file for "TODO(signing)".
+# Three separate concerns (desktop/RELEASING.md):
+#   1. Checks: typecheck, lint (incl. design tokens), tests, rustfmt, clippy,
+#      cargo test. On every push/PR that touches the desktop.
+#   2. Build: an installer artifact for testers. Updater artifacts are signed
+#      only when the updater key is configured, so PR builds stay green without
+#      secrets.
+#   3. Release: on a desktop-v<version> tag. Updater-signed NSIS installer and
+#      latest.json, published to the releases repo the updater reads.
+#      Authenticode (Windows code signing) is an optional extra step. Without a
+#      certificate, SmartScreen will warn on install.
 
 on:
   push:
     branches: [main]
+    tags: ["desktop-v*"]
     paths:
       - "desktop/**"
       - ".github/workflows/desktop-build.yml"
   pull_request:
     paths:
       - "desktop/**"
+      - ".github/workflows/desktop-build.yml"
   workflow_dispatch:
-    inputs:
-      environment:
-        description: "Which .env.<environment> to build with"
-        required: true
-        default: "production"
-        type: choice
-        options: [production, staging]
 
 concurrency:
-  group: desktop-build-${{ github.ref }}
+  group: desktop-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Non-secret build-time configuration (src-tauri/src/config.rs).
+  DEPLOYGUARD_ODOO_BASE_URL: https://dogforcesecurityservices.com
+  VITE_ODOO_BASE_URL: https://dogforcesecurityservices.com
+  VITE_ODOO_DB: dogforce_prod
+  VITE_DEPLOYGUARD_ENV: production
+
 jobs:
-  build-windows:
+  checks:
     runs-on: windows-latest
     defaults:
       run:
         working-directory: desktop
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "22"
           cache: "npm"
           cache-dependency-path: desktop/package-lock.json
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
         with:
           workspaces: desktop/src-tauri -> target
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Frontend tests
-        run: npm test
-
-      - name: Rust tests
+      - run: npm ci
+      - name: Versions agree
+        run: node scripts/release-manifest.mjs check-version
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - name: rustfmt
+        run: cargo fmt --check
+        working-directory: desktop/src-tauri
+      - name: clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: desktop/src-tauri
+      - name: cargo test
         run: cargo test
         working-directory: desktop/src-tauri
 
-      # No secrets are read here — only the non-secret Odoo base URL,
-      # matching desktop/.env.example. See DEVIATIONS.md D-1.
-      - name: Write build-time config
+  build-windows:
+    needs: checks
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
         shell: bash
-        env:
-          TARGET_ENV: ${{ inputs.environment || 'production' }}
-        run: |
-          echo "VITE_DEPLOYGUARD_ENV=${TARGET_ENV}" >> .env.production
-          echo "VITE_ODOO_BASE_URL=https://dogforcesecurityservices.com" >> .env.production
-          echo "VITE_ODOO_DB=dogforce_prod" >> .env.production
-          echo "VITE_APP_VERSION=0.1.0-pilot-${GITHUB_SHA::7}" >> .env.production
-
-      - name: Build Tauri app (Windows, unsigned)
-        uses: tauri-apps/tauri-action@v0
-        env:
-          # TODO(signing): once a certificate exists, set
-          # TAURI_SIGNING_PRIVATE_KEY / WINDOWS_CERTIFICATE here from repo
-          # secrets — see docs/deployguard/26-deployment-strategy.md §4.
-          TAURI_ENV_PLATFORM: windows
-          DEPLOYGUARD_ODOO_BASE_URL: https://dogforcesecurityservices.com
-          DEPLOYGUARD_ODOO_DB: dogforce_prod
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          projectPath: desktop
-          args: --target x86_64-pc-windows-msvc
-
-      - name: Upload installer artifacts
-        uses: actions/upload-artifact@v4
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop/src-tauri -> target
+      - run: npm ci
+      - name: Build installer
+        run: |
+          if [ -n "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            npx tauri build --bundles nsis
+          else
+            echo "::notice::No updater key configured: building without updater artifacts."
+            npx tauri build --bundles nsis --config '{"bundle":{"createUpdaterArtifacts":false}}'
+          fi
+      - uses: actions/upload-artifact@v4
         with:
           name: deployguard-desktop-windows-${{ github.sha }}
-          path: |
-            desktop/src-tauri/target/**/release/bundle/nsis/*.exe
-            desktop/src-tauri/target/**/release/bundle/msi/*.msi
+          path: desktop/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
           retention-days: 30
+
+  release:
+    needs: checks
+    if: ${{ startsWith(github.ref, 'refs/tags/desktop-v') }}
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+        shell: bash
+    env:
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+      RELEASES_REPO: creativesites/dogforce-desktop-releases
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+      - uses: dtolnay/rust-toolchain@stable
+      - run: npm ci
+      - name: Version matches tag
+        id: version
+        run: echo "version=$(node scripts/release-manifest.mjs check-version "${GITHUB_REF_NAME}")" >> "$GITHUB_OUTPUT"
+      - name: Require the updater key
+        run: |
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is not configured. Releases must be updater-signed."
+            exit 1
+          fi
+
+      # Optional Authenticode. Imports the PFX into the runner's store and hands
+      # Tauri its thumbprint. Without it the installer still works, but Windows
+      # SmartScreen shows an "unrecognised app" warning.
+      - name: Import Windows code-signing certificate
+        id: cert
+        if: ${{ env.WINDOWS_CERTIFICATE != '' }}
+        shell: pwsh
+        run: |
+          $bytes = [Convert]::FromBase64String($env:WINDOWS_CERTIFICATE)
+          $pfx = Join-Path $env:RUNNER_TEMP "cert.pfx"
+          [IO.File]::WriteAllBytes($pfx, $bytes)
+          $pw = ConvertTo-SecureString $env:WINDOWS_CERTIFICATE_PASSWORD -AsPlainText -Force
+          $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $pw
+          Remove-Item $pfx
+          "thumbprint=$($cert.Thumbprint)" >> $env:GITHUB_OUTPUT
+
+      - name: Build signed installer
+        env:
+          THUMBPRINT: ${{ steps.cert.outputs.thumbprint }}
+        run: |
+          if [ -n "$THUMBPRINT" ]; then
+            npx tauri build --bundles nsis --config "{\"bundle\":{\"windows\":{\"certificateThumbprint\":\"$THUMBPRINT\",\"digestAlgorithm\":\"sha256\",\"timestampUrl\":\"http://timestamp.digicert.com\"}}}"
+          else
+            echo "::warning::No Windows code-signing certificate: SmartScreen will warn on install."
+            npx tauri build --bundles nsis
+          fi
+
+      - name: Prepare release assets
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          NSIS_DIR=src-tauri/target/release/bundle/nsis
+          INSTALLER="$(ls "$NSIS_DIR"/*_"$VERSION"_x64-setup.exe | head -1)"
+          ASSET="DogForce-Security-Services_${VERSION}_x64-setup.exe"
+          mkdir -p release
+          cp "$INSTALLER" "release/$ASSET"
+          cp "$INSTALLER.sig" "release/$ASSET.sig"
+          NOTES="$(git log -1 --format=%s)"
+          node scripts/release-manifest.mjs latest-json "$VERSION" "$NOTES" "release/$ASSET.sig" \
+            "https://github.com/$RELEASES_REPO/releases/download/v$VERSION/$ASSET" release/latest.json
+
+      - name: Publish to the releases repo
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ env.RELEASES_REPO }}
+          token: ${{ secrets.RELEASES_TOKEN }}
+          tag_name: v${{ steps.version.outputs.version }}
+          name: DogForce Desktop ${{ steps.version.outputs.version }}
+          files: |
+            desktop/release/*.exe
+            desktop/release/latest.json
