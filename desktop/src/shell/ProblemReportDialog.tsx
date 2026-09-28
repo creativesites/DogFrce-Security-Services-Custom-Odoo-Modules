@@ -1,59 +1,45 @@
-import { useState, useId } from "react";
-import { getClientDiagnostics, type ClientDiagnostics } from "../lib/errorCollector";
+import { useState } from "react";
+import { getClientDiagnostics } from "../lib/errorCollector";
 import { createSupportRequest, type ClientCategory } from "../api/support";
-import { extractErrorMessage } from "../lib/extractErrorMessage";
+import { Modal } from "../components/Modal";
+import { ErrorState } from "../components/States";
 
 interface ProblemReportDialogProps {
-  isOpen: boolean;
   onClose: () => void;
   currentRoute?: string;
   taskContext?: { id: number; name: string };
   onSuccess?: (ticketRef: string) => void;
 }
 
-const CATEGORIES: { key: ClientCategory; label: string; desc: string }[] = [
-  { key: "not_working", label: "Not working", desc: "Something crashed or gave an error" },
-  { key: "dont_understand", label: "Don't understand", desc: "Unclear instructions or what to do next" },
-  { key: "no_permission", label: "No permission", desc: "Access denied or missing rights" },
-  { key: "cant_find", label: "Can't find", desc: "Can't find a guard, site, task, or button" },
-  { key: "my_info_wrong", label: "My info is wrong", desc: "Roster, site, or profile details incorrect" },
-  { key: "slow", label: "System is slow", desc: "Spinning loaders or long delay" },
-  { key: "other", label: "Other", desc: "General enquiry or issue" },
+const CATEGORIES: { key: ClientCategory; label: string }[] = [
+  { key: "not_working", label: "Not working" },
+  { key: "dont_understand", label: "Don't understand" },
+  { key: "no_permission", label: "No permission" },
+  { key: "cant_find", label: "Can't find" },
+  { key: "my_info_wrong", label: "My info is wrong" },
+  { key: "slow", label: "System is slow" },
+  { key: "other", label: "Other" },
 ];
 
-export function ProblemReportDialog({
-  isOpen,
-  onClose,
-  currentRoute = "/home",
-  taskContext,
-  onSuccess,
-}: ProblemReportDialogProps) {
+/** "Something's wrong" report into security_support (docs/deployguard/34-feedback-and-support.md). */
+export function ProblemReportDialog({ onClose, currentRoute = "/home", taskContext, onSuccess }: ProblemReportDialogProps) {
   const [category, setCategory] = useState<ClientCategory>("not_working");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
   const [includeDiagnostics, setIncludeDiagnostics] = useState(true);
-  const [showDiagnosticsPreview, setShowDiagnosticsPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submittedRef, setSubmittedRef] = useState<string | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<unknown>(null);
 
-  const titleId = useId();
+  const diagnostics = getClientDiagnostics(currentRoute, taskContext);
 
-  if (!isOpen) return null;
-
-  const diagnostics: ClientDiagnostics = getClientDiagnostics(currentRoute, taskContext);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!subject.trim()) {
-      setSubmitError("Please provide a short summary of the issue.");
-      return;
-    }
-
+  async function handleSubmit(e?: React.FormEvent) {
+    e?.preventDefault();
+    if (!subject.trim()) return;
     setSubmitting(true);
     setSubmitError(null);
-
     try {
       const res = await createSupportRequest({
         subject: subject.trim(),
@@ -64,203 +50,111 @@ export function ProblemReportDialog({
         description: description.trim(),
         diagnostics: includeDiagnostics ? diagnostics : undefined,
       });
-
       setSubmittedRef(res.name);
       onSuccess?.(res.name);
     } catch (err) {
-      setSubmitError(extractErrorMessage(err));
+      setSubmitError(err);
     } finally {
       setSubmitting(false);
     }
   }
 
-  function handleResetAndClose() {
-    setSubmittedRef(null);
-    setSubject("");
-    setDescription("");
-    setIsUrgent(false);
-    setSubmitError(null);
-    onClose();
+  if (submittedRef) {
+    return (
+      <Modal
+        title="Report sent"
+        size="sm"
+        onClose={onClose}
+        footer={<button type="button" className="dg-btn dg-btn--primary" onClick={onClose}>Done</button>}
+      >
+        <p>
+          Reference <strong>{submittedRef}</strong>. The operations team has been told and will follow up with you.
+        </p>
+      </Modal>
+    );
   }
 
   return (
-    <div className="dg-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <div className="dg-modal" style={{ maxWidth: 580 }}>
-        {submittedRef ? (
-          <div className="dg-modal__body" style={{ textAlign: "center", padding: "32px 16px" }}>
-            <div style={{ fontSize: 42, marginBottom: 12 }}>✓</div>
-            <h2 id={titleId} style={{ margin: "0 0 8px 0" }}>Report Submitted</h2>
-            <p style={{ color: "var(--ds-text-muted)", margin: "0 0 16px 0" }}>
-              Reference <strong>{submittedRef}</strong> has been logged. Our operations team and support have been notified.
-            </p>
-            <button
-              type="button"
-              className="dg-btn dg-btn--primary"
-              onClick={handleResetAndClose}
-            >
-              Done
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="dg-modal__head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderBottom: "1px solid var(--ds-border)" }}>
-              <h2 id={titleId} style={{ margin: 0, fontSize: "1.15rem", fontWeight: 600 }}>Report a Problem / Something's Wrong</h2>
-              <button
-                type="button"
-                className="dg-btn dg-btn--secondary"
-                style={{ padding: "4px 8px" }}
-                onClick={handleResetAndClose}
-                disabled={submitting}
-              >
-                ✕
-              </button>
-            </div>
+    <Modal
+      title="Report a problem"
+      subtitle="Tell us what went wrong. Someone will follow up."
+      onClose={onClose}
+      busy={submitting}
+      footer={
+        <>
+          <button type="button" className="dg-btn" onClick={onClose} disabled={submitting}>Cancel</button>
+          <button
+            type="submit"
+            form="dg-problem-form"
+            className="dg-btn dg-btn--primary"
+            disabled={submitting || !subject.trim()}
+          >
+            {submitting ? "Sending…" : "Send report"}
+          </button>
+        </>
+      }
+    >
+      <form id="dg-problem-form" onSubmit={handleSubmit}>
+        {!!submitError && <ErrorState error={submitError} fallback="The report couldn't be sent." />}
 
-            <div className="dg-modal__body" style={{ padding: "20px", maxHeight: "75vh", overflowY: "auto" }}>
-              {submitError && (
-                <div style={{ background: "var(--ds-danger-bg)", color: "var(--ds-danger)", padding: "10px 14px", borderRadius: 6, marginBottom: 16, fontSize: "0.9rem" }}>
-                  {submitError}
-                </div>
-              )}
-
-              {taskContext && (
-                <div style={{ background: "var(--ds-slate)", padding: "8px 12px", borderRadius: 6, marginBottom: 16, fontSize: "0.85rem" }}>
-                  Active task: <strong>{taskContext.name}</strong> (ID #{taskContext.id})
-                </div>
-              )}
-
-              {/* Category Chips */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: 8 }}>
-                  What kind of issue are you experiencing?
-                </label>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                  {CATEGORIES.map((c) => (
-                    <button
-                      key={c.key}
-                      type="button"
-                      className={`dg-chip-btn ${category === c.key ? "is-selected" : ""}`}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 16,
-                        border: "1px solid",
-                        borderColor: category === c.key ? "var(--ds-accent)" : "var(--ds-border)",
-                        background: category === c.key ? "var(--ds-accent)" : "transparent",
-                        color: category === c.key ? "var(--ds-surface)" : "inherit",
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                      }}
-                      onClick={() => setCategory(c.key)}
-                    >
-                      {c.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Subject */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: 6 }}>
-                  Summary <span style={{ color: "var(--ds-danger)" }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  className="dg-input"
-                  style={{ width: "100%", padding: "8px 12px", borderRadius: 6, border: "1px solid var(--ds-border)" }}
-                  placeholder="e.g. Cannot complete checklist item #3 or submit attendance"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div style={{ marginBottom: 16 }}>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: 6 }}>
-                  Details (optional)
-                </label>
-                <textarea
-                  className="dg-textarea"
-                  style={{ width: "100%", minHeight: 80, padding: "8px 12px", borderRadius: 6, border: "1px solid var(--ds-border)" }}
-                  placeholder="Tell us what happened, what you expected, or any steps to reproduce..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-
-              {/* Priority Checkbox */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.88rem", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={isUrgent}
-                    onChange={(e) => setIsUrgent(e.target.checked)}
-                  />
-                  <span>
-                    <strong>Urgent / Blocking</strong> — I cannot perform my duty or shift right now
-                  </span>
-                </label>
-              </div>
-
-              {/* Diagnostics & Redaction (docs/deployguard/34-feedback-and-support.md §1.3) */}
-              <div style={{ borderTop: "1px solid var(--ds-border)", paddingTop: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "0.85rem", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={includeDiagnostics}
-                      onChange={(e) => setIncludeDiagnostics(e.target.checked)}
-                    />
-                    <span>Attach system diagnostics (route, app version, error buffer)</span>
-                  </label>
-                  <button
-                    type="button"
-                    style={{ background: "none", border: "none", color: "var(--ds-accent)", fontSize: "0.8rem", cursor: "pointer", textDecoration: "underline" }}
-                    onClick={() => setShowDiagnosticsPreview(!showDiagnosticsPreview)}
-                  >
-                    {showDiagnosticsPreview ? "Hide details" : "Inspect details"}
-                  </button>
-                </div>
-
-                {showDiagnosticsPreview && (
-                  <pre
-                    style={{
-                      marginTop: 10,
-                      padding: 10,
-                      background: "var(--ds-text)",
-                      color: "var(--ds-text-subtle)",
-                      borderRadius: 6,
-                      fontSize: "0.75rem",
-                      maxHeight: 140,
-                      overflow: "auto",
-                    }}
-                  >
-                    {JSON.stringify(diagnostics, null, 2)}
-                  </pre>
-                )}
-              </div>
-            </div>
-
-            <div className="dg-modal__foot" style={{ display: "flex", justifyContent: "flex-end", gap: 10, padding: "14px 20px", borderTop: "1px solid var(--ds-border)", background: "var(--ds-bg)" }}>
-              <button
-                type="button"
-                className="dg-btn dg-btn--secondary"
-                onClick={handleResetAndClose}
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="dg-btn dg-btn--primary"
-                disabled={submitting || !subject.trim()}
-              >
-                {submitting ? "Submitting..." : "Send Problem Report"}
-              </button>
-            </div>
-          </form>
+        {taskContext && (
+          <div className="dg-alert dg-alert--info">About the task: <strong>{taskContext.name}</strong></div>
         )}
-      </div>
-    </div>
+
+        <fieldset className="dg-field" style={{ border: 0, padding: 0 }}>
+          <legend className="dg-field__label">What kind of problem is it?</legend>
+          <div className="dg-chipset">
+            {CATEGORIES.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                aria-pressed={category === c.key}
+                className={`dg-chip-btn${category === c.key ? " is-selected" : ""}`}
+                onClick={() => setCategory(c.key)}
+              >
+                {c.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <label className="dg-field">
+          <span className="dg-field__label">Summary <span className="dg-required">*</span></span>
+          <input
+            className="dg-input"
+            placeholder="e.g. I can't capture today's attendance for Main Gate"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            required
+          />
+        </label>
+
+        <label className="dg-field">
+          <span className="dg-field__label">Details (optional)</span>
+          <textarea
+            className="dg-textarea"
+            placeholder="What happened, and what did you expect?"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
+        </label>
+
+        <label className="dg-check dg-field">
+          <input type="checkbox" checked={isUrgent} onChange={(e) => setIsUrgent(e.target.checked)} />
+          <span><strong>Urgent:</strong> I can't do my work right now</span>
+        </label>
+
+        <div className="dg-field">
+          <label className="dg-check">
+            <input type="checkbox" checked={includeDiagnostics} onChange={(e) => setIncludeDiagnostics(e.target.checked)} />
+            <span>Attach technical details (screen, app version, recent errors, with passwords and sessions removed)</span>
+          </label>
+          <button type="button" className="dg-btn dg-btn--link" onClick={() => setShowPreview((v) => !v)}>
+            {showPreview ? "Hide details" : "See exactly what is sent"}
+          </button>
+          {showPreview && <pre className="dg-pre">{JSON.stringify(diagnostics, null, 2)}</pre>}
+        </div>
+      </form>
+    </Modal>
   );
 }

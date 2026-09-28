@@ -119,32 +119,23 @@ export async function fetchExceptions(filters: ExceptionFilters = {}): Promise<E
   );
 }
 
+/** Open-exception counts per tier, counted by the server (one `search_count`
+ * each) rather than by downloading every open record. */
 export async function getExceptionCounts(): Promise<ExceptionCounts> {
-  const openStates = ["open", "stale_paused", "acknowledged"];
-  const records = await callKw<Array<{ tier: ExceptionTier; state: ExceptionState }>>(
-    "security.exception.instance",
-    "search_read",
-    [[["state", "in", openStates]]],
-    {
-      fields: ["tier", "state"],
-    }
-  );
-
-  const counts: ExceptionCounts = {
-    critical: 0,
-    attention: 0,
-    watch: 0,
-    totalOpen: records.length,
-  };
-
-  for (const rec of records) {
-    if (rec.tier === "critical") counts.critical++;
-    else if (rec.tier === "attention") counts.attention++;
-    else if (rec.tier === "watch") counts.watch++;
-  }
-
-  return counts;
+  const open: unknown[] = ["state", "in", OPEN_EXCEPTION_STATES];
+  const count = (extra: unknown[][]) =>
+    callKw<number>("security.exception.instance", "search_count", [[open, ...extra]]);
+  const [critical, attention, watch, totalOpen] = await Promise.all([
+    count([["tier", "=", "critical"]]),
+    count([["tier", "=", "attention"]]),
+    count([["tier", "=", "watch"]]),
+    count([]),
+  ]);
+  return { critical, attention, watch, totalOpen };
 }
+
+/** The states the inbox treats as "still needs attention". */
+export const OPEN_EXCEPTION_STATES: ExceptionState[] = ["open", "stale_paused", "acknowledged"];
 
 export async function acknowledgeException(id: number): Promise<boolean> {
   await callKw<boolean>(

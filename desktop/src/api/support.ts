@@ -92,6 +92,12 @@ export async function fetchContextualArticles(
   });
 }
 
+/** List endpoints return summaries only; the body is read when an article is opened. */
+export async function fetchArticleBody(id: number): Promise<string> {
+  const rows = await callKw<Array<{ body: string | false }>>("security.help.article", "read", [[id], ["body"]]);
+  return rows[0]?.body || "";
+}
+
 export async function searchHelpArticles(query: string): Promise<HelpArticle[]> {
   return callKw<HelpArticle[]>("security.help.article", "search_articles", [query]);
 }

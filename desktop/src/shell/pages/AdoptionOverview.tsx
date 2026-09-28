@@ -15,7 +15,8 @@ import {
   WORKFLOW_LABELS,
   CHECKIN_OPTION_LABELS,
 } from "../../api/adoption";
-import { resolveEmployeeId } from "../../api/work";
+import { resolveEmployeeId, type ViewerContext } from "../../api/work";
+import { parseOdooDatetime } from "./myWork.logic";
 import { useSession } from "../../session/SessionContext";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
 import {
@@ -29,7 +30,12 @@ import {
 type ViewTab = "my" | "team";
 type ItemFilter = "all" | ExpectedWorkState;
 
-export function AdoptionOverview() {
+function localTime(odooDatetime: string | false | null | undefined): string | null {
+  const d = odooDatetime ? parseOdooDatetime(odooDatetime) : null;
+  return d ? d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : null;
+}
+
+export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
   const { session } = useSession();
   const [employeeId, setEmployeeId] = useState<number | null>(null);
   const [snapshot, setSnapshot] = useState<AdoptionSnapshot | null>(null);
@@ -46,14 +52,9 @@ export function AdoptionOverview() {
   const [tab, setTab] = useState<ViewTab>("my");
   const [itemFilter, setItemFilter] = useState<ItemFilter>("all");
 
-  const isManagerOrAdmin =
-    session?.uid === 2 ||
-    session?.login?.toLowerCase().includes("admin") ||
-    session?.login?.toLowerCase().includes("manager") ||
-    session?.login?.toLowerCase().includes("wilbert") ||
-    session?.login?.toLowerCase().includes("kuume") ||
-    session?.name?.toLowerCase().includes("admin") ||
-    session?.name?.toLowerCase().includes("manager");
+  // Decided by the server from Odoo groups (get_viewer_context), never from
+  // names or logins in the client.
+  const isManagerOrAdmin = !!viewer && (viewer.is_supervisor || viewer.is_manager || viewer.is_owner);
 
   // Resolve employee ID from session
   useEffect(() => {
@@ -199,14 +200,17 @@ export function AdoptionOverview() {
             </div>
           )}
 
-          <button
-            type="button"
-            className="dg-adoption__refresh-btn"
-            disabled={refreshing}
-            onClick={handleRefresh}
-          >
-            {refreshing ? "Recomputing..." : "↻ Refresh Metrics"}
-          </button>
+          {/* Recomputing runs the company-wide scoring job; only managers may start it. */}
+          {isManagerOrAdmin && (
+            <button
+              type="button"
+              className="dg-adoption__refresh-btn"
+              disabled={refreshing}
+              onClick={handleRefresh}
+            >
+              {refreshing ? "Recomputing…" : "Recalculate"}
+            </button>
+          )}
         </div>
       </header>
 
@@ -356,30 +360,22 @@ export function AdoptionOverview() {
             </p>
 
             <div className="dg-adoption__factors-grid">
-              {(snapshot?.factors && snapshot.factors.length > 0
-                ? snapshot.factors
-                : Object.entries(FACTOR_CONFIG).map(([k, cfg]) => ({
-                    id: 0,
-                    factor_key: k as keyof typeof FACTOR_CONFIG,
-                    weight: cfg.weight,
-                    raw_value: 0,
-                    weighted_value: 0,
-                  }))
-              ).map((factor) => {
-                const cfg = FACTOR_CONFIG[factor.factor_key] || {
-                  label: factor.factor_key,
-                  weight: factor.weight,
-                  description: "",
-                };
+              {(!snapshot?.factors || snapshot.factors.length === 0) && (
+                <p className="dg-adoption__section-desc">No score has been calculated for this period yet.</p>
+              )}
+              {(snapshot?.factors ?? []).map((factor) => {
+                // Weights and points come from the server's score factors;
+                // the client only labels them.
+                const cfg = FACTOR_CONFIG[factor.factor_key] ?? { label: factor.factor_key, description: "" };
                 const rawPercent = Math.round(factor.raw_value);
-                const maxPoints = Math.round(cfg.weight * 100);
-                const earnedPoints = (factor.weighted_value || (factor.raw_value * cfg.weight)).toFixed(1);
+                const maxPoints = Math.round(factor.weight * 100);
+                const earnedPoints = factor.weighted_value.toFixed(1);
 
                 return (
                   <div key={factor.factor_key} className="dg-adoption__factor-card">
                     <div className="dg-adoption__factor-head">
                       <h4 className="dg-adoption__factor-name">{cfg.label}</h4>
-                      <span className="dg-adoption__factor-weight">Weight: {Math.round(cfg.weight * 100)}%</span>
+                      <span className="dg-adoption__factor-weight">Weight: {maxPoints}%</span>
                     </div>
 
                     <p className="dg-adoption__factor-desc">{cfg.description}</p>
@@ -459,12 +455,10 @@ export function AdoptionOverview() {
                           </td>
                           <td className="dg-adoption__mono-cell">{item.period_date}</td>
                           <td className="dg-adoption__mono-cell">
-                            {item.due_at ? item.due_at.split(" ")[1]?.slice(0, 5) || item.due_at : "By end of day"}
+                            {localTime(item.due_at) ?? "By end of day"}
                           </td>
                           <td className="dg-adoption__mono-cell">
-                            {item.fulfilled_at
-                              ? item.fulfilled_at.split(" ")[1]?.slice(0, 5) || item.fulfilled_at
-                              : "--"}
+                            {localTime(item.fulfilled_at) ?? "—"}
                           </td>
                           <td>
                             {item.state === "fulfilled" && (

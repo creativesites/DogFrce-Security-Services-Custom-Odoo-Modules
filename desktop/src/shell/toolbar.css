@@ -72,7 +72,7 @@
      --dgs-rail-icon for idle text/icons, literal white for the
      emphasized/hover state -- so this follows that established
      precedent rather than inventing a new one. */
-  --dg-text:      #fff;
+  --dg-text:      var(--ds-surface);
   --dg-text-2:    var(--dgs-rail-icon);
   --dg-text-3:    color-mix(in oklab, var(--dgs-rail-icon) 65%, var(--dgs-rail) 35%);
   --dg-accent:    var(--ds-accent);
@@ -254,7 +254,7 @@
   border-radius: 999px;
   font-size: 9.5px;
   font-weight: 700;
-  color: #fff;
+  color: var(--ds-surface);
   letter-spacing: 0.02em;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
   object-fit: cover; /* no-op on the initials <span>, needed when this class renders an <img> */
@@ -308,7 +308,7 @@
 .dg-toolbar__winbtn:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--dg-accent); }
 .dg-toolbar__winbtn--close:hover {
   background: var(--dg-danger);
-  color: #fff;
+  color: var(--ds-surface);
 }
 
 .dg-toolbar__winbtn::after {
@@ -545,7 +545,7 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  color: #fff;
+  color: var(--ds-surface);
   background: linear-gradient(135deg, var(--dg-accent), var(--dg-accent-2));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
   flex: 0 0 auto;
@@ -632,7 +632,7 @@
 .dg-btn:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--dg-accent); }
 
 .dg-btn--primary {
-  color: #fff;
+  color: var(--ds-surface);
   border-color: transparent;
   background: linear-gradient(135deg, var(--dg-accent), var(--dg-accent-2));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 20px -8px color-mix(in oklab, var(--dg-accent) 80%, transparent);
@@ -1505,10 +1505,10 @@
   align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--ds-success-bg);
+  border: 1px solid color-mix(in oklab, var(--ds-success) 35%, transparent);
   border-radius: var(--dgs-r-control);
-  color: #166534;
+  color: var(--ds-success);
   font-size: 12.5px;
   line-height: 1.45;
 }
@@ -1516,13 +1516,13 @@
 .dg-adoption__policy-icon {
   margin-top: 1px;
   flex-shrink: 0;
-  color: #15803d;
+  color: var(--ds-success);
 }
 
 .dg-adoption__policy-content strong {
   display: block;
   font-size: 13px;
-  color: #14532d;
+  color: var(--ds-success);
   margin-bottom: 2px;
 }
 
@@ -1532,8 +1532,8 @@
 
 /* Assistance check-in card */
 .dg-adoption__checkin-card {
-  background: linear-gradient(180deg, #fefce8 0%, #fffbeb 100%);
-  border: 1px solid #fef08a;
+  background: linear-gradient(180deg, var(--ds-warning-bg) 0%, var(--ds-warning-bg) 100%);
+  border: 1px solid color-mix(in oklab, var(--ds-warning) 35%, transparent);
   border-radius: var(--dgs-r-card);
   padding: 18px 20px;
   display: flex;
@@ -1548,20 +1548,20 @@
 }
 
 .dg-adoption__checkin-sparkle {
-  color: #b45309;
+  color: var(--ds-warning);
   margin-top: 2px;
 }
 
 .dg-adoption__checkin-title {
   font-size: 15px;
   font-weight: 700;
-  color: #78350f;
+  color: var(--ds-text);
   margin: 0;
 }
 
 .dg-adoption__checkin-desc {
   font-size: 13px;
-  color: #92400e;
+  color: var(--ds-text);
   margin: 3px 0 0;
 }
 
@@ -1576,23 +1576,23 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background: #ffffff;
-  border: 1px solid #fde047;
+  background: var(--ds-surface);
+  border: 1px solid color-mix(in oklab, var(--ds-warning) 50%, transparent);
   border-radius: var(--dgs-r-control);
   font-size: 12.5px;
-  color: #78350f;
+  color: var(--ds-text);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .dg-adoption__checkin-option:hover {
-  background: #fef9c3;
-  border-color: #eab308;
+  background: var(--ds-warning-bg);
+  border-color: var(--ds-warning);
 }
 
 .dg-adoption__checkin-option.is-selected {
-  background: #fef08a;
-  border-color: #ca8a04;
+  background: color-mix(in oklab, var(--ds-warning) 35%, transparent);
+  border-color: var(--ds-warning);
   font-weight: 600;
 }
 
@@ -1606,7 +1606,7 @@
 
 .dg-adoption__checkin-note {
   font-size: 12px;
-  color: #92400e;
+  color: var(--ds-text);
 }
 
 .dg-adoption__checkin-success {
@@ -1614,10 +1614,10 @@
   align-items: center;
   gap: 10px;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid #86efac;
+  background: var(--ds-surface);
+  border: 1px solid color-mix(in oklab, var(--ds-success) 45%, transparent);
   border-radius: var(--dgs-r-control);
-  color: #166534;
+  color: var(--ds-success);
   font-size: 13px;
   font-weight: 500;
 }
@@ -1708,23 +1708,23 @@
 }
 
 .dg-adoption__confidence-badge--high {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--ds-success-bg);
+  color: var(--ds-success);
 }
 
 .dg-adoption__confidence-badge--medium {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: var(--ds-info-bg);
+  color: var(--ds-info);
 }
 
 .dg-adoption__confidence-badge--low {
-  background: #fef9c3;
-  color: #854d0e;
+  background: var(--ds-warning-bg);
+  color: var(--ds-text);
 }
 
 .dg-adoption__confidence-badge--insufficient {
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--ds-slate);
+  color: var(--ds-text-muted);
 }
 
 .dg-adoption__hero-stats-col {
@@ -1759,11 +1759,11 @@
 }
 
 .dg-adoption__stat-val--success {
-  color: #16a34a;
+  color: var(--ds-success);
 }
 
 .dg-adoption__stat-val--info {
-  color: #0284c7;
+  color: var(--ds-info);
 }
 
 .dg-adoption__stat-sub {
@@ -2556,4 +2556,17 @@
   outline: none;
   border-color: var(--ds-accent);
   box-shadow: 0 0 0 2px color-mix(in oklab, var(--ds-accent) 25%, transparent);
+}
+
+/* Initials avatar when Odoo has no photo: brand tokens, not a per-name hue. */
+.dg-toolbar__avatar--initials {
+  background: linear-gradient(135deg, var(--ds-accent), var(--ds-accent-mid));
+}
+
+.dg-lesson-video video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--ds-text);
 }

@@ -51,14 +51,17 @@ export function attemptsRemaining(assessment: TrainingAssessment, attempts: Trai
   return Math.max(0, assessment.max_attempts - attemptsUsed(assessment.id, attempts));
 }
 
-/** Whether every lesson is done and every assessment has a passed attempt —
- * the same rule the Odoo model uses to flip an assignment to "completed",
- * computed client-side so the UI can show "you're done!" the instant the
- * last action happens, without waiting on a refetch. */
-export function isEverythingDone(tree: CourseTree, progress: TrainingLessonProgress[], attempts: TrainingAttempt[]): boolean {
-  const { done, total } = lessonProgressSummary(tree, progress);
-  if (done < total) return false;
-  return tree.assessments.every((a) => attemptsUsed(a.id, attempts) > 0 && latestAttemptFor(a.id, attempts)?.state === "passed");
+/** Which assessment "Take the assessment" should open: the first one not yet
+ * passed that still has attempts left. `null` when there is nothing to take
+ * (all passed, or out of attempts, which the course view explains). Whether the
+ * course is *complete* is not decided here; that is the server's
+ * `assignment.state`. */
+export function nextAssessmentToTake(tree: CourseTree, attempts: TrainingAttempt[]): TrainingAssessment | null {
+  return (
+    tree.assessments.find(
+      (a) => latestAttemptFor(a.id, attempts)?.state !== "passed" && attemptsRemaining(a, attempts) > 0,
+    ) ?? null
+  );
 }
 
 /** Score a set of selected options against a question client-side, for

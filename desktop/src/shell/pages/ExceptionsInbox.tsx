@@ -10,9 +10,10 @@ import {
   type ExceptionCounts,
   type ResolutionCode,
   RESOLUTION_CODE_LABELS,
+  OPEN_EXCEPTION_STATES,
 } from "../../api/exceptions";
 import { notifyDesktop } from "../../lib/notifications";
-import { invoke } from "../../lib/tauri";
+import { useViewMode } from "../../app/viewMode";
 import {
   AlertTriangleIcon,
   AlertOctagonIcon,
@@ -37,6 +38,7 @@ const RESOLUTION_OPTIONS: { code: ResolutionCode; label: string; desc: string }[
 ];
 
 export function ExceptionsInbox() {
+  const { openInOdoo } = useViewMode();
   const [items, setItems] = useState<ExceptionInstance[]>([]);
   const [counts, setCounts] = useState<ExceptionCounts>({
     critical: 0,
@@ -70,13 +72,13 @@ export function ExceptionsInbox() {
 
       let filters = {};
       if (tab === "critical") {
-        filters = { tier: "critical", state: ["open", "stale_paused", "acknowledged"] };
+        filters = { tier: "critical", state: OPEN_EXCEPTION_STATES };
       } else if (tab === "attention") {
-        filters = { tier: "attention", state: ["open", "stale_paused", "acknowledged"] };
+        filters = { tier: "attention", state: OPEN_EXCEPTION_STATES };
       } else if (tab === "watch") {
-        filters = { tier: "watch", state: ["open", "stale_paused", "acknowledged"] };
+        filters = { tier: "watch", state: OPEN_EXCEPTION_STATES };
       } else if (tab === "all_open") {
-        filters = { state: ["open", "stale_paused", "acknowledged"] };
+        filters = { state: OPEN_EXCEPTION_STATES };
       } else if (tab === "history") {
         filters = { state: ["resolved", "auto_resolved"] };
       }
@@ -189,11 +191,13 @@ export function ExceptionsInbox() {
       path = `/web#model=${item.related_model}&id=${item.related_id}`;
     }
     try {
-      await invoke("navigate_odoo", { path });
+      // openInOdoo also closes the app view; navigating alone left the
+      // record hidden behind it.
+      await openInOdoo(path);
     } catch (err) {
-      console.warn("Could not navigate in desktop webview:", err);
+      setError(extractErrorMessage(err, "Couldn't open that record."));
     }
-  }, []);
+  }, [openInOdoo]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -207,9 +211,14 @@ export function ExceptionsInbox() {
         return;
       }
 
-      // Ignore keyboard shortcuts if focus is inside an input/textarea
-      const activeTag = document.activeElement?.tagName?.toLowerCase();
-      if (activeTag === "input" || activeTag === "textarea") return;
+      // Single-key shortcuts only: Ctrl/⌘/Alt combinations (Ctrl+A, Ctrl+S,
+      // Ctrl+K…) belong to the system and the app, never to this list.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const active = document.activeElement as HTMLElement | null;
+      const tag = active?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || active?.isContentEditable) return;
+      // Enter on a focused button must press that button.
+      if (e.key === "Enter" && (tag === "button" || tag === "a")) return;
 
       if (e.key === "ArrowDown" || e.key === "j") {
         e.preventDefault();
@@ -276,7 +285,7 @@ export function ExceptionsInbox() {
           <button
             type="button"
             className="dg-btn dg-btn--secondary"
-            onClick={() => void invoke("navigate_odoo", { path: "/odoo/action-security_exceptions.action_exception_instance" })}
+            onClick={() => void openInOdoo("/odoo/action-security_exceptions.action_exception_instance")}
             title="Open native Odoo backend exceptions table"
           >
             <ExternalLinkIcon size={15} />

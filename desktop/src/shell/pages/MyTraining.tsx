@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { invoke } from "../../lib/tauri";
+import { useViewMode } from "../../app/viewMode";
+import { SafeHtml } from "../../components/SafeHtml";
 import {
   CourseTree, TrainingAssessment, TrainingAssignment, TrainingAttempt, TrainingLesson, TrainingLessonProgress,
   askLessonAi, fetchAssignment, fetchAttempts, fetchCourseTree, fetchLessonProgress, fetchMyAssignments,
@@ -8,7 +9,7 @@ import {
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
 import { useSession } from "../../session/SessionContext";
 import {
-  ASSIGNMENT_STATE_LABELS, adjacentLessons, attemptsRemaining, findLessonSection, isEverythingDone, isLessonDone, latestAttemptFor,
+  ASSIGNMENT_STATE_LABELS, adjacentLessons, attemptsRemaining, findLessonSection, nextAssessmentToTake, isLessonDone, latestAttemptFor,
   lessonProgressSummary,
 } from "./myTraining.logic";
 import { CheckCircleIcon, ClipboardListIcon, SparklesIcon } from "../icons";
@@ -34,6 +35,7 @@ interface MyTrainingProps {
 }
 
 export function MyTraining({ reloadSignal }: MyTrainingProps) {
+  const { openInOdoo } = useViewMode();
   const { session } = useSession();
   const [employeeState, setEmployeeState] = useState<LoadState>("loading");
   const [employeeId, setEmployeeId] = useState<number | null>(null);
@@ -116,8 +118,7 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
             type="button"
             className="dg-btn dg-btn--secondary"
             onClick={() => {
-              void invoke("navigate_odoo", { path: "/odoo/action-hr.open_view_employee_list_my" });
-              void invoke("app_view_close");
+              void openInOdoo("/odoo/action-hr.open_view_employee_list_my");
             }}
           >
             Open Employees in DogForce ERP →
@@ -173,8 +174,7 @@ export function MyTraining({ reloadSignal }: MyTrainingProps) {
               type="button"
               className="dg-btn dg-btn--secondary"
               onClick={() => {
-                void invoke("navigate_odoo", { path: "/odoo/action-security_training.action_security_training_assignment_my" });
-                void invoke("app_view_close");
+                void openInOdoo("/odoo/action-security_training.action_security_training_assignment_my");
               }}
             >
               Open Training in DogForce ERP →
@@ -287,6 +287,7 @@ function AssignmentDetail({
           await markLessonComplete(assignmentId, activeLesson.id);
           await refreshAfterAction();
         }}
+        nextAssessment={nextAssessmentToTake(tree, attempts)}
         onStartAssessment={(assessment) => {
           setActiveLesson(null);
           setOpenAssessment(assessment);
@@ -296,7 +297,8 @@ function AssignmentDetail({
   }
 
   const { done, total } = lessonProgressSummary(tree, progress);
-  const everythingDone = isEverythingDone(tree, progress, attempts);
+  // Completion is the server's decision (security.training.assignment.state).
+  const everythingDone = assignment.state === "completed";
 
   return (
     <div className="dg-detail-enter">
@@ -416,6 +418,24 @@ interface LessonViewProps {
   onSelectLesson: (lesson: TrainingLesson) => void;
   onMarkedDone: () => Promise<void>;
   onStartAssessment: (assessment: TrainingAssessment) => void;
+  /** Which assessment "Take the assessment" opens; null when none is takeable. */
+  nextAssessment: TrainingAssessment | null;
+}
+
+/** Where a lesson video can play inside the app. Must match the CSP's
+ * `frame-src` / `media-src` in tauri.conf.json. Anything else (including the
+ * course's `REPLACE_WITH_…` placeholders) falls back to the written walkthrough. */
+function embeddableVideo(url: string): "iframe" | "file" | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "https:") return null;
+  if (["www.youtube-nocookie.com", "www.youtube.com", "player.vimeo.com"].includes(parsed.hostname)) return "iframe";
+  if (/\.(mp4|webm)$/i.test(parsed.pathname)) return "file";
+  return null;
 }
 
 function LessonView({
@@ -426,6 +446,7 @@ function LessonView({
   onSelectLesson,
   onMarkedDone,
   onStartAssessment,
+  nextAssessment,
 }: LessonViewProps) {
   const done = isLessonDone(lesson.id, progress);
   const { prev, next, index, total } = adjacentLessons(tree, lesson.id);
@@ -439,21 +460,12 @@ function LessonView({
   const [aiBusy, setAiBusy] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  // The `dg_tour=` parameters this used to append had no handler anywhere in
+  // Odoo. Guided practice is now `security_guidance` (see onPractice).
+  const { openInOdoo } = useViewMode();
   const tryItInErp = useCallback(() => {
-    if (!lesson.deep_link_path) return;
-    let path = lesson.deep_link_path;
-    if (path.includes("security_client_onboarding")) {
-      path += path.includes("?") ? "&dg_tour=tour_client_setup" : "?dg_tour=tour_client_setup";
-    } else if (path.includes("action_security_roster_signoff")) {
-      path += path.includes("?") ? "&dg_tour=tour_roster_signoff" : "?dg_tour=tour_roster_signoff";
-    } else if (path.includes("action_attendance_posting_console")) {
-      path += path.includes("?") ? "&dg_tour=tour_attendance_console" : "?dg_tour=tour_attendance_console";
-    } else if (path.includes("security_client_site")) {
-      path += path.includes("?") ? "&dg_tour=tour_client_sites" : "?dg_tour=tour_client_sites";
-    }
-    void invoke("navigate_odoo", { path });
-    void invoke("app_view_close");
-  }, [lesson.deep_link_path]);
+    if (lesson.deep_link_path) void openInOdoo(lesson.deep_link_path);
+  }, [lesson.deep_link_path, openInOdoo]);
 
   const askAi = useCallback(async (questionText?: string) => {
     const q = (questionText ?? aiQuestion).trim();
@@ -562,9 +574,13 @@ function LessonView({
 
       {/* Video Section (if applicable) */}
       {lesson.content_type === "video_url" && (
-        lesson.video_url && !lesson.video_url.startsWith("REPLACE_WITH_") ? (
+        lesson.video_url && embeddableVideo(lesson.video_url) ? (
           <div className="dg-lesson-video">
-            <iframe src={lesson.video_url} title={lesson.name} allowFullScreen />
+            {embeddableVideo(lesson.video_url) === "file" ? (
+              <video src={lesson.video_url} controls preload="metadata" />
+            ) : (
+              <iframe src={lesson.video_url} title={lesson.name} allowFullScreen referrerPolicy="strict-origin" />
+            )}
           </div>
         ) : (
           <div className="dg-lesson-video-notice">
@@ -579,7 +595,7 @@ function LessonView({
       {/* Main Content Card */}
       {lesson.body && (
         <div className="dg-lesson-view__card">
-          <div className="dg-lesson-body" dangerouslySetInnerHTML={{ __html: lesson.body }} />
+          <SafeHtml className="dg-lesson-body" html={lesson.body} />
         </div>
       )}
 
@@ -720,11 +736,11 @@ function LessonView({
             >
               Next: {next.name} →
             </button>
-          ) : tree.assessments.length > 0 ? (
+          ) : nextAssessment ? (
             <button
               type="button"
               className="dg-btn dg-btn--primary"
-              onClick={() => onStartAssessment(tree.assessments[0])}
+              onClick={() => onStartAssessment(nextAssessment)}
             >
               Proceed to Assessment →
             </button>
@@ -746,8 +762,10 @@ function LessonView({
 function AssessmentModal({
   assignmentId, assessment, onClose, onSubmitted,
 }: { assignmentId: number; assessment: TrainingAssessment; onClose: () => void; onSubmitted: () => Promise<void> }) {
+  // The attempt is created on "Start", not when the modal opens: opening and
+  // closing it used to consume one of the employee's limited attempts.
   const [attemptId, setAttemptId] = useState<number | null>(null);
-  const [starting, setStarting] = useState(true);
+  const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
 
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -756,17 +774,16 @@ function AssessmentModal({
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<{ state: string; score_pct: number } | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const id = await startAttempt(assignmentId, assessment.id);
-        if (!cancelled) { setAttemptId(id); setStarting(false); }
-      } catch (err) {
-        if (!cancelled) { setStartError(extractErrorMessage(err, "Couldn't start this assessment.")); setStarting(false); }
-      }
-    })();
-    return () => { cancelled = true; };
+  const begin = useCallback(async () => {
+    setStarting(true);
+    setStartError(null);
+    try {
+      setAttemptId(await startAttempt(assignmentId, assessment.id));
+    } catch (err) {
+      setStartError(extractErrorMessage(err, "Couldn't start this assessment."));
+    } finally {
+      setStarting(false);
+    }
   }, [assignmentId, assessment.id]);
 
   const question = assessment.questions[questionIndex];
@@ -805,8 +822,18 @@ function AssessmentModal({
 
   return (
     <ModalShell title={assessment.name} onClose={onClose}>
-      {starting && <div className="dg-skeleton" style={{ height: 80 }} />}
-      {startError && <p style={{ fontSize: 13, color: "var(--ds-danger)" }}>{startError}</p>}
+      {attemptId == null && !result && (
+        <div>
+          <p>
+            {assessment.questions.length} question{assessment.questions.length === 1 ? "" : "s"}. You need{" "}
+            {assessment.pass_mark_pct}% to pass. Starting uses one of your attempts.
+          </p>
+          {startError && <p className="dg-alert dg-alert--danger">{startError}</p>}
+          <button type="button" className="dg-btn dg-btn--primary" disabled={starting} onClick={() => void begin()}>
+            {starting ? "Starting…" : "Start"}
+          </button>
+        </div>
+      )}
 
       {result && (
         <div className="dg-pop-in" style={{ textAlign: "center", padding: "12px 0" }}>
@@ -820,7 +847,7 @@ function AssessmentModal({
         </div>
       )}
 
-      {!starting && !startError && !result && question && (
+      {attemptId != null && !result && question && (
         <>
           <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
             {assessment.questions.map((_, i) => (

@@ -5,6 +5,7 @@ import {
   clearRecentErrors,
   sanitizeErrorMessage,
   getClientDiagnostics,
+  setDiagnosticsAppVersion,
 } from "./errorCollector";
 
 describe("errorCollector", () => {
@@ -36,9 +37,17 @@ describe("errorCollector", () => {
 
     expect(diag.route).toBe("/work");
     expect(diag.task?.id).toBe(42);
-    expect(diag.appVersion).toBe("0.1.0");
+    expect(diag.appVersion).toBe("unknown");
     expect(diag.recentErrors.length).toBe(1);
     expect(diag.recentErrors[0].message).toBe("Network glitch");
     expect(diag.timestamp).toBeDefined();
+  });
+
+  it("reports the real app version once it is known, and never a session cookie", () => {
+    setDiagnosticsAppVersion("0.3.0");
+    recordClientError("request failed: session_id=abc123secret", "api_call");
+    const diag = getClientDiagnostics("/work");
+    expect(diag.appVersion).toBe("0.3.0");
+    expect(JSON.stringify(diag)).not.toContain("abc123secret");
   });
 });
