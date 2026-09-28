@@ -1,0 +1,54 @@
+/* DeployGuard guided tasks: highlight ring + callout inside the ERP.
+   security_base design tokens (design_system.css), with fallbacks so a
+   missing token never makes the guidance invisible. Pointer events pass
+   through the ring: the employee clicks the real control underneath. */
+
+.o_dg_guidance__ring {
+    position: fixed;
+    z-index: 10000;
+    pointer-events: none;
+    border-radius: var(--ds-radius-md, 8px);
+    border: 3px solid var(--ds-accent, currentColor);
+    box-shadow: 0 0 0 9999px color-mix(in oklab, var(--ds-text, black) 18%, transparent);
+    transition: top 160ms ease-out, left 160ms ease-out, width 160ms ease-out, height 160ms ease-out;
+}
+.o_dg_guidance__ring.is-pulsing { animation: o-dg-pulse 700ms ease-out 2; }
+@keyframes o-dg-pulse {
+    0% { outline: 0 solid var(--ds-accent-mid, currentColor); }
+    100% { outline: 14px solid transparent; }
+}
+
+.o_dg_guidance__callout {
+    position: fixed;
+    z-index: 10001;
+    width: 320px;
+    padding: 12px 14px;
+    border-radius: var(--ds-radius-lg, 10px);
+    background: var(--ds-surface, Canvas);
+    color: var(--ds-text, CanvasText);
+    border: 1px solid var(--ds-border, currentColor);
+    box-shadow: var(--ds-shadow-md, 0 8px 24px rgba(0, 0, 0, 0.18));
+    font-size: 13px;
+    line-height: 1.45;
+}
+.o_dg_guidance__callout.is-docked { right: 16px; bottom: 16px; }
+.o_dg_guidance__callout.is-off-track { border-color: var(--ds-warning, currentColor); }
+.o_dg_guidance__meta { font-size: 11px; font-weight: 600; color: var(--ds-accent, currentColor); margin-bottom: 4px; }
+.o_dg_guidance__title { font-weight: 700; margin-bottom: 4px; }
+.o_dg_guidance__hint { margin-top: 6px; font-size: 12px; color: var(--ds-text-muted, GrayText); }
+.o_dg_guidance__why {
+    margin-top: 8px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--ds-accent, LinkText);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.o_dg_guidance__whytext { margin-top: 4px; color: var(--ds-text-2, inherit); }
+
+@media (prefers-reduced-motion: reduce) {
+    .o_dg_guidance__ring { transition: none; }
+    .o_dg_guidance__ring.is-pulsing { animation: none; }
+}

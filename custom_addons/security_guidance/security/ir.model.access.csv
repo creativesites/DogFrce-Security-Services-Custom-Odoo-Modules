@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_guidance_flow_user,security.guidance.flow.user,model_security_guidance_flow,base.group_user,1,0,0,0
+access_guidance_flow_admin,security.guidance.flow.admin,model_security_guidance_flow,security_work.group_work_supervisor,1,1,1,1
+access_guidance_step_user,security.guidance.step.user,model_security_guidance_step,base.group_user,1,0,0,0
+access_guidance_step_admin,security.guidance.step.admin,model_security_guidance_step,security_work.group_work_supervisor,1,1,1,1
+access_guidance_session_user,security.guidance.session.user,model_security_guidance_session,base.group_user,1,1,1,0
+access_guidance_event_user,security.guidance.event.user,model_security_guidance_event,base.group_user,1,0,0,0
