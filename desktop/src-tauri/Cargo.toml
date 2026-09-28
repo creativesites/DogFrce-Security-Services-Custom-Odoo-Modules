@@ -1,6 +1,6 @@
 [package]
 name = "deployguard-desktop"
-version = "0.2.0"
+version = "2.0.0"
 description = "DeployGuard Desktop — DogForce pilot shell"
 authors = ["DogForce Security Services"]
 edition = "2021"
