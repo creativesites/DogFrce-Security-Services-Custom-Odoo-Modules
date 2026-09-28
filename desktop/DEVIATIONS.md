@@ -1,5 +1,9 @@
 # Deviations from the planned architecture (P2A pilot slice)
 
+> **Superseded as the source of truth by [`RECONCILIATION.md`](./RECONCILIATION.md)
+> (2026-09-28).** D-1, D-3 and D-4 below remain accurate. D-2, D-5 and D-6 are
+> marked superseded inline and kept for history.
+
 > Per the desktop build mission's §26: every deviation from `docs/deployguard/`
 > is documented here, with rationale and the migration path back to the
 > planned architecture. Nothing here is a silent redesign — each item below
@@ -54,6 +58,9 @@ identity fields. `state::SessionInfo` gains Platform-issued fields;
 ---
 
 ## D-2. Odoo renders in the SAME window as a corner overlay, not a second window
+
+> **Superseded:** the corner overlay became a toolbar with a full-window app view, and a guide dock was added. Webview-scoped isolation is unchanged. See RECONCILIATION C-3/C-4.
+
 
 **Planned architecture:** `docs/deployguard/17-desktop-architecture.md` §2
 described two separate native windows (the DeployGuard app window, and a
@@ -152,6 +159,9 @@ alongside P4 (work management).
 
 ## D-5. Auto-update is scaffolded but disabled
 
+> **Superseded:** the updater is active since v0.2.0 (real pubkey, GitHub releases endpoint, user-initiated install). See `RELEASING.md`.
+
+
 **What's built:** the `tauri-plugin-updater` is wired into `lib.rs`, and
 `tauri.conf.json` has an `updater` block, but `"active": false` and an
 empty `pubkey`. No update server exists yet.
@@ -169,6 +179,9 @@ flip `"active": true`.
 ---
 
 ## D-6. No notifications, no work/training/adoption features
+
+> **Superseded:** My Work, Training, Adoption, Exceptions, Owner Overview, OS notifications and guided tasks now exist, backed by real Odoo modules. See RECONCILIATION B.
+
 
 **What's built:** the Home screen shows honest "Coming soon" empty states
 for My Work and Training (mission §6, §17 — explicitly: no fake data).
