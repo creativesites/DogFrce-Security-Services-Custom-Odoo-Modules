@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class SecurityPostType(models.Model):
@@ -950,12 +950,30 @@ class SecurityRosterBatch(models.Model):
                     "severity": "info",
                 })
 
+    # DogForce roles matrix (2026-09-28): roster approval is HR's and the
+    # General Manager's (and the owner's, whose group implies manager).
+    # docs/deployguard/dogforce-roles-and-pipeline.md
+    ROSTER_APPROVER_GROUPS = (
+        "security_base.group_security_hr_payroll_officer",
+        "security_base.group_security_manager",
+    )
+
+    def _assert_can_approve_roster(self):
+        if self.env.su:
+            return
+        if not any(self.env.user.has_group(g) for g in self.ROSTER_APPROVER_GROUPS):
+            raise UserError(
+                "Only HR or the General Manager (or the owner) can approve or reject a roster."
+            )
+
     def action_approve(self):
+        self._assert_can_approve_roster()
         for batch in self:
             batch.state = "approved"
             batch.approved_by_id = self.env.user.id
 
     def action_reject(self):
+        self._assert_can_approve_roster()
         self.ensure_one()
         return {
             "name": "Reject Roster Batch",
@@ -1724,6 +1742,7 @@ class SecurityRosterRejectWizard(models.TransientModel):
 
     def action_confirm_rejection(self):
         self.ensure_one()
+        self.batch_id._assert_can_approve_roster()
         if not self.rejection_reason or not self.rejection_reason.strip():
             raise ValidationError("Please provide a valid reason for rejecting this roster.")
         self.batch_id.write({
