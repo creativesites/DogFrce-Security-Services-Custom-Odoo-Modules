@@ -6,6 +6,16 @@
         <field name="comment">Can verify or reject submitted work, and assign tasks to any employee.</field>
     </record>
 
+    <!-- Managers and the owner supervise work (Team Today, owner overview
+         drill-downs). The Operations Supervisor role does not imply this:
+         registering attendance doesn't mean seeing everyone's tasks. -->
+    <record id="security_base.group_security_manager" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_work_supervisor'))]"/>
+    </record>
+    <record id="security_base.group_security_owner" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_work_supervisor'))]"/>
+    </record>
+
     <record id="rule_work_task_own" model="ir.rule">
         <field name="name">Work Task: see own or supervise all</field>
         <field name="model_id" ref="model_security_work_task"/>
