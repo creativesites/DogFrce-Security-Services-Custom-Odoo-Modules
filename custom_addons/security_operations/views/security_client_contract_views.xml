@@ -254,6 +254,6 @@
               parent="security_operations.menu_security_operations_root"
               action="action_security_client_sites_workbench"
               sequence="6"
-              groups="security_base.group_security_officer"/>
+              groups="security_base.group_security_supervisor"/>
 
 </odoo>
