@@ -11,7 +11,7 @@
             <form string="Duplicate Detection &amp; Normalization">
                 <sheet>
                     <div class="alert alert-info d-flex align-items-center mb-3">
-                        <i class="fa fa-shield fa-2x me-3 text-primary"/>
+                        <i class="fa fa-shield fa-2x me-3 text-primary" title="Duplicate Audit" aria-label="Duplicate Audit"/>
                         <div>
                             <strong>Safe Duplicate Normalization:</strong> This tool detects near-identical clients, duplicate sites, and corrupted records.
                             Historical rosters, attendance logs, and invoices are <strong>never deleted</strong>; duplicates are safely reassigned and archived.
@@ -80,7 +80,7 @@
             <form string="Legacy Contract Structure Migration">
                 <sheet>
                     <div class="alert alert-info d-flex align-items-center mb-3">
-                        <i class="fa fa-cubes fa-2x me-3 text-primary"/>
+                        <i class="fa fa-cubes fa-2x me-3 text-primary" title="Migration" aria-label="Migration"/>
                         <div>
                             <strong>Contract-First Structure Migration:</strong> Converts legacy site, post, and shift requirement configurations into the unified Contract Workspace structure.
                             Historical roster schedules, attendance records, and client IDs are preserved with 100% fidelity.

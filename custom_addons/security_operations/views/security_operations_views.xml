@@ -321,7 +321,7 @@
                     <div class="alert alert-info d-flex align-items-center justify-content-between mb-3"
                          role="alert" invisible="not is_contract_managed">
                         <div class="d-flex align-items-center">
-                            <i class="fa fa-briefcase fa-2x me-3 text-primary"/>
+                            <i class="fa fa-briefcase fa-2x me-3 text-primary" title="Contract Managed" aria-label="Contract Managed"/>
                             <div>
                                 <strong>Contract Managed Site:</strong> Commercial staffing recipes, posts, and rates are controlled by
                                 <field name="contract_id" readonly="1" class="fw-bold ms-1"/>.
@@ -558,7 +558,7 @@
 
                     <div class="alert alert-info d-flex align-items-center mb-3"
                          role="alert" invisible="not is_contract_managed">
-                        <i class="fa fa-briefcase fa-2x me-3 text-primary"/>
+                        <i class="fa fa-briefcase fa-2x me-3 text-primary" title="Contract Managed" aria-label="Contract Managed"/>
                         <div>
                             <strong>Contract-Managed Post:</strong> Configured under contract via
                             <field name="contract_post_id" readonly="1" class="fw-bold ms-1"/>.
@@ -673,7 +673,7 @@
 
                     <div class="alert alert-info d-flex align-items-center mb-3"
                          role="alert" invisible="not is_contract_managed">
-                        <i class="fa fa-briefcase fa-2x me-3 text-primary"/>
+                        <i class="fa fa-briefcase fa-2x me-3 text-primary" title="Contract Managed" aria-label="Contract Managed"/>
                         <div>
                             <strong>Contract-Managed Shift Requirement:</strong> Inherited from contract requirement
                             <field name="contract_requirement_id" readonly="1" class="fw-bold ms-1"/>.
