@@ -47,6 +47,20 @@
                 </button>
             </div>
 
+            <!-- Contract Managed Banner -->
+            <t t-if="state.site.is_contract_managed">
+                <div class="px-4 py-2 bg-primary-subtle border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2 small">
+                        <i class="fa fa-briefcase text-primary"/>
+                        <span class="text-primary-emphasis fw-semibold">Contract Managed Site</span>
+                        <span class="text-muted">— Commercial staffing and rates are managed via contract: <strong><t t-esc="state.site.contract_id ? state.site.contract_id[1] : 'Active Contract'"/></strong></span>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm py-0 px-2" t-on-click="openContractSetup">
+                        <i class="fa fa-sliders me-1"/> Open Contract Setup
+                    </button>
+                </div>
+            </t>
+
             <!-- Tab bar -->
             <div class="sh-tabs nav nav-tabs px-4 bg-light border-bottom">
                 <button class="nav-link" t-att-class="state.activeTab === 'overview' ? 'active' : ''"

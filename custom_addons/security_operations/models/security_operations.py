@@ -124,8 +124,40 @@ class SecurityClientSite(models.Model):
     gps_lng = fields.Float("Longitude", digits=(10, 6))
     geofence_radius = fields.Float("Geofence Radius (m)", default=200.0, help="Allowed clock-in radius around site coordinates in meters.")
 
+    # Contract Management
+    contract_id = fields.Many2one(
+        "security.client.contract",
+        string="Client Contract",
+        ondelete="set null",
+        help="The commercial contract governing this site's staffing and billing.",
+    )
+    is_contract_managed = fields.Boolean(
+        string="Managed by Contract",
+        default=False,
+        help="If enabled, posts and shift requirements are controlled from the client contract.",
+    )
+    setup_status = fields.Selection(
+        [
+            ("ready", "Setup Ready"),
+            ("needs_setup", "Needs Setup"),
+        ],
+        string="Setup Status",
+        compute="_compute_site_setup_status",
+        store=True,
+    )
+
     post_count = fields.Integer(compute="_compute_counts", string="Posts Count")
     active_slot_count = fields.Integer(compute="_compute_counts", string="Today's Slots")
+
+    @api.depends("post_ids", "post_ids.active", "shift_requirement_ids", "shift_requirement_ids.active", "shift_requirement_ids.guard_count")
+    def _compute_site_setup_status(self):
+        for site in self:
+            active_posts = site.post_ids.filtered("active")
+            active_reqs = site.shift_requirement_ids.filtered(lambda r: r.active and r.guard_count > 0 and r.shift_template_id)
+            if active_posts and active_reqs:
+                site.setup_status = "ready"
+            else:
+                site.setup_status = "needs_setup"
 
     @api.depends("post_ids", "post_ids.active")
     def _compute_counts(self):
@@ -178,6 +210,35 @@ class SecurityClientSite(models.Model):
             "context": {"default_site_id": self.id, "default_partner_id": self.partner_id.id},
             "view_mode": "list,form",
         }
+
+    def action_open_contract(self):
+        self.ensure_one()
+        contract = self.contract_id
+        if not contract:
+            contract_model = self.env.get("security.client.contract")
+            if contract_model:
+                contract = contract_model.get_active_for_site(self, fields.Date.today())
+                if contract:
+                    self.contract_id = contract.id
+        if contract:
+            return contract.action_open_contract_workspace()
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("No Contract Linked"),
+                "message": _("Site '%s' is not currently linked to an active client contract.") % self.name,
+                "type": "warning",
+            },
+        }
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            if not vals.get("code"):
+                count = self.search_count([]) + 1
+                vals["code"] = f"SITE-{count:03d}"
+        return super().create(vals_list)
 
     def action_open_slots(self):
         self.ensure_one()
@@ -460,6 +521,16 @@ class SecurityPost(models.Model):
         "post_id",
         string="Resource Requirements",
     )
+    contract_post_id = fields.Many2one(
+        "security.contract.post",
+        string="Contract Post Line",
+        ondelete="set null",
+        help="Linked contract definition for this post.",
+    )
+    is_contract_managed = fields.Boolean(
+        string="Managed by Contract",
+        default=False,
+    )
     note = fields.Text()
 
     @api.onchange("site_id")
@@ -476,7 +547,19 @@ class SecurityPost(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        # Enforce that ordinary users create posts via contract configuration
+        if not self.env.is_admin() and not self.env.su and not self.env.user.has_group("security_base.group_security_manager"):
+            for vals in vals_list:
+                if not vals.get("contract_post_id") and not self.env.context.get("allow_standalone_post") and not self.env.context.get("skip_contract_check"):
+                    raise UserError(
+                        _("Operational posts must originate from a Client Contract configuration. "
+                          "Please add the post in the Contract Workspace or request manager approval.")
+                    )
+
         for vals in vals_list:
+            if not vals.get("code"):
+                count = self.search_count([]) + 1
+                vals["code"] = f"PST-{count:03d}"
             if vals.get("site_id") and not vals.get("partner_id"):
                 vals["partner_id"] = self.env["security.client.site"].browse(vals["site_id"]).partner_id.id
         return super().create(vals_list)
@@ -570,6 +653,21 @@ class SecurityShiftRequirement(models.Model):
         default=False,
         string="Preferred Guard Only",
         help="If enabled, only the preferred guard should fill this shift. Any other assignment triggers a warning.",
+    )
+    contract_requirement_id = fields.Many2one(
+        "security.contract.shift.requirement",
+        string="Contract Requirement Line",
+        ondelete="set null",
+        help="Linked contract definition for this shift requirement.",
+    )
+    is_contract_managed = fields.Boolean(
+        string="Managed by Contract",
+        default=False,
+    )
+    min_grade_id = fields.Many2one(
+        "security.grade",
+        string="Minimum Grade",
+        help="Minimum qualification required for guards assigned to this shift.",
     )
     active = fields.Boolean(default=True)
     note = fields.Text()
@@ -1098,50 +1196,78 @@ class SecurityRosterBatch(models.Model):
         }
 
     @api.model
-    def action_cron_auto_generate_next_month_batches(self):
-        """Cron (runs on the 20th): auto-create next month's roster batch for every active billing plan."""
-        today = date.today()
-        next_month = today + relativedelta(months=1)
-        first_day = next_month.replace(day=1)
-        last_day = next_month.replace(day=calendar.monthrange(next_month.year, next_month.month)[1])
+    def get_operational_cycle_dates(self, target_date=None):
+        """
+        Return the 21st-to-20th operational cycle dates (date_from, date_to).
+        If day >= 21: cycle runs 21st of this month to 20th of next month.
+        If day < 21: cycle runs 21st of prev month to 20th of this month.
+        """
+        ref = target_date or date.today()
+        if isinstance(ref, str):
+            ref = fields.Date.from_string(ref)
+        if ref.day >= 21:
+            date_from = ref.replace(day=21)
+            next_m = ref + relativedelta(months=1)
+            date_to = next_m.replace(day=20)
+        else:
+            prev_m = ref - relativedelta(months=1)
+            date_from = prev_m.replace(day=21)
+            date_to = ref.replace(day=20)
+        return date_from, date_to
 
-        billing_model = self.env.get("security.billing.plan")
-        if not billing_model:
+    @api.model
+    def action_cron_auto_generate_next_month_batches(self):
+        """Cron (runs monthly on the 20th): auto-generate the next 21st-to-20th roster batches for all active contracts."""
+        today = date.today()
+        # Next cycle reference: if today is the 20th, tomorrow is the 21st starting the next cycle
+        ref_date = today + timedelta(days=2)
+        date_from, date_to = self.get_operational_cycle_dates(ref_date)
+
+        contract_model = self.env.get("security.client.contract")
+        if not contract_model:
             return
 
-        active_plans = billing_model.search([("active", "=", True)])
-        req_model = self.env["security.shift.requirement"]
-        notif_model = self.env.get("security.notification")
+        active_contracts = contract_model.search([
+            ("state", "=", "active"),
+            ("date_start", "<=", str(date_to)),
+            "|",
+            ("date_end", "=", False),
+            ("date_end", ">=", str(date_from)),
+        ])
 
+        notif_model = self.env.get("security.notification")
         created_batches = 0
         total_slots = 0
 
-        for plan in active_plans:
-            # Find all active sites linked to this client via shift requirements
-            requirements = req_model.search([
-                ("partner_id", "=", plan.partner_id.id),
-                ("active", "=", True),
-            ])
-            sites = requirements.mapped("site_id")
+        for contract in active_contracts:
+            sites = contract.contract_site_ids.mapped("site_id")
+            if not sites and contract.site_id:
+                sites = contract.site_id
 
             for site in sites:
-                # Skip if a batch already exists for this site + month
+                if not site.active:
+                    continue
+                # Skip if batch already exists for this site and cycle
                 existing = self.search([
                     ("site_id", "=", site.id),
-                    ("date_from", "=", str(first_day)),
-                    ("date_to", "=", str(last_day)),
+                    ("date_from", "=", str(date_from)),
+                    ("date_to", "=", str(date_to)),
+                    ("state", "!=", "cancelled"),
                 ], limit=1)
                 if existing:
                     continue
 
                 batch = self.create({
-                    "date_from": first_day,
-                    "date_to": last_day,
+                    "date_from": date_from,
+                    "date_to": date_to,
                     "site_id": site.id,
-                    "partner_id": plan.partner_id.id,
+                    "partner_id": contract.partner_id.id,
                 })
                 try:
                     batch.action_generate_slots()
+                    # Auto-assign eligible guards using scoring engine
+                    if hasattr(batch, "action_auto_fill_slots"):
+                        batch.action_auto_fill_slots()
                     total_slots += batch.generated_slot_count
                     created_batches += 1
                 except ValidationError:
@@ -1149,47 +1275,53 @@ class SecurityRosterBatch(models.Model):
                     continue
 
         if notif_model and created_batches:
+            cycle_label = f"{date_from.strftime('%d %b')} – {date_to.strftime('%d %b %Y')}"
             notif_model.sudo().create({
-                "title": f"Roster Auto-Generated: {first_day.strftime('%B %Y')}",
+                "title": f"Rosters Auto-Generated: Cycle {cycle_label}",
                 "body": (
-                    f"{created_batches} roster batch(es) auto-created for "
-                    f"{first_day.strftime('%B %Y')} with {total_slots} slots. "
-                    "Please assign guards before the month starts."
+                    f"{created_batches} roster batch(es) generated for cycle {cycle_label} "
+                    f"with {total_slots} slots across active contracts. Guards have been auto-assigned."
                 ),
                 "notification_type": "roster_gap",
                 "severity": "info",
             })
 
     def action_generate_next_month(self):
-        """Manual trigger: generate next month's roster for this batch's site/client."""
+        """Manual trigger: generate next 21st-to-20th operational cycle roster for this batch's site/client."""
         today = date.today()
-        next_month = today + relativedelta(months=1)
-        first_day = next_month.replace(day=1)
-        last_day = next_month.replace(day=calendar.monthrange(next_month.year, next_month.month)[1])
+        # Find next cycle starting after current date_to or next 21st
+        ref_date = self.date_to + timedelta(days=2) if self.date_to else today + relativedelta(months=1)
+        date_from, date_to = self.get_operational_cycle_dates(ref_date)
 
         for batch in self:
+            site_id_val = batch.site_id.id if batch.site_id else False
+            partner_id_val = batch.partner_id.id if batch.partner_id else False
             existing = self.search([
-                ("site_id", "=", batch.site_id.id),
-                ("partner_id", "=", batch.partner_id.id),
-                ("date_from", "=", str(first_day)),
+                ("site_id", "=", site_id_val),
+                ("partner_id", "=", partner_id_val),
+                ("date_from", "=", str(date_from)),
+                ("date_to", "=", str(date_to)),
+                ("state", "!=", "cancelled"),
             ], limit=1)
             if existing:
                 return {
                     "type": "ir.actions.client",
                     "tag": "display_notification",
                     "params": {
-                        "title": "Already Exists",
-                        "message": f"A roster batch for {first_day.strftime('%B %Y')} already exists for this site.",
+                        "title": _("Roster Already Exists"),
+                        "message": _("A roster batch for cycle %s to %s already exists.") % (date_from, date_to),
                         "type": "warning",
                     },
                 }
             new_batch = self.create({
-                "date_from": first_day,
-                "date_to": last_day,
-                "site_id": batch.site_id.id,
-                "partner_id": batch.partner_id.id,
+                "date_from": date_from,
+                "date_to": date_to,
+                "site_id": site_id_val,
+                "partner_id": partner_id_val,
             })
             new_batch.action_generate_slots()
+            if hasattr(new_batch, "action_auto_fill_slots"):
+                new_batch.action_auto_fill_slots()
             return {
                 "type": "ir.actions.act_window",
                 "res_model": "security.roster.batch",

@@ -181,6 +181,10 @@
                 <field name="supervisor_id"/>
                 <field name="post_count" string="Posts"/>
                 <field name="site_coverage_today" widget="percentage" string="Coverage Today"/>
+                <field name="setup_status" widget="badge"
+                       decoration-success="setup_status == 'ready'"
+                       decoration-warning="setup_status in ('missing_shifts', 'no_supervisor', 'uncontracted')"
+                       decoration-danger="setup_status == 'missing_posts'"/>
                 <field name="contract_status" widget="badge"
                        decoration-success="contract_status == 'valid'"
                        decoration-warning="contract_status == 'expiring_soon'"
@@ -213,6 +217,10 @@
                 <separator/>
                 <filter name="filter_critical_risk" string="Critical Risk (&lt;50% Coverage)" domain="[('risk_level', '=', 'critical')]"/>
                 <filter name="filter_high_risk" string="High Risk Sites" domain="[('risk_level', 'in', ('high', 'critical'))]"/>
+                <separator/>
+                <filter name="filter_needs_setup" string="Needs Setup" domain="[('setup_status', '!=', 'ready')]"/>
+                <filter name="filter_contract_managed" string="Contract Managed" domain="[('is_contract_managed', '=', True)]"/>
+                <filter name="filter_uncontracted" string="Uncontracted" domain="[('is_contract_managed', '=', False)]"/>
                 <separator/>
                 <filter name="filter_expiring_contract" string="Expiring Soon / Expired" domain="[('contract_status', 'in', ('expiring_soon', 'expired'))]"/>
                 <filter name="filter_no_supervisor" string="Missing Supervisor" domain="[('supervisor_id', '=', False)]"/>
@@ -300,12 +308,28 @@
         <field name="arch" type="xml">
             <form string="Client Site Command Center">
                 <header>
+                    <button name="action_open_contract" type="object" string="Open Contract Setup"
+                            class="btn-primary" invisible="not is_contract_managed"/>
                     <button name="action_open_site_hub" type="object" string="Open Site Hub"
                             class="btn-secondary"
                             title="Open the interactive Site Management Hub"/>
                 </header>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="is_contract_managed" invisible="1"/>
+
+                    <div class="alert alert-info d-flex align-items-center justify-content-between mb-3"
+                         role="alert" invisible="not is_contract_managed">
+                        <div class="d-flex align-items-center">
+                            <i class="fa fa-briefcase fa-2x me-3 text-primary"/>
+                            <div>
+                                <strong>Contract Managed Site:</strong> Commercial staffing recipes, posts, and rates are controlled by
+                                <field name="contract_id" readonly="1" class="fw-bold ms-1"/>.
+                            </div>
+                        </div>
+                        <button name="action_open_contract" type="object" string="Open Contract Setup"
+                                class="btn btn-outline-primary btn-sm"/>
+                    </div>
 
                     <div class="oe_button_box" name="button_box">
                         <button name="action_open_posts" type="object" class="oe_stat_button" icon="fa-map-marker">
@@ -530,6 +554,17 @@
             <form>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="is_contract_managed" invisible="1"/>
+
+                    <div class="alert alert-info d-flex align-items-center mb-3"
+                         role="alert" invisible="not is_contract_managed">
+                        <i class="fa fa-briefcase fa-2x me-3 text-primary"/>
+                        <div>
+                            <strong>Contract-Managed Post:</strong> Configured under contract via
+                            <field name="contract_post_id" readonly="1" class="fw-bold ms-1"/>.
+                            Guard positions and qualifications are synchronized from the parent contract.
+                        </div>
+                    </div>
                     <div class="oe_title">
                         <label for="name"/>
                         <h1><field name="name" placeholder="e.g. Main Gate" default_focus="1"/></h1>
@@ -634,6 +669,17 @@
             <form>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <field name="is_contract_managed" invisible="1"/>
+
+                    <div class="alert alert-info d-flex align-items-center mb-3"
+                         role="alert" invisible="not is_contract_managed">
+                        <i class="fa fa-briefcase fa-2x me-3 text-primary"/>
+                        <div>
+                            <strong>Contract-Managed Shift Requirement:</strong> Inherited from contract requirement
+                            <field name="contract_requirement_id" readonly="1" class="fw-bold ms-1"/>.
+                            Commercial billing and guard rates are controlled by the parent contract.
+                        </div>
+                    </div>
                     <group>
                         <group>
                             <field name="site_id" domain="[('partner_id', '=', partner_id)]" context="{'default_partner_id': partner_id}"/>

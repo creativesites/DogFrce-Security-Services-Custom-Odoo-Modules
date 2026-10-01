@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_operations.ContractWorkspace">
+    <div class="cw-root o_action">
+
+        <!-- Loading -->
+        <t t-if="state.loading">
+            <div class="cw-loading d-flex align-items-center justify-content-center h-100 py-5">
+                <div class="spinner-border text-primary me-3" role="status"/>
+                <span class="fs-5 text-muted">Loading Contract Workspace…</span>
+            </div>
+        </t>
+
+        <!-- No Contract Selected -->
+        <t t-elif="!state.contract">
+            <div class="cw-no-contract d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                <i class="fa fa-file-text-o fa-3x mb-3"/>
+                <p class="fs-5">No contract selected. Please open a Client Contract and launch the Workspace.</p>
+            </div>
+        </t>
+
+        <!-- Main Workspace -->
+        <t t-else="">
+            <!-- Top Navigation & Action Header -->
+            <header class="cw-header px-4 py-3 border-bottom bg-white shadow-sm">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cw-header-icon rounded-3 p-2 bg-primary-subtle text-primary">
+                            <i class="fa fa-briefcase fs-3"/>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h4 class="mb-0 fw-bold cw-title"><t t-esc="state.contract.name"/></h4>
+                                <span class="badge rounded-pill" t-att-class="{
+                                    'bg-success': state.contract.state === 'active',
+                                    'bg-warning text-dark': state.contract.state === 'draft',
+                                    'bg-secondary': state.contract.state === 'expired',
+                                    'bg-danger': state.contract.state === 'cancelled'
+                                }">
+                                    <t t-esc="state.contract.state ? state.contract.state.toUpperCase() : 'DRAFT'"/>
+                                </span>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fa fa-calendar me-1"/> Cycle: 21st – 20th
+                                </span>
+                            </div>
+                            <div class="cw-meta-info text-muted small mt-1 d-flex flex-wrap align-items-center gap-3">
+                                <span><i class="fa fa-building-o me-1"/> <strong class="text-dark"><t t-esc="state.contract.partner_id ? state.contract.partner_id[1] : '—'"/></strong></span>
+                                <t t-if="state.contract.date_start">
+                                    <span><i class="fa fa-clock-o me-1"/> <t t-esc="state.contract.date_start"/> to <t t-esc="state.contract.date_end || 'Open'"/></span>
+                                </t>
+                                <t t-if="state.contract.monthly_value">
+                                    <span><i class="fa fa-money me-1"/> Value: <strong class="text-dark cw-mono"><t t-esc="state.contract.monthly_value.toLocaleString()"/> NAD/mo</strong></span>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Header Action Buttons -->
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" t-on-click="openContractForm">
+                            <i class="fa fa-external-link me-1"/> Edit Contract Record
+                        </button>
+                        <t t-if="state.contract.state !== 'active'">
+                            <button class="btn btn-primary btn-sm px-3" t-on-click="actionActivate" t-att-disabled="state.contract.readiness_pct &lt; 100">
+                                <i class="fa fa-bolt me-1"/> Activate Operational Setup
+                            </button>
+                        </t>
+                        <t t-else="">
+                            <button class="btn btn-success btn-sm px-3" disabled="disabled">
+                                <i class="fa fa-check-circle me-1"/> Setup Active &amp; Synced
+                            </button>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- KPI Quick Summary Metrics Strip -->
+                <div class="row g-2 mt-3 pt-2 border-top cw-metrics-strip">
+                    <div class="col-6 col-md-auto pe-md-4 border-end">
+                        <div class="text-muted small">Assigned Sites</div>
+                        <div class="fs-5 fw-bold cw-mono"><t t-esc="state.contract.sites_count || 0"/></div>
+                    </div>
+                    <div class="col-6 col-md-auto px-md-4 border-end">
+                        <div class="text-muted small">Configured Posts</div>
+                        <div class="fs-5 fw-bold cw-mono"><t t-esc="state.contract.posts_count || 0"/></div>
+                    </div>
+                    <div class="col-6 col-md-auto px-md-4 border-end">
+                        <div class="text-muted small">Shift Requirements</div>
+                        <div class="fs-5 fw-bold cw-mono"><t t-esc="state.contract.requirements_count || 0"/></div>
+                    </div>
+                    <div class="col-6 col-md-auto px-md-4 border-end">
+                        <div class="text-muted small">Est. Monthly Roster Slots</div>
+                        <div class="fs-5 fw-bold text-primary cw-mono"><t t-esc="state.contract.estimated_monthly_slots || 0"/></div>
+                    </div>
+                    <div class="col-12 col-md-auto ps-md-4 d-flex align-items-center gap-3">
+                        <div>
+                            <div class="text-muted small">Setup Health &amp; Readiness</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress flex-grow-1" style="width: 120px; height: 8px;">
+                                    <div class="progress-bar" role="progressbar"
+                                         t-att-style="'width: ' + (state.contract.readiness_pct || 0) + '%;'"
+                                         t-att-class="state.contract.readiness_pct === 100 ? 'bg-success' : 'bg-warning'"/>
+                                </div>
+                                <span class="fw-bold cw-mono small"><t t-esc="state.contract.readiness_pct || 0"/>%</span>
+                            </div>
+                        </div>
+                        <t t-if="state.contract.setup_issues_count &gt; 0">
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <i class="fa fa-exclamation-triangle me-1"/> <t t-esc="state.contract.setup_issues_count"/> Issues
+                            </span>
+                        </t>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navigation Tab Bar -->
+            <div class="cw-tabs nav nav-tabs px-4 bg-light border-bottom">
+                <button class="nav-link" t-att-class="state.activeTab === 'sites' ? 'active' : ''"
+                        t-on-click="() => this.setTab('sites')">
+                    <i class="fa fa-map-marker me-1"/> Sites &amp; Scope
+                    <span class="badge rounded-pill bg-secondary ms-1 cw-mono"><t t-esc="state.contract.sites_count || 0"/></span>
+                </button>
+                <t t-if="state.selectedSite">
+                    <button class="nav-link active" t-on-click="() => this.setTab('recipe')">
+                        <i class="fa fa-shield me-1"/> Posts &amp; Shifts: <strong class="ms-1"><t t-esc="state.selectedSite.name"/></strong>
+                    </button>
+                </t>
+                <button class="nav-link" t-att-class="state.activeTab === 'rates' ? 'active' : ''"
+                        t-on-click="() => this.setTab('rates')">
+                    <i class="fa fa-tags me-1"/> Rate Cards
+                </button>
+                <button class="nav-link" t-att-class="state.activeTab === 'health' ? 'active' : ''"
+                        t-on-click="() => this.setTab('health')">
+                    <i class="fa fa-heartbeat me-1"/> Setup Health
+                    <t t-if="state.contract.setup_issues_count &gt; 0">
+                        <span class="badge rounded-pill bg-danger ms-1 cw-mono"><t t-esc="state.contract.setup_issues_count"/></span>
+                    </t>
+                </button>
+                <button class="nav-link" t-att-class="state.activeTab === 'preview' ? 'active' : ''"
+                        t-on-click="() => this.setTab('preview')">
+                    <i class="fa fa-check-square-o me-1"/> Review &amp; Activate
+                </button>
+            </div>
+
+            <!-- Tab Content Workspace Area -->
+            <main class="cw-content-area p-4">
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- TAB 1: SITES & SCOPE                                      -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <t t-if="state.activeTab === 'sites'">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-1">Contracted Client Sites</h5>
+                            <p class="text-muted small mb-0">Every site covered by this contract. Posts and shift staffing recipes defined here become live operational sites upon activation.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm" t-on-click="() => this.state.showAddSite = true">
+                            <i class="fa fa-plus me-1"/> Add Site to Contract
+                        </button>
+                    </div>
+
+                    <!-- Quick Add Site Modal / Inline Form -->
+                    <t t-if="state.showAddSite">
+                        <div class="card p-3 mb-4 border-primary bg-primary-subtle">
+                            <h6 class="fw-bold text-primary mb-2"><i class="fa fa-plus-circle me-1"/> New Contracted Site Setup</h6>
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold">Site Name *</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. Head Office - Windhoek"
+                                           t-model="state.newSiteName"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Location / Address</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. Independence Ave, Windhoek"
+                                           t-model="state.newSiteLocation"/>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Sector / Type</label>
+                                    <select class="form-select form-select-sm" t-model="state.newSiteSector">
+                                        <option value="commercial">Commercial</option>
+                                        <option value="residential">Residential</option>
+                                        <option value="industrial">Industrial</option>
+                                        <option value="retail">Retail</option>
+                                        <option value="mining">Mining</option>
+                                        <option value="diplomatic">Diplomatic</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button class="btn btn-secondary btn-sm" t-on-click="() => this.state.showAddSite = false">Cancel</button>
+                                <button class="btn btn-primary btn-sm" t-on-click="actionAddSite">Create Site</button>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Sites Grid -->
+                    <div class="row g-3">
+                        <t t-if="!state.contract.sites || state.contract.sites.length === 0">
+                            <div class="col-12">
+                                <div class="text-center py-5 border rounded bg-white text-muted">
+                                    <i class="fa fa-map-marker fa-3x mb-2 text-secondary"/>
+                                    <h6>No sites configured yet</h6>
+                                    <p class="small text-muted mb-3">Add the physical locations or premises where security guarding will be deployed under this contract.</p>
+                                    <button class="btn btn-primary btn-sm" t-on-click="() => this.state.showAddSite = true">
+                                        <i class="fa fa-plus me-1"/> Add First Site
+                                    </button>
+                                </div>
+                            </div>
+                        </t>
+
+                        <t t-foreach="state.contract.sites" t-as="site" t-key="site.id">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="card h-100 cw-site-card shadow-sm border-0 position-relative">
+                                    <div class="card-body d-flex flex-column">
+                                        <!-- Top Row: Code & Readiness Badge -->
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="badge bg-secondary-subtle text-secondary-emphasis cw-mono">
+                                                <t t-esc="site.code || 'SITE'"/>
+                                            </span>
+                                            <span class="badge" t-att-class="{
+                                                'bg-success-subtle text-success border border-success-subtle': site.readiness_state === 'ready',
+                                                'bg-warning-subtle text-warning-emphasis border border-warning-subtle': site.readiness_state === 'incomplete',
+                                                'bg-danger-subtle text-danger border border-danger-subtle': site.readiness_state === 'missing_posts' || site.readiness_state === 'missing_shifts'
+                                            }">
+                                                <i class="fa fa-circle me-1 small"/>
+                                                <t t-esc="site.readiness_state ? site.readiness_state.replace('_', ' ').toUpperCase() : 'PENDING'"/>
+                                            </span>
+                                        </div>
+
+                                        <!-- Site Title -->
+                                        <h6 class="fw-bold mb-1 text-dark"><t t-esc="site.name"/></h6>
+                                        <div class="text-muted small mb-3">
+                                            <i class="fa fa-map-marker me-1"/> <t t-esc="site.location || 'Location unassigned'"/>
+                                            <t t-if="site.supervisor_id">
+                                                · <i class="fa fa-user me-1"/> <t t-esc="site.supervisor_id[1]"/>
+                                            </t>
+                                        </div>
+
+                                        <!-- Metrics Strip -->
+                                        <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light mb-3 mt-auto">
+                                            <div class="text-center flex-fill border-end">
+                                                <div class="cw-mono fw-bold fs-6"><t t-esc="site.post_count || 0"/></div>
+                                                <div class="text-muted x-small">Posts</div>
+                                            </div>
+                                            <div class="text-center flex-fill border-end">
+                                                <div class="cw-mono fw-bold fs-6"><t t-esc="site.requirement_count || 0"/></div>
+                                                <div class="text-muted x-small">Shift Recipes</div>
+                                            </div>
+                                            <div class="text-center flex-fill">
+                                                <div class="cw-mono fw-bold fs-6 text-primary"><t t-esc="site.estimated_monthly_slots || 0"/></div>
+                                                <div class="text-muted x-small">Mo. Slots</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-flex align-items-center gap-2 pt-2 border-top">
+                                            <button class="btn btn-outline-primary btn-sm flex-fill" t-on-click="() => this.selectSite(site.id)">
+                                                <i class="fa fa-sliders me-1"/> Configure Recipe
+                                            </button>
+                                            <button class="btn btn-outline-secondary btn-sm" title="Duplicate Site Setup" t-on-click="() => this.actionDuplicateSite(site.id)">
+                                                <i class="fa fa-clone"/>
+                                            </button>
+                                            <t t-if="site.site_id">
+                                                <button class="btn btn-outline-secondary btn-sm" title="View Live Operational Site" t-on-click="() => this.openOperationalSite(site.site_id[0])">
+                                                    <i class="fa fa-external-link"/>
+                                                </button>
+                                            </t>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- TAB 2: RECIPE BUILDER (POSTS & SHIFT REQUIREMENTS)         -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <t t-if="state.activeTab === 'recipe' and state.selectedSite">
+                    <!-- Site Recipe Header -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 bg-white border rounded mb-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="backToSites">
+                                <i class="fa fa-arrow-left me-1"/> Back to Sites
+                            </button>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h5 class="fw-bold mb-0"><t t-esc="state.selectedSite.name"/></h5>
+                                    <span class="badge bg-secondary-subtle text-secondary cw-mono"><t t-esc="state.selectedSite.code"/></span>
+                                </div>
+                                <div class="text-muted small">
+                                    Define guarding posts (Main Gate, Patrol, CCTV Room) and the recurring weekly shift requirement recipe for this site.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-primary btn-sm" t-on-click="() => this.state.showAddPost = true">
+                                <i class="fa fa-plus me-1"/> Add Security Post
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Add Post Modal -->
+                    <t t-if="state.showAddPost">
+                        <div class="card p-3 mb-4 border-primary bg-primary-subtle">
+                            <h6 class="fw-bold text-primary mb-2"><i class="fa fa-plus-circle me-1"/> Add Post to <t t-esc="state.selectedSite.name"/></h6>
+                            <div class="row g-2">
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold">Post Name *</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g. Main Gate Access, Reception Patrol"
+                                           t-model="state.newPostName"/>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Default Guard Count</label>
+                                    <input type="number" class="form-control form-control-sm" min="1"
+                                           t-model="state.newPostGuards"/>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Minimum Grade</label>
+                                    <select class="form-select form-select-sm" t-model="state.newPostGradeId">
+                                        <option value="">No minimum grade</option>
+                                        <t t-foreach="state.grades" t-as="grade" t-key="grade.id">
+                                            <option t-att-value="grade.id"><t t-esc="grade.name"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button class="btn btn-secondary btn-sm" t-on-click="() => this.state.showAddPost = false">Cancel</button>
+                                <button class="btn btn-primary btn-sm" t-on-click="actionAddPost">Save Post</button>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Quick Add Shift Modal -->
+                    <t t-if="state.showAddShift">
+                        <div class="card p-3 mb-4 border-info bg-info-subtle">
+                            <h6 class="fw-bold text-info-emphasis mb-2"><i class="fa fa-clock-o me-1"/> Add Shift Requirement</h6>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Shift Template *</label>
+                                    <select class="form-select form-select-sm" t-model="state.newShiftTemplateId">
+                                        <option value="">Select shift template…</option>
+                                        <t t-foreach="state.shiftTemplates" t-as="st" t-key="st.id">
+                                            <option t-att-value="st.id"><t t-esc="st.name"/> (<t t-esc="st.duration_hours"/>h)</option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-semibold">Guards Required</label>
+                                    <input type="number" class="form-control form-control-sm" min="1"
+                                           t-model="state.newShiftGuardCount"/>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-semibold">Min Grade</label>
+                                    <select class="form-select form-select-sm" t-model="state.newShiftGradeId">
+                                        <option value="">Standard (Inherit)</option>
+                                        <t t-foreach="state.grades" t-as="g" t-key="g.id">
+                                            <option t-att-value="g.id"><t t-esc="g.name"/></option>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end gap-2 mt-3">
+                                <button class="btn btn-secondary btn-sm" t-on-click="() => this.state.showAddShift = false">Cancel</button>
+                                <button class="btn btn-primary btn-sm" t-on-click="actionAddShift">Add Requirement</button>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Posts & Shifts Accordion / List -->
+                    <div class="d-flex flex-column gap-3">
+                        <t t-if="!state.selectedSite.posts || state.selectedSite.posts.length === 0">
+                            <div class="text-center py-5 border rounded bg-white text-muted">
+                                <i class="fa fa-shield fa-3x mb-2 text-secondary"/>
+                                <h6>No posts defined for this site</h6>
+                                <p class="small text-muted mb-3">Add guarding posts like Main Gate, Reception, Perimeter Patrol to build your operational staffing recipe.</p>
+                                <button class="btn btn-primary btn-sm" t-on-click="() => this.state.showAddPost = true">
+                                    <i class="fa fa-plus me-1"/> Add First Post
+                                </button>
+                            </div>
+                        </t>
+
+                        <t t-foreach="state.selectedSite.posts" t-as="post" t-key="post.id">
+                            <div class="card shadow-sm border-0 cw-post-card">
+                                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-secondary cw-mono"><t t-esc="post.code || 'PST'"/></span>
+                                        <h6 class="fw-bold mb-0 text-dark"><t t-esc="post.name"/></h6>
+                                        <t t-if="post.min_grade_id">
+                                            <span class="badge bg-light text-dark border">Min Grade: <t t-esc="post.min_grade_id[1]"/></span>
+                                        </t>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <button class="btn btn-outline-primary btn-sm" t-on-click="() => { this.state.newShiftPostId = post.id; this.state.showAddShift = true; }">
+                                            <i class="fa fa-plus me-1"/> Add Shift Requirement
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <t t-if="!post.requirements || post.requirements.length === 0">
+                                        <div class="p-3 text-center text-muted small">
+                                            <i class="fa fa-info-circle me-1"/> No shift requirements defined yet for this post. Click <strong>Add Shift Requirement</strong> above.
+                                        </div>
+                                    </t>
+                                    <t t-else="">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover align-middle mb-0 cw-shift-table">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="ps-3">Shift Template</th>
+                                                        <th>Guards</th>
+                                                        <th>Active Days</th>
+                                                        <th>Billing Rate</th>
+                                                        <th>Guard Pay Rate</th>
+                                                        <th>Est. Mo. Slots</th>
+                                                        <th class="text-end pe-3">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <t t-foreach="post.requirements" t-as="req" t-key="req.id">
+                                                        <tr>
+                                                            <td class="ps-3 fw-semibold">
+                                                                <i class="fa fa-clock-o text-muted me-1"/>
+                                                                <t t-esc="req.shift_template_id ? req.shift_template_id[1] : '—'"/>
+                                                            </td>
+                                                            <td>
+                                                                <span class="badge bg-light text-dark border cw-mono">
+                                                                    <t t-esc="req.guard_count"/> Guard<t t-if="req.guard_count &gt; 1">s</t>
+                                                                </span>
+                                                            </td>
+                                                            <td>
+                                                                <!-- Mon-Sun Pill Grid -->
+                                                                <div class="d-flex gap-1">
+                                                                    <span class="cw-day-pill" t-att-class="req.monday ? 'active' : ''">M</span>
+                                                                    <span class="cw-day-pill" t-att-class="req.tuesday ? 'active' : ''">T</span>
+                                                                    <span class="cw-day-pill" t-att-class="req.wednesday ? 'active' : ''">W</span>
+                                                                    <span class="cw-day-pill" t-att-class="req.thursday ? 'active' : ''">T</span>
+                                                                    <span class="cw-day-pill" t-att-class="req.friday ? 'active' : ''">F</span>
+                                                                    <span class="cw-day-pill" t-att-class="req.saturday ? 'active' : ''">S</span>
+                                                                    <span class="cw-day-pill cw-sunday" t-att-class="req.sunday ? 'active' : ''">S</span>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center gap-1">
+                                                                    <span class="cw-mono small fw-bold">
+                                                                        <t t-esc="req.bill_rate"/> NAD/h
+                                                                    </span>
+                                                                    <t t-if="req.bill_rate_override">
+                                                                        <span class="badge bg-warning text-dark x-small" title="Overridden on requirement">Override</span>
+                                                                    </t>
+                                                                    <t t-else="">
+                                                                        <span class="badge bg-light text-muted border x-small" title="Inherited from contract rate card">Card</span>
+                                                                    </t>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <div class="d-flex align-items-center gap-1">
+                                                                    <span class="cw-mono small fw-bold">
+                                                                        <t t-esc="req.pay_rate"/> NAD/h
+                                                                    </span>
+                                                                    <t t-if="req.pay_rate_override">
+                                                                        <span class="badge bg-warning text-dark x-small" title="Overridden on requirement">Override</span>
+                                                                    </t>
+                                                                    <t t-else="">
+                                                                        <span class="badge bg-light text-muted border x-small" title="Inherited from grade/contract card">Card</span>
+                                                                    </t>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span class="fw-bold cw-mono text-primary">
+                                                                    <t t-esc="req.estimated_monthly_slots || 0"/>
+                                                                </span>
+                                                            </td>
+                                                            <td class="text-end pe-3">
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <button class="btn btn-outline-secondary" title="Apply to All 7 Days (Mon-Sun)" t-on-click="() => this.actionApplyAllDays(req.id)">
+                                                                        <i class="fa fa-calendar-check-o"/> All Days
+                                                                    </button>
+                                                                    <button class="btn btn-outline-secondary" title="Duplicate Shift Requirement" t-on-click="() => this.actionDuplicateShift(req.id)">
+                                                                        <i class="fa fa-clone"/>
+                                                                    </button>
+                                                                    <button class="btn btn-outline-secondary" t-att-title="req.bill_rate_override ? 'Reset to Card Rate' : 'Enable Rate Override'" t-on-click="() => this.toggleRateOverride(req, 'bill_rate_override')">
+                                                                        <i class="fa fa-pencil-square-o"/> Rate
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </t>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </t>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- TAB 3: CONTRACT RATE CARDS                                -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <t t-if="state.activeTab === 'rates'">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-1">Contract Agreed Rate Cards</h5>
+                            <p class="text-muted small">Agreed billing rates per hour for this client by shift category and guard grade. Shift requirements inherit these rates automatically unless explicit commercial overrides are configured.</p>
+                            
+                            <t t-if="!state.rateCards || state.rateCards.length === 0">
+                                <div class="text-center py-4 text-muted">
+                                    <i class="fa fa-tags fa-2x mb-2 text-secondary"/>
+                                    <p class="mb-0">No specific rate card lines attached. Shift requirements default to grade standard hourly rates.</p>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Shift Category</th>
+                                                <th>Guard Grade</th>
+                                                <th>Agreed Hourly Bill Rate (NAD)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="state.rateCards" t-as="rate" t-key="rate.id">
+                                                <tr>
+                                                    <td class="text-capitalize fw-semibold"><t t-esc="rate.shift_category"/></td>
+                                                    <td><t t-esc="rate.grade_id ? rate.grade_id[1] : 'All Grades'"/></td>
+                                                    <td class="cw-mono fw-bold text-success"><t t-esc="rate.hourly_rate"/> NAD/h</td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- TAB 4: SETUP HEALTH & DIAGNOSTICS                         -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <t t-if="state.activeTab === 'health'">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1">Setup Health &amp; Readiness Diagnostics</h5>
+                                    <p class="text-muted small mb-0">Automated pre-flight validation preventing unstaffed posts, missing shifts, or unassigned supervisors before operational rosters can be generated.</p>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="fs-4 fw-bold cw-mono" t-att-class="state.contract.readiness_pct === 100 ? 'text-success' : 'text-warning'">
+                                        <t t-esc="state.contract.readiness_pct || 0"/>%
+                                    </span>
+                                </div>
+                            </div>
+
+                            <t t-if="state.contract.readiness_pct === 100">
+                                <div class="alert alert-success d-flex align-items-center gap-3">
+                                    <i class="fa fa-check-circle fa-2x"/>
+                                    <div>
+                                        <strong>Contract Operational Setup is 100% Ready!</strong>
+                                        <div class="small">All sites have posts, all posts have shift requirements, days of the week are covered, and supervisors are assigned. You can safely activate this contract.</div>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="alert alert-warning d-flex align-items-center gap-3">
+                                    <i class="fa fa-exclamation-triangle fa-2x"/>
+                                    <div>
+                                        <strong>Operational Setup Incomplete (<t t-esc="state.contract.setup_issues_count"/> issues identified)</strong>
+                                        <div class="small">Resolve the items below before activating. Incomplete contracts cannot generate operational roster slots.</div>
+                                    </div>
+                                </div>
+
+                                <t t-if="state.health">
+                                    <div class="list-group">
+                                        <t t-foreach="state.health" t-as="issue" t-key="issue_index">
+                                            <div class="list-group-item d-flex align-items-center justify-content-between p-3">
+                                                <div class="d-flex align-items-start gap-3">
+                                                    <span class="badge bg-danger-subtle text-danger mt-1">
+                                                        <t t-esc="issue.type ? issue.type.toUpperCase() : 'ERROR'"/>
+                                                    </span>
+                                                    <div>
+                                                        <div class="fw-bold text-dark"><t t-esc="issue.site_name || 'Contract Setup'"/></div>
+                                                        <div class="text-muted small"><t t-esc="issue.message"/></div>
+                                                    </div>
+                                                </div>
+                                                <t t-if="issue.site_id">
+                                                    <button class="btn btn-outline-primary btn-sm" t-on-click="() => this.selectSite(issue.site_id)">
+                                                        Fix in Site Recipe
+                                                    </button>
+                                                </t>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </t>
+                            </t>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <!-- TAB 5: REVIEW & ACTIVATE                                  -->
+                <!-- ═══════════════════════════════════════════════════════════ -->
+                <t t-if="state.activeTab === 'preview'">
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-1">Review &amp; Atomic Activation</h5>
+                            <p class="text-muted small">Verify the operational scope below. When activated, all contracted sites, security posts, and shift recipes are atomically synced into live operational records.</p>
+
+                            <div class="row g-3 my-3">
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded bg-light text-center">
+                                        <div class="text-muted small">Operational Cycle</div>
+                                        <div class="fw-bold cw-mono text-dark">
+                                            <t t-if="state.cyclePreview">
+                                                <t t-esc="state.cyclePreview.start"/> to <t t-esc="state.cyclePreview.end"/>
+                                            </t>
+                                            <t t-else="">21st to 20th</t>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded bg-light text-center">
+                                        <div class="text-muted small">Configured Sites</div>
+                                        <div class="fw-bold cw-mono fs-5 text-dark"><t t-esc="state.contract.sites_count || 0"/></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded bg-light text-center">
+                                        <div class="text-muted small">Total Posts</div>
+                                        <div class="fw-bold cw-mono fs-5 text-dark"><t t-esc="state.contract.posts_count || 0"/></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="p-3 border rounded bg-light text-center">
+                                        <div class="text-muted small">Calculated Roster Slots / Mo</div>
+                                        <div class="fw-bold cw-mono fs-5 text-primary"><t t-esc="state.contract.estimated_monthly_slots || 0"/></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 rounded border bg-light my-4">
+                                <h6 class="fw-bold text-dark mb-2"><i class="fa fa-info-circle text-primary me-2"/> Operational Sync Guarantee</h6>
+                                <ul class="small text-muted mb-0 ps-3">
+                                    <li>Posts and Shift Requirements are strictly linked to this Contract.</li>
+                                    <li>Roster generation will automatically schedule slots for the <strong>21st to 20th</strong> operational window using deterministic fairness constraints (max 1 Sunday per guard, max 22 working days).</li>
+                                    <li>Historical rosters and confirmed slots are fully protected and never altered.</li>
+                                </ul>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                                <div>
+                                    <t t-if="state.contract.readiness_pct &lt; 100">
+                                        <span class="text-danger small fw-semibold">
+                                            <i class="fa fa-times-circle me-1"/> Activation disabled: resolve all setup health issues first.
+                                        </span>
+                                    </t>
+                                    <t t-else="">
+                                        <span class="text-success small fw-semibold">
+                                            <i class="fa fa-check-circle me-1"/> All checks passed. Ready for deployment.
+                                        </span>
+                                    </t>
+                                </div>
+                                <button class="btn btn-primary px-4 py-2 fw-semibold" t-on-click="actionActivate" t-att-disabled="state.contract.readiness_pct &lt; 100">
+                                    <i class="fa fa-bolt me-1"/> Activate Contract &amp; Sync Operations
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+            </main>
+        </t>
+    </div>
+</t>
+
+</templates>

@@ -228,6 +228,15 @@ class SecurityRosterBatch(models.Model):
             )
             # {shift_date_str: set(employee_id)} — prevents double-booking in this run
             assigned_today = {}
+            run_sundays = {}
+            run_days = {}
+            max_cycle_days = 22
+            try:
+                p_days = self.env["ir.config_parameter"].sudo().get_param("security.max_working_days_per_cycle", "22")
+                max_cycle_days = int(p_days)
+            except (TypeError, ValueError):
+                pass
+
             for slot in unassigned:
                 slot.critical_gap = False
                 eligible = slot._get_eligible_guards(slot)
@@ -239,7 +248,17 @@ class SecurityRosterBatch(models.Model):
                 # _get_eligible_guards; assigned_today covers intra-run assignments)
                 date_key = str(slot.shift_date)
                 run_assigned = assigned_today.get(date_key, set())
-                eligible = [(emp, sc) for emp, sc in eligible if emp.id not in run_assigned]
+                is_sun = slot.shift_date and slot.shift_date.weekday() == 6
+                fair_eligible = []
+                for emp, sc in eligible:
+                    if emp.id in run_assigned:
+                        continue
+                    if is_sun and run_sundays.get(emp.id, 0) >= 1:
+                        continue
+                    if len(run_days.get(emp.id, set())) >= max_cycle_days:
+                        continue
+                    fair_eligible.append((emp, sc))
+                eligible = fair_eligible
                 if not eligible:
                     slot.critical_gap = True
                     gaps += 1
@@ -258,6 +277,9 @@ class SecurityRosterBatch(models.Model):
                         slot.state = "assigned"
                         slot.critical_gap = False
                         assigned_today.setdefault(date_key, set()).add(best_employee.id)
+                        run_days.setdefault(best_employee.id, set()).add(slot.shift_date)
+                        if is_sun:
+                            run_sundays[best_employee.id] = run_sundays.get(best_employee.id, 0) + 1
                         filled += 1
                         assigned_flag = True
                         break
@@ -401,6 +423,43 @@ class SecurityRosterSlot(models.Model):
         if missing:
             names = self.env["security.certification"].browse(list(missing)).mapped("name")
             warnings.append(f"Missing Certifications: {employee.name} lacks: {', '.join(names)}.")
+
+        # 6. Hard Fairness Constraint: Maximum 1 Sunday per Cycle
+        if self.shift_date and self.shift_date.weekday() == 6 and self.batch_id:
+            other_sundays = self.search([
+                ("batch_id", "=", self.batch_id.id),
+                ("employee_id", "=", employee.id),
+                ("state", "not in", ("cancelled",)),
+                ("id", "!=", self.id),
+            ]).filtered(lambda s: s.shift_date and s.shift_date.weekday() == 6)
+            if other_sundays:
+                warnings.append(
+                    f"Sunday Limit Breach: {employee.name} is already assigned to a Sunday on "
+                    f"{other_sundays[0].shift_date} in this roster cycle (maximum 1 Sunday allowed)."
+                )
+
+        # 7. Hard Fairness Constraint: Maximum Working Days per Cycle (Default: 22)
+        if self.batch_id:
+            max_days = 22
+            try:
+                param_days = self.env["ir.config_parameter"].sudo().get_param(
+                    "security.max_working_days_per_cycle", "22"
+                )
+                max_days = int(param_days)
+            except (TypeError, ValueError):
+                pass
+            assigned_dates = self.search([
+                ("batch_id", "=", self.batch_id.id),
+                ("employee_id", "=", employee.id),
+                ("state", "not in", ("cancelled",)),
+                ("id", "!=", self.id),
+            ]).mapped("shift_date")
+            unique_days = len(set(assigned_dates))
+            if unique_days >= max_days:
+                warnings.append(
+                    f"Working Days Cap: {employee.name} has already reached {unique_days}/{max_days} "
+                    "working days in this roster cycle."
+                )
 
         return {"hard_block": False, "reasons": warnings}
 
@@ -567,6 +626,14 @@ class SecurityRosterSlot(models.Model):
         filled = 0
         no_candidates = 0
         assigned_today = {}
+        run_sundays = {}
+        run_days = {}
+        max_cycle_days = 22
+        try:
+            p_days = self.env["ir.config_parameter"].sudo().get_param("security.max_working_days_per_cycle", "22")
+            max_cycle_days = int(p_days)
+        except (TypeError, ValueError):
+            pass
 
         def _difficulty(s):
             d = 0
@@ -595,7 +662,17 @@ class SecurityRosterSlot(models.Model):
 
             date_key = str(slot.shift_date)
             run_assigned = assigned_today.get(date_key, set())
-            eligible = [(emp, sc) for emp, sc in eligible if emp.id not in run_assigned]
+            is_sun = slot.shift_date and slot.shift_date.weekday() == 6
+            fair_eligible = []
+            for emp, sc in eligible:
+                if emp.id in run_assigned:
+                    continue
+                if is_sun and run_sundays.get(emp.id, 0) >= 1:
+                    continue
+                if len(run_days.get(emp.id, set())) >= max_cycle_days:
+                    continue
+                fair_eligible.append((emp, sc))
+            eligible = fair_eligible
             if not eligible:
                 no_candidates += 1
                 slot.critical_gap = True
@@ -614,6 +691,9 @@ class SecurityRosterSlot(models.Model):
                     slot.state = "assigned"
                     slot.critical_gap = False
                     assigned_today.setdefault(date_key, set()).add(best_employee.id)
+                    run_days.setdefault(best_employee.id, set()).add(slot.shift_date)
+                    if is_sun:
+                        run_sundays[best_employee.id] = run_sundays.get(best_employee.id, 0) + 1
                     filled += 1
                     assigned_flag = True
                     break
@@ -714,6 +794,39 @@ class SecurityRosterSlot(models.Model):
         except (TypeError, ValueError):
             pass
 
+        # Pre-fetch hard fairness constraints (Sunday limit and Max days per cycle)
+        is_sunday = slot.shift_date and slot.shift_date.weekday() == 6
+        guards_on_sunday = set()
+        guards_at_max_days = set()
+
+        max_work_days = 22
+        try:
+            param_days = self.env["ir.config_parameter"].sudo().get_param(
+                "security.max_working_days_per_cycle", "22"
+            )
+            max_work_days = int(param_days)
+        except (TypeError, ValueError):
+            pass
+
+        if slot.batch_id:
+            batch_slots = self.search([
+                ("batch_id", "=", slot.batch_id.id),
+                ("employee_id", "!=", False),
+                ("state", "not in", ("cancelled",)),
+                ("id", "!=", slot.id),
+            ])
+            if is_sunday:
+                guards_on_sunday = set(
+                    batch_slots.filtered(lambda s: s.shift_date and s.shift_date.weekday() == 6).mapped("employee_id").ids
+                )
+            if max_work_days > 0:
+                guard_days = {}
+                for s in batch_slots:
+                    guard_days.setdefault(s.employee_id.id, set()).add(s.shift_date)
+                for gid, d_set in guard_days.items():
+                    if len(d_set) >= max_work_days:
+                        guards_at_max_days.add(gid)
+
         # For the shift start hour, compute from template
         target_start_hour = slot.shift_template_id.start_hour if slot.shift_template_id else 0.0
 
@@ -727,6 +840,12 @@ class SecurityRosterSlot(models.Model):
                 continue
             # Excluded from site/client
             if employee.id in excluded_guard_ids:
+                continue
+            # Sunday limit: Max 1 Sunday per guard per cycle
+            if is_sunday and employee.id in guards_on_sunday:
+                continue
+            # Max working days: Max 22 days per cycle
+            if employee.id in guards_at_max_days:
                 continue
             # Grade check
             if min_grade_seq > 0:

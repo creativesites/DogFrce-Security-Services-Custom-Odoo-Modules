@@ -326,6 +326,58 @@ class SecurityClientOnboardingWizard(models.TransientModel):
                 "pay_rate": req.pay_rate,
             })
 
+        # ── Link to Single Source of Truth: Client Contract ───────────────
+        contract = self.env["security.client.contract"].create({
+            "name": f"CTR-{fields.Date.today().year}-{partner.id:03d}",
+            "partner_id": partner.id,
+            "date_start": self.contract_start or fields.Date.today(),
+            "monthly_value": (self.total_guards * 720 * 25.0) if self.billing_mode == "fixed_monthly" else 0.0,
+            "state": "active",
+        })
+
+        for line in self.site_line_ids:
+            site = site_by_line[line.id]
+            site.write({
+                "contract_id": contract.id,
+                "is_contract_managed": True,
+            })
+            c_site = self.env["security.contract.site"].create({
+                "contract_id": contract.id,
+                "name": site.name,
+                "location": site.location or False,
+                "code": site.code or False,
+                "site_id": site.id,
+            })
+            for post in site.post_ids:
+                c_post = self.env["security.contract.post"].create({
+                    "contract_site_id": c_site.id,
+                    "name": post.name,
+                    "code": post.code or False,
+                    "post_type_id": post.post_type_id.id if post.post_type_id else False,
+                    "required_guard_count": post.required_guard_count,
+                    "post_id": post.id,
+                })
+                post.write({
+                    "contract_post_id": c_post.id,
+                    "is_contract_managed": True,
+                })
+                for s_req in post.shift_requirement_ids:
+                    c_req = self.env["security.contract.shift.requirement"].create({
+                        "contract_site_id": c_site.id,
+                        "contract_post_id": c_post.id,
+                        "shift_template_id": s_req.shift_template_id.id,
+                        "guard_count": s_req.guard_count,
+                        "bill_rate": s_req.bill_rate,
+                        "pay_rate": s_req.pay_rate,
+                        "bill_rate_override": bool(s_req.bill_rate),
+                        "pay_rate_override": bool(s_req.pay_rate),
+                        "requirement_id": s_req.id,
+                    })
+                    s_req.write({
+                        "contract_requirement_id": c_req.id,
+                        "is_contract_managed": True,
+                    })
+
         billing_mode_map = {
             "fixed_monthly": "recurring",
             "per_shift": "shift",
@@ -364,12 +416,15 @@ class SecurityClientOnboardingWizard(models.TransientModel):
             message += " A draft roster batch is ready to generate."
 
         return {
-            "type": "ir.actions.act_window",
-            "res_model": "res.partner",
-            "res_id": partner.id,
-            "views": [[False, "form"]],
+            "type": "ir.actions.client",
+            "tag": "security_operations.contract_workspace",
+            "name": f"Contract Workspace — {contract.name}",
+            "context": {
+                "active_id": contract.id,
+                "active_model": "security.client.contract",
+                "onboarding_message": message,
+            },
             "target": "current",
-            "context": {"onboarding_message": message},
         }
 
     def _reopen(self):

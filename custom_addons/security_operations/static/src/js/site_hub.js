@@ -113,7 +113,8 @@ class SiteHub extends Component {
                 ["name", "partner_id", "location", "contact_name", "contact_phone",
                  "contact_email", "gps_lat", "gps_lng", "geofence_radius", "note",
                  "supervisor_id", "site_coverage_today", "site_coverage_month",
-                 "shift_requirement_ids", "post_ids", "exclusion_ids"],
+                 "shift_requirement_ids", "post_ids", "exclusion_ids",
+                 "contract_id", "is_contract_managed"],
             );
             if (!site) {
                 this.state.error = "This site could not be found or you no longer have permission to view it.";
@@ -237,6 +238,16 @@ class SiteHub extends Component {
             views: [[false, "form"]],
             target: "current",
         });
+    }
+
+    openContractSetup() {
+        if (this.state.site?.contract_id) {
+            this.actionService.doAction({
+                type: "ir.actions.client",
+                tag: "security_operations.contract_workspace",
+                context: { active_id: this.state.site.contract_id[0] },
+            });
+        }
     }
 
     openSlotForm(slotId) {

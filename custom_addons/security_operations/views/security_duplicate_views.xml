@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ========================================== -->
+    <!-- DUPLICATE AUDIT & CLEANUP WIZARD           -->
+    <!-- ========================================== -->
+    <record id="view_security_duplicate_audit_wizard_form" model="ir.ui.view">
+        <field name="name">security.duplicate.audit.wizard.form</field>
+        <field name="model">security.duplicate.audit.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Duplicate Detection &amp; Normalization">
+                <sheet>
+                    <div class="alert alert-info d-flex align-items-center mb-3">
+                        <i class="fa fa-shield fa-2x me-3 text-primary"/>
+                        <div>
+                            <strong>Safe Duplicate Normalization:</strong> This tool detects near-identical clients, duplicate sites, and corrupted records.
+                            Historical rosters, attendance logs, and invoices are <strong>never deleted</strong>; duplicates are safely reassigned and archived.
+                        </div>
+                    </div>
+
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="total_detected" readonly="1" class="fw-bold"/>
+                            <field name="approved_count" readonly="1" class="fw-bold text-success"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Candidate Duplicates" name="lines">
+                            <field name="line_ids" nolabel="1">
+                                <list editable="bottom"
+                                      decoration-muted="state == 'dismissed'"
+                                      decoration-success="state == 'approved'"
+                                      decoration-info="state == 'merged'">
+                                    <field name="record_type"/>
+                                    <field name="reason"/>
+                                    <field name="keeper_partner_id" invisible="record_type != 'client'"/>
+                                    <field name="dup_partner_id" invisible="record_type != 'client'"/>
+                                    <field name="keeper_site_id" invisible="record_type != 'site'"/>
+                                    <field name="dup_site_id" invisible="record_type != 'site'"/>
+                                    <field name="state" widget="badge"
+                                           decoration-warning="state == 'detected'"
+                                           decoration-success="state == 'approved'"
+                                           decoration-muted="state == 'dismissed'"
+                                           decoration-info="state == 'merged'"/>
+                                    <button name="action_approve" type="object" string="Approve"
+                                            invisible="state != 'detected'" class="btn-sm btn-outline-success"/>
+                                    <button name="action_dismiss" type="object" string="Dismiss"
+                                            invisible="state != 'detected'" class="btn-sm btn-outline-secondary"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button name="action_run_audit" type="object" string="Scan for Duplicates (Dry Run)" class="btn-primary"/>
+                    <button name="action_merge_approved" type="object" string="Merge &amp; Archive Approved" class="btn-warning"
+                            invisible="approved_count == 0" confirm="Are you sure you want to merge and safely archive approved candidates? No historical data will be deleted."/>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_duplicate_audit_wizard" model="ir.actions.act_window">
+        <field name="name">Duplicate Normalization Wizard</field>
+        <field name="res_model">security.duplicate.audit.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- ========================================== -->
+    <!-- LEGACY CONTRACT MIGRATION WIZARD           -->
+    <!-- ========================================== -->
+    <record id="view_security_legacy_contract_migration_wizard_form" model="ir.ui.view">
+        <field name="name">security.legacy.contract.migration.wizard.form</field>
+        <field name="model">security.legacy.contract.migration.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Legacy Contract Structure Migration">
+                <sheet>
+                    <div class="alert alert-info d-flex align-items-center mb-3">
+                        <i class="fa fa-cubes fa-2x me-3 text-primary"/>
+                        <div>
+                            <strong>Contract-First Structure Migration:</strong> Converts legacy site, post, and shift requirement configurations into the unified Contract Workspace structure.
+                            Historical roster schedules, attendance records, and client IDs are preserved with 100% fidelity.
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Migration Status">
+                            <field name="state" readonly="1" widget="badge"
+                                   decoration-success="state == 'done'"
+                                   decoration-warning="state == 'draft'"/>
+                            <field name="contracts_processed" readonly="1"/>
+                            <field name="sites_mapped" readonly="1"/>
+                            <field name="posts_mapped" readonly="1"/>
+                            <field name="requirements_mapped" readonly="1"/>
+                            <field name="needs_review" readonly="1" class="text-danger fw-bold"/>
+                        </group>
+                    </group>
+
+                    <group string="Detailed Log" invisible="not report_text">
+                        <field name="report_text" readonly="1" nolabel="1" widget="text" class="font-monospace"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_run_migration" type="object" string="Execute Contract Migration" class="btn-primary"
+                            invisible="state == 'done'"/>
+                    <button string="Done" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_security_legacy_contract_migration_wizard" model="ir.actions.act_window">
+        <field name="name">Legacy Contract Migration</field>
+        <field name="res_model">security.legacy.contract.migration.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Menu Items under Operations Configuration -->
+    <menuitem id="menu_security_duplicate_audit"
+              name="Duplicate Audit &amp; Cleanup"
+              parent="security_operations.menu_security_configuration_root"
+              action="action_security_duplicate_audit_wizard"
+              sequence="90"
+              groups="security_base.group_security_manager"/>
+
+    <menuitem id="menu_security_legacy_migration"
+              name="Migrate to Contract Structure"
+              parent="security_operations.menu_security_configuration_root"
+              action="action_security_legacy_contract_migration_wizard"
+              sequence="95"
+              groups="security_base.group_security_manager"/>
+
+</odoo>

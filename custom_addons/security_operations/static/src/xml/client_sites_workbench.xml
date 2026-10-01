@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<t t-name="security_operations.ClientSitesWorkbench">
+    <div class="csw-root o_action">
+
+        <!-- Top Header & Filter Bar -->
+        <header class="csw-header px-4 py-3 border-bottom bg-white shadow-sm">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="csw-icon rounded-3 p-2 bg-primary-subtle text-primary">
+                        <i class="fa fa-sitemap fs-3"/>
+                    </div>
+                    <div>
+                        <h4 class="mb-0 fw-bold csw-title">Client Sites Operational Workbench</h4>
+                        <div class="text-muted small">
+                            Hierarchical site portfolio grouped by client. Monitor setup completeness, contract link, and deployment readiness.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" t-on-click="openContractList">
+                        <i class="fa fa-file-text-o me-1"/> All Contracts
+                    </button>
+                    <button class="btn btn-primary btn-sm px-3" t-on-click="openClientOnboarding">
+                        <i class="fa fa-plus-circle me-1"/> Set Up New Client
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search and Filter Chips Row -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <!-- Filter Chips -->
+                    <button class="btn btn-sm csw-chip" t-att-class="state.filter === 'all' ? 'active' : ''"
+                            t-on-click="() => this.setFilter('all')">
+                        All Sites
+                        <span class="badge rounded-pill bg-secondary ms-1 csw-mono"><t t-esc="state.metrics.totalSites"/></span>
+                    </button>
+                    <button class="btn btn-sm csw-chip" t-att-class="state.filter === 'needs_setup' ? 'active' : ''"
+                            t-on-click="() => this.setFilter('needs_setup')">
+                        <i class="fa fa-wrench me-1 text-warning"/> Needs Setup
+                        <span class="badge rounded-pill bg-warning text-dark ms-1 csw-mono"><t t-esc="state.metrics.needsSetupSites"/></span>
+                    </button>
+                    <button class="btn btn-sm csw-chip" t-att-class="state.filter === 'coverage_risk' ? 'active' : ''"
+                            t-on-click="() => this.setFilter('coverage_risk')">
+                        <i class="fa fa-exclamation-triangle me-1 text-danger"/> Coverage Risk
+                        <span class="badge rounded-pill bg-danger ms-1 csw-mono"><t t-esc="state.metrics.coverageRiskSites"/></span>
+                    </button>
+                    <button class="btn btn-sm csw-chip" t-att-class="state.filter === 'expiring' ? 'active' : ''"
+                            t-on-click="() => this.setFilter('expiring')">
+                        <i class="fa fa-calendar-times-o me-1 text-info"/> Expiring Contracts
+                        <span class="badge rounded-pill bg-info text-dark ms-1 csw-mono"><t t-esc="state.metrics.expiringContracts"/></span>
+                    </button>
+                    <button class="btn btn-sm csw-chip" t-att-class="state.filter === 'no_supervisor' ? 'active' : ''"
+                            t-on-click="() => this.setFilter('no_supervisor')">
+                        <i class="fa fa-user-times me-1 text-secondary"/> No Supervisor
+                        <span class="badge rounded-pill bg-secondary ms-1 csw-mono"><t t-esc="state.metrics.noSupervisorSites"/></span>
+                    </button>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="csw-search-box position-relative" style="min-width: 260px;">
+                    <i class="fa fa-search position-absolute top-50 translate-middle-y text-muted ms-3"/>
+                    <input type="text" class="form-control form-control-sm ps-5 rounded-pill"
+                           placeholder="Filter client, site, location…"
+                           t-model="state.searchQuery"/>
+                </div>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <t t-if="state.loading">
+            <div class="d-flex align-items-center justify-content-center py-5">
+                <div class="spinner-border text-primary me-3" role="status"/>
+                <span class="fs-5 text-muted">Loading sites and client portfolios…</span>
+            </div>
+        </t>
+
+        <!-- Main Body: Vertical Client-Grouped View -->
+        <main class="csw-main-content p-4" t-else="">
+            <t t-if="filteredClients.length === 0">
+                <div class="card p-5 text-center bg-white border-0 shadow-sm text-muted">
+                    <i class="fa fa-filter fa-3x mb-3 text-secondary"/>
+                    <h5>No client sites match the current filter</h5>
+                    <p class="small text-muted mb-3">Try clearing search terms or selecting 'All Sites' filter chip.</p>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" t-on-click="() => this.setFilter('all')">
+                            Reset Filters
+                        </button>
+                    </div>
+                </div>
+            </t>
+
+            <div class="d-flex flex-column gap-4">
+                <t t-foreach="filteredClients" t-as="client" t-key="client.id">
+                    <div class="card csw-client-card shadow-sm border-0">
+                        <!-- Client Header Banner -->
+                        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between cursor-pointer"
+                             t-on-click="() => this.toggleCollapse(client.id)">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="fa text-muted" t-att-class="state.collapsedClients[client.id] ? 'fa-chevron-right' : 'fa-chevron-down'"/>
+                                <div class="csw-client-avatar rounded-circle bg-light border d-flex align-items-center justify-content-center">
+                                    <i class="fa fa-building-o text-primary"/>
+                                </div>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h5 class="fw-bold mb-0 text-dark"><t t-esc="client.name"/></h5>
+                                        <t t-if="client.hasActiveContract">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                <i class="fa fa-file-text-o me-1"/> Contracted: <t t-esc="client.contractName"/>
+                                            </span>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge bg-secondary-subtle text-secondary-emphasis border">
+                                                Uncontracted
+                                            </span>
+                                        </t>
+                                    </div>
+                                    <div class="text-muted small mt-1">
+                                        <t t-esc="client.sites.length"/> site<t t-if="client.sites.length !== 1">s</t> configured
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2">
+                                <t t-if="client.contractId">
+                                    <button class="btn btn-outline-primary btn-sm" t-on-click.stop="() => this.openContractSetup({ contract_id: [client.contractId] })">
+                                        <i class="fa fa-briefcase me-1"/> Open Contract Workspace
+                                    </button>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Sites List inside Client (Expanded by default) -->
+                        <t t-if="!state.collapsedClients[client.id]">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0 csw-sites-table">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="ps-4">Site Name &amp; Code</th>
+                                                <th>Location / Sector</th>
+                                                <th>Supervisor</th>
+                                                <th class="text-center">Active Posts</th>
+                                                <th class="text-center">Shift Recipes</th>
+                                                <th class="text-center">Est. Slots/Mo</th>
+                                                <th>Operational Status</th>
+                                                <th class="text-end pe-4">Quick Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="client.sites" t-as="site" t-key="site.id">
+                                                <tr>
+                                                    <!-- Site Name & Code -->
+                                                    <td class="ps-4">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <span class="badge bg-light text-secondary border csw-mono">
+                                                                <t t-esc="site.code || 'SITE'"/>
+                                                            </span>
+                                                            <strong class="text-dark"><t t-esc="site.name"/></strong>
+                                                        </div>
+                                                    </td>
+
+                                                    <!-- Location & Sector -->
+                                                    <td>
+                                                        <div class="small text-dark"><t t-esc="site.location || '—'"/></div>
+                                                        <div class="x-small text-muted text-capitalize"><t t-esc="site.site_type || 'Commercial'"/></div>
+                                                    </td>
+
+                                                    <!-- Supervisor -->
+                                                    <td>
+                                                        <t t-if="site.supervisor_id">
+                                                            <span class="small text-dark">
+                                                                <i class="fa fa-user-circle-o text-muted me-1"/>
+                                                                <t t-esc="site.supervisor_id[1]"/>
+                                                            </span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle x-small">
+                                                                <i class="fa fa-user-times me-1"/> No Supervisor
+                                                            </span>
+                                                        </t>
+                                                    </td>
+
+                                                    <!-- Posts Count -->
+                                                    <td class="text-center">
+                                                        <span class="csw-mono fw-bold" t-att-class="site.postCount === 0 ? 'text-danger' : 'text-dark'">
+                                                            <t t-esc="site.postCount"/>
+                                                        </span>
+                                                    </td>
+
+                                                    <!-- Shift Recipes Count -->
+                                                    <td class="text-center">
+                                                        <span class="csw-mono fw-bold" t-att-class="site.reqCount === 0 ? 'text-danger' : 'text-dark'">
+                                                            <t t-esc="site.reqCount"/>
+                                                        </span>
+                                                    </td>
+
+                                                    <!-- Estimated Monthly Slots -->
+                                                    <td class="text-center">
+                                                        <span class="csw-mono fw-bold text-primary">
+                                                            <t t-esc="site.approxMonthlySlots"/>
+                                                        </span>
+                                                    </td>
+
+                                                    <!-- Status Badge -->
+                                                    <td>
+                                                        <t t-if="site.setup_status === 'ready'">
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                                <i class="fa fa-check-circle me-1"/> Ready
+                                                            </span>
+                                                        </t>
+                                                        <t t-elif="site.setup_status === 'missing_posts'">
+                                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                                                <i class="fa fa-shield me-1"/> Missing Posts
+                                                            </span>
+                                                        </t>
+                                                        <t t-elif="site.setup_status === 'missing_shifts'">
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                                                <i class="fa fa-clock-o me-1"/> Missing Shifts
+                                                            </span>
+                                                        </t>
+                                                        <t t-elif="site.setup_status === 'no_supervisor'">
+                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                                                <i class="fa fa-user-times me-1"/> No Supervisor
+                                                            </span>
+                                                        </t>
+                                                        <t t-else="">
+                                                            <span class="badge bg-secondary-subtle text-secondary border">
+                                                                Uncontracted
+                                                            </span>
+                                                        </t>
+                                                    </td>
+
+                                                    <!-- Actions -->
+                                                    <td class="text-end pe-4">
+                                                        <div class="btn-group btn-group-sm">
+                                                            <t t-if="site.contract_id">
+                                                                <button class="btn btn-outline-primary" title="Open Contract Setup" t-on-click="() => this.openContractSetup(site)">
+                                                                    <i class="fa fa-sliders me-1"/> Contract Setup
+                                                                </button>
+                                                            </t>
+                                                            <t t-else="">
+                                                                <button class="btn btn-outline-secondary" title="Quick Setup Wizard" t-on-click="() => this.openSetupWizard(site.id)">
+                                                                    <i class="fa fa-magic me-1"/> Setup Wizard
+                                                                </button>
+                                                            </t>
+                                                            <button class="btn btn-outline-secondary" title="Site Hub" t-on-click="() => this.openSiteHub(site.id)">
+                                                                <i class="fa fa-tachometer"/>
+                                                            </button>
+                                                            <button class="btn btn-outline-secondary" title="Operational Site Form" t-on-click="() => this.openSiteOps(site.id)">
+                                                                <i class="fa fa-pencil"/>
+                                                            </button>
+                                                            <t t-if="site.setup_status === 'ready'">
+                                                                <button class="btn btn-outline-success" title="Generate Next 21st-20th Roster" t-on-click="() => this.generateRoster(site.id)">
+                                                                    <i class="fa fa-calendar-plus-o"/>
+                                                                </button>
+                                                            </t>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+            </div>
+        </main>
+    </div>
+</t>
+
+</templates>

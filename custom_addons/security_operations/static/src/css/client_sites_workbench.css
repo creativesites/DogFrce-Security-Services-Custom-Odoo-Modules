@@ -1,0 +1,99 @@
+/* ─── Client Sites Workbench ─────────────────────────────────────── */
+
+.csw-root {
+    background: var(--ds-bg, #f8f9fa);
+    min-height: 100vh;
+    font-size: 0.875rem;
+}
+
+.csw-header {
+    background: var(--ds-surface, #ffffff);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.csw-title {
+    color: var(--ds-text, #111827);
+    letter-spacing: -0.01em;
+}
+
+.csw-mono {
+    font-family: var(--dgs-mono, var(--ds-mono, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace));
+    font-variant-numeric: tabular-nums;
+}
+
+.csw-chip {
+    border: 1px solid var(--ds-border, #e2e8f0);
+    background: var(--ds-surface, #ffffff);
+    color: var(--ds-text-subtle, #64748b);
+    border-radius: var(--ds-radius-pill, 50rem);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8125rem;
+    transition: all 0.15s ease;
+}
+
+.csw-chip:hover {
+    background: var(--ds-slate, #f1f5f9);
+    color: var(--ds-text, #111827);
+}
+
+.csw-chip.active {
+    background: var(--ds-accent, #1b3a6b) !important;
+    border-color: var(--ds-accent, #1b3a6b) !important;
+    color: #ffffff !important;
+    font-weight: 600;
+}
+
+.csw-chip.active .badge {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+}
+
+.csw-client-card {
+    border: 1px solid var(--ds-border, #e2e8f0) !important;
+    border-radius: var(--ds-radius-md, 0.5rem);
+    overflow: hidden;
+}
+
+.csw-client-avatar {
+    width: 36px;
+    height: 36px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.csw-sites-table th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--ds-text-subtle, #64748b);
+    font-weight: 600;
+}
+
+.csw-sites-table td {
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+/* ─── Breakpoints ───────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+    .csw-header {
+        position: relative;
+    }
+    .csw-main-content {
+        padding: 1rem !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .csw-sites-table th:nth-child(4),
+    .csw-sites-table td:nth-child(4),
+    .csw-sites-table th:nth-child(5),
+    .csw-sites-table td:nth-child(5) {
+        display: none;
+    }
+}

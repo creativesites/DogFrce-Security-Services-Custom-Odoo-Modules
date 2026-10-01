@@ -7,8 +7,10 @@
         <field name="arch" type="xml">
             <form string="Client Contract">
                 <header>
-                    <button name="action_activate" type="object" string="Activate"
-                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_open_contract_workspace" type="object"
+                            string="Open Contract Workspace" class="oe_highlight btn-primary"/>
+                    <button name="action_activate" type="object" string="Activate Setup"
+                            invisible="state != 'draft'" class="btn-secondary"/>
                     <button name="action_terminate" type="object" string="Terminate"
                             invisible="state not in ('draft', 'active')"/>
                     <button name="action_reset_to_draft" type="object" string="Reset to Draft"
@@ -17,21 +19,63 @@
                            statusbar_visible="draft,active,expired,terminated"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-map-marker" type="action"
+                                name="%(security_operations.action_security_contract_site)d"
+                                context="{'search_default_contract_id': id, 'default_contract_id': id}">
+                            <field name="sites_count" widget="statinfo" string="Sites"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-shield" type="action"
+                                name="%(security_operations.action_security_contract_post)d"
+                                context="{'search_default_contract_id': id}">
+                            <field name="posts_count" widget="statinfo" string="Posts"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-clock-o" type="action"
+                                name="%(security_operations.action_security_contract_requirement)d"
+                                context="{'search_default_contract_id': id}">
+                            <field name="requirements_count" widget="statinfo" string="Shifts"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-calendar" disabled="1">
+                            <field name="estimated_monthly_slots" widget="statinfo" string="Mo. Slots"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-heartbeat" disabled="1">
+                            <field name="readiness_pct" widget="statinfo" string="Readiness (%)"/>
+                        </button>
+                    </div>
+
+                    <div class="alert alert-warning d-flex align-items-center mb-3"
+                         role="alert" invisible="setup_issues_count == 0">
+                        <i class="fa fa-exclamation-triangle fa-2x me-3"/>
+                        <div>
+                            <strong>Operational Setup Incomplete:</strong>
+                            <field name="setup_issues_count" readonly="1" class="fw-bold"/> configuration issue(s) detected.
+                            Open the <strong>Contract Workspace</strong> to review and resolve diagnostic health items.
+                        </div>
+                    </div>
+
                     <div class="oe_title">
+                        <span class="o_form_label">Client Contract</span>
                         <h1>
                             <field name="name" placeholder="e.g. CTR-2026-001"/>
                         </h1>
                     </div>
                     <group>
-                        <group string="Client">
+                        <group string="Commercial Details">
                             <field name="partner_id"/>
-                            <field name="site_id"/>
-                        </group>
-                        <group string="Term">
-                            <field name="date_start"/>
-                            <field name="date_end"/>
                             <field name="monthly_value"/>
                             <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                        <group string="Contract Term &amp; Cycle">
+                            <field name="date_start"/>
+                            <field name="date_end"/>
+                            <div class="o_td_label">
+                                <label for="date_start" string="Operational Cycle"/>
+                            </div>
+                            <div>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="fa fa-calendar me-1"/> 21st to 20th Monthly Billing
+                                </span>
+                            </div>
                         </group>
                     </group>
                     <group invisible="not billing_this_period and not cap_used_pct">
@@ -42,9 +86,34 @@
                         </group>
                     </group>
                     <notebook>
+                        <page string="Contracted Sites &amp; Scope" name="contract_sites">
+                            <div class="alert alert-info mb-2" invisible="contract_site_ids">
+                                Add physical deployment sites under this contract. Staffing recipes (posts &amp; shifts) defined under these sites become live operational positions when activated.
+                            </div>
+                            <field name="contract_site_ids" nolabel="1">
+                                <list decoration-success="readiness_state == 'ready'"
+                                      decoration-warning="readiness_state == 'incomplete'"
+                                      decoration-danger="readiness_state in ('missing_posts', 'missing_shifts')">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="code"/>
+                                    <field name="name"/>
+                                    <field name="location"/>
+                                    <field name="site_type"/>
+                                    <field name="supervisor_id"/>
+                                    <field name="post_count"/>
+                                    <field name="requirement_count"/>
+                                    <field name="estimated_monthly_slots"/>
+                                    <field name="readiness_state" widget="badge"
+                                           decoration-success="readiness_state == 'ready'"
+                                           decoration-warning="readiness_state == 'incomplete'"
+                                           decoration-danger="readiness_state in ('missing_posts', 'missing_shifts')"/>
+                                    <field name="site_id" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Rate Card" name="rate_card">
                             <div class="alert alert-info mb-2" invisible="rate_line_ids">
-                                Add billing rates for each shift category. The system uses these rates to calculate planned revenue on rosters and billing amounts on attendance records.
+                                Add agreed billing rates for each shift category. Shift requirements inherit these rates unless an explicit commercial override is set.
                             </div>
                             <field name="rate_line_ids" nolabel="1">
                                 <list editable="bottom">
@@ -55,8 +124,13 @@
                                 </list>
                             </field>
                         </page>
-                        <page string="Notes" name="notes">
-                            <field name="note" placeholder="Contract terms and notes…"/>
+                        <page string="Legacy Single Site Link" name="legacy_site" groups="base.group_no_one">
+                            <group>
+                                <field name="site_id"/>
+                            </group>
+                        </page>
+                        <page string="Notes &amp; Terms" name="notes">
+                            <field name="note" placeholder="Contract terms and operational notes…"/>
                         </page>
                     </notebook>
                 </sheet>
@@ -74,7 +148,10 @@
                   decoration-danger="state in ('expired', 'terminated')">
                 <field name="name"/>
                 <field name="partner_id"/>
-                <field name="site_id"/>
+                <field name="sites_count" string="Sites"/>
+                <field name="posts_count" string="Posts"/>
+                <field name="estimated_monthly_slots" string="Mo. Slots"/>
+                <field name="readiness_pct" widget="progressbar" string="Readiness"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="monthly_value"/>
@@ -98,6 +175,10 @@
                         domain="[('state','=','active')]"/>
                 <filter name="filter_draft" string="Draft"
                         domain="[('state','=','draft')]"/>
+                <filter name="filter_ready" string="100% Ready"
+                        domain="[('readiness_pct','=',100)]"/>
+                <filter name="filter_incomplete" string="Needs Setup"
+                        domain="[('readiness_pct','&lt;',100)]"/>
                 <filter name="filter_expired" string="Expired / Terminated"
                         domain="[('state','in',['expired','terminated'])]"/>
                 <separator/>
@@ -116,11 +197,54 @@
         <field name="context">{'search_default_filter_active': 1}</field>
     </record>
 
+    <!-- Contract Site actions -->
+    <record id="action_security_contract_site" model="ir.actions.act_window">
+        <field name="name">Contract Sites</field>
+        <field name="res_model">security.contract.site</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Contract Post actions -->
+    <record id="action_security_contract_post" model="ir.actions.act_window">
+        <field name="name">Contract Posts</field>
+        <field name="res_model">security.contract.post</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Contract Shift Requirement actions -->
+    <record id="action_security_contract_requirement" model="ir.actions.act_window">
+        <field name="name">Contract Shift Requirements</field>
+        <field name="res_model">security.contract.shift.requirement</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Client Action for Contract Workspace -->
+    <record id="action_security_contract_workspace" model="ir.actions.client">
+        <field name="name">Contract Workspace</field>
+        <field name="tag">security_operations.contract_workspace</field>
+        <field name="target">current</field>
+    </record>
+
+    <!-- Client Action for Client Sites Workbench -->
+    <record id="action_security_client_sites_workbench" model="ir.actions.client">
+        <field name="name">Client Sites Workbench</field>
+        <field name="tag">security_operations.client_sites_workbench</field>
+        <field name="target">current</field>
+    </record>
+
     <menuitem id="menu_security_client_contracts"
               name="Client Contracts"
               parent="security_operations.menu_security_billing_root"
               action="action_security_client_contract"
               sequence="5"
               groups="hr.group_hr_user"/>
+
+    <!-- Operational Workbench menu in Operations menu -->
+    <menuitem id="menu_security_client_sites_workbench"
+              name="Sites Workbench"
+              parent="security_operations.menu_security_operations_root"
+              action="action_security_client_sites_workbench"
+              sequence="6"
+              groups="security_base.group_security_officer"/>
 
 </odoo>

@@ -1,0 +1,109 @@
+/* ─── Contract Workspace ─────────────────────────────────────────── */
+
+.cw-root {
+    background: var(--ds-bg, #f8f9fa);
+    min-height: 100vh;
+    font-size: 0.875rem;
+}
+
+.cw-header {
+    background: var(--ds-surface, #ffffff);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.cw-title {
+    color: var(--ds-text, #111827);
+    letter-spacing: -0.01em;
+}
+
+.cw-mono {
+    font-family: var(--dgs-mono, var(--ds-mono, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace));
+    font-variant-numeric: tabular-nums;
+}
+
+.cw-tabs .nav-link {
+    color: var(--ds-text-subtle, #64748b);
+    border: none;
+    padding: 0.65rem 1.1rem;
+    font-size: 0.875rem;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    background: transparent;
+}
+
+.cw-tabs .nav-link.active {
+    color: var(--ds-accent, #1b3a6b);
+    border-bottom: 2px solid var(--ds-accent, #1b3a6b);
+    background: transparent;
+    font-weight: 600;
+}
+
+.cw-tabs .nav-link:hover {
+    color: var(--ds-accent, #1b3a6b);
+}
+
+.cw-site-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    border: 1px solid var(--ds-border, #e2e8f0) !important;
+}
+
+.cw-site-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ds-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1)) !important;
+}
+
+.cw-post-card {
+    border: 1px solid var(--ds-border, #e2e8f0) !important;
+}
+
+/* ─── Mon-Sun Day Pills ─────────────────────────────────────────── */
+
+.cw-day-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: var(--ds-radius-sm, 4px);
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-family: var(--dgs-mono, var(--ds-mono, monospace));
+    color: var(--ds-text-subtle, #94a3b8);
+    background: var(--ds-slate, #e2e8f0);
+}
+
+.cw-day-pill.active {
+    color: #ffffff;
+    background: var(--ds-accent, #1b3a6b);
+}
+
+.cw-day-pill.cw-sunday.active {
+    background: #e11d48; /* Red/Rose indicator for Sunday */
+}
+
+/* ─── Metric Strip & Responsive Breakpoints ─────────────────────── */
+
+.cw-metrics-strip {
+    font-size: 0.8125rem;
+}
+
+.x-small {
+    font-size: 0.72rem;
+}
+
+@media (max-width: 1024px) {
+    .cw-header {
+        position: relative;
+    }
+    .cw-content-area {
+        padding: 1rem !important;
+    }
+}
+
+@media (max-width: 900px) {
+    .cw-metrics-strip .border-end {
+        border-right: none !important;
+    }
+}

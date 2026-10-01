@@ -98,6 +98,11 @@ class TestOnboardingWizard(TransactionCase):
         plan = self.env["security.billing.plan"].search([("partner_id", "=", partner.id)])
         self.assertEqual(len(plan), 1)
 
+        contracts = self.env["security.client.contract"].search([("partner_id", "=", partner.id)])
+        self.assertEqual(len(contracts), 1)
+        self.assertEqual(contracts.state, "active")
+        self.assertEqual(sites.contract_id, contracts)
+
     def test_confirm_creates_roster_batch(self):
         """Regression: the default options used to raise on confirm."""
         wiz, _site = self._fully_populated()
