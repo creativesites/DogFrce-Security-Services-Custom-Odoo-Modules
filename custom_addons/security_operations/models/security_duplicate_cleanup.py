@@ -183,11 +183,16 @@ class SecurityDuplicateAuditLine(models.TransientModel):
         ("detected", "Detected (Pending Review)"),
         ("approved", "Approved for Merge"),
         ("merged", "Merged & Archived"),
+        ("dismissed", "Dismissed"),
         ("skipped", "Skipped"),
     ], default="detected", required=True)
 
     def action_approve(self):
         self.write({"state": "approved"})
+
+    def action_dismiss(self):
+        """Mark candidate as dismissed (no merge needed)."""
+        self.write({"state": "dismissed"})
 
     def action_skip(self):
         self.write({"state": "skipped"})
