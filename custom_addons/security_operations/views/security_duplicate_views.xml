@@ -123,14 +123,14 @@
     <!-- Menu Items under Operations Configuration -->
     <menuitem id="menu_security_duplicate_audit"
               name="Duplicate Audit &amp; Cleanup"
-              parent="security_operations.menu_security_configuration_root"
+              parent="security_base.menu_security_configuration"
               action="action_security_duplicate_audit_wizard"
               sequence="90"
               groups="security_base.group_security_manager"/>
 
     <menuitem id="menu_security_legacy_migration"
               name="Migrate to Contract Structure"
-              parent="security_operations.menu_security_configuration_root"
+              parent="security_base.menu_security_configuration"
               action="action_security_legacy_contract_migration_wizard"
               sequence="95"
               groups="security_base.group_security_manager"/>
