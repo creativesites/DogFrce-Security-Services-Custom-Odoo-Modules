@@ -1,9 +1,12 @@
 import json
+import logging
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class SecurityClientContract(models.Model):
@@ -490,7 +493,23 @@ class SecurityClientContract(models.Model):
             if hasattr(contract, "message_post"):
                 contract.message_post(body=msg)
 
+            # Auto-generate operational roster batch for active cycle
+            try:
+                batch_model = self.env.get("security.roster.batch")
+                if batch_model:
+                    batch_model.action_run_cycle_autoroster(cycle_type="current", contract_ids=[contract.id])
+            except Exception as e:
+                _logger.warning("Automated roster generation on contract %s activation notice: %s", contract.name, e)
+
         return True
+
+    def action_trigger_auto_roster(self, cycle_type="current"):
+        """Staff action to generate and auto-fill roster for this contract's sites."""
+        self.ensure_one()
+        batch_model = self.env.get("security.roster.batch")
+        if not batch_model:
+            raise UserError("Roster batch system is not available.")
+        return batch_model.action_run_cycle_autoroster(cycle_type=cycle_type, contract_ids=[self.id])
 
     def action_terminate(self):
         for contract in self:

@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_operations.ContractsDashboard" owl="1">
+    <div class="dgs-contracts-dashboard">
+        <!-- Dashboard Header -->
+        <div class="dgs-cd-header">
+            <div class="dgs-cd-header-titles">
+                <h1 class="dgs-cd-title">Client Contracts &amp; Readiness Dashboard</h1>
+                <p class="dgs-cd-subtitle">
+                    Single source of truth for contract scope, site hierarchy, guarding recipes, and automated rostering health.
+                </p>
+            </div>
+            <div class="dgs-cd-header-actions">
+                <button class="dgs-cd-btn-ai" t-on-click="refreshAiInsights">
+                    <span class="dgs-cd-sparkle">✦</span>
+                    <t t-if="state.aiLoading">Analyzing with Gemini...</t>
+                    <t t-else="">Ask Gemini AI Analysis</t>
+                </button>
+                <button class="dgs-cd-btn-primary" t-on-click="createNewContract">
+                    + New Client Contract
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Strip -->
+        <div class="dgs-cd-kpi-grid">
+            <div class="dgs-cd-kpi-card" t-on-click="() => this.setFilter('all')">
+                <div class="dgs-cd-kpi-label">Total Contracts</div>
+                <div class="dgs-cd-kpi-value dgs-mono"><t t-esc="state.stats.total"/></div>
+                <div class="dgs-cd-kpi-meta"><t t-esc="state.stats.active"/> Active · <t t-esc="state.stats.draft"/> Draft</div>
+            </div>
+            <div class="dgs-cd-kpi-card highlight-ready" t-on-click="() => this.setFilter('ready')">
+                <div class="dgs-cd-kpi-label">Auto-Roster Ready</div>
+                <div class="dgs-cd-kpi-value dgs-mono"><t t-esc="state.stats.ready"/></div>
+                <div class="dgs-cd-kpi-meta">≥ 80% Readiness Score</div>
+            </div>
+            <div class="dgs-cd-kpi-card">
+                <div class="dgs-cd-kpi-label">Avg Readiness Health</div>
+                <div class="dgs-cd-kpi-value dgs-mono"><t t-esc="state.stats.avgReadiness"/>%</div>
+                <div class="dgs-cd-kpi-bar-container">
+                    <div class="dgs-cd-bar-fill" t-attf-style="width: {{ state.stats.avgReadiness }}%;"/>
+                </div>
+            </div>
+            <div class="dgs-cd-kpi-card">
+                <div class="dgs-cd-kpi-label">Contracted Operational Scope</div>
+                <div class="dgs-cd-kpi-value dgs-mono"><t t-esc="state.stats.totalSites"/> <span class="dgs-cd-unit">Sites</span></div>
+                <div class="dgs-cd-kpi-meta"><t t-esc="state.stats.totalPosts"/> Posts · <t t-esc="state.stats.totalSlots"/> Est. Slots/Mo</div>
+            </div>
+        </div>
+
+        <!-- Gemini AI Executive Intelligence Card -->
+        <div class="dgs-cd-ai-card">
+            <div class="dgs-cd-ai-header">
+                <div class="dgs-cd-ai-title-wrap">
+                    <span class="dgs-cd-sparkle">✦</span>
+                    <span class="dgs-cd-ai-title">GEMINI 3.8 FLASH CONTRACT INTELLIGENCE</span>
+                    <span class="dgs-cd-ai-pill">Real-time Analysis</span>
+                </div>
+                <button class="dgs-cd-ai-refresh" t-on-click="refreshAiInsights" title="Refresh Analysis">
+                    <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.aiLoading }"/>
+                </button>
+            </div>
+            <div class="dgs-cd-ai-content">
+                <div class="dgs-cd-ai-block">
+                    <div class="dgs-cd-ai-subtitle">Executive Readiness Overview</div>
+                    <p class="dgs-cd-ai-text"><t t-esc="state.aiSummary || 'All client contracts are synchronized and evaluated. Ready for deterministic cycle scheduling.'"/></p>
+                </div>
+                <div class="dgs-cd-ai-block" t-if="state.aiSuggestions">
+                    <div class="dgs-cd-ai-subtitle">Tactical Rostering &amp; Dispatch Guidance</div>
+                    <p class="dgs-cd-ai-text dgs-cd-ai-bullets"><t t-esc="state.aiSuggestions"/></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Strip: Filters & Search -->
+        <div class="dgs-cd-controls">
+            <div class="dgs-cd-filters">
+                <button t-attf-class="dgs-cd-filter-pill {{ state.filter === 'all' ? 'active' : '' }}"
+                        t-on-click="() => this.setFilter('all')">
+                    All Contracts (<t t-esc="state.stats.total"/>)
+                </button>
+                <button t-attf-class="dgs-cd-filter-pill {{ state.filter === 'ready' ? 'active' : '' }}"
+                        t-on-click="() => this.setFilter('ready')">
+                    Ready for Auto-Roster (<t t-esc="state.stats.ready"/>)
+                </button>
+                <button t-attf-class="dgs-cd-filter-pill {{ state.filter === 'needs_setup' ? 'active' : '' }}"
+                        t-on-click="() => this.setFilter('needs_setup')">
+                    Needs Attention (<t t-esc="state.stats.total - state.stats.ready"/>)
+                </button>
+                <button t-attf-class="dgs-cd-filter-pill {{ state.filter === 'active' ? 'active' : '' }}"
+                        t-on-click="() => this.setFilter('active')">
+                    Active Status (<t t-esc="state.stats.active"/>)
+                </button>
+                <button t-attf-class="dgs-cd-filter-pill {{ state.filter === 'draft' ? 'active' : '' }}"
+                        t-on-click="() => this.setFilter('draft')">
+                    Draft Status (<t t-esc="state.stats.draft"/>)
+                </button>
+            </div>
+            <div class="dgs-cd-search-wrap">
+                <input type="text"
+                       class="dgs-cd-search-input"
+                       placeholder="Search contracts or clients..."
+                       t-model="state.searchQuery"/>
+            </div>
+        </div>
+
+        <!-- Contracts Table / Cards -->
+        <div class="dgs-cd-table-container">
+            <table class="dgs-cd-table">
+                <thead>
+                    <tr>
+                        <th>Contract &amp; Client</th>
+                        <th>Status</th>
+                        <th>Readiness Score</th>
+                        <th>Scope (Sites / Posts / Shifts)</th>
+                        <th>Est. Slots / Mo</th>
+                        <th>Cycle</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-if="filteredContracts.length === 0">
+                        <tr>
+                            <td colspan="7" class="dgs-cd-empty-state">
+                                No contracts matching this view.
+                            </td>
+                        </tr>
+                    </t>
+                    <t t-foreach="filteredContracts" t-as="contract" t-key="contract.id">
+                        <tr class="dgs-cd-row">
+                            <td>
+                                <div class="dgs-cd-name" t-on-click="() => this.openContract(contract.id)">
+                                    <t t-esc="contract.name"/>
+                                </div>
+                                <div class="dgs-cd-client">
+                                    <t t-esc="contract.partner_id ? contract.partner_id[1] : 'No Client'"/>
+                                </div>
+                            </td>
+                            <td>
+                                <span t-attf-class="dgs-cd-status-badge status-{{ contract.state }}">
+                                    <t t-esc="contract.state"/>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="dgs-cd-readiness-cell">
+                                    <div class="dgs-cd-pct-num dgs-mono">
+                                        <t t-esc="Math.round(contract.readiness_pct or 0)"/>%
+                                    </div>
+                                    <div class="dgs-cd-pct-bar">
+                                        <div class="dgs-cd-pct-bar-fill"
+                                             t-attf-class="{{ (contract.readiness_pct or 0) >= 80 ? 'good' : 'warning' }}"
+                                             t-attf-style="width: {{ contract.readiness_pct or 0 }}%;"/>
+                                    </div>
+                                    <span class="dgs-cd-issues-badge" t-if="contract.setup_issues_count > 0">
+                                        <t t-esc="contract.setup_issues_count"/> items
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="dgs-cd-scope-chips">
+                                    <span class="dgs-chip"><t t-esc="contract.sites_count or 0"/> sites</span>
+                                    <span class="dgs-chip"><t t-esc="contract.posts_count or 0"/> posts</span>
+                                    <span class="dgs-chip"><t t-esc="contract.requirements_count or 0"/> shifts</span>
+                                </div>
+                            </td>
+                            <td class="dgs-mono">
+                                <t t-esc="contract.estimated_monthly_slots or 0"/>
+                            </td>
+                            <td>
+                                <span class="dgs-cd-cycle-tag">21st – 20th</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="dgs-cd-actions">
+                                    <button class="dgs-btn-sm dgs-btn-accent"
+                                            t-on-click="() => this.openWorkspace(contract.id)"
+                                            title="Open Interactive Contract Workspace">
+                                        Workspace
+                                    </button>
+                                    <button class="dgs-btn-sm dgs-btn-ghost"
+                                            t-on-click="() => this.openContract(contract.id)"
+                                            title="View Contract Form">
+                                        Details
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</t>
+</templates>

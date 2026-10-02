@@ -47,6 +47,13 @@
         <field name="target">current</field>
     </record>
 
+    <!-- Client Action for Contracts Dashboard -->
+    <record id="action_security_contracts_dashboard" model="ir.actions.client">
+        <field name="name">Contracts Dashboard</field>
+        <field name="tag">security_operations.contracts_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
     <!-- ======================================================== -->
     <!-- FORM & LIST VIEWS                                        -->
     <!-- ======================================================== -->
@@ -241,12 +248,27 @@
     </record>
 
     <!-- Menu Items -->
+    <menuitem id="menu_security_billing_contracts_dashboard"
+              name="Contracts Dashboard"
+              parent="security_operations.menu_security_billing_root"
+              action="action_security_contracts_dashboard"
+              sequence="4"
+              groups="hr.group_hr_user"/>
+
     <menuitem id="menu_security_client_contracts"
               name="Client Contracts"
               parent="security_operations.menu_security_billing_root"
               action="action_security_client_contract"
               sequence="5"
               groups="hr.group_hr_user"/>
+
+    <!-- Operational Contracts Dashboard in Operations menu -->
+    <menuitem id="menu_security_operations_contracts_dashboard"
+              name="Contracts Dashboard"
+              parent="security_operations.menu_security_operations_root"
+              action="action_security_contracts_dashboard"
+              sequence="5"
+              groups="security_base.group_security_supervisor"/>
 
     <!-- Operational Workbench menu in Operations menu -->
     <menuitem id="menu_security_client_sites_workbench"

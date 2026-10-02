@@ -124,6 +124,70 @@
 
     </div>
 
+    <!-- Contracts Health, Readiness & AI Intelligence -->
+    <t t-if="contracts">
+      <div class="dgs-contracts-section-header">
+        <div class="dgs-contracts-header-left">
+          <h2 class="dgs-home-section-heading" style="margin: 0;">Client Contracts &amp; Readiness</h2>
+          <span class="dgs-contracts-badge">
+            <t t-esc="contracts.avg_readiness"/>% Avg Readiness
+          </span>
+        </div>
+        <div class="dgs-contracts-header-actions">
+          <button class="dgs-contracts-btn-ai" t-on-click="onRefreshAiInsights" title="Regenerate Gemini AI Insights">
+            <span class="dgs-ai-sparkle">✦</span>
+            <t t-if="uiState.aiLoading">Analyzing...</t>
+            <t t-else="">Ask Gemini AI</t>
+          </button>
+          <button class="dgs-contracts-btn-link" t-on-click="onOpenContracts">
+            View All Contracts (<t t-esc="contracts.total_contracts"/>) →
+          </button>
+        </div>
+      </div>
+
+      <!-- Contracts KPI Strip -->
+      <div class="dgs-contracts-kpi-grid">
+        <div class="dgs-contracts-kpi-card">
+          <div class="dgs-kpi-label">Active Contracts</div>
+          <div class="dgs-kpi-value dgs-mono"><t t-esc="contracts.active_contracts"/></div>
+          <div class="dgs-kpi-sub"><t t-esc="contracts.ready_contracts"/> auto-roster ready</div>
+        </div>
+        <div class="dgs-contracts-kpi-card">
+          <div class="dgs-kpi-label">Contract Sites</div>
+          <div class="dgs-kpi-value dgs-mono"><t t-esc="contracts.total_sites"/></div>
+          <div class="dgs-kpi-sub">Across all clients</div>
+        </div>
+        <div class="dgs-contracts-kpi-card">
+          <div class="dgs-kpi-label">Guarding Posts</div>
+          <div class="dgs-kpi-value dgs-mono"><t t-esc="contracts.total_posts"/></div>
+          <div class="dgs-kpi-sub"><t t-esc="contracts.total_recipes"/> shift recipes</div>
+        </div>
+        <div class="dgs-contracts-kpi-card">
+          <div class="dgs-kpi-label">Est. Monthly Slots</div>
+          <div class="dgs-kpi-value dgs-mono"><t t-esc="contracts.est_monthly_slots"/></div>
+          <div class="dgs-kpi-sub">21st–20th cycle volume</div>
+        </div>
+      </div>
+
+      <!-- AI Summary & Suggestions Banner -->
+      <div class="dgs-contracts-ai-card">
+        <div class="dgs-ai-badge-row">
+          <span class="dgs-ai-tag"><span class="dgs-ai-sparkle">✦</span> GEMINI 3.8 FLASH INTELLIGENCE</span>
+          <span class="dgs-ai-status-pill">Active on Production</span>
+        </div>
+        <div class="dgs-ai-body">
+          <div class="dgs-ai-summary-block">
+            <div class="dgs-ai-label">Executive Health Summary</div>
+            <p class="dgs-ai-text"><t t-esc="contracts.ai_summary"/></p>
+          </div>
+          <div class="dgs-ai-suggestions-block" t-if="contracts.ai_suggestions">
+            <div class="dgs-ai-label">Tactical Auto-Rostering Suggestions</div>
+            <p class="dgs-ai-text dgs-ai-bullets"><t t-esc="contracts.ai_suggestions"/></p>
+          </div>
+        </div>
+      </div>
+    </t>
+
     <!-- Modules -->
     <h2 class="dgs-home-section-heading">Modules</h2>
     <t t-foreach="moduleFamilies" t-as="family" t-key="family.key">

@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="security_shift_planner.AutoRosteringDashboard">
+        <div class="df-autoroster-dashboard">
+            <!-- Header Bar -->
+            <div class="df-ar-header">
+                <div class="df-ar-header-left">
+                    <div class="df-ar-badge">
+                        <i class="fa fa-magic me-1"/> AUTOMATED ROSTERING ENGINE
+                    </div>
+                    <h1 class="df-ar-title">Operations Rostering Hub</h1>
+                    <p class="df-ar-subtitle">
+                        Automated shift generation &amp; intelligent guard allocation driven by contract operational recipes.
+                    </p>
+                </div>
+
+                <div class="df-ar-header-right">
+                    <!-- Cycle Selector -->
+                    <div class="df-ar-cycle-selector">
+                        <button class="df-ar-cycle-btn"
+                                t-att-class="{ 'active': state.cycleType === 'current' }"
+                                t-on-click="() => this.setCycle('current')">
+                            <i class="fa fa-calendar-check-o me-1"/> Current Cycle
+                        </button>
+                        <button class="df-ar-cycle-btn"
+                                t-att-class="{ 'active': state.cycleType === 'next' }"
+                                t-on-click="() => this.setCycle('next')">
+                            <i class="fa fa-calendar-plus-o me-1"/> Next Cycle (21st–20th)
+                        </button>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="df-ar-header-actions">
+                        <button class="btn btn-outline-secondary df-ar-btn-refresh"
+                                t-on-click="loadData"
+                                t-att-disabled="state.loading || state.runningRoster"
+                                title="Refresh cycle data">
+                            <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.loading }"/>
+                        </button>
+                        <button class="btn btn-primary df-ar-btn-run"
+                                t-on-click="runFullAutoRoster"
+                                t-att-disabled="state.loading || state.runningRoster">
+                            <i class="fa fa-bolt me-1" t-att-class="{ 'fa-spin': state.runningRoster }"/>
+                            <t t-if="state.runningRoster">Rostering in Progress…</t>
+                            <t t-else="">Run Full Auto-Roster</t>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cycle Notice / Info Bar -->
+            <div class="df-ar-info-bar">
+                <div class="df-ar-info-left">
+                    <span class="df-ar-info-label">Active Period:</span>
+                    <strong class="df-ar-info-period"><t t-esc="state.data.cycle_label || 'Loading cycle…'"/></strong>
+                    <span class="badge bg-primary-subtle text-primary ms-2 border border-primary-subtle">
+                        21st to 20th Standard Operational Cycle
+                    </span>
+                </div>
+                <div class="df-ar-info-right">
+                    <button class="btn btn-sm btn-link text-decoration-none" t-on-click="openRosteringHub">
+                        <i class="fa fa-external-link me-1"/> Open Interactive Roster Board
+                    </button>
+                </div>
+            </div>
+
+            <!-- Execution Result Banner (if just ran) -->
+            <t t-if="state.lastResult">
+                <div class="alert alert-success df-ar-result-alert d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-check-circle fa-2x me-3 text-success"/>
+                        <div>
+                            <strong>Auto-Rostering Run Complete:</strong>
+                            <div class="small text-muted"><t t-esc="state.lastResult.message"/></div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" t-on-click="() => this.state.lastResult = null"/>
+                </div>
+            </t>
+
+            <!-- KPI Cards -->
+            <div class="df-ar-kpis">
+                <div class="df-ar-kpi-card">
+                    <div class="df-ar-kpi-icon text-primary"><i class="fa fa-cubes"/></div>
+                    <div class="df-ar-kpi-content">
+                        <div class="df-ar-kpi-value"><t t-esc="state.data.stats.total_batches"/></div>
+                        <div class="df-ar-kpi-label">Active Site Batches</div>
+                    </div>
+                </div>
+
+                <div class="df-ar-kpi-card">
+                    <div class="df-ar-kpi-icon text-info"><i class="fa fa-calendar"/></div>
+                    <div class="df-ar-kpi-content">
+                        <div class="df-ar-kpi-value"><t t-esc="state.data.stats.total_slots"/></div>
+                        <div class="df-ar-kpi-label">Shift Slots Generated</div>
+                    </div>
+                </div>
+
+                <div class="df-ar-kpi-card">
+                    <div class="df-ar-kpi-icon text-success"><i class="fa fa-shield"/></div>
+                    <div class="df-ar-kpi-content">
+                        <div class="df-ar-kpi-value text-success"><t t-esc="state.data.stats.total_assigned"/></div>
+                        <div class="df-ar-kpi-label">Guards Assigned</div>
+                    </div>
+                </div>
+
+                <div class="df-ar-kpi-card" t-att-class="{ 'has-gaps': state.data.stats.unassigned_gaps > 0 }">
+                    <div class="df-ar-kpi-icon text-warning"><i class="fa fa-exclamation-triangle"/></div>
+                    <div class="df-ar-kpi-content">
+                        <div class="df-ar-kpi-value" t-att-class="{ 'text-danger': state.data.stats.unassigned_gaps > 0 }">
+                            <t t-esc="state.data.stats.unassigned_gaps"/>
+                        </div>
+                        <div class="df-ar-kpi-label">Unassigned Gaps</div>
+                    </div>
+                </div>
+
+                <div class="df-ar-kpi-card">
+                    <div class="df-ar-kpi-icon text-purple"><i class="fa fa-pie-chart"/></div>
+                    <div class="df-ar-kpi-content">
+                        <div class="df-ar-kpi-value"><t t-esc="state.data.stats.overall_fill_rate"/>%</div>
+                        <div class="df-ar-kpi-label">Roster Fill Rate</div>
+                    </div>
+                </div>
+
+                <div class="df-ar-kpi-card">
+                    <div class="df-ar-kpi-icon text-secondary"><i class="fa fa-file-text-o"/></div>
+                    <div class="df-ar-kpi-content">
+                        <div class="df-ar-kpi-value">
+                            <t t-esc="state.data.stats.ready_contracts"/> / <t t-esc="state.data.stats.active_contracts"/>
+                        </div>
+                        <div class="df-ar-kpi-label">Ready Contracts</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area: Navigation Tabs -->
+            <div class="df-ar-content-card">
+                <div class="df-ar-nav-bar">
+                    <div class="df-ar-tabs">
+                        <button class="df-ar-tab"
+                                t-att-class="{ 'active': state.activeTab === 'contracts' }"
+                                t-on-click="() => this.setActiveTab('contracts')">
+                            <i class="fa fa-handshake-o me-1"/> Contracts &amp; Readiness
+                            <span class="badge bg-light text-dark ms-1">
+                                <t t-esc="state.data.contracts.length"/>
+                            </span>
+                        </button>
+                        <button class="df-ar-tab"
+                                t-att-class="{ 'active': state.activeTab === 'batches' }"
+                                t-on-click="() => this.setActiveTab('batches')">
+                            <i class="fa fa-th-list me-1"/> Generated Site Batches
+                            <span class="badge bg-light text-dark ms-1">
+                                <t t-esc="state.data.batches.length"/>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div class="df-ar-controls">
+                        <t t-if="state.activeTab === 'contracts'">
+                            <div class="btn-group btn-group-sm me-2">
+                                <button class="btn btn-outline-secondary"
+                                        t-att-class="{ 'active': state.filterState === 'all' }"
+                                        t-on-click="() => this.setFilter('all')">All</button>
+                                <button class="btn btn-outline-secondary"
+                                        t-att-class="{ 'active': state.filterState === 'ready' }"
+                                        t-on-click="() => this.setFilter('ready')">100% Ready</button>
+                                <button class="btn btn-outline-secondary"
+                                        t-att-class="{ 'active': state.filterState === 'with_gaps' }"
+                                        t-on-click="() => this.setFilter('with_gaps')">With Gaps</button>
+                            </div>
+                        </t>
+
+                        <div class="df-ar-search-box">
+                            <i class="fa fa-search df-ar-search-icon"/>
+                            <input type="text"
+                                   class="form-control form-control-sm df-ar-search-input"
+                                   placeholder="Search by client or reference…"
+                                   t-model="state.searchQuery"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 1: Contracts Table -->
+                <t t-if="state.activeTab === 'contracts'">
+                    <div class="table-responsive df-ar-table-wrap">
+                        <table class="table table-hover align-middle df-ar-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Contract</th>
+                                    <th>Client</th>
+                                    <th>Readiness</th>
+                                    <th>Sites &amp; Posts</th>
+                                    <th>Batches</th>
+                                    <th>Slots (Filled / Total)</th>
+                                    <th>Fill Rate</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="filteredContracts.length === 0">
+                                    <tr>
+                                        <td colspan="8" class="text-center py-5 text-muted">
+                                            <i class="fa fa-folder-open-o fa-3x mb-2 d-block text-secondary"/>
+                                            No contracts match the current filter.
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="filteredContracts" t-as="c" t-key="c.id">
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold df-clickable text-primary" t-on-click="() => this.openContract(c.id)">
+                                                <t t-esc="c.name"/>
+                                            </div>
+                                            <span class="badge" t-att-class="c.state === 'active' ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'">
+                                                <t t-esc="c.state"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium text-dark"><t t-esc="c.partner_name"/></div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="min-width: 140px;">
+                                                <div class="progress flex-grow-1 me-2" style="height: 7px;">
+                                                    <div class="progress-bar"
+                                                         t-att-class="c.readiness_pct >= 100 ? 'bg-success' : (c.readiness_pct >= 80 ? 'bg-info' : 'bg-warning')"
+                                                         t-att-style="'width: ' + c.readiness_pct + '%;'"/>
+                                                </div>
+                                                <span class="small fw-semibold"><t t-esc="c.readiness_pct"/>%</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border me-1">
+                                                <i class="fa fa-map-marker me-1"/> <t t-esc="c.sites_count"/> Sites
+                                            </span>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="fa fa-shield me-1"/> <t t-esc="c.posts_count"/> Posts
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge" t-att-class="c.batches_count > 0 ? 'bg-primary-subtle text-primary' : 'bg-secondary-subtle text-secondary'">
+                                                <t t-esc="c.batches_count"/> Batches
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <t t-if="c.slots_count > 0">
+                                                <span class="text-success fw-bold"><t t-esc="c.assigned_count"/></span> / 
+                                                <span><t t-esc="c.slots_count"/></span>
+                                                <t t-if="c.gaps_count > 0">
+                                                    <span class="badge bg-danger-subtle text-danger ms-1">
+                                                        <t t-esc="c.gaps_count"/> gaps
+                                                    </span>
+                                                </t>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-muted small">Not generated yet</span>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <t t-if="c.slots_count > 0">
+                                                <span class="badge"
+                                                      t-att-class="c.fill_rate >= 90 ? 'bg-success-subtle text-success' : (c.fill_rate >= 70 ? 'bg-warning-subtle text-warning' : 'bg-danger-subtle text-danger')">
+                                                    <t t-esc="c.fill_rate"/>%
+                                                </span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge bg-light text-muted">—</span>
+                                            </t>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary"
+                                                        t-on-click="() => this.runContractAutoRoster(c.id)"
+                                                        t-att-disabled="state.runningRoster"
+                                                        title="Generate &amp; auto-assign this contract">
+                                                    <i class="fa fa-bolt me-1"/> Auto-Roster
+                                                </button>
+                                                <button class="btn btn-outline-secondary"
+                                                        t-on-click="() => this.openContractWorkspace(c.id)"
+                                                        title="Open Contract Workspace">
+                                                    <i class="fa fa-cog"/>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+
+                <!-- Tab 2: Batches Table -->
+                <t t-if="state.activeTab === 'batches'">
+                    <div class="table-responsive df-ar-table-wrap">
+                        <table class="table table-hover align-middle df-ar-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Batch Reference</th>
+                                    <th>Operational Site</th>
+                                    <th>Client</th>
+                                    <th>Status</th>
+                                    <th>Total Slots</th>
+                                    <th>Assigned</th>
+                                    <th>Gaps</th>
+                                    <th>Fill Rate</th>
+                                    <th class="text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-if="filteredBatches.length === 0">
+                                    <tr>
+                                        <td colspan="9" class="text-center py-5 text-muted">
+                                            <i class="fa fa-calendar-times-o fa-3x mb-2 d-block text-secondary"/>
+                                            No batches generated for this cycle yet. Click <strong>"Run Full Auto-Roster"</strong> above to generate!
+                                        </td>
+                                    </tr>
+                                </t>
+                                <t t-foreach="filteredBatches" t-as="b" t-key="b.id">
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold df-clickable text-primary" t-on-click="() => this.openBatch(b.id)">
+                                                <t t-esc="b.name"/>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-medium text-dark"><i class="fa fa-map-marker text-muted me-1"/> <t t-esc="b.site_name"/></div>
+                                        </td>
+                                        <td>
+                                            <div class="text-dark"><t t-esc="b.partner_name"/></div>
+                                        </td>
+                                        <td>
+                                            <span class="badge" t-att-class="b.state === 'draft' ? 'bg-secondary-subtle text-secondary' : 'bg-primary-subtle text-primary'">
+                                                <t t-esc="b.state"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-dark"><t t-esc="b.total_slots"/></strong>
+                                        </td>
+                                        <td>
+                                            <span class="text-success fw-bold"><t t-esc="b.assigned_slots"/></span>
+                                        </td>
+                                        <td>
+                                            <t t-if="b.unassigned_slots > 0">
+                                                <span class="badge bg-danger text-white"><t t-esc="b.unassigned_slots"/></span>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="badge bg-success text-white">0 (Filled)</span>
+                                            </t>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center" style="min-width: 110px;">
+                                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
+                                                    <div class="progress-bar"
+                                                         t-att-class="b.fill_rate >= 90 ? 'bg-success' : (b.fill_rate >= 70 ? 'bg-warning' : 'bg-danger')"
+                                                         t-att-style="'width: ' + b.fill_rate + '%;'"/>
+                                                </div>
+                                                <span class="small fw-semibold"><t t-esc="b.fill_rate"/>%</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <button class="btn btn-sm btn-outline-primary"
+                                                    t-on-click="() => this.openBatch(b.id)">
+                                                <i class="fa fa-external-link me-1"/> Open Batch
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </div>
+                </t>
+            </div>
+        </div>
+    </t>
+</templates>

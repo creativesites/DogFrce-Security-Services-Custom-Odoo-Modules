@@ -224,6 +224,37 @@ export class HomeDashboard extends Component {
         });
     }
 
+    get contracts() {
+        return this.payload?.contracts;
+    }
+
+    onOpenContracts() {
+        this.action.doAction("security_operations.action_security_client_contract", { clearBreadcrumbs: true });
+    }
+
+    onOpenContract(contractId) {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "security.client.contract",
+            res_id: contractId,
+            views: [[false, "form"]],
+            target: "current",
+        });
+    }
+
+    async onRefreshAiInsights() {
+        if (this.uiState.aiLoading) return;
+        this.uiState.aiLoading = true;
+        try {
+            await this.shell.orm.call("security.shell.data", "action_refresh_contracts_ai_insights", []);
+            await this.shell.loadPayload(this.uiState.period);
+        } catch (e) {
+            console.error("DeployGuard Shell: refresh AI insights failed", e);
+        } finally {
+            this.uiState.aiLoading = false;
+        }
+    }
+
     onSearchFocus() {
         this.shell.state.paletteOpen = true;
     }

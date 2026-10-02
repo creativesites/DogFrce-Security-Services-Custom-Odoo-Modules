@@ -47,30 +47,30 @@ export class ClientSitesWorkbench extends Component {
                 ]
             );
 
-            // Fetch counts of posts & shifts per site
-            const postCounts = await this.orm.readGroup(
+            // Fetch counts of posts & shifts per site using searchRead
+            const allPosts = await this.orm.searchRead(
                 "security.post",
                 [["active", "=", true]],
-                ["site_id"],
                 ["site_id"]
             );
             const postCountMap = {};
-            for (const pc of postCounts) {
-                if (pc.site_id) {
-                    postCountMap[pc.site_id[0]] = pc.site_id_count;
+            for (const p of allPosts) {
+                if (p.site_id) {
+                    const sid = p.site_id[0];
+                    postCountMap[sid] = (postCountMap[sid] || 0) + 1;
                 }
             }
 
-            const reqCounts = await this.orm.readGroup(
+            const allReqs = await this.orm.searchRead(
                 "security.shift.requirement",
                 [["active", "=", true]],
-                ["site_id"],
                 ["site_id"]
             );
             const reqCountMap = {};
-            for (const rc of reqCounts) {
-                if (rc.site_id) {
-                    reqCountMap[rc.site_id[0]] = rc.site_id_count;
+            for (const r of allReqs) {
+                if (r.site_id) {
+                    const sid = r.site_id[0];
+                    reqCountMap[sid] = (reqCountMap[sid] || 0) + 1;
                 }
             }
 

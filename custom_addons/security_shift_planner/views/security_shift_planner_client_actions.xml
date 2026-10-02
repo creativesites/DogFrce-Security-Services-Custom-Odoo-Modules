@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Rostering Mega Menu — Executive Command Center (sequence 0 = top of menu) -->
+    <!-- Auto-Rostering Dashboard — Automated shift generation & intelligent guard allocation -->
+    <record id="action_autorostering_dashboard" model="ir.actions.client">
+        <field name="name">🤖 Auto-Rostering Center</field>
+        <field name="tag">security_shift_planner.autorostering_dashboard</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_autorostering_dashboard"
+        name="🤖 Auto-Roster Engine"
+        parent="security_operations.menu_security_roster"
+        action="action_autorostering_dashboard"
+        sequence="0"
+        groups="hr.group_hr_user"
+    />
+
+    <!-- Operational quick link in Operations root menu -->
+    <menuitem
+        id="menu_operations_autoroster_dashboard"
+        name="Auto-Roster Engine"
+        parent="security_operations.menu_security_operations_root"
+        action="action_autorostering_dashboard"
+        sequence="7"
+        groups="security_base.group_security_supervisor"
+    />
+
+    <!-- Rostering Mega Menu — Executive Command Center (sequence 1) -->
     <record id="action_rostering_mega_menu" model="ir.actions.client">
         <field name="name">⚡ Rostering Mega Menu</field>
         <field name="tag">security_shift_planner.rostering_mega_menu</field>
@@ -12,7 +38,7 @@
         name="⚡ Mega Menu"
         parent="security_operations.menu_security_roster"
         action="action_rostering_mega_menu"
-        sequence="0"
+        sequence="1"
         groups="hr.group_hr_user"
     />
 

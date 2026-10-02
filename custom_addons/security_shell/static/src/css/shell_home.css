@@ -537,6 +537,182 @@
     margin-top: 6px;
 }
 
+/* ── Contracts & AI Intelligence Section ──────────────────────────────── */
+
+.dgs-contracts-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 32px 0 16px;
+}
+
+.dgs-contracts-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dgs-contracts-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+    border-radius: var(--dgs-r-pill);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dgs-contracts-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dgs-contracts-btn-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+    color: #FFFFFF;
+    border: 1px solid #4338CA;
+    border-radius: var(--dgs-r-pill);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dgs-contracts-btn-ai:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(67, 56, 202, 0.25);
+}
+
+.dgs-ai-sparkle {
+    color: #FBBF24;
+    font-size: 14px;
+}
+
+.dgs-contracts-btn-link {
+    background: none;
+    border: none;
+    color: var(--ds-primary, #2563EB);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 8px;
+}
+
+.dgs-contracts-btn-link:hover {
+    text-decoration: underline;
+}
+
+.dgs-contracts-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.dgs-contracts-kpi-card {
+    background: var(--dgs-panel);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--dgs-r-card);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dgs-contracts-kpi-card .dgs-kpi-label {
+    font-size: 12.5px;
+    color: var(--ds-text-subtle);
+    margin-bottom: 6px;
+}
+
+.dgs-contracts-kpi-card .dgs-kpi-value {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--ds-text);
+}
+
+.dgs-contracts-kpi-card .dgs-kpi-sub {
+    font-size: 12px;
+    color: var(--ds-text-subtle);
+    margin-top: 4px;
+}
+
+.dgs-contracts-ai-card {
+    background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
+    color: #F8FAFC;
+    border-radius: var(--dgs-r-card);
+    padding: 22px 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dgs-ai-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.dgs-ai-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    color: #A5B4FC;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dgs-ai-status-pill {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 8px;
+    background: rgba(16, 185, 129, 0.2);
+    color: #34D399;
+    border-radius: var(--dgs-r-pill);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.dgs-ai-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.dgs-ai-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #94A3B8;
+    margin-bottom: 8px;
+}
+
+.dgs-ai-text {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #E2E8F0;
+    margin: 0;
+}
+
+.dgs-ai-bullets {
+    white-space: pre-line;
+}
+
+@media (max-width: 900px) {
+    .dgs-contracts-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .dgs-ai-body { grid-template-columns: 1fr; gap: 16px; }
+}
+
 /* ── Responsive ────────────────────────────────────────────────────────── */
 
 @media (max-width: 1100px) {

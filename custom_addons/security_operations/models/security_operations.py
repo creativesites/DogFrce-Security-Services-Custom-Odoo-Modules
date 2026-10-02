@@ -1,9 +1,12 @@
 import calendar
+import logging
 from datetime import date, timedelta
 
 from dateutil.relativedelta import relativedelta
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
 
 
 class SecurityPostType(models.Model):
@@ -1285,6 +1288,204 @@ class SecurityRosterBatch(models.Model):
                 "notification_type": "roster_gap",
                 "severity": "info",
             })
+
+    @api.model
+    def action_cron_sync_ready_contracts_roster(self):
+        """Cron (daily): Ensure all active ready contracts have operational roster batches for the current cycle."""
+        return self.action_run_cycle_autoroster(cycle_type="current")
+
+    @api.model
+    def action_run_cycle_autoroster(self, cycle_type="current", contract_ids=None):
+        """
+        Runs automated rostering for specified cycle ('current' or 'next') or contracts.
+        Generates roster batches, creates slots from shift requirements, and fills them via auto-assignment.
+        """
+        today = date.today()
+        if cycle_type == "next":
+            ref_date = today + timedelta(days=25)
+        else:
+            ref_date = today
+        date_from, date_to = self.get_operational_cycle_dates(ref_date)
+
+        contract_model = self.env.get("security.client.contract")
+        if not contract_model:
+            return {"success": False, "message": "Contract model not found"}
+
+        domain = [("state", "=", "active")]
+        if contract_ids:
+            domain.append(("id", "in", contract_ids))
+        active_contracts = contract_model.search(domain)
+
+        created_batches = 0
+        updated_batches = 0
+        total_slots = 0
+        total_assigned = 0
+
+        for contract in active_contracts:
+            sites = contract.contract_site_ids.mapped("site_id")
+            if not sites and contract.site_id:
+                sites = contract.site_id
+
+            for site in sites:
+                if not site.active:
+                    continue
+                batch = self.search([
+                    ("site_id", "=", site.id),
+                    ("date_from", "=", str(date_from)),
+                    ("date_to", "=", str(date_to)),
+                    ("state", "!=", "cancelled"),
+                ], limit=1)
+
+                is_new = False
+                if not batch:
+                    batch = self.create({
+                        "date_from": date_from,
+                        "date_to": date_to,
+                        "site_id": site.id,
+                        "partner_id": contract.partner_id.id,
+                    })
+                    is_new = True
+
+                try:
+                    if not batch.slot_ids:
+                        batch.action_generate_slots()
+                    if hasattr(batch, "action_auto_fill_slots"):
+                        batch.action_auto_fill_slots()
+
+                    if is_new:
+                        created_batches += 1
+                    else:
+                        updated_batches += 1
+
+                    total_slots += len(batch.slot_ids.filtered(lambda s: s.state != "cancelled"))
+                    total_assigned += len(batch.slot_ids.filtered(lambda s: s.employee_id and s.state != "cancelled"))
+                except Exception as e:
+                    _logger.warning("Error auto-rostering site %s (contract %s): %s", site.name, contract.name, e)
+                    continue
+
+        fill_rate = round(total_assigned / total_slots * 100, 1) if total_slots else 0.0
+        cycle_label = f"{date_from.strftime('%d %b %Y')} – {date_to.strftime('%d %b %Y')}"
+
+        return {
+            "success": True,
+            "cycle_label": cycle_label,
+            "date_from": str(date_from),
+            "date_to": str(date_to),
+            "created_batches": created_batches,
+            "updated_batches": updated_batches,
+            "total_slots": total_slots,
+            "total_assigned": total_assigned,
+            "unassigned_gaps": total_slots - total_assigned,
+            "fill_rate": fill_rate,
+            "message": f"Cycle {cycle_label}: {created_batches} created, {updated_batches} updated. {total_assigned}/{total_slots} slots filled ({fill_rate}%).",
+        }
+
+    @api.model
+    def get_autoroster_dashboard_data(self, cycle_type="current", custom_date_from=None, custom_date_to=None):
+        today = date.today()
+        if cycle_type == "next":
+            ref_date = today + timedelta(days=25)
+            d_from, d_to = self.get_operational_cycle_dates(ref_date)
+        elif cycle_type == "custom" and custom_date_from and custom_date_to:
+            d_from = fields.Date.from_string(custom_date_from)
+            d_to = fields.Date.from_string(custom_date_to)
+        else:
+            d_from, d_to = self.get_operational_cycle_dates(today)
+
+        cycle_label = f"{d_from.strftime('%d %b %Y')} – {d_to.strftime('%d %b %Y')}"
+
+        contract_model = self.env.get("security.client.contract")
+        contracts = contract_model.search([("state", "in", ["active", "draft"])], order="readiness_pct desc, name asc") if contract_model else []
+
+        batches = self.search([
+            ("date_from", "=", str(d_from)),
+            ("date_to", "=", str(d_to)),
+            ("state", "!=", "cancelled"),
+        ])
+
+        batch_by_site = {}
+        for b in batches:
+            if b.site_id:
+                batch_by_site.setdefault(b.site_id.id, []).append(b)
+
+        contracts_data = []
+        for c in contracts:
+            c_sites = c.contract_site_ids.mapped("site_id")
+            if not c_sites and c.site_id:
+                c_sites = c.site_id
+
+            site_batches = []
+            for s in c_sites:
+                site_batches.extend(batch_by_site.get(s.id, []))
+
+            slots_count = sum(len(b.slot_ids.filtered(lambda s: s.state != 'cancelled')) for b in site_batches)
+            assigned_count = sum(len(b.slot_ids.filtered(lambda s: s.employee_id and s.state != 'cancelled')) for b in site_batches)
+            gaps_count = slots_count - assigned_count
+            c_fill_rate = round(assigned_count / slots_count * 100, 1) if slots_count else 0.0
+
+            contracts_data.append({
+                "id": c.id,
+                "name": c.name,
+                "partner_name": c.partner_id.name or "Unknown Client",
+                "state": c.state,
+                "readiness_pct": round(c.readiness_pct or 0.0, 1),
+                "sites_count": len(c.contract_site_ids),
+                "posts_count": c.posts_count,
+                "requirements_count": c.requirements_count,
+                "batches_count": len(site_batches),
+                "slots_count": slots_count,
+                "assigned_count": assigned_count,
+                "gaps_count": gaps_count,
+                "fill_rate": c_fill_rate,
+                "can_roster": c.state == "active" and (c.readiness_pct or 0.0) >= 80,
+            })
+
+        batches_data = []
+        for b in batches:
+            active_slots = b.slot_ids.filtered(lambda s: s.state != 'cancelled')
+            total = len(active_slots)
+            assigned = len(active_slots.filtered(lambda s: bool(s.employee_id)))
+            gaps = total - assigned
+            rate = round(assigned / total * 100, 1) if total else 0.0
+
+            batches_data.append({
+                "id": b.id,
+                "name": b.name,
+                "site_name": b.site_id.name if b.site_id else "General",
+                "partner_name": b.partner_id.name if b.partner_id else "General",
+                "state": b.state,
+                "total_slots": total,
+                "assigned_slots": assigned,
+                "unassigned_slots": gaps,
+                "fill_rate": rate,
+            })
+
+        total_batches = len(batches)
+        total_slots = sum(b["total_slots"] for b in batches_data)
+        total_assigned = sum(b["assigned_slots"] for b in batches_data)
+        unassigned_gaps = total_slots - total_assigned
+        overall_fill_rate = round(total_assigned / total_slots * 100, 1) if total_slots else 0.0
+
+        ready_contracts_count = len([c for c in contracts_data if c["readiness_pct"] >= 100])
+        active_contracts_count = len([c for c in contracts_data if c["state"] == "active"])
+
+        return {
+            "cycle_type": cycle_type,
+            "cycle_label": cycle_label,
+            "date_from": str(d_from),
+            "date_to": str(d_to),
+            "stats": {
+                "total_batches": total_batches,
+                "total_slots": total_slots,
+                "total_assigned": total_assigned,
+                "unassigned_gaps": unassigned_gaps,
+                "overall_fill_rate": overall_fill_rate,
+                "active_contracts": active_contracts_count,
+                "ready_contracts": ready_contracts_count,
+            },
+            "contracts": contracts_data,
+            "batches": batches_data,
+        }
 
     def action_generate_next_month(self):
         """Manual trigger: generate next 21st-to-20th operational cycle roster for this batch's site/client."""

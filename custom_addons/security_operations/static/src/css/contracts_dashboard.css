@@ -1,0 +1,454 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   DogForce — Client Contracts & Readiness Dashboard
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.dgs-contracts-dashboard {
+    padding: 24px 32px 48px;
+    background: #0B0F17;
+    color: #F8FAFC;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.dgs-cd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 20px;
+}
+
+.dgs-cd-title {
+    font-size: 26px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+}
+
+.dgs-cd-subtitle {
+    font-size: 13.5px;
+    color: #94A3B8;
+    margin: 0;
+    max-width: 650px;
+}
+
+.dgs-cd-header-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.dgs-cd-btn-ai {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+    color: #FFFFFF;
+    border: 1px solid #4F46E5;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dgs-cd-btn-ai:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+}
+
+.dgs-cd-sparkle {
+    color: #FBBF24;
+    font-size: 14px;
+}
+
+.dgs-cd-btn-primary {
+    padding: 9px 18px;
+    background: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dgs-cd-btn-primary:hover {
+    background: #1D4ED8;
+}
+
+/* KPI Strip */
+.dgs-cd-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.dgs-cd-kpi-card {
+    background: #131B29;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+.dgs-cd-kpi-card:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dgs-cd-kpi-card.highlight-ready {
+    border-left: 4px solid #10B981;
+}
+
+.dgs-cd-kpi-label {
+    font-size: 12.5px;
+    color: #94A3B8;
+    margin-bottom: 6px;
+    font-weight: 500;
+}
+
+.dgs-cd-kpi-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #FFFFFF;
+    letter-spacing: -1px;
+}
+
+.dgs-cd-unit {
+    font-size: 14px;
+    color: #94A3B8;
+    font-weight: 400;
+}
+
+.dgs-cd-kpi-meta {
+    font-size: 12px;
+    color: #64748B;
+    margin-top: 6px;
+}
+
+.dgs-cd-kpi-bar-container {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.dgs-cd-bar-fill {
+    height: 100%;
+    background: #10B981;
+    border-radius: 3px;
+}
+
+/* Gemini AI Card */
+.dgs-cd-ai-card {
+    background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.dgs-cd-ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.dgs-cd-ai-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dgs-cd-ai-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #A5B4FC;
+    letter-spacing: 0.8px;
+}
+
+.dgs-cd-ai-pill {
+    font-size: 10.5px;
+    padding: 2px 8px;
+    background: rgba(16, 185, 129, 0.2);
+    color: #34D399;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+.dgs-cd-ai-refresh {
+    background: none;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px;
+}
+
+.dgs-cd-ai-refresh:hover {
+    color: #FFFFFF;
+}
+
+.dgs-cd-ai-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.dgs-cd-ai-subtitle {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94A3B8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
+
+.dgs-cd-ai-text {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #E2E8F0;
+    margin: 0;
+}
+
+.dgs-cd-ai-bullets {
+    white-space: pre-line;
+}
+
+/* Controls */
+.dgs-cd-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 16px;
+}
+
+.dgs-cd-filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.dgs-cd-filter-pill {
+    padding: 6px 14px;
+    background: #131B29;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94A3B8;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dgs-cd-filter-pill.active {
+    background: #2563EB;
+    border-color: #2563EB;
+    color: #FFFFFF;
+}
+
+.dgs-cd-search-wrap {
+    min-width: 280px;
+}
+
+.dgs-cd-search-input {
+    width: 100%;
+    padding: 7px 14px;
+    background: #131B29;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+}
+
+.dgs-cd-search-input:focus {
+    border-color: #3B82F6;
+}
+
+/* Table */
+.dgs-cd-table-container {
+    background: #131B29;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.dgs-cd-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.dgs-cd-table th {
+    background: #0F172A;
+    color: #94A3B8;
+    font-weight: 600;
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dgs-cd-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    color: #E2E8F0;
+    vertical-align: middle;
+}
+
+.dgs-cd-row:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.dgs-cd-name {
+    font-weight: 600;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+.dgs-cd-name:hover {
+    color: #60A5FA;
+}
+
+.dgs-cd-client {
+    font-size: 12px;
+    color: #94A3B8;
+    margin-top: 2px;
+}
+
+.dgs-cd-status-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.dgs-cd-status-badge.status-active {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+}
+
+.dgs-cd-status-badge.status-draft {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+}
+
+.dgs-cd-readiness-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dgs-cd-pct-num {
+    font-weight: 600;
+    min-width: 40px;
+}
+
+.dgs-cd-pct-bar {
+    width: 90px;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.dgs-cd-pct-bar-fill {
+    height: 100%;
+}
+
+.dgs-cd-pct-bar-fill.good {
+    background: #10B981;
+}
+
+.dgs-cd-pct-bar-fill.warning {
+    background: #F59E0B;
+}
+
+.dgs-cd-issues-badge {
+    font-size: 11px;
+    color: #94A3B8;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.dgs-cd-scope-chips {
+    display: flex;
+    gap: 6px;
+}
+
+.dgs-chip {
+    font-size: 11.5px;
+    background: rgba(255, 255, 255, 0.06);
+    padding: 2px 7px;
+    border-radius: 4px;
+    color: #CBD5E1;
+}
+
+.dgs-cd-cycle-tag {
+    font-size: 11px;
+    background: rgba(59, 130, 246, 0.12);
+    color: #60A5FA;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.dgs-cd-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+.dgs-btn-sm {
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+}
+
+.dgs-btn-accent {
+    background: #2563EB;
+    color: #FFFFFF;
+}
+
+.dgs-btn-accent:hover {
+    background: #1D4ED8;
+}
+
+.dgs-btn-ghost {
+    background: rgba(255, 255, 255, 0.06);
+    color: #CBD5E1;
+}
+
+.dgs-btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.dgs-cd-empty-state {
+    text-align: center;
+    padding: 40px !important;
+    color: #64748B;
+    font-style: italic;
+}
+
+@media (max-width: 1024px) {
+    .dgs-cd-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .dgs-cd-ai-content { grid-template-columns: 1fr; }
+}
