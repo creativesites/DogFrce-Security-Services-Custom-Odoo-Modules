@@ -134,11 +134,6 @@
           </span>
         </div>
         <div class="dgs-contracts-header-actions">
-          <button class="dgs-contracts-btn-ai" t-on-click="onRefreshAiInsights" title="Regenerate Gemini AI Insights">
-            <span class="dgs-ai-sparkle">✦</span>
-            <t t-if="uiState.aiLoading">Analyzing...</t>
-            <t t-else="">Ask Gemini AI</t>
-          </button>
           <button class="dgs-contracts-btn-link" t-on-click="onOpenContracts">
             View All Contracts (<t t-esc="contracts.total_contracts"/>) →
           </button>
@@ -169,19 +164,21 @@
         </div>
       </div>
 
-      <!-- AI Summary & Suggestions Banner -->
-      <div class="dgs-contracts-ai-card">
+      <!-- Inconspicuous Operations Health Summary (For Testing) -->
+      <div class="dgs-contracts-ai-card" t-if="contracts.ai_summary or contracts.ai_suggestions">
         <div class="dgs-ai-badge-row">
-          <span class="dgs-ai-tag"><span class="dgs-ai-sparkle">✦</span> GEMINI 3.8 FLASH INTELLIGENCE</span>
-          <span class="dgs-ai-status-pill">Active on Production</span>
+          <span class="dgs-ai-tag"><i class="fa fa-info-circle me-1"/> Portfolio Health &amp; Guidance</span>
+          <button class="btn btn-sm btn-link text-muted p-0 ms-auto" t-on-click="onRefreshAiInsights" title="Refresh Analysis">
+            <i class="fa fa-refresh" t-att-class="{ 'fa-spin': uiState.aiLoading }"/>
+          </button>
         </div>
         <div class="dgs-ai-body">
-          <div class="dgs-ai-summary-block">
+          <div class="dgs-ai-summary-block" t-if="contracts.ai_summary">
             <div class="dgs-ai-label">Executive Health Summary</div>
             <p class="dgs-ai-text"><t t-esc="contracts.ai_summary"/></p>
           </div>
           <div class="dgs-ai-suggestions-block" t-if="contracts.ai_suggestions">
-            <div class="dgs-ai-label">Tactical Auto-Rostering Suggestions</div>
+            <div class="dgs-ai-label">Tactical Operational Guidance</div>
             <p class="dgs-ai-text dgs-ai-bullets"><t t-esc="contracts.ai_suggestions"/></p>
           </div>
         </div>

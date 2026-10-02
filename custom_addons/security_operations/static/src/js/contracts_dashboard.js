@@ -28,9 +28,9 @@ export class ContractsDashboard extends Component {
                 totalPosts: 0,
                 totalSlots: 0,
             },
-            aiLoading: false,
-            aiSummary: "",
-            aiSuggestions: "",
+            analysisLoading: false,
+            portfolioSummary: "",
+            portfolioSuggestions: "",
         });
 
         onWillStart(async () => {
@@ -47,8 +47,7 @@ export class ContractsDashboard extends Component {
                 [
                     "name", "partner_id", "state", "date_start", "date_end",
                     "readiness_pct", "setup_issues_count", "sites_count",
-                    "posts_count", "requirements_count", "estimated_monthly_slots",
-                    "billing_frequency"
+                    "posts_count", "requirements_count", "estimated_monthly_slots"
                 ],
                 { order: "readiness_pct desc, name asc" }
             );
@@ -69,11 +68,11 @@ export class ContractsDashboard extends Component {
                 totalSites, totalPosts, totalSlots
             };
 
-            // Fetch AI insights from shell data or generate if empty
+            // Fetch portfolio insights from shell data
             const payload = await this.orm.call("security.shell.data", "get_home_payload", ["today"]);
             if (payload && payload.contracts) {
-                this.state.aiSummary = payload.contracts.ai_summary || "";
-                this.state.aiSuggestions = payload.contracts.ai_suggestions || "";
+                this.state.portfolioSummary = payload.contracts.ai_summary || "";
+                this.state.portfolioSuggestions = payload.contracts.ai_suggestions || "";
             }
         } catch (e) {
             console.error("Failed to load contracts dashboard data:", e);
@@ -140,21 +139,21 @@ export class ContractsDashboard extends Component {
         });
     }
 
-    async refreshAiInsights() {
-        if (this.state.aiLoading) return;
-        this.state.aiLoading = true;
+    async refreshPortfolioAnalysis() {
+        if (this.state.analysisLoading) return;
+        this.state.analysisLoading = true;
         try {
             const res = await this.orm.call("security.shell.data", "action_refresh_contracts_ai_insights", []);
             if (res) {
-                this.state.aiSummary = res.summary;
-                this.state.aiSuggestions = res.suggestions;
-                this.notification.add("Gemini AI contract analysis updated successfully", { type: "success" });
+                this.state.portfolioSummary = res.summary;
+                this.state.portfolioSuggestions = res.suggestions;
+                this.notification.add("Portfolio analysis updated successfully", { type: "success" });
             }
         } catch (e) {
-            console.error("AI insights generation failed:", e);
-            this.notification.add("AI analysis request failed", { type: "danger" });
+            console.error("Portfolio analysis failed:", e);
+            this.notification.add("Analysis update failed", { type: "danger" });
         } finally {
-            this.state.aiLoading = false;
+            this.state.analysisLoading = false;
         }
     }
 }

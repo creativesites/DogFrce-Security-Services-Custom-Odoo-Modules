@@ -267,15 +267,19 @@ class SecurityClientSite(models.Model):
             else:
                 site.contract_status = "valid"
         # Mark expired contracts for sites with no active contract but a past one
-        for site in self:
-            if site.contract_status == "none" and contract_model:
-                past = contract_model.search([
-                    ("site_id", "=", site.id),
-                    ("state", "in", ("active", "expired")),
-                    ("date_end", "<", today),
-                ], limit=1)
-                if past:
-                    site.contract_status = "expired"
+        if has_contract_model:
+            contract_model = self.env["security.client.contract"]
+            for site in self:
+                if site.contract_status == "none":
+                    past = contract_model.search([
+                        "|",
+                        ("contract_site_ids.site_id", "=", site.id),
+                        ("site_id", "=", site.id),
+                        ("state", "in", ("active", "expired")),
+                        ("date_end", "<", today),
+                    ], limit=1)
+                    if past:
+                        site.contract_status = "expired"
 
     def _search_contract_status(self, operator, value):
         if operator not in ("=", "!=", "in", "not in"):

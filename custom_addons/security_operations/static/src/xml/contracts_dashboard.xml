@@ -7,15 +7,10 @@
             <div class="dgs-cd-header-titles">
                 <h1 class="dgs-cd-title">Client Contracts &amp; Readiness Dashboard</h1>
                 <p class="dgs-cd-subtitle">
-                    Single source of truth for contract scope, site hierarchy, guarding recipes, and automated rostering health.
+                    Single source of truth for contract scope, site hierarchy, guarding recipes, and operational readiness.
                 </p>
             </div>
             <div class="dgs-cd-header-actions">
-                <button class="dgs-cd-btn-ai" t-on-click="refreshAiInsights">
-                    <span class="dgs-cd-sparkle">✦</span>
-                    <t t-if="state.aiLoading">Analyzing with Gemini...</t>
-                    <t t-else="">Ask Gemini AI Analysis</t>
-                </button>
                 <button class="dgs-cd-btn-primary" t-on-click="createNewContract">
                     + New Client Contract
                 </button>
@@ -48,26 +43,23 @@
             </div>
         </div>
 
-        <!-- Gemini AI Executive Intelligence Card -->
-        <div class="dgs-cd-ai-card">
-            <div class="dgs-cd-ai-header">
-                <div class="dgs-cd-ai-title-wrap">
-                    <span class="dgs-cd-sparkle">✦</span>
-                    <span class="dgs-cd-ai-title">GEMINI 3.8 FLASH CONTRACT INTELLIGENCE</span>
-                    <span class="dgs-cd-ai-pill">Real-time Analysis</span>
+        <!-- Inconspicuous Operations Guidance Card (For Testing) -->
+        <div class="dgs-cd-insights-card" t-if="state.portfolioSummary or state.portfolioSuggestions">
+            <div class="dgs-cd-insights-header">
+                <div class="dgs-cd-insights-title-wrap">
+                    <i class="fa fa-info-circle text-primary me-1"/>
+                    <span class="dgs-cd-insights-title">Operational Portfolio Summary</span>
                 </div>
-                <button class="dgs-cd-ai-refresh" t-on-click="refreshAiInsights" title="Refresh Analysis">
-                    <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.aiLoading }"/>
+                <button class="dgs-cd-insights-refresh" t-on-click="refreshPortfolioAnalysis" title="Refresh Analysis">
+                    <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.analysisLoading }"/>
                 </button>
             </div>
-            <div class="dgs-cd-ai-content">
-                <div class="dgs-cd-ai-block">
-                    <div class="dgs-cd-ai-subtitle">Executive Readiness Overview</div>
-                    <p class="dgs-cd-ai-text"><t t-esc="state.aiSummary || 'All client contracts are synchronized and evaluated. Ready for deterministic cycle scheduling.'"/></p>
+            <div class="dgs-cd-insights-content">
+                <div class="dgs-cd-insights-block" t-if="state.portfolioSummary">
+                    <p class="dgs-cd-insights-text"><t t-esc="state.portfolioSummary"/></p>
                 </div>
-                <div class="dgs-cd-ai-block" t-if="state.aiSuggestions">
-                    <div class="dgs-cd-ai-subtitle">Tactical Rostering &amp; Dispatch Guidance</div>
-                    <p class="dgs-cd-ai-text dgs-cd-ai-bullets"><t t-esc="state.aiSuggestions"/></p>
+                <div class="dgs-cd-insights-block" t-if="state.portfolioSuggestions">
+                    <p class="dgs-cd-insights-text dgs-cd-insights-bullets"><t t-esc="state.portfolioSuggestions"/></p>
                 </div>
             </div>
         </div>

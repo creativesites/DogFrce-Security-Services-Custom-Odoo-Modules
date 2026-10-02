@@ -646,27 +646,29 @@
 }
 
 .dgs-contracts-ai-card {
-    background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
-    color: #F8FAFC;
+    background: #FFFFFF;
+    color: #0F172A;
     border-radius: var(--dgs-r-card);
-    padding: 22px 24px;
-    margin-bottom: 32px;
-    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid #1B3A6B;
 }
 
 .dgs-ai-badge-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .dgs-ai-tag {
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.8px;
-    color: #A5B4FC;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: #1B3A6B;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -676,10 +678,10 @@
     font-size: 10.5px;
     font-weight: 600;
     padding: 2px 8px;
-    background: rgba(16, 185, 129, 0.2);
-    color: #34D399;
+    background: #ECFDF5;
+    color: #059669;
     border-radius: var(--dgs-r-pill);
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    border: 1px solid #A7F3D0;
 }
 
 .dgs-ai-body {
@@ -689,18 +691,18 @@
 }
 
 .dgs-ai-label {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: #94A3B8;
-    margin-bottom: 8px;
+    color: #64748B;
+    margin-bottom: 6px;
 }
 
 .dgs-ai-text {
     font-size: 13.5px;
     line-height: 1.6;
-    color: #E2E8F0;
+    color: #334155;
     margin: 0;
 }
 

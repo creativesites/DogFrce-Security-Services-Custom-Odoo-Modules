@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DogForce — Client Contracts & Readiness Dashboard
+   DogForce — Client Contracts & Readiness Dashboard (Light / System Design)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .dgs-contracts-dashboard {
     padding: 24px 32px 48px;
-    background: #0B0F17;
-    color: #F8FAFC;
+    background: #F8FAFC;
+    color: #0F172A;
     min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
@@ -19,18 +19,18 @@
 }
 
 .dgs-cd-title {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 700;
-    color: #FFFFFF;
+    color: #0F172A;
     margin: 0 0 6px 0;
     letter-spacing: -0.5px;
 }
 
 .dgs-cd-subtitle {
     font-size: 13.5px;
-    color: #94A3B8;
+    color: #64748B;
     margin: 0;
-    max-width: 650px;
+    max-width: 680px;
 }
 
 .dgs-cd-header-actions {
@@ -39,45 +39,20 @@
     align-items: center;
 }
 
-.dgs-cd-btn-ai {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 9px 18px;
-    background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
-    color: #FFFFFF;
-    border: 1px solid #4F46E5;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.dgs-cd-btn-ai:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
-}
-
-.dgs-cd-sparkle {
-    color: #FBBF24;
-    font-size: 14px;
-}
-
 .dgs-cd-btn-primary {
-    padding: 9px 18px;
-    background: #2563EB;
+    padding: 8px 16px;
+    background: #1B3A6B;
     color: #FFFFFF;
     border: none;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: background 0.15s ease;
 }
 
 .dgs-cd-btn-primary:hover {
-    background: #1D4ED8;
+    background: #152E55;
 }
 
 /* KPI Strip */
@@ -89,16 +64,18 @@
 }
 
 .dgs-cd-kpi-card {
-    background: #131B29;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
-    padding: 18px 20px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 16px 20px;
     cursor: pointer;
-    transition: border-color 0.15s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: all 0.15s ease;
 }
 
 .dgs-cd-kpi-card:hover {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: #CBD5E1;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.07);
 }
 
 .dgs-cd-kpi-card.highlight-ready {
@@ -107,21 +84,21 @@
 
 .dgs-cd-kpi-label {
     font-size: 12.5px;
-    color: #94A3B8;
+    color: #64748B;
     margin-bottom: 6px;
     font-weight: 500;
 }
 
 .dgs-cd-kpi-value {
-    font-size: 30px;
+    font-size: 28px;
     font-weight: 700;
-    color: #FFFFFF;
-    letter-spacing: -1px;
+    color: #0F172A;
+    letter-spacing: -0.5px;
 }
 
 .dgs-cd-unit {
     font-size: 14px;
-    color: #94A3B8;
+    color: #64748B;
     font-weight: 400;
 }
 
@@ -133,7 +110,7 @@
 
 .dgs-cd-kpi-bar-container {
     height: 6px;
-    background: rgba(255, 255, 255, 0.08);
+    background: #F1F5F9;
     border-radius: 3px;
     overflow: hidden;
     margin-top: 10px;
@@ -145,81 +122,64 @@
     border-radius: 3px;
 }
 
-/* Gemini AI Card */
-.dgs-cd-ai-card {
-    background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 100%);
-    border: 1px solid rgba(99, 102, 241, 0.25);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+/* Inconspicuous Guidance Card */
+.dgs-cd-insights-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-left: 4px solid #1B3A6B;
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-.dgs-cd-ai-header {
+.dgs-cd-insights-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
 }
 
-.dgs-cd-ai-title-wrap {
+.dgs-cd-insights-title-wrap {
     display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.dgs-cd-ai-title {
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #A5B4FC;
-    letter-spacing: 0.8px;
-}
-
-.dgs-cd-ai-pill {
-    font-size: 10.5px;
-    padding: 2px 8px;
-    background: rgba(16, 185, 129, 0.2);
-    color: #34D399;
-    border-radius: 12px;
+.dgs-cd-insights-title {
+    font-size: 13px;
     font-weight: 600;
+    color: #1E293B;
 }
 
-.dgs-cd-ai-refresh {
+.dgs-cd-insights-refresh {
     background: none;
     border: none;
-    color: #94A3B8;
+    color: #64748B;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     padding: 4px;
+    transition: color 0.15s ease;
 }
 
-.dgs-cd-ai-refresh:hover {
-    color: #FFFFFF;
+.dgs-cd-insights-refresh:hover {
+    color: #0F172A;
 }
 
-.dgs-cd-ai-content {
+.dgs-cd-insights-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 24px;
+    gap: 20px;
 }
 
-.dgs-cd-ai-subtitle {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94A3B8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-}
-
-.dgs-cd-ai-text {
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: #E2E8F0;
+.dgs-cd-insights-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #475569;
     margin: 0;
 }
 
-.dgs-cd-ai-bullets {
+.dgs-cd-insights-bullets {
     white-space: pre-line;
 }
 
@@ -240,9 +200,9 @@
 
 .dgs-cd-filter-pill {
     padding: 6px 14px;
-    background: #131B29;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #94A3B8;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #64748B;
     border-radius: 20px;
     font-size: 12.5px;
     font-weight: 500;
@@ -250,10 +210,16 @@
     transition: all 0.15s ease;
 }
 
+.dgs-cd-filter-pill:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+}
+
 .dgs-cd-filter-pill.active {
-    background: #2563EB;
-    border-color: #2563EB;
+    background: #1B3A6B;
+    border-color: #1B3A6B;
     color: #FFFFFF;
+    font-weight: 600;
 }
 
 .dgs-cd-search-wrap {
@@ -263,24 +229,27 @@
 .dgs-cd-search-input {
     width: 100%;
     padding: 7px 14px;
-    background: #131B29;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
-    border-radius: 8px;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #0F172A;
+    border-radius: 6px;
     font-size: 13px;
     outline: none;
+    transition: border-color 0.15s ease;
 }
 
 .dgs-cd-search-input:focus {
-    border-color: #3B82F6;
+    border-color: #1B3A6B;
+    box-shadow: 0 0 0 2px rgba(27, 58, 107, 0.15);
 }
 
 /* Table */
 .dgs-cd-table-container {
-    background: #131B29;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .dgs-cd-table {
@@ -290,41 +259,42 @@
 }
 
 .dgs-cd-table th {
-    background: #0F172A;
-    color: #94A3B8;
+    background: #F8FAFC;
+    color: #64748B;
     font-weight: 600;
     text-align: left;
     padding: 12px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    font-size: 12px;
+    border-bottom: 1px solid #E2E8F0;
+    font-size: 11.5px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .dgs-cd-table td {
-    padding: 14px 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    color: #E2E8F0;
+    padding: 13px 16px;
+    border-bottom: 1px solid #F1F5F9;
+    color: #334155;
     vertical-align: middle;
 }
 
 .dgs-cd-row:hover {
-    background: rgba(255, 255, 255, 0.02);
+    background: #F8FAFC;
 }
 
 .dgs-cd-name {
     font-weight: 600;
-    color: #FFFFFF;
+    color: #0F172A;
     cursor: pointer;
 }
 
 .dgs-cd-name:hover {
-    color: #60A5FA;
+    color: #1B3A6B;
+    text-decoration: underline;
 }
 
 .dgs-cd-client {
     font-size: 12px;
-    color: #94A3B8;
+    color: #64748B;
     margin-top: 2px;
 }
 
@@ -337,13 +307,15 @@
 }
 
 .dgs-cd-status-badge.status-active {
-    background: rgba(16, 185, 129, 0.15);
-    color: #34D399;
+    background: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
 }
 
 .dgs-cd-status-badge.status-draft {
-    background: rgba(245, 158, 11, 0.15);
-    color: #FBBF24;
+    background: #FEF3C7;
+    color: #D97706;
+    border: 1px solid #FDE68A;
 }
 
 .dgs-cd-readiness-cell {
@@ -355,12 +327,13 @@
 .dgs-cd-pct-num {
     font-weight: 600;
     min-width: 40px;
+    color: #0F172A;
 }
 
 .dgs-cd-pct-bar {
-    width: 90px;
+    width: 80px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.08);
+    background: #E2E8F0;
     border-radius: 3px;
     overflow: hidden;
 }
@@ -379,10 +352,11 @@
 
 .dgs-cd-issues-badge {
     font-size: 11px;
-    color: #94A3B8;
-    background: rgba(255, 255, 255, 0.06);
+    color: #D97706;
+    background: #FEF3C7;
     padding: 2px 6px;
     border-radius: 4px;
+    font-weight: 500;
 }
 
 .dgs-cd-scope-chips {
@@ -392,16 +366,18 @@
 
 .dgs-chip {
     font-size: 11.5px;
-    background: rgba(255, 255, 255, 0.06);
+    background: #F1F5F9;
     padding: 2px 7px;
     border-radius: 4px;
-    color: #CBD5E1;
+    color: #475569;
+    border: 1px solid #E2E8F0;
 }
 
 .dgs-cd-cycle-tag {
     font-size: 11px;
-    background: rgba(59, 130, 246, 0.12);
-    color: #60A5FA;
+    background: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
     padding: 2px 8px;
     border-radius: 10px;
     font-weight: 500;
@@ -414,41 +390,48 @@
 }
 
 .dgs-btn-sm {
-    padding: 5px 10px;
+    padding: 5px 11px;
     font-size: 12px;
     font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
     transition: all 0.15s ease;
 }
 
 .dgs-btn-accent {
-    background: #2563EB;
+    background: #1B3A6B;
     color: #FFFFFF;
 }
 
 .dgs-btn-accent:hover {
-    background: #1D4ED8;
+    background: #152E55;
 }
 
 .dgs-btn-ghost {
-    background: rgba(255, 255, 255, 0.06);
-    color: #CBD5E1;
+    background: #FFFFFF;
+    border-color: #E2E8F0;
+    color: #475569;
 }
 
 .dgs-btn-ghost:hover {
-    background: rgba(255, 255, 255, 0.12);
+    background: #F1F5F9;
+    color: #0F172A;
 }
 
 .dgs-cd-empty-state {
     text-align: center;
     padding: 40px !important;
-    color: #64748B;
+    color: #94A3B8;
     font-style: italic;
+}
+
+.dgs-mono {
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-variant-numeric: tabular-nums;
 }
 
 @media (max-width: 1024px) {
     .dgs-cd-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .dgs-cd-ai-content { grid-template-columns: 1fr; }
+    .dgs-cd-insights-content { grid-template-columns: 1fr; }
 }
