@@ -217,12 +217,10 @@ class SecurityClientSite(models.Model):
     def action_open_contract(self):
         self.ensure_one()
         contract = self.contract_id
-        if not contract:
-            contract_model = self.env.get("security.client.contract")
-            if contract_model:
-                contract = contract_model.get_active_for_site(self, fields.Date.today())
-                if contract:
-                    self.contract_id = contract.id
+        if not contract and "security.client.contract" in self.env:
+            contract = self.env["security.client.contract"].get_active_for_site(self, fields.Date.today())
+            if contract:
+                self.contract_id = contract.id
         if contract:
             return contract.action_open_contract_workspace()
         return {
@@ -256,12 +254,12 @@ class SecurityClientSite(models.Model):
 
     def _compute_contract_status(self):
         today = fields.Date.today()
-        contract_model = self.env.get("security.client.contract")
+        has_contract_model = "security.client.contract" in self.env
         for site in self:
-            if not contract_model:
+            if not has_contract_model:
                 site.contract_status = "none"
                 continue
-            contract = contract_model.get_active_for_site(site, today)
+            contract = self.env["security.client.contract"].get_active_for_site(site, today)
             if not contract:
                 site.contract_status = "none"
             elif contract.date_end and (contract.date_end - today).days <= 30:
@@ -685,11 +683,11 @@ class SecurityShiftRequirement(models.Model):
     @api.depends("site_id")
     def _compute_contract_active(self):
         today = fields.Date.context_today(self)
-        contract_model = self.env.get("security.client.contract")
+        has_contract_model = "security.client.contract" in self.env
         for req in self:
-            if contract_model and req.site_id and req.site_id.partner_id:
+            if has_contract_model and req.site_id and req.site_id.partner_id:
                 req.contract_active = bool(
-                    contract_model.get_active_for_site(req.site_id, today)
+                    self.env["security.client.contract"].get_active_for_site(req.site_id, today)
                 )
             else:
                 req.contract_active = True  # no contract module installed — no gate
@@ -884,10 +882,10 @@ class SecurityRosterBatch(models.Model):
             batch.generated_slot_count = len(batch.slot_ids)
 
     def _compute_planned_revenue(self):
-        contract_model = self.env.get("security.client.contract")
-        holiday_model = self.env.get("security.public.holiday")
+        has_contract = "security.client.contract" in self.env
+        has_holiday = "security.public.holiday" in self.env
         for batch in self:
-            if not contract_model:
+            if not has_contract:
                 batch.planned_revenue = 0.0
                 continue
             total = 0.0
@@ -899,13 +897,13 @@ class SecurityRosterBatch(models.Model):
                 site = slot.site_id
                 if not site:
                     continue
-                contract = contract_model.get_active_for_site(site, slot.shift_date)
+                contract = self.env["security.client.contract"].get_active_for_site(site, slot.shift_date)
                 if not contract:
                     continue
                 # Determine primary billing category for this slot
                 category = "normal"
-                if holiday_model and slot.shift_date:
-                    if holiday_model.search_count([
+                if has_holiday and slot.shift_date:
+                    if self.env["security.public.holiday"].search_count([
                         ("holiday_date", "=", slot.shift_date),
                         ("active", "=", True),
                     ]):
@@ -1000,9 +998,9 @@ class SecurityRosterBatch(models.Model):
                 raise ValidationError("No new roster slots were created. Check dates or existing slots.")
 
     def action_confirm(self):
-        contract_model = self.env.get("security.client.contract")
+        has_contract = "security.client.contract" in self.env
         for batch in self:
-            if contract_model:
+            if has_contract:
                 # Validate every site in this batch has an active contract on date_from.
                 # Mid-month expiry is caught here — ops managers see the problem via the
                 # contract_active badge on ShiftRequirement before generating a new batch.
@@ -1010,7 +1008,7 @@ class SecurityRosterBatch(models.Model):
                 for site in sites:
                     if not site.partner_id:
                         continue
-                    contract = contract_model.get_active_for_site(site, batch.date_from)
+                    contract = self.env["security.client.contract"].get_active_for_site(site, batch.date_from)
                     if not contract:
                         raise ValidationError(
                             f"No active contract for site '{site.name}' "
@@ -1318,9 +1316,9 @@ class SecurityRosterBatch(models.Model):
             ref_date = today
         date_from, date_to = self.get_operational_cycle_dates(ref_date)
 
-        contract_model = self.env["security.client.contract"] if "security.client.contract" in self.env else None
-        if not contract_model:
+        if "security.client.contract" not in self.env:
             return {"success": False, "message": "Contract model not found"}
+        contract_model = self.env["security.client.contract"]
 
         domain = [("state", "=", "active")]
         if contract_ids:
@@ -1405,8 +1403,13 @@ class SecurityRosterBatch(models.Model):
 
         cycle_label = f"{d_from.strftime('%d %b %Y')} – {d_to.strftime('%d %b %Y')}"
 
-        contract_model = self.env["security.client.contract"] if "security.client.contract" in self.env else None
-        contracts = contract_model.search([("state", "in", ["active", "draft"])], order="readiness_pct desc, name asc") if contract_model else []
+        if "security.client.contract" in self.env:
+            contracts = self.env["security.client.contract"].search(
+                [("state", "in", ["active", "draft"])],
+                order="readiness_pct desc, name asc"
+            )
+        else:
+            contracts = []
 
         batches = self.search([
             ("date_from", "=", str(d_from)),

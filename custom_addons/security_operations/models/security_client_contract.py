@@ -255,15 +255,15 @@ class SecurityClientContract(models.Model):
     def _compute_billing_cap(self):
         today = date.today()
         first_day = today.replace(day=1)
-        attendance_model = self.env.get("security.attendance.record")
+        has_attendance = "security.attendance.record" in self.env
         for contract in self:
             billed = 0.0
             site_ids = contract.contract_site_ids.mapped("site_id.id")
             if contract.site_id and contract.site_id.id not in site_ids:
                 site_ids.append(contract.site_id.id)
 
-            if attendance_model and site_ids:
-                records = attendance_model.search([
+            if has_attendance and site_ids:
+                records = self.env["security.attendance.record"].search([
                     ("site_id", "in", site_ids),
                     ("shift_date", ">=", str(first_day)),
                     ("shift_date", "<=", str(today)),
