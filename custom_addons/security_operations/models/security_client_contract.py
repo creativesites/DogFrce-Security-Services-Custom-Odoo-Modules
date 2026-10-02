@@ -495,7 +495,7 @@ class SecurityClientContract(models.Model):
 
             # Auto-generate operational roster batch for active cycle
             try:
-                batch_model = self.env.get("security.roster.batch")
+                batch_model = self.env["security.roster.batch"] if "security.roster.batch" in self.env else None
                 if batch_model:
                     batch_model.action_run_cycle_autoroster(cycle_type="current", contract_ids=[contract.id])
             except Exception as e:
@@ -506,7 +506,7 @@ class SecurityClientContract(models.Model):
     def action_trigger_auto_roster(self, cycle_type="current"):
         """Staff action to generate and auto-fill roster for this contract's sites."""
         self.ensure_one()
-        batch_model = self.env.get("security.roster.batch")
+        batch_model = self.env["security.roster.batch"] if "security.roster.batch" in self.env else None
         if not batch_model:
             raise UserError("Roster batch system is not available.")
         return batch_model.action_run_cycle_autoroster(cycle_type=cycle_type, contract_ids=[self.id])

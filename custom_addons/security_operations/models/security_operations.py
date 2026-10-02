@@ -1226,7 +1226,7 @@ class SecurityRosterBatch(models.Model):
         ref_date = today + timedelta(days=2)
         date_from, date_to = self.get_operational_cycle_dates(ref_date)
 
-        contract_model = self.env.get("security.client.contract")
+        contract_model = self.env["security.client.contract"] if "security.client.contract" in self.env else None
         if not contract_model:
             return
 
@@ -1238,7 +1238,7 @@ class SecurityRosterBatch(models.Model):
             ("date_end", ">=", str(date_from)),
         ])
 
-        notif_model = self.env.get("security.notification")
+        notif_model = self.env["security.notification"] if "security.notification" in self.env else None
         created_batches = 0
         total_slots = 0
 
@@ -1307,7 +1307,7 @@ class SecurityRosterBatch(models.Model):
             ref_date = today
         date_from, date_to = self.get_operational_cycle_dates(ref_date)
 
-        contract_model = self.env.get("security.client.contract")
+        contract_model = self.env["security.client.contract"] if "security.client.contract" in self.env else None
         if not contract_model:
             return {"success": False, "message": "Contract model not found"}
 
@@ -1394,7 +1394,7 @@ class SecurityRosterBatch(models.Model):
 
         cycle_label = f"{d_from.strftime('%d %b %Y')} – {d_to.strftime('%d %b %Y')}"
 
-        contract_model = self.env.get("security.client.contract")
+        contract_model = self.env["security.client.contract"] if "security.client.contract" in self.env else None
         contracts = contract_model.search([("state", "in", ["active", "draft"])], order="readiness_pct desc, name asc") if contract_model else []
 
         batches = self.search([
