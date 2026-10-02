@@ -43,6 +43,8 @@ class SecurityContractShiftRequirement(models.Model):
     friday = fields.Boolean(default=True, string="Fri")
     saturday = fields.Boolean(default=True, string="Sat")
     sunday = fields.Boolean(default=True, string="Sun")
+    public_holiday = fields.Boolean(default=True, string="Public Holiday", help="Whether this shift operates on Public Holidays.")
+    is_ad_hoc = fields.Boolean(default=False, string="On-Demand / Emergency", help="Shift active only when requested on-demand by client.")
 
     guard_count = fields.Integer(
         default=1,
@@ -217,7 +219,7 @@ class SecurityContractShiftRequirement(models.Model):
         return True
 
     def action_copy_to_all_days(self):
-        """Apply active status to all Mon-Sun days."""
+        """Apply active status to all Mon-Sun days and public holidays."""
         self.write({
             "monday": True,
             "tuesday": True,
@@ -226,5 +228,50 @@ class SecurityContractShiftRequirement(models.Model):
             "friday": True,
             "saturday": True,
             "sunday": True,
+            "public_holiday": True,
         })
         return True
+
+    def action_set_weekend_and_holidays(self):
+        """Apply active status to Saturday, Sunday, and Public Holidays (e.g. 24h weekend coverage)."""
+        self.write({
+            "monday": False,
+            "tuesday": False,
+            "wednesday": False,
+            "thursday": False,
+            "friday": False,
+            "saturday": True,
+            "sunday": True,
+            "public_holiday": True,
+        })
+        return True
+
+    def action_set_weekdays_only(self):
+        """Apply active status to Monday through Friday only."""
+        self.write({
+            "monday": True,
+            "tuesday": True,
+            "wednesday": True,
+            "thursday": True,
+            "friday": True,
+            "saturday": False,
+            "sunday": False,
+            "public_holiday": False,
+        })
+        return True
+
+    def write(self, vals):
+        res = super().write(vals)
+        sync_keys = [
+            "guard_count", "monday", "tuesday", "wednesday", "thursday",
+            "friday", "saturday", "sunday", "public_holiday", "bill_rate",
+            "pay_rate", "rate_multiplier", "fairness_weight", "preferred_employee_id",
+            "allow_preferred_only"
+        ]
+        op_vals = {k: vals[k] for k in sync_keys if k in vals}
+        if op_vals:
+            for req in self:
+                if req.requirement_id and req.requirement_id.exists():
+                    req.requirement_id.write(op_vals)
+        return res
+

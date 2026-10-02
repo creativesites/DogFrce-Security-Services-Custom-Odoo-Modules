@@ -464,6 +464,8 @@ class SecurityClientContract(models.Model):
                             "friday": c_req.friday,
                             "saturday": c_req.saturday,
                             "sunday": c_req.sunday,
+                            "public_holiday": c_req.public_holiday,
+                            "is_ad_hoc": c_req.is_ad_hoc,
                             "bill_rate": c_req.bill_rate,
                             "pay_rate": c_req.pay_rate,
                             "rate_multiplier": c_req.rate_multiplier,

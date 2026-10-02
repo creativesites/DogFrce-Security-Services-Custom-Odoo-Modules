@@ -616,6 +616,8 @@ class SecurityShiftRequirement(models.Model):
     friday = fields.Boolean(default=True)
     saturday = fields.Boolean(default=True)
     sunday = fields.Boolean(default=True)
+    public_holiday = fields.Boolean(default=True, string="Public Holiday", help="Whether this shift operates on Public Holidays.")
+    is_ad_hoc = fields.Boolean(default=False, string="On-Demand / Emergency")
     bill_rate = fields.Float(default=0.0)
     pay_rate = fields.Float(default=0.0)
     rate_multiplier = fields.Float(default=1.0)
@@ -694,6 +696,15 @@ class SecurityShiftRequirement(models.Model):
 
     def _is_active_on_date(self, target_date):
         self.ensure_one()
+        # Public Holiday check
+        if getattr(self, "public_holiday", False) and "security.public.holiday" in self.env:
+            is_holiday = bool(self.env["security.public.holiday"].search_count([
+                ("holiday_date", "=", target_date),
+                ("active", "=", True),
+            ]))
+            if is_holiday:
+                return True
+
         weekday = target_date.weekday()
         return [
             self.monday,

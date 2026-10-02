@@ -64,23 +64,48 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: var(--ds-radius-sm, 4px);
-    font-size: 0.68rem;
+    font-size: 0.7rem;
     font-weight: 700;
     font-family: var(--dgs-mono, var(--ds-mono, monospace));
     color: var(--ds-text-subtle, #94a3b8);
     background: var(--ds-slate, #e2e8f0);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease-in-out;
+}
+
+.cw-day-pill:hover {
+    transform: translateY(-1px);
+    filter: brightness(0.92);
 }
 
 .cw-day-pill.active {
     color: #ffffff;
     background: var(--ds-accent, #1b3a6b);
+    box-shadow: 0 1px 2px rgba(27, 58, 107, 0.25);
+}
+
+.cw-day-pill.cw-sat.active {
+    background: #0284c7; /* Sky blue for Saturday */
 }
 
 .cw-day-pill.cw-sunday.active {
     background: #e11d48; /* Red/Rose indicator for Sunday */
+}
+
+.cw-day-pill.cw-ph {
+    width: 26px;
+    font-size: 0.65rem;
+    letter-spacing: -0.3px;
+}
+
+.cw-day-pill.cw-ph.active {
+    background: #7c3aed; /* Purple indicator for Public Holidays */
+    color: #ffffff;
+    box-shadow: 0 1px 3px rgba(124, 58, 237, 0.3);
 }
 
 /* ─── Metric Strip & Responsive Breakpoints ─────────────────────── */

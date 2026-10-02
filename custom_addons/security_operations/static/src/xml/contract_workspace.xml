@@ -425,20 +425,50 @@
                                                                 <t t-esc="req.shift_template_id ? req.shift_template_id[1] : '—'"/>
                                                             </td>
                                                             <td>
-                                                                <span class="badge bg-light text-dark border cw-mono">
-                                                                    <t t-esc="req.guard_count"/> Guard<t t-if="req.guard_count &gt; 1">s</t>
-                                                                </span>
+                                                                <div class="d-inline-flex align-items-center border rounded bg-white px-1 shadow-sm">
+                                                                    <button class="btn btn-sm btn-link text-muted p-0 me-1"
+                                                                            title="Decrease guard count"
+                                                                            t-on-click="() => this.changeGuardCount(req, -1)">
+                                                                        <i class="fa fa-minus small"/>
+                                                                    </button>
+                                                                    <span class="fw-bold cw-mono px-1 text-dark" style="min-width: 22px; text-align: center;">
+                                                                        <t t-esc="req.guard_count"/>
+                                                                    </span>
+                                                                    <button class="btn btn-sm btn-link text-muted p-0 ms-1"
+                                                                            title="Increase guard count"
+                                                                            t-on-click="() => this.changeGuardCount(req, 1)">
+                                                                        <i class="fa fa-plus small"/>
+                                                                    </button>
+                                                                </div>
+                                                                <span class="text-muted small ms-1">Guard<t t-if="req.guard_count &gt; 1">s</t></span>
                                                             </td>
                                                             <td>
-                                                                <!-- Mon-Sun Pill Grid -->
-                                                                <div class="d-flex gap-1">
-                                                                    <span class="cw-day-pill" t-att-class="req.monday ? 'active' : ''">M</span>
-                                                                    <span class="cw-day-pill" t-att-class="req.tuesday ? 'active' : ''">T</span>
-                                                                    <span class="cw-day-pill" t-att-class="req.wednesday ? 'active' : ''">W</span>
-                                                                    <span class="cw-day-pill" t-att-class="req.thursday ? 'active' : ''">T</span>
-                                                                    <span class="cw-day-pill" t-att-class="req.friday ? 'active' : ''">F</span>
-                                                                    <span class="cw-day-pill" t-att-class="req.saturday ? 'active' : ''">S</span>
-                                                                    <span class="cw-day-pill cw-sunday" t-att-class="req.sunday ? 'active' : ''">S</span>
+                                                                <!-- Mon-Sun Pill Grid + Public Holiday -->
+                                                                <div class="d-flex align-items-center gap-1">
+                                                                    <span class="cw-day-pill cursor-pointer" title="Monday (Click to toggle)"
+                                                                          t-att-class="req.monday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'monday')">M</span>
+                                                                    <span class="cw-day-pill cursor-pointer" title="Tuesday (Click to toggle)"
+                                                                          t-att-class="req.tuesday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'tuesday')">T</span>
+                                                                    <span class="cw-day-pill cursor-pointer" title="Wednesday (Click to toggle)"
+                                                                          t-att-class="req.wednesday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'wednesday')">W</span>
+                                                                    <span class="cw-day-pill cursor-pointer" title="Thursday (Click to toggle)"
+                                                                          t-att-class="req.thursday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'thursday')">T</span>
+                                                                    <span class="cw-day-pill cursor-pointer" title="Friday (Click to toggle)"
+                                                                          t-att-class="req.friday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'friday')">F</span>
+                                                                    <span class="cw-day-pill cursor-pointer cw-sat" title="Saturday (Click to toggle)"
+                                                                          t-att-class="req.saturday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'saturday')">S</span>
+                                                                    <span class="cw-day-pill cursor-pointer cw-sunday" title="Sunday (Click to toggle)"
+                                                                          t-att-class="req.sunday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'sunday')">S</span>
+                                                                    <span class="cw-day-pill cursor-pointer cw-ph ms-1" title="Public Holiday (Click to toggle)"
+                                                                          t-att-class="req.public_holiday ? 'active' : ''"
+                                                                          t-on-click="() => this.toggleDay(req, 'public_holiday')">PH</span>
                                                                 </div>
                                                             </td>
                                                             <td>
@@ -474,14 +504,30 @@
                                                             </td>
                                                             <td class="text-end pe-3">
                                                                 <div class="btn-group btn-group-sm">
-                                                                    <button class="btn btn-outline-secondary" title="Apply to All 7 Days (Mon-Sun)" t-on-click="() => this.actionApplyAllDays(req.id)">
-                                                                        <i class="fa fa-calendar-check-o"/> All Days
+                                                                    <button class="btn btn-outline-primary"
+                                                                            title="Weekend (Sat, Sun) + Public Holidays 24h"
+                                                                            t-on-click="() => this.actionSetWeekendAndHolidays(req.id)">
+                                                                        <i class="fa fa-calendar-minus-o"/> Weekend+PH
                                                                     </button>
-                                                                    <button class="btn btn-outline-secondary" title="Duplicate Shift Requirement" t-on-click="() => this.actionDuplicateShift(req.id)">
+                                                                    <button class="btn btn-outline-secondary"
+                                                                            title="Mon–Fri Weekdays Only"
+                                                                            t-on-click="() => this.actionSetWeekdaysOnly(req.id)">
+                                                                        Mon–Fri
+                                                                    </button>
+                                                                    <button class="btn btn-outline-secondary"
+                                                                            title="All 7 Days (Mon-Sun + PH)"
+                                                                            t-on-click="() => this.actionApplyAllDays(req.id)">
+                                                                        All Days
+                                                                    </button>
+                                                                    <button class="btn btn-outline-secondary"
+                                                                            title="Edit Detailed Shift Requirement"
+                                                                            t-on-click="() => this.openRequirementForm(req.id)">
+                                                                        <i class="fa fa-pencil"/>
+                                                                    </button>
+                                                                    <button class="btn btn-outline-secondary"
+                                                                            title="Duplicate Shift Requirement"
+                                                                            t-on-click="() => this.actionDuplicateShift(req.id)">
                                                                         <i class="fa fa-clone"/>
-                                                                    </button>
-                                                                    <button class="btn btn-outline-secondary" t-att-title="req.bill_rate_override ? 'Reset to Card Rate' : 'Enable Rate Override'" t-on-click="() => this.toggleRateOverride(req, 'bill_rate_override')">
-                                                                        <i class="fa fa-pencil-square-o"/> Rate
                                                                     </button>
                                                                 </div>
                                                             </td>

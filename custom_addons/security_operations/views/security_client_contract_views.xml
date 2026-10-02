@@ -247,6 +247,101 @@
         </field>
     </record>
 
+    <!-- Contract Shift Requirement Form & List Views -->
+    <record id="view_security_contract_requirement_form" model="ir.ui.view">
+        <field name="name">security.contract.shift.requirement.form</field>
+        <field name="model">security.contract.shift.requirement</field>
+        <field name="arch" type="xml">
+            <form string="Contract Shift Staffing Requirement">
+                <header>
+                    <button name="action_set_weekend_and_holidays" type="object"
+                            string="Weekend (Sat, Sun) + Public Holidays 24h" class="btn-primary"/>
+                    <button name="action_set_weekdays_only" type="object"
+                            string="Mon–Fri Weekdays Only" class="btn-secondary"/>
+                    <button name="action_copy_to_all_days" type="object"
+                            string="All 7 Days + Public Holidays" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Post &amp; Shift Assignment">
+                            <field name="contract_site_id" readonly="1"/>
+                            <field name="contract_post_id"/>
+                            <field name="shift_template_id"/>
+                            <field name="guard_count" string="Number of Guards / Workers"/>
+                            <field name="min_grade_id"/>
+                        </group>
+                        <group string="Active Operating Days">
+                            <field name="monday"/>
+                            <field name="tuesday"/>
+                            <field name="wednesday"/>
+                            <field name="thursday"/>
+                            <field name="friday"/>
+                            <field name="saturday"/>
+                            <field name="sunday"/>
+                            <field name="public_holiday" string="Public Holidays (24h / Holiday Shift)"/>
+                            <field name="is_ad_hoc" string="On-Demand / Emergency Client Request"/>
+                        </group>
+                    </group>
+                    <group string="Commercial Rates &amp; Overrides">
+                        <group>
+                            <field name="contract_bill_rate" readonly="1"/>
+                            <field name="bill_rate_override"/>
+                            <field name="bill_rate" invisible="not bill_rate_override"/>
+                        </group>
+                        <group>
+                            <field name="contract_pay_rate" readonly="1"/>
+                            <field name="pay_rate_override"/>
+                            <field name="pay_rate" invisible="not pay_rate_override"/>
+                            <field name="override_reason" invisible="not bill_rate_override and not pay_rate_override"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Staffing Criteria &amp; Guard Preferences">
+                            <group>
+                                <field name="preferred_employee_id"/>
+                                <field name="allow_preferred_only"/>
+                                <field name="required_certification_ids" widget="many2many_tags"/>
+                                <field name="required_language_ids" widget="many2many_tags"/>
+                                <field name="required_attribute_ids" widget="many2many_tags"/>
+                            </group>
+                        </page>
+                        <page string="Temporary / Extra Cover">
+                            <group>
+                                <field name="is_extra_cover"/>
+                                <field name="date_start" invisible="not is_extra_cover"/>
+                                <field name="date_end" invisible="not is_extra_cover"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_security_contract_requirement_list" model="ir.ui.view">
+        <field name="name">security.contract.shift.requirement.list</field>
+        <field name="model">security.contract.shift.requirement</field>
+        <field name="arch" type="xml">
+            <list string="Contract Shift Requirements">
+                <field name="sequence" widget="handle"/>
+                <field name="contract_site_id"/>
+                <field name="contract_post_id"/>
+                <field name="shift_template_id"/>
+                <field name="guard_count" string="Workers"/>
+                <field name="monday"/>
+                <field name="tuesday"/>
+                <field name="wednesday"/>
+                <field name="thursday"/>
+                <field name="friday"/>
+                <field name="saturday"/>
+                <field name="sunday"/>
+                <field name="public_holiday" string="PH"/>
+                <field name="estimated_monthly_slots" string="Mo. Slots"/>
+                <field name="bill_rate"/>
+            </list>
+        </field>
+    </record>
+
     <!-- Menu Items -->
     <menuitem id="menu_security_billing_contracts_dashboard"
               name="Contracts Dashboard"

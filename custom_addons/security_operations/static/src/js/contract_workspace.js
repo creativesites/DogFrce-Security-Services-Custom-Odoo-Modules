@@ -157,9 +157,10 @@ class ContractWorkspace extends Component {
                 [
                     "shift_template_id", "guard_count", "min_grade_id",
                     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+                    "public_holiday", "is_ad_hoc",
                     "bill_rate", "bill_rate_override", "contract_bill_rate",
                     "pay_rate", "pay_rate_override", "contract_pay_rate",
-                    "override_reason", "estimated_monthly_slots"
+                    "override_reason", "estimated_monthly_slots", "requirement_id"
                 ]
             );
         }
@@ -292,14 +293,70 @@ class ContractWorkspace extends Component {
         }
     }
 
+    async toggleDay(req, dayField) {
+        const newVal = !req[dayField];
+        try {
+            await this.orm.write("security.contract.shift.requirement", [req.id], { [dayField]: newVal });
+            req[dayField] = newVal;
+            await this._loadSelectedSite(this.state.selectedSiteId);
+            this.notification.add(`Updated ${dayField.replace('_', ' ')}: ${newVal ? 'Active' : 'Off'}`, { type: "info" });
+        } catch (err) {
+            this.notification.add(err.message, { type: "danger" });
+        }
+    }
+
+    async changeGuardCount(req, delta) {
+        const currentCount = req.guard_count || 1;
+        const newCount = Math.max(1, currentCount + delta);
+        if (newCount === currentCount) return;
+        try {
+            await this.orm.write("security.contract.shift.requirement", [req.id], { guard_count: newCount });
+            req.guard_count = newCount;
+            await this._loadSelectedSite(this.state.selectedSiteId);
+            this.notification.add(`Guard count set to ${newCount}`, { type: "info" });
+        } catch (err) {
+            this.notification.add(err.message, { type: "danger" });
+        }
+    }
+
     async actionApplyAllDays(reqId) {
         try {
             await this.orm.call("security.contract.shift.requirement", "action_copy_to_all_days", [[reqId]]);
-            this.notification.add("Applied to all Mon–Sun days.", { type: "success" });
+            this.notification.add("Applied to all Mon–Sun days and Public Holidays.", { type: "success" });
             await this._loadSelectedSite(this.state.selectedSiteId);
         } catch (err) {
             this.notification.add(err.message, { type: "danger" });
         }
+    }
+
+    async actionSetWeekendAndHolidays(reqId) {
+        try {
+            await this.orm.call("security.contract.shift.requirement", "action_set_weekend_and_holidays", [[reqId]]);
+            this.notification.add("Applied Weekend (Sat, Sun) + Public Holidays 24h schedule.", { type: "success" });
+            await this._loadSelectedSite(this.state.selectedSiteId);
+        } catch (err) {
+            this.notification.add(err.message, { type: "danger" });
+        }
+    }
+
+    async actionSetWeekdaysOnly(reqId) {
+        try {
+            await this.orm.call("security.contract.shift.requirement", "action_set_weekdays_only", [[reqId]]);
+            this.notification.add("Applied Monday–Friday weekdays schedule.", { type: "success" });
+            await this._loadSelectedSite(this.state.selectedSiteId);
+        } catch (err) {
+            this.notification.add(err.message, { type: "danger" });
+        }
+    }
+
+    openRequirementForm(reqId) {
+        this.actionService.doAction({
+            type: "ir.actions.act_window",
+            res_model: "security.contract.shift.requirement",
+            res_id: reqId,
+            views: [[false, "form"]],
+            target: "new",
+        });
     }
 
     async toggleRateOverride(req, field) {
