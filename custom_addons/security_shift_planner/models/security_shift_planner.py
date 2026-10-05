@@ -129,7 +129,7 @@ class SecurityRosterBatch(models.Model):
         }
 
     def action_copy_from_previous_batch(self, source_batch_id):
-        """Copies slot structures (post, template, assigned guard if valid) from source batch."""
+        """Copies slot structures from source batch, validating guard membership in site team and eligibility."""
         self.ensure_one()
         source = self.browse(source_batch_id)
         if not source.exists() or not source.slot_ids:
@@ -140,19 +140,71 @@ class SecurityRosterBatch(models.Model):
         t_start = fields.Date.from_string(self.date_from)
         days_diff = (t_start - s_start).days
 
+        # Ensure site pool snapshots exist for all sites in source
+        source_sites = source.slot_ids.mapped("site_id")
+        for st in source_sites:
+            if hasattr(self, "_get_effective_site_pool"):
+                self._get_effective_site_pool(st)
+
+        leave_model = self.env.get("security.leave.request")
         new_slots = []
         for s in source.slot_ids.filtered(lambda x: x.state != "cancelled"):
             s_date = fields.Date.from_string(s.shift_date)
             new_date = s_date + datetime.timedelta(days=days_diff)
+            new_date_str = fields.Date.to_string(new_date)
+
             # Only include if within target batch date range
-            if self.date_from <= fields.Date.to_string(new_date) <= self.date_to:
+            if self.date_from <= new_date_str <= self.date_to:
+                target_emp_id = False
+                state_val = "draft"
+                wrong_fit = False
+                is_relief_val = False
+
+                if s.employee_id:
+                    emp = s.employee_id
+                    site = s.site_id
+                    eff_pool = self.env["hr.employee"]
+                    p_mode = "site_only"
+                    if site and hasattr(self, "_get_effective_site_pool"):
+                        eff_pool, p_mode = self._get_effective_site_pool(site)
+                    elif site and site.site_guard_pool_ids:
+                        eff_pool = site.site_guard_pool_ids
+                        p_mode = site.guard_pool_mode or "site_only"
+
+                    # 1. Is guard in this site's effective pool?
+                    if eff_pool and emp.id not in eff_pool.ids and p_mode == "site_only":
+                        wrong_fit = f"Carried-forward guard {emp.name} is not in {site.name}'s regular team pool."
+                    # 2. Is guard active, not disqualified?
+                    elif not emp.active or emp.security_disqualified or not emp.security_guard:
+                        wrong_fit = f"Carried-forward guard {emp.name} is inactive or disqualified."
+                    else:
+                        # 3. Check approved leave on new_date
+                        on_leave = False
+                        if leave_model:
+                            on_leave = bool(leave_model.search_count([
+                                ("employee_id", "=", emp.id),
+                                ("state", "=", "approved"),
+                                ("date_from", "<=", new_date_str),
+                                ("date_to", ">=", new_date_str),
+                            ]))
+                        if on_leave:
+                            wrong_fit = f"Carried-forward guard {emp.name} is on approved leave on {new_date_str}."
+                        else:
+                            target_emp_id = emp.id
+                            state_val = "assigned"
+                            if eff_pool and emp.id not in eff_pool.ids:
+                                is_relief_val = True
+
                 vals = {
                     "batch_id": self.id,
                     "post_id": s.post_id.id,
                     "shift_template_id": s.shift_template_id.id,
-                    "shift_date": fields.Date.to_string(new_date),
-                    "employee_id": s.employee_id.id if s.employee_id else False,
-                    "state": "assigned" if s.employee_id else "draft",
+                    "shift_date": new_date_str,
+                    "shift_requirement_id": s.shift_requirement_id.id if s.shift_requirement_id else False,
+                    "employee_id": target_emp_id,
+                    "state": state_val,
+                    "is_relief": is_relief_val,
+                    "wrong_fit_reasons": wrong_fit,
                 }
                 new_slots.append(vals)
 
@@ -463,6 +515,77 @@ class SecurityRosterSlot(models.Model):
 
         return {"hard_block": False, "reasons": warnings}
 
+    def get_slot_pool_info(self):
+        """
+        Return structured site pool, relief pool, and preferred guard info for this slot.
+        Used by the OWL Roster Board and Rostering Hub sidebars.
+        """
+        self.ensure_one()
+        site = self.site_id
+        batch = self.batch_id
+        eff_pool = self.env["hr.employee"]
+        pool_mode = "site_only"
+
+        if batch and site and hasattr(batch, "_get_effective_site_pool"):
+            eff_pool, pool_mode = batch._get_effective_site_pool(site)
+        elif site and site.site_guard_pool_ids:
+            eff_pool = site.site_guard_pool_ids
+            pool_mode = site.guard_pool_mode or "site_only"
+        elif site:
+            pool_mode = site.guard_pool_mode or "site_only"
+
+        def _format_guard(g, is_pool_member):
+            elig = self.check_guard_eligibility(g)
+            reasons = list(elig.get("reasons", []))
+            is_blocked = elig.get("hard_block", False) or bool(reasons)
+            return {
+                "id": g.id,
+                "name": g.name,
+                "grade": g.security_grade_id.name if g.security_grade_id else "—",
+                "is_pool_member": is_pool_member,
+                "is_assigned_to_this_slot": bool(self.employee_id and self.employee_id.id == g.id),
+                "is_eligible": not is_blocked,
+                "reasons": reasons,
+            }
+
+        regular_guards = [_format_guard(g, True) for g in eff_pool]
+
+        relief_guards = []
+        if pool_mode == "site_then_relief" or not eff_pool:
+            all_guards = self.env["hr.employee"].search([
+                ("security_guard", "=", True),
+                ("active", "=", True),
+                ("security_disqualified", "=", False),
+                ("id", "not in", eff_pool.ids),
+            ], order="name asc", limit=150)
+            relief_guards = [_format_guard(g, False) for g in all_guards]
+
+        preferred = None
+        if self.shift_requirement_id and self.shift_requirement_id.preferred_employee_id:
+            pe = self.shift_requirement_id.preferred_employee_id
+            preferred = {
+                "id": pe.id,
+                "name": pe.name,
+                "grade": pe.security_grade_id.name if pe.security_grade_id else "—",
+                "allow_preferred_only": bool(self.shift_requirement_id.allow_preferred_only),
+            }
+
+        return {
+            "slot_id": self.id,
+            "site_id": site.id if site else False,
+            "site_name": site.name if site else "—",
+            "post_name": self.post_id.name if self.post_id else "—",
+            "shift_date": str(self.shift_date) if self.shift_date else "",
+            "guard_pool_mode": pool_mode,
+            "regular_count": len(eff_pool),
+            "peak_staffing_required": site.peak_staffing_required if site else 0,
+            "has_capacity_warning": bool(site.guard_pool_capacity_warning) if site else False,
+            "capacity_warning": site.guard_pool_capacity_warning or "" if site else "",
+            "regular_guards": regular_guards,
+            "relief_guards": relief_guards,
+            "preferred_guard": preferred,
+        }
+
     def action_manual_assign(self, employee_id, override=False, override_reason=False):
         """
         Assign an employee to this slot with manual override support.
@@ -478,7 +601,26 @@ class SecurityRosterSlot(models.Model):
         override = bool(override)
 
         eligibility = self.check_guard_eligibility(employee)
-        reasons = eligibility.get("reasons", [])
+        reasons = list(eligibility.get("reasons", []))
+
+        # Check site pool restrictions
+        eff_pool = self.env["hr.employee"]
+        eff_mode = "site_only"
+        if self.site_id:
+            if self.batch_id and hasattr(self.batch_id, "_get_effective_site_pool"):
+                eff_pool, eff_mode = self.batch_id._get_effective_site_pool(self.site_id)
+            elif self.site_id.site_guard_pool_ids:
+                eff_pool = self.site_id.site_guard_pool_ids
+                eff_mode = self.site_id.guard_pool_mode or "site_only"
+            else:
+                eff_mode = self.site_id.guard_pool_mode or "site_only"
+
+        if eff_pool and employee.id not in eff_pool.ids:
+            if eff_mode == "site_only":
+                reasons.append(
+                    f"Site Pool Restriction: {employee.name} is not in {self.site_id.name}'s regular guard pool (Site Only mode)."
+                )
+
         is_blocked = eligibility.get("hard_block", False) or bool(reasons)
 
         if is_blocked and not override:
@@ -567,12 +709,32 @@ class SecurityRosterSlot(models.Model):
             if "compliance_override" in self._fields:
                 vals["compliance_override"] = False
                 vals["compliance_override_reason"] = False
-            self.write(vals)
+
+        # Check if guard belongs to site's regular pool
+        is_relief_val = False
+        relief_reason_val = False
+        eff_pool = self.env["hr.employee"]
+        if self.site_id:
+            if self.batch_id and hasattr(self.batch_id, "_get_effective_site_pool"):
+                eff_pool, _mode = self.batch_id._get_effective_site_pool(self.site_id)
+            elif self.site_id.site_guard_pool_ids:
+                eff_pool = self.site_id.site_guard_pool_ids
+            if eff_pool and employee.id not in eff_pool.ids:
+                is_relief_val = True
+                relief_reason_val = "Manual assignment outside regular site pool"
+
+        vals["is_relief"] = is_relief_val
+        vals["relief_reason"] = relief_reason_val
+        vals["is_preferred_assignment"] = bool(
+            self.shift_requirement_id and self.shift_requirement_id.preferred_employee_id == employee
+        )
+        self.write(vals)
 
         return {
             "status": "success",
             "message": f"Successfully assigned {employee.name}.",
             "is_override": self.is_override,
+            "is_relief": self.is_relief,
         }
 
     def _compute_suggestion_count(self):
@@ -687,9 +849,27 @@ class SecurityRosterSlot(models.Model):
             assigned_flag = False
             for _best_score, best_employee in scored:
                 try:
+                    # Check relief status
+                    is_relief_val = False
+                    relief_reason_val = False
+                    eff_pool = self.env["hr.employee"]
+                    if slot.site_id:
+                        if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                            eff_pool, _mode = slot.batch_id._get_effective_site_pool(slot.site_id)
+                        elif slot.site_id.site_guard_pool_ids:
+                            eff_pool = slot.site_id.site_guard_pool_ids
+                        if eff_pool and best_employee.id not in eff_pool.ids:
+                            is_relief_val = True
+                            relief_reason_val = "No eligible regular site guard available (relief fallback)"
+
                     slot.employee_id = best_employee.id
                     slot.state = "assigned"
                     slot.critical_gap = False
+                    slot.is_relief = is_relief_val
+                    slot.relief_reason = relief_reason_val
+                    slot.is_preferred_assignment = bool(
+                        slot.shift_requirement_id and slot.shift_requirement_id.preferred_employee_id == best_employee
+                    )
                     assigned_today.setdefault(date_key, set()).add(best_employee.id)
                     run_days.setdefault(best_employee.id, set()).add(slot.shift_date)
                     if is_sun:
@@ -704,6 +884,16 @@ class SecurityRosterSlot(models.Model):
             if not assigned_flag:
                 no_candidates += 1
                 slot.critical_gap = True
+                p_mode = "site_only"
+                if slot.site_id:
+                    if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                        _pool, p_mode = slot.batch_id._get_effective_site_pool(slot.site_id)
+                    else:
+                        p_mode = slot.site_id.guard_pool_mode or "site_only"
+                if p_mode == "site_only":
+                    slot.wrong_fit_reasons = "No eligible regular site guard available in site pool. Relief fallback is disabled for this site."
+                else:
+                    slot.wrong_fit_reasons = "No eligible regular or relief guard candidate meets constraints."
 
         parts = [f"{filled} slot(s) auto-assigned"]
         if no_candidates:
@@ -830,56 +1020,34 @@ class SecurityRosterSlot(models.Model):
         # For the shift start hour, compute from template
         target_start_hour = slot.shift_template_id.start_hour if slot.shift_template_id else 0.0
 
-        eligible = []
-        for employee in all_guards:
-            # Guard on leave
+        def _passes_hard_constraints(employee):
             if employee.id in guards_on_leave:
-                continue
-            # Already assigned elsewhere
+                return False
             if employee.id in already_assigned:
-                continue
-            # Excluded from site/client
+                return False
             if employee.id in excluded_guard_ids:
-                continue
-            # Sunday limit: Max 1 Sunday per guard per cycle
+                return False
             if is_sunday and employee.id in guards_on_sunday:
-                continue
-            # Max working days: Max 22 days per cycle
+                return False
             if employee.id in guards_at_max_days:
-                continue
-            # Grade check
+                return False
             if min_grade_seq > 0:
                 emp_grade_seq = employee.security_grade_id.sequence if employee.security_grade_id else 0
                 if not employee.security_grade_id or emp_grade_seq > min_grade_seq:
-                    continue
-            # Reliability score
+                    return False
             if employee.security_reliability_score < min_score:
-                continue
-            # Certifications
+                return False
             emp_cert_ids = set(employee.security_certification_ids.ids)
             if required_certs - emp_cert_ids:
-                continue
-            # Expired certifications (if documents module is installed)
+                return False
             if hasattr(employee, "get_expired_certification_ids"):
                 expired = employee.get_expired_certification_ids()
                 if required_certs & expired:
-                    continue
-
-            # Languages requirement check
-            req_languages = set(post_type.required_language_ids.ids) if post_type and post_type.required_language_ids else set()
-            if requirement and requirement.required_language_ids:
-                req_languages |= set(requirement.required_language_ids.ids)
+                    return False
             if req_languages and (req_languages - set(employee.security_language_ids.ids)):
-                continue
-
-            # Attributes requirement check
-            req_attributes = set(post_type.required_attribute_ids.ids) if post_type and post_type.required_attribute_ids else set()
-            if requirement and requirement.required_attribute_ids:
-                req_attributes |= set(requirement.required_attribute_ids.ids)
+                return False
             if req_attributes and (req_attributes - set(employee.security_attribute_ids.ids)):
-                continue
-
-            # Fatigue check — minimum rest hours between shifts
+                return False
             if slot.shift_date and min_rest_hours > 0:
                 look_back_date = slot.shift_date - timedelta(days=2)
                 recent_slot = self.search([
@@ -897,15 +1065,11 @@ class SecurityRosterSlot(models.Model):
                     days_diff = (slot.shift_date - last_date).days
                     rest_hours = days_diff * 24 - last_end_hour + target_start_hour
                     if rest_hours < min_rest_hours:
-                        continue
-
-            # Check required documents for the post type
-            post_type_for_docs = slot.post_id.post_type_id if slot.post_id and slot.post_id.post_type_id else False
+                        return False
             if post_type_for_docs and hasattr(post_type_for_docs, "required_document_type_ids") and post_type_for_docs.required_document_type_ids:
-                today = fields.Date.context_today(self)
+                today_d = fields.Date.context_today(self)
                 doc_model = self.env.get("security.employee.document")
                 if doc_model is not None:
-                    doc_missing = False
                     for required_type in post_type_for_docs.required_document_type_ids:
                         has_valid_doc = doc_model.search_count([
                             ("employee_id", "=", employee.id),
@@ -913,17 +1077,51 @@ class SecurityRosterSlot(models.Model):
                             ("state", "=", "verified"),
                             "|",
                             ("expiry_date", "=", False),
-                            ("expiry_date", ">=", str(today)),
+                            ("expiry_date", ">=", str(today_d)),
                         ])
                         if not has_valid_doc:
-                            doc_missing = True
-                            break
-                    if doc_missing:
-                        continue
+                            return False
+            return True
 
-            eligible.append((employee, 0))
+        # ── LEVEL 1: Requirement Preferred Guard ──
+        if requirement and requirement.preferred_employee_id:
+            pref = requirement.preferred_employee_id
+            if pref.active and pref.security_guard and not pref.security_disqualified:
+                if _passes_hard_constraints(pref):
+                    return [(pref, 0)]
+                elif requirement.allow_preferred_only:
+                    # Strict preferred guard only: do not silently substitute another guard!
+                    return []
 
-        return eligible
+        # ── Sourcing Effective Site Pool ──
+        site = slot.site_id
+        effective_pool = self.env["hr.employee"]
+        pool_mode = "site_only"
+        if site:
+            if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                effective_pool, pool_mode = slot.batch_id._get_effective_site_pool(site)
+            elif site.site_guard_pool_ids:
+                effective_pool = site.site_guard_pool_ids
+                pool_mode = site.guard_pool_mode or "site_only"
+
+        # ── LEVEL 2: Regular Site Guards (Roster Site Pool) ──
+        if effective_pool:
+            site_candidates = effective_pool.filtered(
+                lambda e: e.active and e.security_guard and not e.security_disqualified
+            )
+            site_eligible = [(emp, 0) for emp in site_candidates if _passes_hard_constraints(emp)]
+            if site_eligible:
+                return site_eligible
+
+        # ── LEVEL 3: Relief Fallback (ONLY if site_then_relief is enabled or if site has no pool configured) ──
+        if pool_mode == "site_then_relief" or not effective_pool:
+            relief_pool = all_guards - effective_pool if effective_pool else all_guards
+            relief_eligible = [(emp, 0) for emp in relief_pool if _passes_hard_constraints(emp)]
+            if relief_eligible:
+                return relief_eligible
+
+        # ── LEVEL 4: Critical Gap ──
+        return []
 
     def _score_guard(self, slot, employee):
         """Return (score, breakdown_text) for one eligible guard."""

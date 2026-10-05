@@ -65,7 +65,7 @@
                                                          t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
                                                          t-on-dragleave="onDragLeaveSlot"
                                                          t-on-drop="(ev) => this.onDropSlot(slot, ev)"
-                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : (slot.is_override ? '#fef3c7' : (slot.conflict ? '#fee2e2' : '#dcfce7'))) + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : (slot.is_override ? '#f59e0b' : (slot.conflict ? '#dc2626' : '#16a34a'))) + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:grab; min-height:30px; transition:box-shadow .15s;'">
+                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : (slot.is_override ? '#fef3c7' : (slot.conflict ? '#fee2e2' : (slot.is_relief ? '#fef9c3' : '#dcfce7')))) + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : (slot.is_override ? '#f59e0b' : (slot.conflict ? '#dc2626' : (slot.is_relief ? '#d97706' : '#16a34a')))) + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:grab; min-height:30px; transition:box-shadow .15s;'">
                                                         <div class="d-flex align-items-center flex-wrap gap-1">
                                                             <t t-if="slot.is_override">
                                                                 <span style="font-size:9px; font-weight:700; color:#b45309; background:#fde68a; border:1px solid #f59e0b; padding:1px 4px; border-radius:2px; margin-right:3px;"
@@ -76,8 +76,14 @@
                                                             <t t-elif="slot.conflict">
                                                                 <span style="font-size:9px; font-weight:700; color:#dc2626; background:#fecaca; padding:1px 4px; border-radius:2px; margin-right:3px;">CONFLICT</span>
                                                             </t>
+                                                            <t t-if="slot.is_relief">
+                                                                <span style="font-size:9px; font-weight:700; color:#92400e; background:#fef3c7; border:1px solid #f59e0b; padding:1px 4px; border-radius:2px; margin-right:3px;"
+                                                                      t-att-title="'RELIEF ASSIGNMENT:\n' + (slot.relief_reason || 'Outside regular site team pool')">
+                                                                    <i class="fa fa-shield me-1"/>RELIEF
+                                                                </span>
+                                                            </t>
                                                         </div>
-                                                        <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.is_override ? '#b45309' : (slot.conflict ? '#991b1b' : '#15803d')) + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
+                                                        <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.is_override ? '#b45309' : (slot.conflict ? '#991b1b' : (slot.is_relief ? '#92400e' : '#15803d'))) + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
                                                              t-esc="slot.employee_name"/>
                                                         <div class="d-flex align-items-center justify-content-between mt-1">
                                                             <div t-if="slot.shift_label" style="font-size:9px; color:#16a34a;" t-esc="slot.shift_label"/>

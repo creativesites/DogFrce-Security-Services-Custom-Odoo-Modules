@@ -425,6 +425,13 @@ class SecurityClientContract(models.Model):
                         "is_contract_managed": True,
                     })
 
+                if c_site.contract_guard_pool_ids:
+                    operational_site.write({
+                        "site_guard_pool_ids": [(6, 0, c_site.contract_guard_pool_ids.ids)],
+                        "guard_pool_mode": c_site.guard_pool_mode or "site_only",
+                        "guard_pool_source": f"Contract {contract.name}",
+                    })
+
                 # 2. Sync or Create Posts
                 for c_post in c_site.post_line_ids:
                     operational_post = c_post.post_id

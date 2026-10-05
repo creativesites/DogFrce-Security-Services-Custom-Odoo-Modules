@@ -114,7 +114,10 @@ class SiteHub extends Component {
                  "contact_email", "gps_lat", "gps_lng", "geofence_radius", "note",
                  "supervisor_id", "site_coverage_today", "site_coverage_month",
                  "shift_requirement_ids", "post_ids", "exclusion_ids",
-                 "contract_id", "is_contract_managed"],
+                 "contract_id", "is_contract_managed",
+                 "site_guard_pool_ids", "guard_pool_mode", "guard_pool_source",
+                 "guard_pool_source_date", "guard_pool_count", "peak_staffing_required",
+                 "guard_pool_capacity_warning"],
             );
             if (!site) {
                 this.state.error = "This site could not be found or you no longer have permission to view it.";
@@ -159,6 +162,17 @@ class SiteHub extends Component {
 
     async _loadGuards() {
         if (!this.siteId) return;
+
+        // Load Regular Site Guards
+        this.state.regularGuards = [];
+        if (this.state.site?.site_guard_pool_ids?.length) {
+            this.state.regularGuards = await this.orm.read(
+                "hr.employee",
+                this.state.site.site_guard_pool_ids,
+                ["name", "employee_code", "security_grade_id", "security_reliability_score", "security_disqualified", "active"]
+            );
+        }
+
         const slots = await this.orm.searchRead(
             "security.roster.slot",
             [
@@ -177,6 +191,38 @@ class SiteHub extends Component {
             seen.add(eid);
             return true;
         });
+    }
+
+    openImportWizard() {
+        this.actionService.doAction({
+            type: "ir.actions.act_window",
+            name: "Import Regular Site Guards",
+            res_model: "security.roster.team.import.wizard",
+            view_mode: "form",
+            views: [[false, "form"]],
+            target: "new",
+            context: {
+                default_site_id: this.siteId,
+                default_source_label: `${this.state.site.name} Roster Import`,
+            },
+        }, {
+            onClose: () => this._load(),
+        });
+    }
+
+    async toggleGuardPoolMode() {
+        const newMode = this.state.site.guard_pool_mode === "site_only" ? "site_then_relief" : "site_only";
+        await this.orm.write("security.client.site", [this.siteId], { guard_pool_mode: newMode });
+        this.state.site.guard_pool_mode = newMode;
+        this.notification.add(`Guard pool mode set to: ${newMode === "site_only" ? "Regular Site Pool Only" : "Site Pool with Relief Fallback"}`, { type: "info" });
+    }
+
+    async removeGuardFromPool(employeeId) {
+        await this.orm.write("security.client.site", [this.siteId], {
+            site_guard_pool_ids: [[3, employeeId]]
+        });
+        await this._load();
+        this.notification.add("Guard removed from regular site team", { type: "success" });
     }
 
     async _loadRequirements() {

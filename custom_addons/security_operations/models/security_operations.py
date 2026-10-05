@@ -149,8 +149,93 @@ class SecurityClientSite(models.Model):
         store=True,
     )
 
+    # Regular Site Guard Pool
+    site_guard_pool_ids = fields.Many2many(
+        "hr.employee",
+        "security_client_site_guard_rel",
+        "site_id",
+        "employee_id",
+        string="Regular Site Guards",
+        domain=[("security_guard", "=", True), ("active", "=", True)],
+        help="Authoritative regular operational guard team for this site.",
+    )
+    guard_pool_mode = fields.Selection(
+        [
+            ("site_only", "Regular Site Pool Only"),
+            ("site_then_relief", "Site Pool with Relief Fallback"),
+        ],
+        string="Guard Pool Mode",
+        default="site_only",
+        required=True,
+        help="Determines whether auto-rostering and dispatch may select relief guards outside the regular site pool.",
+    )
+    guard_pool_source = fields.Char(
+        string="Guard Pool Source",
+        help="Source of the regular guard team (e.g. DogForce October 2026 Manual Roster).",
+    )
+    guard_pool_source_date = fields.Date(
+        string="Source Date",
+        default=fields.Date.today,
+    )
+    guard_pool_count = fields.Integer(
+        string="Regular Guards Count",
+        compute="_compute_guard_pool_stats",
+    )
+    peak_staffing_required = fields.Integer(
+        string="Peak Daily Staffing Required",
+        compute="_compute_guard_pool_stats",
+    )
+    guard_pool_capacity_warning = fields.Char(
+        string="Capacity Warning",
+        compute="_compute_guard_pool_stats",
+    )
+
     post_count = fields.Integer(compute="_compute_counts", string="Posts Count")
     active_slot_count = fields.Integer(compute="_compute_counts", string="Today's Slots")
+
+    @api.depends("site_guard_pool_ids", "shift_requirement_ids.guard_count", "shift_requirement_ids.active", "shift_requirement_ids.monday", "shift_requirement_ids.tuesday", "shift_requirement_ids.wednesday", "shift_requirement_ids.thursday", "shift_requirement_ids.friday", "shift_requirement_ids.saturday", "shift_requirement_ids.sunday")
+    def _compute_guard_pool_stats(self):
+        for site in self:
+            pool_count = len(site.site_guard_pool_ids)
+            site.guard_pool_count = pool_count
+
+            # Calculate daily shifts required per day of week
+            days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+            peak_day = 0
+            total_week_slots = 0
+            active_reqs = site.shift_requirement_ids.filtered(lambda r: r.active and r.guard_count > 0)
+            for d in days:
+                day_slots = sum(r.guard_count for r in active_reqs.filtered(lambda r: getattr(r, d, False)))
+                if day_slots > peak_day:
+                    peak_day = day_slots
+                total_week_slots += day_slots
+
+            site.peak_staffing_required = peak_day
+            est_monthly_slots = int(total_week_slots * 4.3)
+            recommended_min = max(peak_day, (est_monthly_slots + 21) // 22) if est_monthly_slots > 0 else 0
+
+            if active_reqs and pool_count < recommended_min:
+                site.guard_pool_capacity_warning = (
+                    f"Guard Pool Too Small: Site requires ~{est_monthly_slots} shifts/month (peak {peak_day} guards/day). "
+                    f"Regular pool has {pool_count} guard(s), but at least {recommended_min} regular guards are needed "
+                    f"to avoid fatigue and Sunday limit violations."
+                )
+            else:
+                site.guard_pool_capacity_warning = False
+
+    def action_open_import_wizard(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Import Regular Site Guards",
+            "res_model": "security.roster.team.import.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_site_id": self.id,
+                "default_source_label": f"{self.name} Roster Import",
+            },
+        }
 
     @api.depends("post_ids", "post_ids.active", "shift_requirement_ids", "shift_requirement_ids.active", "shift_requirement_ids.guard_count")
     def _compute_site_setup_status(self):
@@ -861,6 +946,11 @@ class SecurityRosterBatch(models.Model):
         required=True,
     )
     slot_ids = fields.One2many("security.roster.slot", "batch_id", string="Roster Slots")
+    roster_site_pool_ids = fields.One2many(
+        "security.roster.batch.site.pool",
+        "batch_id",
+        string="Roster Site Guard Teams",
+    )
     generated_slot_count = fields.Integer(compute="_compute_generated_slot_count")
     planned_revenue = fields.Float(
         compute="_compute_planned_revenue",
@@ -871,6 +961,24 @@ class SecurityRosterBatch(models.Model):
     approved_by_id = fields.Many2one("res.users", readonly=True, string="Approved By")
     rejection_reason = fields.Text(string="Rejection Reason")
     note = fields.Text()
+
+    def _get_effective_site_pool(self, site_id):
+        """
+        Return (effective_guard_ids, guard_pool_mode) for a given site in this batch.
+        If a snapshot record doesn't exist, create it from the site's permanent defaults.
+        """
+        self.ensure_one()
+        if not site_id:
+            return (self.env["hr.employee"], "site_only")
+        pool = self.roster_site_pool_ids.filtered(lambda p: p.site_id.id == site_id.id)
+        if not pool:
+            pool = self.env["security.roster.batch.site.pool"].create({
+                "batch_id": self.id,
+                "site_id": site_id.id,
+                "guard_ids": [(6, 0, site_id.site_guard_pool_ids.ids)],
+                "guard_pool_mode": site_id.guard_pool_mode or "site_only",
+            })
+        return (pool.guard_ids, pool.guard_pool_mode)
 
     @api.depends("date_from", "date_to", "partner_id", "site_id")
     def _compute_name(self):
@@ -963,6 +1071,10 @@ class SecurityRosterBatch(models.Model):
             if not requirements:
                 raise ValidationError("No active shift requirements found for this roster batch.")
 
+            # Ensure roster site team snapshots exist for all sites in this batch
+            for s in requirements.mapped("site_id"):
+                batch._get_effective_site_pool(s)
+
             created_count = 0
             target_date = batch.date_from
             while target_date <= batch.date_to:
@@ -994,6 +1106,7 @@ class SecurityRosterBatch(models.Model):
                             if not preferred.security_disqualified:
                                 vals["employee_id"] = preferred.id
                                 vals["state"] = "assigned"
+                                vals["is_preferred_assignment"] = True
                         slot_model.create(vals)
                         created_count += 1
                 target_date += timedelta(days=1)
@@ -1584,6 +1697,17 @@ class SecurityRosterSlot(models.Model):
     )
     override_reason = fields.Char()
     is_override = fields.Boolean("Is Override", default=False)
+    is_relief = fields.Boolean(
+        "Is Relief Assignment",
+        default=False,
+        index=True,
+        help="Flagged if guard was assigned outside the site's regular team pool.",
+    )
+    relief_reason = fields.Char("Relief Reason")
+    is_preferred_assignment = fields.Boolean(
+        "Assigned via Preferred Guard",
+        default=False,
+    )
     wrong_fit_reasons = fields.Text("Wrong Fit Ineligibility Reasons")
     overtime_planned = fields.Boolean(default=False)
     high_value_shift = fields.Boolean(

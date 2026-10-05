@@ -289,30 +289,132 @@
 
                 <!-- ── GUARDS ── -->
                 <t t-if="state.activeTab === 'guards'">
-                    <t t-if="state.guards.length === 0">
-                        <div class="text-center text-muted py-5">
-                            <i class="fa fa-user-times fa-2x mb-3 d-block"/>
-                            No guards currently assigned to this site.
+                    <!-- Capacity Warning Banner -->
+                    <t t-if="state.site.guard_pool_capacity_warning">
+                        <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+                            <i class="fa fa-exclamation-triangle fa-2x me-3 text-warning"/>
+                            <div>
+                                <strong>Capacity Shortage Warning:</strong>
+                                <div><t t-esc="state.site.guard_pool_capacity_warning"/></div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- Pool Control Panel -->
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-light border rounded mb-4">
+                        <div class="d-flex align-items-center gap-4">
+                            <div>
+                                <span class="text-muted small d-block">REGULAR SITE GUARDS</span>
+                                <span class="fs-4 fw-bold text-primary"><t t-esc="state.regularGuards ? state.regularGuards.length : 0"/> Guards</span>
+                            </div>
+                            <div class="border-start ps-3">
+                                <span class="text-muted small d-block">PEAK DAILY STAFFING</span>
+                                <span class="fs-5 fw-semibold text-dark"><t t-esc="state.site.peak_staffing_required || 0"/> guards/day</span>
+                            </div>
+                            <div class="border-start ps-3">
+                                <span class="text-muted small d-block">DISPATCH MODE</span>
+                                <span class="badge" t-att-class="state.site.guard_pool_mode === 'site_only' ? 'bg-primary' : 'bg-info'">
+                                    <t t-esc="state.site.guard_pool_mode === 'site_only' ? 'Site Pool Only' : 'Site + Relief Fallback'"/>
+                                </span>
+                                <button class="btn btn-sm btn-link text-decoration-none p-0 ms-2" t-on-click="toggleGuardPoolMode" title="Change Pool Mode">
+                                    <i class="fa fa-exchange"/> Change
+                                </button>
+                            </div>
+                            <t t-if="state.site.guard_pool_source">
+                                <div class="border-start ps-3">
+                                    <span class="text-muted small d-block">CONFIG SOURCE</span>
+                                    <span class="small text-muted"><t t-esc="state.site.guard_pool_source"/></span>
+                                </div>
+                            </t>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-primary btn-sm" t-on-click="openImportWizard">
+                                <i class="fa fa-upload me-1"/> Import from Roster Document
+                            </button>
+                            <button class="btn btn-outline-secondary btn-sm" t-on-click="openSiteForm">
+                                <i class="fa fa-user-plus me-1"/> Add Guard
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Regular Guards Table -->
+                    <h6 class="text-uppercase text-muted fw-bold small mb-2">Authoritative Site Guard Team</h6>
+                    <t t-if="!state.regularGuards || state.regularGuards.length === 0">
+                        <div class="text-center text-muted py-4 bg-light border rounded mb-4">
+                            <i class="fa fa-users fa-2x mb-2 d-block text-secondary"/>
+                            <p class="mb-2">No regular guard team configured for this site yet.</p>
+                            <button class="btn btn-primary btn-sm" t-on-click="openImportWizard">
+                                <i class="fa fa-upload me-1"/> Import Current Roster Document
+                            </button>
                         </div>
                     </t>
                     <t t-else="">
-                        <table class="table table-sm table-hover">
+                        <table class="table table-sm table-hover align-middle border mb-4">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Guard Name</th>
+                                    <th>Guard ID</th>
+                                    <th>Grade</th>
+                                    <th>Reliability</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="state.regularGuards" t-as="rg" t-key="rg.id">
+                                    <tr>
+                                        <td class="fw-semibold"><t t-esc="rg.name"/></td>
+                                        <td class="text-muted small"><t t-esc="rg.employee_code || '—'"/></td>
+                                        <td>
+                                            <span class="badge bg-secondary" t-if="rg.security_grade_id">
+                                                <t t-esc="rg.security_grade_id[1]"/>
+                                            </span>
+                                            <span class="text-muted small" t-else="">—</span>
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold text-success"><t t-esc="rg.security_reliability_score"/>%</span>
+                                        </td>
+                                        <td>
+                                            <span t-if="rg.security_disqualified" class="badge bg-danger">Disqualified</span>
+                                            <span t-elif="!rg.active" class="badge bg-secondary">Inactive</span>
+                                            <span t-else="" class="badge bg-success">Active Team Member</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2" t-on-click="() => this.removeGuardFromPool(rg.id)" title="Remove from regular site team">
+                                                <i class="fa fa-times"/> Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                    </t>
+
+                    <!-- Recent Slot History Accordion/Section -->
+                    <h6 class="text-uppercase text-muted fw-bold small mb-2 mt-4">Recent Slot Assignments on Site</h6>
+                    <t t-if="state.guards.length === 0">
+                        <div class="text-muted small py-2">
+                            No recent shift history recorded for this site.
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="table table-sm table-hover text-muted small">
                             <thead class="table-light">
                                 <tr>
                                     <th>Guard</th>
                                     <th>Post</th>
                                     <th>Shift</th>
-                                    <th>Last Seen</th>
+                                    <th>Date</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <t t-foreach="state.guards" t-as="g" t-key="g.id">
                                     <tr>
-                                        <td class="fw-semibold"><t t-esc="g.employee_id ? g.employee_id[1] : '—'"/></td>
-                                        <td class="text-muted small"><t t-esc="g.post_id ? g.post_id[1] : '—'"/></td>
-                                        <td class="text-muted small"><t t-esc="g.shift_template_id ? g.shift_template_id[1] : '—'"/></td>
-                                        <td class="text-muted small"><t t-esc="g.shift_date"/></td>
+                                        <td class="fw-semibold text-dark"><t t-esc="g.employee_id ? g.employee_id[1] : '—'"/></td>
+                                        <td><t t-esc="g.post_id ? g.post_id[1] : '—'"/></td>
+                                        <td><t t-esc="g.shift_template_id ? g.shift_template_id[1] : '—'"/></td>
+                                        <td><t t-esc="g.shift_date"/></td>
                                         <td>
                                             <span t-att-class="g.state === 'confirmed' ? 'badge bg-success' : g.state === 'assigned' ? 'badge bg-info' : 'badge bg-secondary'">
                                                 <t t-esc="g.state"/>

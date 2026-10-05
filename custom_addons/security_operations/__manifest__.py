@@ -23,6 +23,7 @@
         "views/security_demand_plan_views.xml",
         "views/ops_dashboard_actions.xml",
         "views/security_duplicate_views.xml",
+        "wizards/security_roster_team_import_wizard_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

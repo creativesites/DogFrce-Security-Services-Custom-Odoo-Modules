@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_security_roster_team_import_wizard_form" model="ir.ui.view">
+        <name>security.roster.team.import.wizard.form</name>
+        <model>security.roster.team.import.wizard</model>
+        <arch type="xml">
+            <form string="Import Regular Site Guards from Roster">
+                <field name="state" invisible="1"/>
+                
+                <!-- Stage 1: Upload -->
+                <div invisible="state != 'upload'">
+                    <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                        <i class="fa fa-info-circle fa-2x me-3"/>
+                        <div>
+                            <strong>Low-Friction Site Team Setup:</strong> Upload an existing DogForce roster document (Excel <code>.xlsx</code>, CSV <code>.csv</code>, or plain text <code>.txt</code>). 
+                            The system will automatically parse guard names and match them to active employees.
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Target Site &amp; Source">
+                            <field name="site_id" options="{'no_create': True}"/>
+                            <field name="source_label" placeholder="e.g. DogForce October 2026 Excel Roster"/>
+                            <field name="guard_pool_mode" widget="radio"/>
+                        </group>
+                        <group string="Document File">
+                            <field name="file_data" filename="file_name" widget="binary"/>
+                            <field name="file_name" invisible="1"/>
+                        </group>
+                    </group>
+                </div>
+
+                <!-- Stage 2: Review & Match -->
+                <div invisible="state != 'review'">
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-light border rounded mb-3">
+                        <div>
+                            <h5 class="mb-1 text-primary fw-bold"><field name="site_id" readonly="1" options="{'no_open': True}"/></h5>
+                            <span class="text-muted small">Source: <field name="source_label" readonly="1"/></span>
+                        </div>
+                        <div class="d-flex gap-3 text-center">
+                            <div class="px-3 py-1 bg-white border rounded">
+                                <div class="fs-4 fw-bold text-dark"><field name="total_guards_found"/></div>
+                                <div class="text-muted small">Total Found</div>
+                            </div>
+                            <div class="px-3 py-1 bg-white border rounded">
+                                <div class="fs-4 fw-bold text-success"><field name="matched_count"/></div>
+                                <div class="text-muted small">Matched</div>
+                            </div>
+                            <div class="px-3 py-1 bg-white border rounded">
+                                <div class="fs-4 fw-bold text-warning"><field name="unmatched_count"/></div>
+                                <div class="text-muted small">Requires Review</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning py-2 mb-3" invisible="unmatched_count == 0">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <strong>Attention:</strong> <field name="unmatched_count"/> guard(s) could not be matched automatically. Review or manually select existing HR employees, or leave unchecked if they are not active employees.
+                    </div>
+
+                    <field name="line_ids">
+                        <tree editable="bottom" decoration-success="match_status in ('exact', 'manual')" decoration-warning="match_status == 'fuzzy'" decoration-danger="match_status == 'unmatched'">
+                            <field name="include_in_pool" widget="boolean_toggle"/>
+                            <field name="raw_guard_name" readonly="1"/>
+                            <field name="employee_id" options="{'no_create': True}" placeholder="Search active guard..."/>
+                            <field name="match_status" widget="badge" 
+                                   decoration-success="match_status in ('exact', 'manual')" 
+                                   decoration-warning="match_status == 'fuzzy'" 
+                                   decoration-danger="match_status == 'unmatched'"/>
+                            <field name="confidence_pct" widget="progressbar"/>
+                            <field name="note" readonly="1"/>
+                        </tree>
+                    </field>
+                </div>
+
+                <footer>
+                    <button name="action_parse_document" string="Extract &amp; Match Guards →" type="object" class="btn-primary" invisible="state != 'upload'"/>
+                    <button name="action_confirm_import" string="Confirm &amp; Update Site Team" type="object" class="btn-success" invisible="state != 'review'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </arch>
+    </record>
+
+    <!-- Action -->
+    <record id="action_security_roster_team_import_wizard" model="ir.actions.act_window">
+        <name>Import Regular Site Guards</name>
+        <res_model>security.roster.team.import.wizard</res_model>
+        <view_mode>form</view_mode>
+        <target>new</target>
+    </record>
+
+</odoo>

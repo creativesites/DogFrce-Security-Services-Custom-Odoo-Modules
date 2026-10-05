@@ -742,14 +742,22 @@
                      t-att-value="state.guardSearchTerm"
                      t-on-input="(ev) => { state.guardSearchTerm = ev.target.value; }"/>
             </div>
-            <div class="d-flex rounded bg-light p-1" style="font-size:11px; font-weight:700;">
-              <button t-att-class="'btn btn-sm flex-fill py-1 rounded ' + (state.guardTab === 'suggested' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+            <div class="d-flex rounded bg-light p-1" style="font-size:10px; font-weight:700; gap:2px;">
+              <button t-att-class="'btn btn-sm flex-fill py-1 px-1 rounded ' + (state.guardTab === 'site_team' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+                      t-on-click="() => { state.guardTab = 'site_team'; }">
+                <i class="fa fa-shield me-1 text-primary"/>Site Team (<t t-esc="state.slotPoolInfo ? state.slotPoolInfo.regular_guards.length : 0"/>)
+              </button>
+              <button t-att-class="'btn btn-sm flex-fill py-1 px-1 rounded ' + (state.guardTab === 'suggested' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
                       t-on-click="() => { state.guardTab = 'suggested'; }">
                 <i class="fa fa-star me-1 text-warning"/>Suggested (<t t-esc="state.suggestions.length"/>)
               </button>
-              <button t-att-class="'btn btn-sm flex-fill py-1 rounded ' + (state.guardTab === 'all' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+              <button t-att-class="'btn btn-sm flex-fill py-1 px-1 rounded ' + (state.guardTab === 'relief' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
+                      t-on-click="() => { state.guardTab = 'relief'; }">
+                <i class="fa fa-life-ring me-1 text-warning"/>Relief
+              </button>
+              <button t-att-class="'btn btn-sm flex-fill py-1 px-1 rounded ' + (state.guardTab === 'all' ? 'btn-white shadow-sm text-primary fw-bold' : 'text-secondary')"
                       t-on-click="() => { state.guardTab = 'all'; }">
-                <i class="fa fa-users me-1 text-info"/>All Guards (<t t-esc="filteredAllGuards.length"/>)
+                <i class="fa fa-users me-1 text-info"/>All / Override
               </button>
             </div>
           </div>
@@ -757,8 +765,119 @@
           <!-- Suggestions list -->
           <div class="rh-suggestions-body">
 
-            <!-- TAB 1: SUGGESTED MATCHES -->
+            <!-- TAB 1: REGULAR SITE TEAM -->
+            <t t-if="state.guardTab === 'site_team'">
+              <t t-if="state.loadingSlotPool">
+                <div class="rh-loading-center">
+                  <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>Loading site team…
+                </div>
+              </t>
+              <t t-elif="state.slotPoolInfo">
+                <!-- Site Policy & Capacity Header -->
+                <div class="mb-3 p-2 bg-light border rounded" style="font-size:11px;">
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="fw-bold text-dark"><i class="fa fa-building text-primary me-1"/><t t-esc="state.slotPoolInfo.site_name"/></span>
+                    <span t-att-class="'badge ' + (state.slotPoolInfo.guard_pool_mode === 'site_only' ? 'bg-secondary' : 'bg-info text-dark')">
+                      <t t-if="state.slotPoolInfo.guard_pool_mode === 'site_only'">Site Only</t>
+                      <t t-else="">Site + Relief</t>
+                    </span>
+                  </div>
+                  <div class="text-muted" style="font-size:10px;">
+                    Pool: <strong><t t-esc="state.slotPoolInfo.regular_count"/></strong> regular guards | Peak Required: <strong><t t-esc="state.slotPoolInfo.peak_staffing_required"/></strong>
+                  </div>
+                  <t t-if="state.slotPoolInfo.has_capacity_warning">
+                    <div class="alert alert-danger p-1 mt-1 mb-0" style="font-size:10px;">
+                      <i class="fa fa-exclamation-triangle me-1"/> <t t-esc="state.slotPoolInfo.capacity_warning"/>
+                    </div>
+                  </t>
+                </div>
+
+                <t t-if="state.slotPoolInfo.preferred_guard">
+                  <div class="p-2 mb-2 bg-white border border-primary rounded d-flex align-items-center justify-content-between shadow-sm">
+                    <div>
+                      <div style="font-size:11px; font-weight:700; color:#1e40af;">
+                        <i class="fa fa-star text-warning me-1"/>Preferred Guard: <t t-esc="state.slotPoolInfo.preferred_guard.name"/>
+                      </div>
+                      <div style="font-size:10px; color:#64748b;">
+                        Grade: <t t-esc="state.slotPoolInfo.preferred_guard.grade"/>
+                        <t t-if="state.slotPoolInfo.preferred_guard.allow_preferred_only">
+                          <span class="badge bg-warning text-dark ms-1">Preferred Only</span>
+                        </t>
+                      </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary py-1 px-2"
+                            style="font-size:11px; font-weight:600;"
+                            t-on-click="() => this.assignGuardDirect(state.slotPoolInfo.preferred_guard)">
+                      <i class="fa fa-check me-1"/>Assign
+                    </button>
+                  </div>
+                </t>
+
+                <t t-if="state.slotPoolInfo.regular_guards.length > 0">
+                  <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#64748b; margin-bottom:8px;">
+                    <i class="fa fa-shield me-1 text-primary"/>
+                    Regular Site Guards (<t t-esc="state.slotPoolInfo.regular_guards.length"/>)
+                  </div>
+
+                  <t t-foreach="state.slotPoolInfo.regular_guards" t-as="guard" t-key="guard.id">
+                    <div class="p-2 mb-2 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
+                      <div style="flex:1; min-width:0; margin-right:8px;">
+                        <div class="d-flex align-items-center gap-1 mb-1">
+                          <span style="font-size:12px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" t-esc="guard.name"/>
+                          <t t-if="guard.is_assigned_to_this_slot">
+                            <span class="badge bg-success" style="font-size:9px;">ASSIGNED</span>
+                          </t>
+                        </div>
+                        <div style="font-size:10px; color:#64748b;">Grade: <t t-esc="guard.grade"/></div>
+                        <t t-if="!guard.is_eligible and guard.reasons.length">
+                          <div style="font-size:9px; color:#dc2626; margin-top:2px; line-height:1.2;">
+                            <t t-foreach="guard.reasons" t-as="r" t-key="r">
+                              <div>• <t t-esc="r"/></div>
+                            </t>
+                          </div>
+                        </t>
+                      </div>
+                      <div>
+                        <t t-if="guard.is_eligible">
+                          <button class="btn btn-sm btn-success py-1 px-2"
+                                  style="font-size:11px; font-weight:600;"
+                                  t-on-click="() => this.assignGuardDirect(guard)">
+                            <i class="fa fa-check me-1"/>Assign
+                          </button>
+                        </t>
+                        <t t-else="">
+                          <button class="btn btn-sm btn-outline-warning text-dark py-1 px-2"
+                                  style="font-size:11px; font-weight:600;"
+                                  t-on-click="() => this.assignGuardDirect(guard)">
+                            <i class="fa fa-warning me-1 text-warning"/>Override
+                          </button>
+                        </t>
+                      </div>
+                    </div>
+                  </t>
+                </t>
+                <t t-else="">
+                  <div class="alert alert-info py-3 px-3 mb-3 border-start border-4 border-info" style="font-size:11px;">
+                    <div class="fw-bold mb-1"><i class="fa fa-info-circle me-1"/>No Regular Site Guards Configured</div>
+                    <div class="text-muted">
+                      This site does not yet have a regular team pool. You can import or assign regular guards in Client Sites or use Relief / All Guards.
+                    </div>
+                  </div>
+                </t>
+              </t>
+            </t>
+
+            <!-- TAB 2: SUGGESTED MATCHES -->
             <t t-if="state.guardTab === 'suggested'">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#64748b;">
+                  <i class="fa fa-star me-1 text-warning"/>Scoring Engine
+                </span>
+                <button class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:10px;"
+                        t-on-click="loadSuggestions">
+                  <i class="fa fa-refresh me-1"/>Score Guards
+                </button>
+              </div>
               <t t-if="state.loadingSuggestions">
                 <div class="rh-loading-center">
                   <i class="fa fa-spinner fa-spin fa-lg d-block mb-2"/>Scoring guards…
@@ -799,10 +918,10 @@
               <t t-elif="state.suggestionsLoaded and state.suggestions.length === 0">
                 <div class="alert alert-warning py-3 px-3 mb-3 border-start border-4 border-warning" style="font-size:11px; background:#fffbeb;">
                   <div style="font-size:12px; font-weight:700; color:#92400e;" class="mb-1">
-                    <i class="fa fa-exclamation-triangle me-1 text-warning"/>No 100% Eligible Guard Suggestions
+                    <i class="fa fa-exclamation-triangle me-1 text-warning"/>No Eligible Guard Suggestions
                   </div>
                   <div style="color:#78350f;">
-                    All guards have requirement warnings (e.g. leave or grade). Select any guard below to assign with a manual override:
+                    All candidates have warnings or exclusions. Select any guard below to assign with a manual override:
                   </div>
                 </div>
 
@@ -825,15 +944,64 @@
               <t t-else="">
                 <div class="rh-loading-center" style="color:#94a3b8;">
                   <i class="fa fa-magic d-block mb-2" style="font-size:28px; color:#cbd5e1;"/>
-                  <div class="mb-2">Click "Suggest Guards" for top matches, or pick from "All Guards".</div>
-                  <button class="btn btn-sm btn-outline-secondary" t-on-click="() => { state.guardTab = 'all'; }">
-                    <i class="fa fa-users me-1"/>Browse All Guards
+                  <div class="mb-2">Click "Score Guards" for top matches, or pick from Site Team or Relief.</div>
+                  <button class="btn btn-sm btn-primary" t-on-click="loadSuggestions">
+                    <i class="fa fa-magic me-1"/>Score Guards
                   </button>
                 </div>
               </t>
             </t>
 
-            <!-- TAB 2: ALL GUARDS DIRECTORY -->
+            <!-- TAB 3: RELIEF COVERAGE -->
+            <t t-if="state.guardTab === 'relief'">
+              <t t-if="state.slotPoolInfo and state.slotPoolInfo.guard_pool_mode === 'site_only'">
+                <div class="alert alert-secondary py-3 px-3 mb-3 border-start border-4 border-secondary" style="font-size:11px;">
+                  <div class="fw-bold mb-1"><i class="fa fa-lock me-1"/>Relief Fallback Disabled (Site Only Mode)</div>
+                  <div class="text-muted">
+                    <t t-esc="state.slotPoolInfo.site_name"/> is configured for <strong>Regular Site Pool Only</strong>.
+                    Relief assignments from company-wide guards are disabled by policy.
+                    <div class="mt-2">
+                      To assign a non-pool guard, use the <strong>All / Override</strong> tab (requires an audit reason), or update the site settings to enable 'Site Pool with Relief Fallback'.
+                    </div>
+                  </div>
+                </div>
+              </t>
+              <t t-elif="state.slotPoolInfo">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; color:#d97706; margin-bottom:8px;">
+                  <i class="fa fa-life-ring me-1"/>
+                  Relief Candidates (<t t-esc="state.slotPoolInfo.relief_guards ? state.slotPoolInfo.relief_guards.length : 0"/>)
+                </div>
+                <div class="alert alert-warning py-2 px-3 mb-2" style="font-size:10px;">
+                  <i class="fa fa-info-circle me-1"/>
+                  Guards outside regular site team. Assignments will be tagged with <span class="badge bg-warning text-dark">RELIEF</span> badge.
+                </div>
+                <t t-if="!state.slotPoolInfo.relief_guards or state.slotPoolInfo.relief_guards.length === 0">
+                  <div class="text-center py-4 text-muted" style="font-size:12px;">No relief guards available.</div>
+                </t>
+                <t t-foreach="state.slotPoolInfo.relief_guards" t-as="guard" t-key="guard.id">
+                  <div class="p-2 mb-2 bg-white border rounded d-flex align-items-center justify-content-between shadow-sm">
+                    <div style="flex:1; min-width:0; margin-right:8px;">
+                      <div style="font-size:12px; font-weight:700; color:#1e293b;" t-esc="guard.name"/>
+                      <div style="font-size:10px; color:#64748b;">Grade: <t t-esc="guard.grade"/></div>
+                      <t t-if="!guard.is_eligible and guard.reasons.length">
+                        <div style="font-size:9px; color:#dc2626; margin-top:2px;">
+                          <t t-foreach="guard.reasons" t-as="r" t-key="r">
+                            <div>• <t t-esc="r"/></div>
+                          </t>
+                        </div>
+                      </t>
+                    </div>
+                    <button class="btn btn-sm btn-outline-warning text-dark py-1 px-2"
+                            style="font-size:11px; font-weight:600;"
+                            t-on-click="() => this.assignGuardDirect(guard)">
+                      <i class="fa fa-shield me-1"/>Assign Relief
+                    </button>
+                  </div>
+                </t>
+              </t>
+            </t>
+
+            <!-- TAB 4: ALL GUARDS DIRECTORY -->
             <t t-if="state.guardTab === 'all'">
               <div class="rh-sug-header">
                 <i class="fa fa-users me-1"/>All Active Guards (<t t-esc="filteredAllGuards.length"/>)

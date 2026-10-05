@@ -59,6 +59,25 @@ class SecurityContractSite(models.Model):
         string="Shift Requirements",
     )
 
+    contract_guard_pool_ids = fields.Many2many(
+        "hr.employee",
+        "sec_contract_site_guard_rel",
+        "contract_site_id",
+        "employee_id",
+        string="Regular Site Guards",
+        domain=[("security_guard", "=", True), ("active", "=", True)],
+        help="Regular operational guard team defined under this contract site.",
+    )
+    guard_pool_mode = fields.Selection(
+        [
+            ("site_only", "Regular Site Pool Only"),
+            ("site_then_relief", "Site Pool with Relief Fallback"),
+        ],
+        string="Guard Pool Mode",
+        default="site_only",
+        required=True,
+    )
+
     post_count = fields.Integer(
         compute="_compute_counts",
         store=True,

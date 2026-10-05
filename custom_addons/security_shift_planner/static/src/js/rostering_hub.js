@@ -80,7 +80,9 @@ class RosteringHub extends Component {
             // ── guard directory & search
             allGuards: [],
             guardSearchTerm: "",
-            guardTab: "suggested", // "suggested" or "all"
+            guardTab: "site_team", // "site_team", "suggested", "relief", or "all"
+            slotPoolInfo: null,
+            loadingSlotPool: false,
 
             // ── smart recommendations
             smartRecommendations: [],
@@ -293,7 +295,8 @@ class RosteringHub extends Component {
             ["id", "shift_date", "site_id", "post_id", "shift_template_id",
              "employee_id", "state", "suggestion_count", "fairness_warning",
              "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
-             "readiness_score", "readiness_state", "readiness_summary"]
+             "readiness_score", "readiness_state", "readiness_summary",
+             "is_relief", "relief_reason", "is_preferred_assignment"]
         );
 
         const tplIds = [...new Set(rawSlots.map(s => s.shift_template_id?.[0]).filter(Boolean))];
@@ -322,6 +325,9 @@ class RosteringHub extends Component {
                 is_override:       !!s.is_override,
                 override_reason:   s.override_reason || "",
                 wrong_fit_reasons: s.wrong_fit_reasons || "",
+                is_relief:         !!s.is_relief,
+                relief_reason:     s.relief_reason || "",
+                is_preferred_assignment: !!s.is_preferred_assignment,
                 shift_label:       tmpl ? this._fmtShift(tmpl) : "",
             };
         });
@@ -546,12 +552,31 @@ class RosteringHub extends Component {
     // Guard assignment panel
     // ─────────────────────────────────────────────────────────────────────────
 
-    selectSlot(slot) {
+    async selectSlot(slot) {
         this.state.selectedSlot      = slot;
         this.state.panelOpen         = true;
         this.state.suggestions       = [];
         this.state.suggestionsLoaded = false;
         this.state.assignError       = null;
+        this.state.slotPoolInfo      = null;
+        this.state.guardTab          = "site_team";
+        await this.loadSlotPoolInfo(slot);
+    }
+
+    async loadSlotPoolInfo(slot) {
+        if (!slot) return;
+        this.state.loadingSlotPool = true;
+        try {
+            const info = await this.orm.call("security.roster.slot", "get_slot_pool_info", [[slot.id]]);
+            this.state.slotPoolInfo = info;
+            if (info && info.regular_guards && info.regular_guards.length === 0) {
+                this.state.guardTab = info.guard_pool_mode === "site_then_relief" ? "relief" : "all";
+            }
+        } catch (e) {
+            console.error("Could not load slot pool info:", e);
+        } finally {
+            this.state.loadingSlotPool = false;
+        }
     }
 
     closePanel() {
@@ -560,6 +585,8 @@ class RosteringHub extends Component {
         this.state.suggestions       = [];
         this.state.suggestionsLoaded = false;
         this.state.assignError       = null;
+        this.state.slotPoolInfo      = null;
+        this.state.loadingSlotPool   = false;
     }
 
     async loadSuggestions() {
