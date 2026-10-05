@@ -3,18 +3,18 @@
 
     <!-- Form View -->
     <record id="view_security_roster_team_import_wizard_form" model="ir.ui.view">
-        <name>security.roster.team.import.wizard.form</name>
-        <model>security.roster.team.import.wizard</model>
-        <arch type="xml">
+        <field name="name">security.roster.team.import.wizard.form</field>
+        <field name="model">security.roster.team.import.wizard</field>
+        <field name="arch" type="xml">
             <form string="Import Regular Site Guards from Roster">
                 <field name="state" invisible="1"/>
                 
-                <!-- Stage 1: Upload -->
+                <!-- Stage 1: Upload / Input -->
                 <div invisible="state != 'upload'">
                     <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
                         <i class="fa fa-info-circle fa-2x me-3"/>
                         <div>
-                            <strong>Low-Friction Site Team Setup:</strong> Upload an existing DogForce roster document (Excel <code>.xlsx</code>, CSV <code>.csv</code>, or plain text <code>.txt</code>). 
+                            <strong>Low-Friction Site Team Setup:</strong> Upload an existing DogForce roster document (Excel <code>.xlsx</code>, CSV <code>.csv</code>, or plain text <code>.txt</code>), or paste names directly. 
                             The system will automatically parse guard names and match them to active employees.
                         </div>
                     </div>
@@ -23,10 +23,12 @@
                             <field name="site_id" options="{'no_create': True}"/>
                             <field name="source_label" placeholder="e.g. DogForce October 2026 Excel Roster"/>
                             <field name="guard_pool_mode" widget="radio"/>
+                            <field name="import_mode" widget="radio"/>
                         </group>
-                        <group string="Document File">
-                            <field name="file_data" filename="file_name" widget="binary"/>
+                        <group string="Document / Roster Input">
+                            <field name="file_data" filename="file_name" widget="binary" invisible="import_mode != 'file'" required="import_mode == 'file'"/>
                             <field name="file_name" invisible="1"/>
+                            <field name="raw_text" placeholder="Paste guard names or schedule lines here..." invisible="import_mode != 'raw_text'" required="import_mode == 'raw_text'"/>
                         </group>
                     </group>
                 </div>
@@ -60,7 +62,7 @@
                     </div>
 
                     <field name="line_ids">
-                        <tree editable="bottom" decoration-success="match_status in ('exact', 'manual')" decoration-warning="match_status == 'fuzzy'" decoration-danger="match_status == 'unmatched'">
+                        <list editable="bottom" decoration-success="match_status in ('exact', 'manual')" decoration-warning="match_status == 'fuzzy'" decoration-danger="match_status == 'unmatched'">
                             <field name="include_in_pool" widget="boolean_toggle"/>
                             <field name="raw_guard_name" readonly="1"/>
                             <field name="employee_id" options="{'no_create': True}" placeholder="Search active guard..."/>
@@ -70,7 +72,7 @@
                                    decoration-danger="match_status == 'unmatched'"/>
                             <field name="confidence_pct" widget="progressbar"/>
                             <field name="note" readonly="1"/>
-                        </tree>
+                        </list>
                     </field>
                 </div>
 
@@ -80,15 +82,15 @@
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>
-        </arch>
+        </field>
     </record>
 
     <!-- Action -->
     <record id="action_security_roster_team_import_wizard" model="ir.actions.act_window">
-        <name>Import Regular Site Guards</name>
-        <res_model>security.roster.team.import.wizard</res_model>
-        <view_mode>form</view_mode>
-        <target>new</target>
+        <field name="name">Import Regular Site Guards</field>
+        <field name="res_model">security.roster.team.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
     </record>
 
 </odoo>

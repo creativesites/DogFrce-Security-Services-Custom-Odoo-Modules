@@ -21,9 +21,19 @@ class SecurityRosterTeamImportWizard(models.TransientModel):
         string="Client Site",
         required=True,
     )
+    import_mode = fields.Selection(
+        [
+            ("file", "Upload Document File"),
+            ("raw_text", "Paste Raw Text / Names"),
+        ],
+        string="Input Method",
+        default="file",
+        required=True,
+    )
+    raw_text = fields.Text(string="Pasted Roster Text")
     file_data = fields.Binary(
         string="Roster Document (Excel / CSV / Text / PDF)",
-        required=True,
+        required=False,
     )
     file_name = fields.Char(string="File Name")
     source_label = fields.Char(
@@ -76,31 +86,34 @@ class SecurityRosterTeamImportWizard(models.TransientModel):
             wiz.unmatched_count = len(wiz.line_ids.filtered(lambda l: not l.employee_id or l.match_status == "unmatched"))
 
     def action_parse_document(self):
-        """Parse uploaded document, extract candidate names, and match against hr.employee."""
+        """Parse uploaded document or pasted text, extract candidate names, and match against hr.employee."""
         self.ensure_one()
-        if not self.file_data:
-            raise UserError(_("Please upload a roster document to proceed."))
-
-        try:
-            file_bytes = base64.b64decode(self.file_data)
-        except Exception as e:
-            raise UserError(_("Could not decode uploaded file: %s") % str(e))
-
-        filename = (self.file_name or "").lower()
         extracted_names = []
 
-        if filename.endswith(".csv"):
-            extracted_names = self._parse_csv(file_bytes)
-        elif filename.endswith(".xlsx") or filename.endswith(".xlsm") or filename.endswith(".xltx"):
-            extracted_names = self._parse_xlsx(file_bytes)
+        if self.import_mode == "raw_text":
+            if not self.raw_text or not self.raw_text.strip():
+                raise UserError(_("Please paste roster text or names to proceed."))
+            extracted_names = self._parse_raw_text(self.raw_text)
         else:
-            # Fallback text / general text parsing
-            extracted_names = self._parse_text_content(file_bytes)
+            if not self.file_data:
+                raise UserError(_("Please upload a roster document to proceed."))
+            try:
+                file_bytes = base64.b64decode(self.file_data)
+            except Exception as e:
+                raise UserError(_("Could not decode uploaded file: %s") % str(e))
+
+            filename = (self.file_name or "").lower()
+            if filename.endswith(".csv"):
+                extracted_names = self._parse_csv(file_bytes)
+            elif filename.endswith(".xlsx") or filename.endswith(".xlsm") or filename.endswith(".xltx"):
+                extracted_names = self._parse_xlsx(file_bytes)
+            else:
+                extracted_names = self._parse_text_content(file_bytes)
 
         if not extracted_names:
             raise UserError(_(
-                "No guard names could be detected in the uploaded file. "
-                "Please verify the file format or ensure it contains guard names or ID numbers."
+                "No guard names could be detected in the uploaded file or text. "
+                "Please verify the format or ensure it contains guard names or ID numbers."
             ))
 
         # Clear existing lines
@@ -193,6 +206,19 @@ class SecurityRosterTeamImportWizard(models.TransientModel):
             # Tokenize line or extract name-like patterns
             tokens = re.split(r"[,\t;|]", line)
             for tok in tokens:
+                clean_tok = self._clean_token(tok)
+                if clean_tok and clean_tok not in names:
+                    names.append(clean_tok)
+        return names
+
+    def _parse_raw_text(self, text):
+        names = []
+        for line in (text or "").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            cleaned = re.sub(r"^\s*(\d+[\.\)]|\*|\-)\s*", "", line).strip()
+            for tok in re.split(r"[,\t;|]", cleaned):
                 clean_tok = self._clean_token(tok)
                 if clean_tok and clean_tok not in names:
                     names.append(clean_tok)
@@ -311,6 +337,12 @@ class SecurityRosterTeamImportWizard(models.TransientModel):
                 "sticky": False,
             }
         }
+
+    def action_parse_and_preview(self):
+        return self.action_parse_document()
+
+    def action_confirm(self):
+        return self.action_confirm_import()
 
 
 class SecurityRosterTeamImportWizardLine(models.TransientModel):
