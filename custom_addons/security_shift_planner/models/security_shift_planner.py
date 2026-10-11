@@ -1,7 +1,10 @@
 import datetime
+import logging
 from datetime import timedelta
 
 from odoo import api, fields, models
+
+_logger = logging.getLogger(__name__)
 
 
 class SecuritySlotSuggestion(models.Model):
@@ -937,6 +940,13 @@ class SecurityRosterSlot(models.Model):
         required_certs = set(post_type.required_certification_ids.ids)
         if requirement:
             required_certs |= set(requirement.required_certification_ids.ids)
+
+        post_type_for_docs = post_type
+        req_languages = set(post_type.required_language_ids.ids)
+        req_attributes = set(post_type.required_attribute_ids.ids)
+        if requirement:
+            req_languages |= set(requirement.required_language_ids.ids)
+            req_attributes |= set(requirement.required_attribute_ids.ids)
 
         min_grade_seq = post_type.min_grade_id.sequence if post_type.min_grade_id else 0
         min_score = max(
