@@ -20,14 +20,15 @@ class AttendancePostingConsole extends Component {
         this.notification = useService("notification");
         this.action = useService("action");
 
-        const today = new Date().toISOString().slice(0, 10);
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
         const ctx = this.props.action?.context || {};
 
         this.state = useState({
             loading: true,
             sites: [],
             selectedSiteId: ctx.default_site_id || null,
-            date: ctx.default_date || today,
+            date: ctx.default_date || this.props.action?.params?.date || today,
             batchId: ctx.default_batch_id || null,
             batchState: null,
             batchName: null,
@@ -286,12 +287,22 @@ class AttendancePostingConsole extends Component {
                 "action_bulk_mark_attendance",
                 [
                     [this.state.batchId],
-                    dirty.map((r) => ({
-                        record_id: r.id,
-                        manual_presence: r.manual_presence,
-                        check_in: r.check_in ? this._toIsoString(r.check_in) : false,
-                        check_out: r.check_out ? this._toIsoString(r.check_out) : false,
-                    })),
+                    dirty.map((r) => {
+                        const ci = r.check_in ? this._toIsoString(r.check_in) : false;
+                        let co = r.check_out ? this._toIsoString(r.check_out) : false;
+                        // Night shifts finish the next morning: a check-out not after check-in is next day.
+                        if (ci && co && co <= ci) {
+                            const d = new Date(co.replace(" ", "T") + "Z");
+                            d.setUTCDate(d.getUTCDate() + 1);
+                            co = this._toIsoString(d);
+                        }
+                        return {
+                            record_id: r.id,
+                            manual_presence: r.manual_presence,
+                            check_in: ci,
+                            check_out: co,
+                        };
+                    }),
                 ]
             );
             this.state.dirtyIds = new Set();

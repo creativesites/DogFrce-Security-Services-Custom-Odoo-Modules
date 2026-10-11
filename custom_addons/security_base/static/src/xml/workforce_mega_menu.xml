@@ -88,15 +88,15 @@
               </div>
             </div>
 
-            <div class="rmm-card" t-if="matchesSearch('Posting Console', 'Live site posting and guard clockin', ['posting', 'console', 'clockin'])"
-                 t-on-click="() => this.openAction('security_attendance.action_posting_console')">
+            <div class="rmm-card" t-if="matchesSearch('Posting Console', 'Daily posting sheet and guard attendance', ['posting', 'console', 'attendance'])"
+                 t-on-click="() => this.openAction('security_attendance.action_attendance_posting_console')">
               <div class="rmm-card-icon icon-purple"><i class="fa fa-location-arrow"/></div>
               <div class="rmm-card-content">
                 <div class="rmm-card-header">
                   <span class="rmm-card-title">Posting Console</span>
                   <span class="rmm-pill pill-purple">Live Ops</span>
                 </div>
-                <div class="rmm-card-desc">Real-time guard posting console: GPS clock-in verification, supervisor check-ins, and field status.</div>
+                <div class="rmm-card-desc">Daily posting sheet: see who is rostered, mark guards present, absent or AWOL, and validate the sheet.</div>
               </div>
             </div>
 

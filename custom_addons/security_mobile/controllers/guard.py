@@ -49,7 +49,7 @@ class GuardMobileController(http.Controller):
         env = request.env(su=True)
         rec = env["security.attendance.record"].search([
             ("employee_id", "=", employee.id),
-            ("date", "=", today_str)
+            ("shift_date", "=", today_str)
         ], limit=1)
 
         # Fallback to roster slot if no attendance record generated yet
@@ -57,7 +57,7 @@ class GuardMobileController(http.Controller):
         if not rec.exists():
             roster_slot = env["security.roster.slot"].search([
                 ("employee_id", "=", employee.id),
-                ("date", "=", today_str)
+                ("shift_date", "=", today_str)
             ], limit=1)
 
         site_info = None
@@ -153,7 +153,7 @@ class GuardMobileController(http.Controller):
         env = request.env(su=True)
         rec = env["security.attendance.record"].search([
             ("employee_id", "=", employee.id),
-            ("date", "=", today_str)
+            ("shift_date", "=", today_str)
         ], limit=1)
 
         now_dt = fields.Datetime.now()
@@ -162,18 +162,14 @@ class GuardMobileController(http.Controller):
             # Auto-create attendance record if guard is assigned to roster today
             roster_slot = env["security.roster.slot"].search([
                 ("employee_id", "=", employee.id),
-                ("date", "=", today_str)
+                ("shift_date", "=", today_str)
             ], limit=1)
 
             if not roster_slot.exists():
                 return _json_err("No shift rostered for you today.", status=400)
 
             rec = env["security.attendance.record"].create({
-                "employee_id": employee.id,
-                "site_id": roster_slot.site_id.id if roster_slot.site_id else False,
-                "post_id": roster_slot.post_id.id if roster_slot.post_id else False,
-                "shift_template_id": roster_slot.shift_template_id.id if roster_slot.shift_template_id else False,
-                "date": today_str,
+                "roster_slot_id": roster_slot.id,
                 "manual_presence": "present",
             })
 
@@ -330,7 +326,7 @@ class GuardMobileController(http.Controller):
         env = request.env(su=True)
         records = env["security.attendance.record"].search([
             ("employee_id", "=", employee.id)
-        ], order="date desc", limit=30)
+        ], order="shift_date desc", limit=30)
 
         history_list = []
         present_cnt = 0
@@ -349,7 +345,7 @@ class GuardMobileController(http.Controller):
 
             history_list.append({
                 "record_id": r.id,
-                "date": fields.Date.to_string(r.date) if r.date else "",
+                "date": fields.Date.to_string(r.shift_date) if r.shift_date else "",
                 "site": r.site_id.name if r.site_id else "Unassigned",
                 "post": r.post_id.name if r.post_id else None,
                 "shift": r.shift_template_id.name if r.shift_template_id else None,

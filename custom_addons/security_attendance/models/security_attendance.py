@@ -148,7 +148,8 @@ class SecurityAttendanceBatch(models.Model):
                     }
                 )
                 created_count += 1
-            batch.state = "captured"
+            if batch.state == "draft":
+                batch.state = "captured"
             if not created_count:
                 return {
                     "type": "ir.actions.client",
@@ -255,6 +256,14 @@ class SecurityAttendanceBatch(models.Model):
             },
         )
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        # Sheets created from the Posting Console only send date + site; fill the client.
+        for vals in vals_list:
+            if vals.get("site_id") and not vals.get("partner_id"):
+                vals["partner_id"] = self.env["security.client.site"].browse(vals["site_id"]).partner_id.id
+        return super().create(vals_list)
+
     def action_cancel(self):
         for batch in self:
             batch.state = "cancelled"
@@ -269,12 +278,26 @@ class SecurityAttendanceBatch(models.Model):
         records_data: list of {record_id, manual_presence, check_in, check_out}
         """
         self.ensure_one()
+        if self.state in ("locked", "cancelled"):
+            raise UserError(
+                "This posting sheet is %s and can no longer be edited. "
+                "Ask HR or a manager to reset it to draft first." % self.state
+            )
         record_model = self.env["security.attendance.record"]
         for item in records_data:
             record = record_model.browse(item.get("record_id"))
             if not record.exists():
                 continue
-            vals = {"manual_presence": item.get("manual_presence", "not_marked")}
+            presence = item.get("manual_presence", "not_marked")
+            vals = {"manual_presence": presence}
+            # onchange does not fire on a programmatic write, so keep absence_type in step
+            # (reports, AWOL counts and hour buckets read it).
+            if presence == "awol":
+                vals["absence_type"] = "awol"
+            elif presence == "absent":
+                vals["absence_type"] = "no_show" if record.absence_type in ("none", "awol", False) else record.absence_type
+            elif presence == "present":
+                vals["absence_type"] = "none"
             if item.get("check_in"):
                 vals["check_in"] = item["check_in"]
             if item.get("check_out"):

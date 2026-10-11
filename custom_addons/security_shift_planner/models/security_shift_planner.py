@@ -1009,8 +1009,11 @@ class SecurityRosterSlot(models.Model):
             pass
 
         if slot.batch_id:
+            # Count across ALL sites in the same roster cycle, so a guard on several
+            # site teams cannot exceed the cycle limits by working at each site.
             batch_slots = self.search([
-                ("batch_id", "=", slot.batch_id.id),
+                ("shift_date", ">=", slot.batch_id.date_from),
+                ("shift_date", "<=", slot.batch_id.date_to),
                 ("employee_id", "!=", False),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", slot.id),
