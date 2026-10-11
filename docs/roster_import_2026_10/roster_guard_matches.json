@@ -1,0 +1,2598 @@
+[
+ {
+  "sheet": "AFRIKUUMBA",
+  "header_row": 6,
+  "needed": 37,
+  "allocated": 55,
+  "service": "24 HOURS",
+  "titles": [
+   "AFRIKUUMBA",
+   "AFRIKUUMBA",
+   "AFRIKUUMBA",
+   "21 DECEMBER - 20 NOVEMBER 2026"
+  ],
+  "guards": [
+   "Tjapona Titus",
+   "Mbangu Matheus",
+   "Mupetami David",
+   "Ndunduma Alabert",
+   "Festus Jason",
+   "Shapange Erastus (NS)",
+   "Mutibi Albert",
+   "Matheus Frans",
+   "Maghuru John",
+   "Kaishungu Pius",
+   "Nangonya Erastus",
+   "Sheya Petrus",
+   "Nyandiso Barry",
+   "Petrus Fillepus",
+   "Nendongo Natan",
+   "Iifo David",
+   "Nghifikwa Onesmus",
+   "Shefika Tiephelus",
+   "Nanguli Rinus",
+   "Immanuel Johannes",
+   "Kathira Wayunda",
+   "Intja Markus",
+   "Shileka Abraham",
+   "Nekwaya Teophilus",
+   "Amalwa Paulus",
+   "Lukas Fesnat",
+   "Amupadhi Olavi",
+   "Mutenda Joseph",
+   "Sivambo Anderas",
+   "Kanime Gustav",
+   "Kangura Wilhard",
+   "Rainhard Lukas",
+   "Nawa Simataa",
+   "Kandjara Jonah",
+   "Musupi Muikutwi",
+   "Sakaria Micheal",
+   "Sapalo Immanuel",
+   "Jackson James",
+   "Johannes Mwawendange",
+   "Ausiku Fabian",
+   "Kasita Julius",
+   "Shaanika Josua",
+   "Mupupa Fillipus",
+   "Mbaumba Kaipangua",
+   "Kudumo Paulus",
+   "Mumbekwa Victor",
+   "Jeke Mukuwa",
+   "Makili Bonafatius",
+   "Shimangu Paulinus",
+   "Ndjaleka Reinhold",
+   "Lukas Frans",
+   "Sindimba Godfried",
+   "Kamwere Koita",
+   "Sikongo Gerson",
+   "Nekare Eduward"
+  ],
+  "matches": [
+   {
+    "raw": "Tjapona Titus",
+    "emp_id": 685,
+    "emp_name": "Tjapona Titus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Mbangu Matheus",
+    "emp_id": 597,
+    "emp_name": "Mbangu Matthew Olavi",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Mbangu Matthew Olavi",
+     "Likuwa Tjimango Matheus"
+    ]
+   },
+   {
+    "raw": "Mupetami David",
+    "emp_id": 610,
+    "emp_name": "Mupetami David Penombili",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Ndunduma Alabert",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Kavei Abiud Nguaundjua",
+     "Mutibi Albert Mutibi"
+    ]
+   },
+   {
+    "raw": "Festus Jason",
+    "emp_id": 527,
+    "emp_name": "Festus Jason",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Shapange Erastus (NS)",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nangonya Erastus",
+     "Mwandingi Erastus"
+    ]
+   },
+   {
+    "raw": "Mutibi Albert",
+    "emp_id": 615,
+    "emp_name": "Mutibi Albert Mutibi",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Matheus Frans",
+    "emp_id": 595,
+    "emp_name": "Matheus Frans Kondjeni",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Maghuru John",
+    "emp_id": 587,
+    "emp_name": "Maghuru John Moyakeya",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Kaishungu Pius",
+    "emp_id": 554,
+    "emp_name": "Kaishungu Pius Nakale",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nangonya Erastus",
+    "emp_id": 630,
+    "emp_name": "Nangonya Erastus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Sheya Petrus",
+    "emp_id": 667,
+    "emp_name": "Sheya Petrus Shigwedha",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nyandiso Barry",
+    "emp_id": 653,
+    "emp_name": "Nyandiso Barry Mueze",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Petrus Fillepus",
+    "emp_id": 655,
+    "emp_name": "Petrus Filippus Nghilinganye",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Mupupa Fillipus",
+     "Petrus Filippus Nghilinganye"
+    ]
+   },
+   {
+    "raw": "Nendongo Natan",
+    "emp_id": 641,
+    "emp_name": "Nendongo Natan",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Iifo David",
+    "emp_id": 542,
+    "emp_name": "Iifo David Nadhipite",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nghifikwa Onesmus",
+    "emp_id": 647,
+    "emp_name": "Nghifikwa Onesmus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Shefika Tiephelus",
+    "emp_id": 666,
+    "emp_name": "Shefika Theophilus Shalongo",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Shefika Theophilus Shalongo",
+     "Michael Haikali"
+    ]
+   },
+   {
+    "raw": "Nanguli Rinus",
+    "emp_id": 631,
+    "emp_name": "Nanguli Rinus Nghidishange",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Immanuel Johannes",
+    "emp_id": 548,
+    "emp_name": "Johannes Immanuel",
+    "tier": "transposed",
+    "conf": 95,
+    "alts": []
+   },
+   {
+    "raw": "Kathira Wayunda",
+    "emp_id": 570,
+    "emp_name": "Kathira Wayunda",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Intja Markus",
+    "emp_id": 543,
+    "emp_name": "Intja Markus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Shileka Abraham",
+    "emp_id": 671,
+    "emp_name": "Shileka Abraham Nangwena",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nekwaya Teophilus",
+    "emp_id": 640,
+    "emp_name": "Nekwaya Teofilus Sakaria",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Amalwa Paulus",
+    "emp_id": 518,
+    "emp_name": "Amalwa Paulus Immanuel",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Lukas Fesnat",
+    "emp_id": 585,
+    "emp_name": "Lukas Fesnat",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Amupadhi Olavi",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mbangu Matthew Olavi",
+     "Mupetami David Penombili"
+    ]
+   },
+   {
+    "raw": "Mutenda Joseph",
+    "emp_id": 614,
+    "emp_name": "Mutenda Joseph Ndjamba",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Sivambo Anderas",
+    "emp_id": 680,
+    "emp_name": "Sivambo Andrias Mukoya",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Kanime Gustav",
+    "emp_id": 563,
+    "emp_name": "Kanime Gustav",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Kangura Wilhard",
+    "emp_id": 562,
+    "emp_name": "Kangura Willhard Thifafure",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Rainhard Lukas",
+    "emp_id": 657,
+    "emp_name": "Rainhard Lucas Ndafohamba",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Nawa Simataa",
+    "emp_id": 633,
+    "emp_name": "Nawa Simataa Smart",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Kandjara Jonah",
+    "emp_id": 560,
+    "emp_name": "Kandjara Jonah Chiuluka",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Musupi Muikutwi",
+    "emp_id": 613,
+    "emp_name": "Musupi Muikutwi Postrick",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Sakaria Micheal",
+    "emp_id": 659,
+    "emp_name": "Sakaria Michael Sama",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Sapalo Immanuel",
+    "emp_id": 660,
+    "emp_name": "Sapalo Immanuel Sapalo",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Jackson James",
+    "emp_id": 544,
+    "emp_name": "Jackson James Tileinge",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Johannes Mwawendange",
+    "emp_id": 622,
+    "emp_name": "Mwawendange Johannes",
+    "tier": "transposed",
+    "conf": 95,
+    "alts": []
+   },
+   {
+    "raw": "Ausiku Fabian",
+    "emp_id": 520,
+    "emp_name": "Ausiku Fabianus",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Kasita Julius",
+    "emp_id": 568,
+    "emp_name": "Kasita Julius Tulimekondjo",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Shaanika Josua",
+    "emp_id": 662,
+    "emp_name": "Shaanika Josua Angaleni",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Mupupa Fillipus",
+    "emp_id": 612,
+    "emp_name": "Mupupa Fillipus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Mbaumba Kaipangua",
+    "emp_id": 598,
+    "emp_name": "Mbaumba Kaipangua",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Kudumo Paulus",
+    "emp_id": 577,
+    "emp_name": "Kundumo Paulus",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Mumbekwa Victor",
+    "emp_id": 608,
+    "emp_name": "Mumbekwa Victor Imataa",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Jeke Mukuwa",
+    "emp_id": 545,
+    "emp_name": "Jeke Mukuwa Jacobs",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Makili Bonafatius",
+    "emp_id": 588,
+    "emp_name": "Makili Bonifantius Stephanus Pendapalam",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Shimangu Paulinus",
+    "emp_id": 672,
+    "emp_name": "Shimangu Paulinus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Ndjaleka Reinhold",
+    "emp_id": 636,
+    "emp_name": "Ndjaleka Reinhold Shitenyi",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Lukas Frans",
+    "emp_id": 586,
+    "emp_name": "Lukas Frans",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Sindimba Godfried",
+    "emp_id": 678,
+    "emp_name": "Sindimba Godfried Hamutenya",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Kamwere Koita",
+    "emp_id": 558,
+    "emp_name": "Kamwere Koita Isdor",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Sikongo Gerson",
+    "emp_id": 676,
+    "emp_name": "Sikongo Gerson Haupindi",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nekare Eduward",
+    "emp_id": 639,
+    "emp_name": "Nekare Eduward",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAPWU",
+  "header_row": 5,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HOURS",
+  "titles": [
+   "NANTU LIKWAFELA",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Sheehama Monika",
+   "Matheus Matheus",
+   "Endjala Petrus",
+   "Hitewa Hopheni"
+  ],
+  "matches": [
+   {
+    "raw": "Sheehama Monika",
+    "emp_id": 665,
+    "emp_name": "Sheehama Monika Mweneni",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Matheus Matheus",
+    "emp_id": 594,
+    "emp_name": "Mateus Matheus Anton",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Endjala Petrus",
+    "emp_id": 635,
+    "emp_name": "Ndara Petrus",
+    "tier": "fuzzy",
+    "conf": 84,
+    "alts": []
+   },
+   {
+    "raw": "Hitewa Hopheni",
+    "emp_id": 541,
+    "emp_name": "Hitewa Hophen Hilifavali",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAPWU",
+  "header_row": 12,
+  "needed": 2,
+  "allocated": 3,
+  "service": "",
+  "titles": [
+   "21 SEPTEMBER - 20 OCTOBER 2026",
+   "NANTU WHK WEST"
+  ],
+  "guards": [
+   "Siseho Lifuma",
+   "Iyambo Gideon",
+   "Sivambo Matheus"
+  ],
+  "matches": [
+   {
+    "raw": "Siseho Lifuma",
+    "emp_id": 679,
+    "emp_name": "Siseho Lifuma Rapamus",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Iyambo Gideon",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nambuli Gideon",
+     "Job Kamboi"
+    ]
+   },
+   {
+    "raw": "Sivambo Matheus",
+    "emp_id": 681,
+    "emp_name": "Sivambo Matheus Hausiku",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAPWU",
+  "header_row": 19,
+  "needed": 2,
+  "allocated": 3,
+  "service": "",
+  "titles": [
+   "28/9/26",
+   "C C - HUB",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Thikuro Titus",
+   "Lukas Fesnat",
+   "Tuyapeni Petrus",
+   "Shoopala Fillemon"
+  ],
+  "matches": [
+   {
+    "raw": "Thikuro Titus",
+    "emp_id": 683,
+    "emp_name": "Thikuro Titus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Lukas Fesnat",
+    "emp_id": 585,
+    "emp_name": "Lukas Fesnat",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Tuyapeni Petrus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Shinana Petrus",
+     "Tjapona Titus"
+    ]
+   },
+   {
+    "raw": "Shoopala Fillemon",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Fillemon Tobias Simon",
+     "Martina Fillemon Ndeshipanda"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "NAPWU",
+  "header_row": 26,
+  "needed": null,
+  "allocated": 3,
+  "service": "",
+  "titles": [
+   "21 SEPTEMBER - 20 OCTOBER 2026",
+   "NAPWU"
+  ],
+  "guards": [
+   "Nahimana Elie",
+   "Hauwanga Festus",
+   "Nghidulwa Theofilus"
+  ],
+  "matches": [
+   {
+    "raw": "Nahimana Elie",
+    "emp_id": 624,
+    "emp_name": "Nahimana Elie",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Hauwanga Festus",
+    "emp_id": 539,
+    "emp_name": "Hauwanga Festus Tangi",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nghidulwa Theofilus",
+    "emp_id": 645,
+    "emp_name": "Nghidulwa Theophelus Tuyenikumwe",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Nghidulwa Theophelus Tuyenikumwe",
+     "Shefika Theophilus Shalongo"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "NAPWU",
+  "header_row": 34,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HRS",
+  "titles": [
+   "MASIKHULENI GUEST HOUSE",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Petrus Fillipus",
+   "Johannes Johanna",
+   "Laban Maria"
+  ],
+  "matches": [
+   {
+    "raw": "Petrus Fillipus",
+    "emp_id": 655,
+    "emp_name": "Petrus Filippus Nghilinganye",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Johannes Johanna",
+    "emp_id": 549,
+    "emp_name": "Johannes Johanna",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Laban Maria",
+    "emp_id": 579,
+    "emp_name": "Laban Maria Magdalena",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAMIC NO 2&3",
+  "header_row": 5,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HRS",
+  "titles": [
+   "NAMIC NO.2 & 3",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Haikali Michiel",
+   "Nghede Marth",
+   "Ndara Matheus",
+   "Kaisungu pius"
+  ],
+  "matches": [
+   {
+    "raw": "Haikali Michiel",
+    "emp_id": 600,
+    "emp_name": "Michael Haikali",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Nghede Marth",
+    "emp_id": 643,
+    "emp_name": "Nghede Martha Mwatemenange",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Ndara Matheus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nangonya Erastus",
+     "Ndara Johannes Ndumba"
+    ]
+   },
+   {
+    "raw": "Kaisungu pius",
+    "emp_id": 554,
+    "emp_name": "Kaishungu Pius Nakale",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAMIC NO 2&3",
+  "header_row": 15,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HOURS",
+  "titles": [
+   "PETROFUND",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Jackson James",
+   "Mwinkolwa Kornelius",
+   "Lutwayi Andreas"
+  ],
+  "matches": [
+   {
+    "raw": "Jackson James",
+    "emp_id": 544,
+    "emp_name": "Jackson James Tileinge",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Mwinkolwa Kornelius",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Kornelius Eliaser Nghipusha",
+     "Kasamane Meinolf"
+    ]
+   },
+   {
+    "raw": "Lutwayi Andreas",
+    "emp_id": 584,
+    "emp_name": "Litwayi Andreas Siwaya",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAMIC NO 2&3",
+  "header_row": 25,
+  "needed": null,
+  "allocated": null,
+  "service": "",
+  "titles": [
+   "EROS HOUSE & GENERAL VEIKO ALEXANDER",
+   "EROS HOUSE & GENERAL VEIKO ALEXANDER",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Fillemon Tobias Simon",
+   "Shuumbili Johannes",
+   "Akuunda Andreas",
+   "Mwatila Phillipus"
+  ],
+  "matches": [
+   {
+    "raw": "Fillemon Tobias Simon",
+    "emp_id": 528,
+    "emp_name": "Fillemon Tobias Simon",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Shuumbili Johannes",
+    "emp_id": 675,
+    "emp_name": "Shuumbili Johannes H",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Akuunda Andreas",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Kapundja Moses",
+     "Pangula Muhinda"
+    ]
+   },
+   {
+    "raw": "Mwatila Phillipus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Fillipus Amos",
+     "Amalwa Paulus Immanuel"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "NAMIC NO 2&3",
+  "header_row": 34,
+  "needed": 1,
+  "allocated": null,
+  "service": "NIGHT SHIFT",
+  "titles": [
+   "MEANS KLEIN WHK",
+   "MEANS",
+   "STANDBY",
+   "CHDS / CHINA DYA",
+   "OYETWENI CLINIC & GENERAL VEIKO ALEXANDER",
+   "STBY MEANS STANDBY",
+   "MEANS",
+   "STANDBY",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Mwatila Phillipus",
+   "Ngongo Asser"
+  ],
+  "matches": [
+   {
+    "raw": "Mwatila Phillipus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Fillipus Amos",
+     "Amalwa Paulus Immanuel"
+    ]
+   },
+   {
+    "raw": "Ngongo Asser",
+    "emp_id": 652,
+    "emp_name": "Ngongo Asser Siremo",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAMIC NO 2&3",
+  "header_row": 41,
+  "needed": 1,
+  "allocated": null,
+  "service": "NIGHT SHIFT",
+  "titles": [
+   "SHPR",
+   "SCRAP SOUHTERN",
+   "STBY MEANS STANDBY",
+   "MEANS",
+   "STANDBY",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Ndjunga Muniwe"
+  ],
+  "matches": [
+   {
+    "raw": "Ndjunga Muniwe",
+    "emp_id": 638,
+    "emp_name": "Ndjunga Muniwe",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "NAMIC NO 2&3",
+  "header_row": 46,
+  "needed": 1,
+  "allocated": null,
+  "service": "NIGHT SHIFT",
+  "titles": [
+   "WAKKA PRE -PRIMARY",
+   "STBY MEANS STANDBY",
+   "MEANS",
+   "STANDBY",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Hamutenya Erickson"
+  ],
+  "matches": [
+   {
+    "raw": "Hamutenya Erickson",
+    "emp_id": 536,
+    "emp_name": "Hamutenya Erickson Nghilifavali",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "EMERINCIA PLOT",
+  "header_row": 6,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HRS",
+  "titles": [
+   "EMERINCIA POLT",
+   "EMERINCIA POLT",
+   "21 September - 20 October 2026",
+   "SHPR MEANS SHOPRITE"
+  ],
+  "guards": [
+   "Matheus Frans",
+   "Mbaumba Kaveipi",
+   "Nghitewa Petrus",
+   "Amalwa Paulus",
+   "Kangura Wilhard",
+   "Kahuthe Bonifatius"
+  ],
+  "matches": [
+   {
+    "raw": "Matheus Frans",
+    "emp_id": 595,
+    "emp_name": "Matheus Frans Kondjeni",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Mbaumba Kaveipi",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mbaumba Kaipangua",
+     "Marungu Agapitus Ndumba"
+    ]
+   },
+   {
+    "raw": "Nghitewa Petrus",
+    "emp_id": 650,
+    "emp_name": "Nghitewa Petrus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Amalwa Paulus",
+    "emp_id": 518,
+    "emp_name": "Amalwa Paulus Immanuel",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Kangura Wilhard",
+    "emp_id": 562,
+    "emp_name": "Kangura Willhard Thifafure",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Kahuthe Bonifatius",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Ruzendo Bonifatius",
+     "Mateus Matheus Anton"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "EMERINCIA PLOT",
+  "header_row": 18,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HRS",
+  "titles": [
+   "ADCON",
+   "21 September - 20 October 2026",
+   "SHPR MEANS SHOPRITE"
+  ],
+  "guards": [
+   "Tjikongo Immanuel",
+   "Shalele Fabian",
+   "Eiaseb Ricardino",
+   "Masingo Immanuel",
+   "Mutibi Albert",
+   "Shilemba Risto"
+  ],
+  "matches": [
+   {
+    "raw": "Tjikongo Immanuel",
+    "emp_id": 686,
+    "emp_name": "Tjikongo Immanuel Walter",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Shalele Fabian",
+    "emp_id": 663,
+    "emp_name": "Shalele Fabian Damonaomufifa",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Eiaseb Ricardino",
+    "emp_id": 522,
+    "emp_name": "Eiaseb Ricardino",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Masingo Immanuel",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Johannes Immanuel",
+     "Tjikongo Immanuel Walter"
+    ]
+   },
+   {
+    "raw": "Mutibi Albert",
+    "emp_id": 615,
+    "emp_name": "Mutibi Albert Mutibi",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Shilemba Risto",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Shimangu Paulinus",
+     "Shihepo John Jeremias"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "EMERINCIA PLOT",
+  "header_row": 31,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HOURS",
+  "titles": [
+   "BONSMARA SERVICES STATION",
+   "21 September - 20 October 2026",
+   "SHPR MEANS SHOPRITE"
+  ],
+  "guards": [
+   "Kavei Abuid",
+   "Mupupa Fillipus",
+   "David Erastus"
+  ],
+  "matches": [
+   {
+    "raw": "Kavei Abuid",
+    "emp_id": 574,
+    "emp_name": "Kavei Abiud Nguaundjua",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Mupupa Fillipus",
+    "emp_id": 612,
+    "emp_name": "Mupupa Fillipus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "David Erastus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Ndara Petrus",
+     "Kasera Matheus"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "ATTA RENTALS",
+  "header_row": 5,
+  "needed": 2,
+  "allocated": 3,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "ATTA RENTAL",
+   "21 SEPTEMBER - 20 OCTOBER 2026",
+   "EYC =EYE CLINIC"
+  ],
+  "guards": [
+   "Kahare Shimafo",
+   "Kayofa Jonas",
+   "Muhau Munali"
+  ],
+  "matches": [
+   {
+    "raw": "Kahare Shimafo",
+    "emp_id": 552,
+    "emp_name": "Kahare Shimafo",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Kayofa Jonas",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Jonas Toini",
+     "Job Kamboi"
+    ]
+   },
+   {
+    "raw": "Muhau Munali",
+    "emp_id": 605,
+    "emp_name": "Muhau Munali",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "ATTA RENTALS",
+  "header_row": 13,
+  "needed": 1,
+  "allocated": 2,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "EYE CLINIC",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Ndara Johannes",
+   "Mapeu Cellestinus"
+  ],
+  "matches": [
+   {
+    "raw": "Ndara Johannes",
+    "emp_id": 634,
+    "emp_name": "Ndara Johannes Ndumba",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Mapeu Cellestinus",
+    "emp_id": 590,
+    "emp_name": "Mapeu Cellestinus Kosenge",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "ATTA RENTALS",
+  "header_row": 21,
+  "needed": 2,
+  "allocated": 1,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "MAGNOLIA INDUSTRY",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Mwashekele Andreas",
+   "Weka Kamutuva"
+  ],
+  "matches": [
+   {
+    "raw": "Mwashekele Andreas",
+    "emp_id": 621,
+    "emp_name": "Mwashekele S N Andreas",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Weka Kamutuva",
+    "emp_id": 689,
+    "emp_name": "Weka Kamutuva",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "ATTA RENTALS",
+  "header_row": 38,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HRS",
+  "titles": [
+   "NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",
+   "21 September - 20 October 2026"
+  ],
+  "guards": [
+   "Tjihoto Mbimbo",
+   "Isaaks Chali",
+   "Swartbooi David",
+   "Kandjimi Moses",
+   "Kalondo Teodor",
+   "Ngombe Zejavi",
+   "Muniwe Simafo",
+   "Shilongo Paulus",
+   "Nangonya Erastus"
+  ],
+  "matches": [
+   {
+    "raw": "Tjihoto Mbimbo",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Thikuro Titus",
+     "Tjikongo Immanuel Walter"
+    ]
+   },
+   {
+    "raw": "Isaaks Chali",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Sakaria Michael Sama",
+     "Michael Haikali"
+    ]
+   },
+   {
+    "raw": "Swartbooi David",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mupetami David Penombili",
+     "Iifo David Nadhipite"
+    ]
+   },
+   {
+    "raw": "Kandjimi Moses",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Kapundja Moses",
+     "Mukoya Kapirika"
+    ]
+   },
+   {
+    "raw": "Kalondo Teodor",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Shefika Theophilus Shalongo",
+     "Kamanya Matheus Mahongo"
+    ]
+   },
+   {
+    "raw": "Ngombe Zejavi",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nakapela Gotrieb Letuvene",
+     "Rainhard Lucas Ndafohamba"
+    ]
+   },
+   {
+    "raw": "Muniwe Simafo",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Kahare Shimafo",
+     "Ndjunga Muniwe"
+    ]
+   },
+   {
+    "raw": "Shilongo Paulus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Shimangu Paulinus",
+     "Shinana Petrus"
+    ]
+   },
+   {
+    "raw": "Nangonya Erastus",
+    "emp_id": 630,
+    "emp_name": "Nangonya Erastus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "HOCHLAND S S",
+  "header_row": 6,
+  "needed": 1,
+  "allocated": 2,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "HOCHLAND S S",
+   "HOCHLAND S S",
+   "21 SEPTEMBER - 20 OCTOBER 2026",
+   "SHPR MEANS SHOPRITE"
+  ],
+  "guards": [
+   "Titus Titus",
+   "Petrus Titus"
+  ],
+  "matches": [
+   {
+    "raw": "Titus Titus",
+    "emp_id": 684,
+    "emp_name": "Titus Titus Nghipangelwa",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Petrus Titus",
+    "emp_id": 656,
+    "emp_name": "Petrus Titus Fernadu",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "HOCHLAND S S",
+  "header_row": 15,
+  "needed": 1,
+  "allocated": 2,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "UNIGAS",
+   "SHPR MEANS SHOPRITE",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Katangolo Julius",
+   "Intja Markus"
+  ],
+  "matches": [
+   {
+    "raw": "Katangolo Julius",
+    "emp_id": 569,
+    "emp_name": "Katangolo Julius Ngendina",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Intja Markus",
+    "emp_id": 543,
+    "emp_name": "Intja Markus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "HOCHLAND S S",
+  "header_row": 23,
+  "needed": 1,
+  "allocated": 2,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "EFFORT INVESTMENT",
+   "21 SEPTEMBER - 20 OCTOBER 2026",
+   "SHPR MEANS SHOPRITE"
+  ],
+  "guards": [
+   "Diyerenge H",
+   "Likuwa Emerincia"
+  ],
+  "matches": [
+   {
+    "raw": "Diyerenge H",
+    "emp_id": 521,
+    "emp_name": "Diyerenge Heinrich Muronga",
+    "tier": "initial_surname",
+    "conf": 85,
+    "alts": []
+   },
+   {
+    "raw": "Likuwa Emerincia",
+    "emp_id": 582,
+    "emp_name": "Likuwa Emmerciana Sitoka Likuwa",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Likuwa Emmerciana Sitoka Likuwa",
+     "Lukas Fesnat"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "HOCHLAND S S",
+  "header_row": 31,
+  "needed": 2,
+  "allocated": null,
+  "service": "NIGHT SHIFT",
+  "titles": [
+   "DREAMLAND",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Amwaalwa Festus",
+   "Sondaha Lucas"
+  ],
+  "matches": [
+   {
+    "raw": "Amwaalwa Festus",
+    "emp_id": 519,
+    "emp_name": "Amwaalwa Festus Kwathandje",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Sondaha Lucas",
+    "emp_id": 682,
+    "emp_name": "Sondaha Lucas Sinimbo",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "HOCHLAND S S",
+  "header_row": 39,
+  "needed": 1,
+  "allocated": null,
+  "service": "",
+  "titles": [
+   "CHINA CONSTRUCTION",
+   "SHPR MEANS SHOPRITE",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Sondaha Lucas",
+   "Mapulanga Mutanda"
+  ],
+  "matches": [
+   {
+    "raw": "Sondaha Lucas",
+    "emp_id": 682,
+    "emp_name": "Sondaha Lucas Sinimbo",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Mapulanga Mutanda",
+    "emp_id": 591,
+    "emp_name": "Mapulanga Mutanda",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "CHINA SEVETH",
+  "header_row": 4,
+  "needed": 11,
+  "allocated": 16,
+  "service": "24 HOURS",
+  "titles": [
+   "CHINA SEVETH RAILWAY",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Naftal Kaarina",
+   "Mengela Aino",
+   "Kathire Wayunda",
+   "Hailonga Natalia",
+   "Shikongo Silvanus",
+   "Muhembo Muyenga",
+   "Maghuru John",
+   "Nangolo Helena",
+   "Shefika Teofilus",
+   "Mutibi Linyunga",
+   "Martina Fillemon",
+   "Immanuel Hausiku",
+   "Kamundongo Leonarld",
+   "Jafet Gabreil",
+   "Asino Jonathan",
+   "Mwashindange Festus",
+   "Frans Kosmas",
+   "Nghifekwena Frans",
+   "Matias Ananias",
+   "Hamwati Lotnard"
+  ],
+  "matches": [
+   {
+    "raw": "Naftal Kaarina",
+    "emp_id": 623,
+    "emp_name": "Naftali Kaarina",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Mengela Aino",
+    "emp_id": 599,
+    "emp_name": "Mengela Aino",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Kathire Wayunda",
+    "emp_id": 570,
+    "emp_name": "Kathira Wayunda",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Hailonga Natalia",
+    "emp_id": 533,
+    "emp_name": "Hailonga Natalia Ndahafa",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Shikongo Silvanus",
+    "emp_id": 669,
+    "emp_name": "Shikongo Sylvanus Ndilipune",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Muhembo Muyenga",
+    "emp_id": 606,
+    "emp_name": "Muhembo Muyenga",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Maghuru John",
+    "emp_id": 587,
+    "emp_name": "Maghuru John Moyakeya",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nangolo Helena",
+    "emp_id": 629,
+    "emp_name": "Nangolo Helena",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Shefika Teofilus",
+    "emp_id": 666,
+    "emp_name": "Shefika Theophilus Shalongo",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Shefika Theophilus Shalongo",
+     "Nekwaya Teofilus Sakaria"
+    ]
+   },
+   {
+    "raw": "Mutibi Linyunga",
+    "emp_id": 616,
+    "emp_name": "Mutibi Linyunga",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Martina Fillemon",
+    "emp_id": 592,
+    "emp_name": "Martina Fillemon Ndeshipanda",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Immanuel Hausiku",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Ausiku Fabianus",
+     "Michael Haikali"
+    ]
+   },
+   {
+    "raw": "Kamundongo Leonarld",
+    "emp_id": 557,
+    "emp_name": "Kamundongo Leornard Kupembona",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Jafet Gabreil",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Naftali Kaarina",
+     "Johannes Immanuel"
+    ]
+   },
+   {
+    "raw": "Asino Jonathan",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Sondaha Lucas Sinimbo",
+     "Naftali Kaarina"
+    ]
+   },
+   {
+    "raw": "Mwashindange Festus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mwandingi Erastus",
+     "Shinana Petrus"
+    ]
+   },
+   {
+    "raw": "Frans Kosmas",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Lukas Frans",
+     "Matheus Frans Kondjeni"
+    ]
+   },
+   {
+    "raw": "Nghifekwena Frans",
+    "emp_id": 646,
+    "emp_name": "Nghifekwena Frans Nghidipohamba",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Matias Ananias",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Sivambo Andrias Mukoya",
+     "Mateus Matheus Anton"
+    ]
+   },
+   {
+    "raw": "Hamwati Lotnard",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mwaetako Martin Tweulongelwa",
+     "Kamundongo Leornard Kupembona"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "CHINA SEVETH",
+  "header_row": 30,
+  "needed": 11,
+  "allocated": 16,
+  "service": "24 HOURS",
+  "titles": [
+   "CHINA SEVETH RAILWAY",
+   "21 SEPTEMBER - 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Naftal Kaarina",
+   "Mengela Aino",
+   "Kathire Wayunda",
+   "Hailonga Natalia",
+   "Shikongo Silvanus",
+   "Muhembo Muyenga",
+   "Maghuru John",
+   "Nangolo Helena",
+   "Shefika Teofilus",
+   "Mutibi Linyunga",
+   "Martina Fillemon",
+   "Immanuel Hausiku",
+   "Kamundongo Leonarld",
+   "Jafet Gabreil",
+   "Asino Jonathan",
+   "Mwashindange Festus",
+   "Frans Kosmas",
+   "Nghifekwena Frans",
+   "Matias Ananias",
+   "Hamwati Lotnard"
+  ],
+  "matches": [
+   {
+    "raw": "Naftal Kaarina",
+    "emp_id": 623,
+    "emp_name": "Naftali Kaarina",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Mengela Aino",
+    "emp_id": 599,
+    "emp_name": "Mengela Aino",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Kathire Wayunda",
+    "emp_id": 570,
+    "emp_name": "Kathira Wayunda",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Hailonga Natalia",
+    "emp_id": 533,
+    "emp_name": "Hailonga Natalia Ndahafa",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Shikongo Silvanus",
+    "emp_id": 669,
+    "emp_name": "Shikongo Sylvanus Ndilipune",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Muhembo Muyenga",
+    "emp_id": 606,
+    "emp_name": "Muhembo Muyenga",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Maghuru John",
+    "emp_id": 587,
+    "emp_name": "Maghuru John Moyakeya",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nangolo Helena",
+    "emp_id": 629,
+    "emp_name": "Nangolo Helena",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Shefika Teofilus",
+    "emp_id": 666,
+    "emp_name": "Shefika Theophilus Shalongo",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Shefika Theophilus Shalongo",
+     "Nekwaya Teofilus Sakaria"
+    ]
+   },
+   {
+    "raw": "Mutibi Linyunga",
+    "emp_id": 616,
+    "emp_name": "Mutibi Linyunga",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Martina Fillemon",
+    "emp_id": 592,
+    "emp_name": "Martina Fillemon Ndeshipanda",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Immanuel Hausiku",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Ausiku Fabianus",
+     "Michael Haikali"
+    ]
+   },
+   {
+    "raw": "Kamundongo Leonarld",
+    "emp_id": 557,
+    "emp_name": "Kamundongo Leornard Kupembona",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Jafet Gabreil",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Naftali Kaarina",
+     "Johannes Immanuel"
+    ]
+   },
+   {
+    "raw": "Asino Jonathan",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Sondaha Lucas Sinimbo",
+     "Naftali Kaarina"
+    ]
+   },
+   {
+    "raw": "Mwashindange Festus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mwandingi Erastus",
+     "Shinana Petrus"
+    ]
+   },
+   {
+    "raw": "Frans Kosmas",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Lukas Frans",
+     "Matheus Frans Kondjeni"
+    ]
+   },
+   {
+    "raw": "Nghifekwena Frans",
+    "emp_id": 646,
+    "emp_name": "Nghifekwena Frans Nghidipohamba",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Matias Ananias",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Sivambo Andrias Mukoya",
+     "Mateus Matheus Anton"
+    ]
+   },
+   {
+    "raw": "Hamwati Lotnard",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Mwaetako Martin Tweulongelwa",
+     "Kamundongo Leornard Kupembona"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "SCRAP NORTHERN",
+  "header_row": 5,
+  "needed": 9,
+  "allocated": 14,
+  "service": "24 HOURS",
+  "titles": [
+   "SCRAP NORTHERN",
+   "21 September - 20 october 2026"
+  ],
+  "guards": [
+   "Jonas Toini",
+   "Haimbondi Fillemon",
+   "Muharukua Maveip",
+   "Johannes Emilia",
+   "Kasera Mathew",
+   "Shaanika Josua",
+   "Nekongo Jonas",
+   "Mungamba Sarafina",
+   "Mpande Frans",
+   "Katura Thobias",
+   "Shinendima Paulus"
+  ],
+  "matches": [
+   {
+    "raw": "Jonas Toini",
+    "emp_id": 550,
+    "emp_name": "Jonas Toini",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Haimbondi Fillemon",
+    "emp_id": 534,
+    "emp_name": "Haimbodi Fillemon Nghishile",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Muharukua Maveip",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Muharukua Dienaar",
+     "Muhau Kamuhelo"
+    ]
+   },
+   {
+    "raw": "Johannes Emilia",
+    "emp_id": 547,
+    "emp_name": "Johannes Emilia Loini",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Kasera Mathew",
+    "emp_id": 567,
+    "emp_name": "Kasera Matheus",
+    "tier": "fuzzy",
+    "conf": 88,
+    "alts": []
+   },
+   {
+    "raw": "Shaanika Josua",
+    "emp_id": 662,
+    "emp_name": "Shaanika Josua Angaleni",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nekongo Jonas",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nendongo Natan",
+     "Jonas Toini"
+    ]
+   },
+   {
+    "raw": "Mungamba Sarafina",
+    "emp_id": 609,
+    "emp_name": "Mungamba Sarafine Ghukamba",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Mpande Frans",
+    "emp_id": 601,
+    "emp_name": "Mpande Frans Kanyeva",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Katura Thobias",
+    "emp_id": 571,
+    "emp_name": "Katura Thobias Siwombe",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Shinendima Paulus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Shimangu Paulinus",
+     "Shinana Petrus"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "SCRAP NORTHERN",
+  "header_row": 22,
+  "needed": 1,
+  "allocated": null,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "KUNENE",
+   "21 September - 20 october 2026"
+  ],
+  "guards": [
+   "Eliaser Petrus",
+   "Sackaria Michael"
+  ],
+  "matches": [
+   {
+    "raw": "Eliaser Petrus",
+    "emp_id": 523,
+    "emp_name": "Eliaser Petrus Vakenyeneka",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Sackaria Michael",
+    "emp_id": 659,
+    "emp_name": "Sakaria Michael Sama",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "SCRAP NORTHERN",
+  "header_row": 30,
+  "needed": 1,
+  "allocated": null,
+  "service": "NIGHT SHIFT /SUN&P/H",
+  "titles": [
+   "NEW ERA CENTERAL HOSPITAL",
+   "&",
+   "STATE HOUSE",
+   "STATE HOUSE",
+   "21 September - 20 october 2026",
+   "STH MEANS = STATE HOUSE"
+  ],
+  "guards": [
+   "Kaura Unomasa",
+   "Haihambo Rainhold",
+   "Shoopala Fillemon",
+   "Nekwaya Tiophilus"
+  ],
+  "matches": [
+   {
+    "raw": "Kaura Unomasa",
+    "emp_id": 573,
+    "emp_name": "Kaura  Unomasa",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Haihambo Rainhold",
+    "emp_id": 532,
+    "emp_name": "Haihambo Reinhold Pombili",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Shoopala Fillemon",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Fillemon Tobias Simon",
+     "Martina Fillemon Ndeshipanda"
+    ]
+   },
+   {
+    "raw": "Nekwaya Tiophilus",
+    "emp_id": 640,
+    "emp_name": "Nekwaya Teofilus Sakaria",
+    "tier": "assisted",
+    "conf": 80,
+    "alts": [
+     "Nekwaya Teofilus Sakaria",
+     "Shefika Theophilus Shalongo"
+    ]
+   }
+  ]
+ },
+ {
+  "sheet": "SCRAP NORTHERN",
+  "header_row": 40,
+  "needed": 1,
+  "allocated": null,
+  "service": "NIGHT SHIFT",
+  "titles": [
+   "AFRIDECA & OVER SIDE GROUP",
+   "OSG =MEANS OVER SIDE GROUP",
+   "OSG =MEANS OVER SIDE GROUP",
+   "21 September - 20 october 2026"
+  ],
+  "guards": [
+   "Mumbekwa Victory",
+   "Ausiku Fabianus",
+   "Nekare Edward"
+  ],
+  "matches": [
+   {
+    "raw": "Mumbekwa Victory",
+    "emp_id": 608,
+    "emp_name": "Mumbekwa Victor Imataa",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Ausiku Fabianus",
+    "emp_id": 520,
+    "emp_name": "Ausiku Fabianus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Nekare Edward",
+    "emp_id": 639,
+    "emp_name": "Nekare Eduward",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "CHINA NEW ROAD",
+  "header_row": 6,
+  "needed": 2,
+  "allocated": 3,
+  "service": "24 HRS",
+  "titles": [
+   "ROBOT & NEW ROAD",
+   "21 SEPTEMBER 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Nashiwaya phillemon",
+   "Shinana Petrus",
+   "Kamwere Koita",
+   "Olavi Joseph",
+   "Naphine Lisia",
+   "Mpepo Herman",
+   "Henok Heikki",
+   "Tjiposa K",
+   "Nyandiso Barry",
+   "Hamukonda F",
+   "Kahare Johannes",
+   "Nawa Simata"
+  ],
+  "matches": [
+   {
+    "raw": "Nashiwaya phillemon",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nghililewanga Festus Ndeshimupandela",
+     "Nghitewa Petrus"
+    ]
+   },
+   {
+    "raw": "Shinana Petrus",
+    "emp_id": 673,
+    "emp_name": "Shinana Petrus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Kamwere Koita",
+    "emp_id": 558,
+    "emp_name": "Kamwere Koita Isdor",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Olavi Joseph",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Jonas Toini",
+     "Mutenda Joseph Ndjamba"
+    ]
+   },
+   {
+    "raw": "Naphine Lisia",
+    "emp_id": 632,
+    "emp_name": "Naphine Lisias Penothina",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Mpepo Herman",
+    "emp_id": 602,
+    "emp_name": "Mpepo Manolf Herman",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Henok Heikki",
+    "emp_id": 540,
+    "emp_name": "Heikki Henok",
+    "tier": "transposed",
+    "conf": 95,
+    "alts": []
+   },
+   {
+    "raw": "Tjiposa K",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Tjapona Titus",
+     "Kaura  Unomasa"
+    ]
+   },
+   {
+    "raw": "Nyandiso Barry",
+    "emp_id": 653,
+    "emp_name": "Nyandiso Barry Mueze",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Hamukonda F",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Hamukwaya Aktoffel",
+     "Muhau Munali"
+    ]
+   },
+   {
+    "raw": "Kahare Johannes",
+    "emp_id": 551,
+    "emp_name": "Kahare Johannes Mununga",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nawa Simata",
+    "emp_id": 633,
+    "emp_name": "Nawa Simataa Smart",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   }
+  ]
+ },
+ {
+  "sheet": "CHINA NEW ROAD",
+  "header_row": 26,
+  "needed": 2,
+  "allocated": 3,
+  "service": "HRS",
+  "titles": [
+   "MANDELA & UNDER THE BRIDGE",
+   "21 SEPTEMBER 20 OCTOBER 2026"
+  ],
+  "guards": [
+   "Shilongo Onesmus",
+   "Ndjaleka Reinhold",
+   "Tjapona Titus",
+   "Hengombe Petrus",
+   "Teodor Teodor",
+   "Mupetami David",
+   "Nduukeme Josef",
+   "Tobias Sakaria",
+   "Iifo David",
+   "Rainhard Lukas",
+   "Teofilus Ferdinard"
+  ],
+  "matches": [
+   {
+    "raw": "Shilongo Onesmus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Festus Jason",
+     "Shimangu Paulinus"
+    ]
+   },
+   {
+    "raw": "Ndjaleka Reinhold",
+    "emp_id": 636,
+    "emp_name": "Ndjaleka Reinhold Shitenyi",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Tjapona Titus",
+    "emp_id": 685,
+    "emp_name": "Tjapona Titus",
+    "tier": "exact",
+    "conf": 100,
+    "alts": []
+   },
+   {
+    "raw": "Hengombe Petrus",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nghitewa Petrus",
+     "Ndara Petrus"
+    ]
+   },
+   {
+    "raw": "Teodor Teodor",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nekare Eduward",
+     "Nendongo Natan"
+    ]
+   },
+   {
+    "raw": "Mupetami David",
+    "emp_id": 610,
+    "emp_name": "Mupetami David Penombili",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Nduukeme Josef",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Ndara Johannes Ndumba",
+     "Mutenda Joseph Ndjamba"
+    ]
+   },
+   {
+    "raw": "Tobias Sakaria",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Nekwaya Teofilus Sakaria",
+     "Katura Thobias Siwombe"
+    ]
+   },
+   {
+    "raw": "Iifo David",
+    "emp_id": 542,
+    "emp_name": "Iifo David Nadhipite",
+    "tier": "token_subset",
+    "conf": 90,
+    "alts": []
+   },
+   {
+    "raw": "Rainhard Lukas",
+    "emp_id": 657,
+    "emp_name": "Rainhard Lucas Ndafohamba",
+    "tier": "token_fuzzy",
+    "conf": 82,
+    "alts": []
+   },
+   {
+    "raw": "Teofilus Ferdinard",
+    "emp_id": null,
+    "emp_name": null,
+    "tier": "unmatched",
+    "conf": 0,
+    "alts": [
+     "Petrus Titus Fernadu",
+     "Nekwaya Teofilus Sakaria"
+    ]
+   }
+  ]
+ }
+]

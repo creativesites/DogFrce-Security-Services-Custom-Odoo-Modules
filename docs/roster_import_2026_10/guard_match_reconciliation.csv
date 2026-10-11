@@ -1,0 +1,212 @@
+sheet,block title,name on roster,matched Odoo employee,match type,confidence
+AFRIKUUMBA,AFRIKUUMBA,Tjapona Titus,Tjapona Titus,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Mbangu Matheus,Mbangu Matthew Olavi,assisted,80
+AFRIKUUMBA,AFRIKUUMBA,Mupetami David,Mupetami David Penombili,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Ndunduma Alabert,,unmatched,0
+AFRIKUUMBA,AFRIKUUMBA,Festus Jason,Festus Jason,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Shapange Erastus (NS),,unmatched,0
+AFRIKUUMBA,AFRIKUUMBA,Mutibi Albert,Mutibi Albert Mutibi,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Matheus Frans,Matheus Frans Kondjeni,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Maghuru John,Maghuru John Moyakeya,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Kaishungu Pius,Kaishungu Pius Nakale,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Nangonya Erastus,Nangonya Erastus,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Sheya Petrus,Sheya Petrus Shigwedha,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Nyandiso Barry,Nyandiso Barry Mueze,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Petrus Fillepus,Petrus Filippus Nghilinganye,assisted,80
+AFRIKUUMBA,AFRIKUUMBA,Nendongo Natan,Nendongo Natan,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Iifo David,Iifo David Nadhipite,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Nghifikwa Onesmus,Nghifikwa Onesmus,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Shefika Tiephelus,Shefika Theophilus Shalongo,assisted,80
+AFRIKUUMBA,AFRIKUUMBA,Nanguli Rinus,Nanguli Rinus Nghidishange,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Immanuel Johannes,Johannes Immanuel,transposed,95
+AFRIKUUMBA,AFRIKUUMBA,Kathira Wayunda,Kathira Wayunda,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Intja Markus,Intja Markus,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Shileka Abraham,Shileka Abraham Nangwena,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Nekwaya Teophilus,Nekwaya Teofilus Sakaria,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Amalwa Paulus,Amalwa Paulus Immanuel,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Lukas Fesnat,Lukas Fesnat,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Amupadhi Olavi,,unmatched,0
+AFRIKUUMBA,AFRIKUUMBA,Mutenda Joseph,Mutenda Joseph Ndjamba,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Sivambo Anderas,Sivambo Andrias Mukoya,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Kanime Gustav,Kanime Gustav,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Kangura Wilhard,Kangura Willhard Thifafure,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Rainhard Lukas,Rainhard Lucas Ndafohamba,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Nawa Simataa,Nawa Simataa Smart,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Kandjara Jonah,Kandjara Jonah Chiuluka,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Musupi Muikutwi,Musupi Muikutwi Postrick,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Sakaria Micheal,Sakaria Michael Sama,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Sapalo Immanuel,Sapalo Immanuel Sapalo,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Jackson James,Jackson James Tileinge,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Johannes Mwawendange,Mwawendange Johannes,transposed,95
+AFRIKUUMBA,AFRIKUUMBA,Ausiku Fabian,Ausiku Fabianus,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Kasita Julius,Kasita Julius Tulimekondjo,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Shaanika Josua,Shaanika Josua Angaleni,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Mupupa Fillipus,Mupupa Fillipus,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Mbaumba Kaipangua,Mbaumba Kaipangua,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Kudumo Paulus,Kundumo Paulus,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Mumbekwa Victor,Mumbekwa Victor Imataa,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Jeke Mukuwa,Jeke Mukuwa Jacobs,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Makili Bonafatius,Makili Bonifantius Stephanus Pendapalam,token_fuzzy,82
+AFRIKUUMBA,AFRIKUUMBA,Shimangu Paulinus,Shimangu Paulinus,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Ndjaleka Reinhold,Ndjaleka Reinhold Shitenyi,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Lukas Frans,Lukas Frans,exact,100
+AFRIKUUMBA,AFRIKUUMBA,Sindimba Godfried,Sindimba Godfried Hamutenya,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Kamwere Koita,Kamwere Koita Isdor,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Sikongo Gerson,Sikongo Gerson Haupindi,token_subset,90
+AFRIKUUMBA,AFRIKUUMBA,Nekare Eduward,Nekare Eduward,exact,100
+NAPWU,NANTU LIKWAFELA,Sheehama Monika,Sheehama Monika Mweneni,token_subset,90
+NAPWU,NANTU LIKWAFELA,Matheus Matheus,Mateus Matheus Anton,token_fuzzy,82
+NAPWU,NANTU LIKWAFELA,Endjala Petrus,Ndara Petrus,fuzzy,84
+NAPWU,NANTU LIKWAFELA,Hitewa Hopheni,Hitewa Hophen Hilifavali,token_fuzzy,82
+NAPWU,21 SEPTEMBER - 20 OCTOBER 2026,Siseho Lifuma,Siseho Lifuma Rapamus,token_subset,90
+NAPWU,21 SEPTEMBER - 20 OCTOBER 2026,Iyambo Gideon,,unmatched,0
+NAPWU,21 SEPTEMBER - 20 OCTOBER 2026,Sivambo Matheus,Sivambo Matheus Hausiku,token_subset,90
+NAPWU,28/9/26,Thikuro Titus,Thikuro Titus,exact,100
+NAPWU,28/9/26,Lukas Fesnat,Lukas Fesnat,exact,100
+NAPWU,28/9/26,Tuyapeni Petrus,,unmatched,0
+NAPWU,28/9/26,Shoopala Fillemon,,unmatched,0
+NAPWU,21 SEPTEMBER - 20 OCTOBER 2026,Nahimana Elie,Nahimana Elie,exact,100
+NAPWU,21 SEPTEMBER - 20 OCTOBER 2026,Hauwanga Festus,Hauwanga Festus Tangi,token_subset,90
+NAPWU,21 SEPTEMBER - 20 OCTOBER 2026,Nghidulwa Theofilus,Nghidulwa Theophelus Tuyenikumwe,assisted,80
+NAPWU,MASIKHULENI GUEST HOUSE,Petrus Fillipus,Petrus Filippus Nghilinganye,token_fuzzy,82
+NAPWU,MASIKHULENI GUEST HOUSE,Johannes Johanna,Johannes Johanna,exact,100
+NAPWU,MASIKHULENI GUEST HOUSE,Laban Maria,Laban Maria Magdalena,token_subset,90
+NAMIC NO 2&3,NAMIC NO.2 & 3,Haikali Michiel,Michael Haikali,token_fuzzy,82
+NAMIC NO 2&3,NAMIC NO.2 & 3,Nghede Marth,Nghede Martha Mwatemenange,token_fuzzy,82
+NAMIC NO 2&3,NAMIC NO.2 & 3,Ndara Matheus,,unmatched,0
+NAMIC NO 2&3,NAMIC NO.2 & 3,Kaisungu pius,Kaishungu Pius Nakale,token_fuzzy,82
+NAMIC NO 2&3,PETROFUND,Jackson James,Jackson James Tileinge,token_subset,90
+NAMIC NO 2&3,PETROFUND,Mwinkolwa Kornelius,,unmatched,0
+NAMIC NO 2&3,PETROFUND,Lutwayi Andreas,Litwayi Andreas Siwaya,token_fuzzy,82
+NAMIC NO 2&3,EROS HOUSE & GENERAL VEIKO ALEXANDER,Fillemon Tobias Simon,Fillemon Tobias Simon,exact,100
+NAMIC NO 2&3,EROS HOUSE & GENERAL VEIKO ALEXANDER,Shuumbili Johannes,Shuumbili Johannes H,token_subset,90
+NAMIC NO 2&3,EROS HOUSE & GENERAL VEIKO ALEXANDER,Akuunda Andreas,,unmatched,0
+NAMIC NO 2&3,EROS HOUSE & GENERAL VEIKO ALEXANDER,Mwatila Phillipus,,unmatched,0
+NAMIC NO 2&3,MEANS KLEIN WHK,Mwatila Phillipus,,unmatched,0
+NAMIC NO 2&3,MEANS KLEIN WHK,Ngongo Asser,Ngongo Asser Siremo,token_subset,90
+NAMIC NO 2&3,SHPR,Ndjunga Muniwe,Ndjunga Muniwe,exact,100
+NAMIC NO 2&3,WAKKA PRE -PRIMARY,Hamutenya Erickson,Hamutenya Erickson Nghilifavali,token_subset,90
+EMERINCIA PLOT,EMERINCIA POLT,Matheus Frans,Matheus Frans Kondjeni,token_subset,90
+EMERINCIA PLOT,EMERINCIA POLT,Mbaumba Kaveipi,,unmatched,0
+EMERINCIA PLOT,EMERINCIA POLT,Nghitewa Petrus,Nghitewa Petrus,exact,100
+EMERINCIA PLOT,EMERINCIA POLT,Amalwa Paulus,Amalwa Paulus Immanuel,token_subset,90
+EMERINCIA PLOT,EMERINCIA POLT,Kangura Wilhard,Kangura Willhard Thifafure,token_fuzzy,82
+EMERINCIA PLOT,EMERINCIA POLT,Kahuthe Bonifatius,,unmatched,0
+EMERINCIA PLOT,ADCON,Tjikongo Immanuel,Tjikongo Immanuel Walter,token_subset,90
+EMERINCIA PLOT,ADCON,Shalele Fabian,Shalele Fabian Damonaomufifa,token_subset,90
+EMERINCIA PLOT,ADCON,Eiaseb Ricardino,Eiaseb Ricardino,exact,100
+EMERINCIA PLOT,ADCON,Masingo Immanuel,,unmatched,0
+EMERINCIA PLOT,ADCON,Mutibi Albert,Mutibi Albert Mutibi,token_subset,90
+EMERINCIA PLOT,ADCON,Shilemba Risto,,unmatched,0
+EMERINCIA PLOT,BONSMARA SERVICES STATION,Kavei Abuid,Kavei Abiud Nguaundjua,token_fuzzy,82
+EMERINCIA PLOT,BONSMARA SERVICES STATION,Mupupa Fillipus,Mupupa Fillipus,exact,100
+EMERINCIA PLOT,BONSMARA SERVICES STATION,David Erastus,,unmatched,0
+ATTA RENTALS,ATTA RENTAL,Kahare Shimafo,Kahare Shimafo,exact,100
+ATTA RENTALS,ATTA RENTAL,Kayofa Jonas,,unmatched,0
+ATTA RENTALS,ATTA RENTAL,Muhau Munali,Muhau Munali,exact,100
+ATTA RENTALS,EYE CLINIC,Ndara Johannes,Ndara Johannes Ndumba,token_subset,90
+ATTA RENTALS,EYE CLINIC,Mapeu Cellestinus,Mapeu Cellestinus Kosenge,token_subset,90
+ATTA RENTALS,MAGNOLIA INDUSTRY,Mwashekele Andreas,Mwashekele S N Andreas,token_subset,90
+ATTA RENTALS,MAGNOLIA INDUSTRY,Weka Kamutuva,Weka Kamutuva,exact,100
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Tjihoto Mbimbo,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Isaaks Chali,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Swartbooi David,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Kandjimi Moses,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Kalondo Teodor,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Ngombe Zejavi,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Muniwe Simafo,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Shilongo Paulus,,unmatched,0
+ATTA RENTALS,"NEW ERA HEAD OFFICER, WARE HOUSE & SHOP",Nangonya Erastus,Nangonya Erastus,exact,100
+HOCHLAND S S,HOCHLAND S S,Titus Titus,Titus Titus Nghipangelwa,token_fuzzy,82
+HOCHLAND S S,HOCHLAND S S,Petrus Titus,Petrus Titus Fernadu,token_subset,90
+HOCHLAND S S,UNIGAS,Katangolo Julius,Katangolo Julius Ngendina,token_subset,90
+HOCHLAND S S,UNIGAS,Intja Markus,Intja Markus,exact,100
+HOCHLAND S S,EFFORT INVESTMENT,Diyerenge H,Diyerenge Heinrich Muronga,initial_surname,85
+HOCHLAND S S,EFFORT INVESTMENT,Likuwa Emerincia,Likuwa Emmerciana Sitoka Likuwa,assisted,80
+HOCHLAND S S,DREAMLAND,Amwaalwa Festus,Amwaalwa Festus Kwathandje,token_subset,90
+HOCHLAND S S,DREAMLAND,Sondaha Lucas,Sondaha Lucas Sinimbo,token_subset,90
+HOCHLAND S S,CHINA CONSTRUCTION,Sondaha Lucas,Sondaha Lucas Sinimbo,token_subset,90
+HOCHLAND S S,CHINA CONSTRUCTION,Mapulanga Mutanda,Mapulanga Mutanda,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Naftal Kaarina,Naftali Kaarina,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Mengela Aino,Mengela Aino,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Kathire Wayunda,Kathira Wayunda,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Hailonga Natalia,Hailonga Natalia Ndahafa,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Shikongo Silvanus,Shikongo Sylvanus Ndilipune,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Muhembo Muyenga,Muhembo Muyenga,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Maghuru John,Maghuru John Moyakeya,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Nangolo Helena,Nangolo Helena,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Shefika Teofilus,Shefika Theophilus Shalongo,assisted,80
+CHINA SEVETH,CHINA SEVETH RAILWAY,Mutibi Linyunga,Mutibi Linyunga,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Martina Fillemon,Martina Fillemon Ndeshipanda,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Immanuel Hausiku,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Kamundongo Leonarld,Kamundongo Leornard Kupembona,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Jafet Gabreil,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Asino Jonathan,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Mwashindange Festus,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Frans Kosmas,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Nghifekwena Frans,Nghifekwena Frans Nghidipohamba,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Matias Ananias,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Hamwati Lotnard,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Naftal Kaarina,Naftali Kaarina,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Mengela Aino,Mengela Aino,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Kathire Wayunda,Kathira Wayunda,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Hailonga Natalia,Hailonga Natalia Ndahafa,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Shikongo Silvanus,Shikongo Sylvanus Ndilipune,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Muhembo Muyenga,Muhembo Muyenga,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Maghuru John,Maghuru John Moyakeya,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Nangolo Helena,Nangolo Helena,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Shefika Teofilus,Shefika Theophilus Shalongo,assisted,80
+CHINA SEVETH,CHINA SEVETH RAILWAY,Mutibi Linyunga,Mutibi Linyunga,exact,100
+CHINA SEVETH,CHINA SEVETH RAILWAY,Martina Fillemon,Martina Fillemon Ndeshipanda,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Immanuel Hausiku,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Kamundongo Leonarld,Kamundongo Leornard Kupembona,token_fuzzy,82
+CHINA SEVETH,CHINA SEVETH RAILWAY,Jafet Gabreil,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Asino Jonathan,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Mwashindange Festus,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Frans Kosmas,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Nghifekwena Frans,Nghifekwena Frans Nghidipohamba,token_subset,90
+CHINA SEVETH,CHINA SEVETH RAILWAY,Matias Ananias,,unmatched,0
+CHINA SEVETH,CHINA SEVETH RAILWAY,Hamwati Lotnard,,unmatched,0
+SCRAP NORTHERN,SCRAP NORTHERN,Jonas Toini,Jonas Toini,exact,100
+SCRAP NORTHERN,SCRAP NORTHERN,Haimbondi Fillemon,Haimbodi Fillemon Nghishile,token_fuzzy,82
+SCRAP NORTHERN,SCRAP NORTHERN,Muharukua Maveip,,unmatched,0
+SCRAP NORTHERN,SCRAP NORTHERN,Johannes Emilia,Johannes Emilia Loini,token_subset,90
+SCRAP NORTHERN,SCRAP NORTHERN,Kasera Mathew,Kasera Matheus,fuzzy,88
+SCRAP NORTHERN,SCRAP NORTHERN,Shaanika Josua,Shaanika Josua Angaleni,token_subset,90
+SCRAP NORTHERN,SCRAP NORTHERN,Nekongo Jonas,,unmatched,0
+SCRAP NORTHERN,SCRAP NORTHERN,Mungamba Sarafina,Mungamba Sarafine Ghukamba,token_fuzzy,82
+SCRAP NORTHERN,SCRAP NORTHERN,Mpande Frans,Mpande Frans Kanyeva,token_subset,90
+SCRAP NORTHERN,SCRAP NORTHERN,Katura Thobias,Katura Thobias Siwombe,token_subset,90
+SCRAP NORTHERN,SCRAP NORTHERN,Shinendima Paulus,,unmatched,0
+SCRAP NORTHERN,KUNENE,Eliaser Petrus,Eliaser Petrus Vakenyeneka,token_subset,90
+SCRAP NORTHERN,KUNENE,Sackaria Michael,Sakaria Michael Sama,token_fuzzy,82
+SCRAP NORTHERN,NEW ERA CENTERAL HOSPITAL,Kaura Unomasa,Kaura  Unomasa,exact,100
+SCRAP NORTHERN,NEW ERA CENTERAL HOSPITAL,Haihambo Rainhold,Haihambo Reinhold Pombili,token_fuzzy,82
+SCRAP NORTHERN,NEW ERA CENTERAL HOSPITAL,Shoopala Fillemon,,unmatched,0
+SCRAP NORTHERN,NEW ERA CENTERAL HOSPITAL,Nekwaya Tiophilus,Nekwaya Teofilus Sakaria,assisted,80
+SCRAP NORTHERN,AFRIDECA & OVER SIDE GROUP,Mumbekwa Victory,Mumbekwa Victor Imataa,token_fuzzy,82
+SCRAP NORTHERN,AFRIDECA & OVER SIDE GROUP,Ausiku Fabianus,Ausiku Fabianus,exact,100
+SCRAP NORTHERN,AFRIDECA & OVER SIDE GROUP,Nekare Edward,Nekare Eduward,token_fuzzy,82
+CHINA NEW ROAD,ROBOT & NEW ROAD,Nashiwaya phillemon,,unmatched,0
+CHINA NEW ROAD,ROBOT & NEW ROAD,Shinana Petrus,Shinana Petrus,exact,100
+CHINA NEW ROAD,ROBOT & NEW ROAD,Kamwere Koita,Kamwere Koita Isdor,token_subset,90
+CHINA NEW ROAD,ROBOT & NEW ROAD,Olavi Joseph,,unmatched,0
+CHINA NEW ROAD,ROBOT & NEW ROAD,Naphine Lisia,Naphine Lisias Penothina,token_fuzzy,82
+CHINA NEW ROAD,ROBOT & NEW ROAD,Mpepo Herman,Mpepo Manolf Herman,token_subset,90
+CHINA NEW ROAD,ROBOT & NEW ROAD,Henok Heikki,Heikki Henok,transposed,95
+CHINA NEW ROAD,ROBOT & NEW ROAD,Tjiposa K,,unmatched,0
+CHINA NEW ROAD,ROBOT & NEW ROAD,Nyandiso Barry,Nyandiso Barry Mueze,token_subset,90
+CHINA NEW ROAD,ROBOT & NEW ROAD,Hamukonda F,,unmatched,0
+CHINA NEW ROAD,ROBOT & NEW ROAD,Kahare Johannes,Kahare Johannes Mununga,token_subset,90
+CHINA NEW ROAD,ROBOT & NEW ROAD,Nawa Simata,Nawa Simataa Smart,token_fuzzy,82
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Shilongo Onesmus,,unmatched,0
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Ndjaleka Reinhold,Ndjaleka Reinhold Shitenyi,token_subset,90
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Tjapona Titus,Tjapona Titus,exact,100
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Hengombe Petrus,,unmatched,0
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Teodor Teodor,,unmatched,0
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Mupetami David,Mupetami David Penombili,token_subset,90
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Nduukeme Josef,,unmatched,0
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Tobias Sakaria,,unmatched,0
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Iifo David,Iifo David Nadhipite,token_subset,90
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Rainhard Lukas,Rainhard Lucas Ndafohamba,token_fuzzy,82
+CHINA NEW ROAD,MANDELA & UNDER THE BRIDGE,Teofilus Ferdinard,,unmatched,0

@@ -14,8 +14,10 @@ MAP = [
     ("MAGNOLIA", [39]), ("HOCHLAND S S", [8]), ("EFFORT INVESTMENT", [9]),
     ("CHINA SEVETH", [26]), ("SCRAP NORTHERN", [32]), ("KUNENE", [36]),
     ("AFRIDECA", [44]),
+    ("DREAMLAND", [14]), ("CHINA CONSTRUCTION", [22]), ("ROBOT & NEW ROAD", [22]),
+    ("MANDELA & UNDER", [22]),
 ]
-OK = {"exact", "transposed", "token_subset", "initial_surname", "token_fuzzy", "fuzzy"}
+OK = {"exact", "transposed", "token_subset", "initial_surname", "token_fuzzy", "fuzzy", "assisted"}
 
 
 def cs_for(block):

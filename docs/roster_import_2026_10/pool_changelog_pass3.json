@@ -1,0 +1,24 @@
+{
+ "run": "2026-10-11 18:07:32",
+ "source": "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+ "sites": [
+  {
+   "contract_site": 50,
+   "site": 3939,
+   "site_name": "Oyetweni Dialyses Centre (Pty) Ltd",
+   "site_pool_before": [],
+   "contract_pool_before": [],
+   "site_pool_after": [
+    652
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    false,
+    "2026-10-05"
+   ],
+   "unmatched": [
+    "Mwatila Phillipus"
+   ]
+  }
+ ]
+}

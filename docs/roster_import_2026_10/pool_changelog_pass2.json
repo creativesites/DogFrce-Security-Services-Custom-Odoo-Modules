@@ -1,0 +1,820 @@
+{
+ "run": "2026-10-11 18:03:16",
+ "source": "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+ "sites": [
+  {
+   "contract_site": 34,
+   "site": 3352,
+   "site_name": "AFRIKUUMBA CONSTRUCTION (PTY) LTD",
+   "site_pool_before": [
+    518,
+    520,
+    527,
+    542,
+    543,
+    544,
+    545,
+    548,
+    554,
+    558,
+    560,
+    562,
+    563,
+    568,
+    570,
+    577,
+    585,
+    586,
+    587,
+    588,
+    595,
+    598,
+    608,
+    610,
+    612,
+    613,
+    614,
+    615,
+    622,
+    630,
+    631,
+    633,
+    636,
+    639,
+    640,
+    641,
+    647,
+    653,
+    657,
+    659,
+    660,
+    662,
+    667,
+    671,
+    672,
+    676,
+    678,
+    680,
+    685
+   ],
+   "contract_pool_before": [
+    518,
+    520,
+    527,
+    542,
+    543,
+    544,
+    545,
+    548,
+    554,
+    558,
+    560,
+    562,
+    563,
+    568,
+    570,
+    577,
+    585,
+    586,
+    587,
+    588,
+    595,
+    598,
+    608,
+    610,
+    612,
+    613,
+    614,
+    615,
+    622,
+    630,
+    631,
+    633,
+    636,
+    639,
+    640,
+    641,
+    647,
+    653,
+    657,
+    659,
+    660,
+    662,
+    667,
+    671,
+    672,
+    676,
+    678,
+    680,
+    685
+   ],
+   "site_pool_after": [
+    518,
+    520,
+    527,
+    542,
+    543,
+    544,
+    545,
+    548,
+    554,
+    558,
+    560,
+    562,
+    563,
+    568,
+    570,
+    577,
+    585,
+    586,
+    587,
+    588,
+    595,
+    598,
+    608,
+    610,
+    612,
+    613,
+    614,
+    615,
+    622,
+    630,
+    631,
+    633,
+    636,
+    639,
+    640,
+    641,
+    647,
+    653,
+    657,
+    659,
+    660,
+    662,
+    667,
+    671,
+    672,
+    676,
+    678,
+    680,
+    685,
+    597,
+    655,
+    666
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Ndunduma Alabert",
+    "Shapange Erastus (NS)",
+    "Amupadhi Olavi"
+   ]
+  },
+  {
+   "contract_site": 55,
+   "site": 4256,
+   "site_name": "Nantu Likwafela - Main Site",
+   "site_pool_before": [
+    541,
+    594,
+    635,
+    665
+   ],
+   "contract_pool_before": [
+    541,
+    594,
+    635,
+    665
+   ],
+   "site_pool_after": [
+    541,
+    594,
+    635,
+    665
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 56,
+   "site": 4257,
+   "site_name": "Namibia National Teachers Union - Main Site",
+   "site_pool_before": [
+    679,
+    681
+   ],
+   "contract_pool_before": [
+    679,
+    681
+   ],
+   "site_pool_after": [
+    679,
+    681
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Iyambo Gideon"
+   ]
+  },
+  {
+   "contract_site": 23,
+   "site": 4205,
+   "site_name": "Windhoek West",
+   "site_pool_before": [
+    585,
+    683
+   ],
+   "contract_pool_before": [
+    585,
+    683
+   ],
+   "site_pool_after": [
+    585,
+    683
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Tuyapeni Petrus",
+    "Shoopala Fillemon"
+   ]
+  },
+  {
+   "contract_site": 25,
+   "site": 4247,
+   "site_name": "Namibian Public Workers Union - Main Site",
+   "site_pool_before": [
+    539,
+    624
+   ],
+   "contract_pool_before": [
+    539,
+    624
+   ],
+   "site_pool_after": [
+    539,
+    624,
+    645
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 57,
+   "site": 4258,
+   "site_name": "Namibian National Teachers Union - Main Site",
+   "site_pool_before": [
+    549,
+    579,
+    655
+   ],
+   "contract_pool_before": [
+    549,
+    579,
+    655
+   ],
+   "site_pool_after": [
+    549,
+    579,
+    655
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 53,
+   "site": 4254,
+   "site_name": "Namibian Mine Workers Property - Main Site",
+   "site_pool_before": [
+    554,
+    600,
+    643
+   ],
+   "contract_pool_before": [
+    554,
+    600,
+    643
+   ],
+   "site_pool_after": [
+    554,
+    600,
+    643
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Ndara Matheus"
+   ]
+  },
+  {
+   "contract_site": 54,
+   "site": 4255,
+   "site_name": "Namibia Mine Workers Property - Main Site",
+   "site_pool_before": [
+    554,
+    600,
+    643
+   ],
+   "contract_pool_before": [
+    554,
+    600,
+    643
+   ],
+   "site_pool_after": [
+    554,
+    600,
+    643
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Ndara Matheus"
+   ]
+  },
+  {
+   "contract_site": 30,
+   "site": 4250,
+   "site_name": "Petroleum Training & Education Fund - Main Site",
+   "site_pool_before": [
+    544,
+    584
+   ],
+   "contract_pool_before": [
+    544,
+    584
+   ],
+   "site_pool_after": [
+    544,
+    584
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Mwinkolwa Kornelius"
+   ]
+  },
+  {
+   "contract_site": 49,
+   "site": 4252,
+   "site_name": "Alexander and Incorporated Law Firm - Main Site",
+   "site_pool_before": [
+    528,
+    675
+   ],
+   "contract_pool_before": [
+    528,
+    675
+   ],
+   "site_pool_after": [
+    528,
+    675
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Akuunda Andreas",
+    "Mwatila Phillipus"
+   ]
+  },
+  {
+   "contract_site": 33,
+   "site": 4251,
+   "site_name": "Waka Academy - Main Site",
+   "site_pool_before": [
+    536
+   ],
+   "contract_pool_before": [
+    536
+   ],
+   "site_pool_after": [
+    536
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 42,
+   "site": 3359,
+   "site_name": "Adcon Transport (Pty) Ltd",
+   "site_pool_before": [
+    522,
+    615,
+    663,
+    686
+   ],
+   "contract_pool_before": [
+    522,
+    615,
+    663,
+    686
+   ],
+   "site_pool_after": [
+    522,
+    615,
+    663,
+    686
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Masingo Immanuel",
+    "Shilemba Risto"
+   ]
+  },
+  {
+   "contract_site": 47,
+   "site": 3406,
+   "site_name": "Bonsmara  Service Station",
+   "site_pool_before": [
+    574,
+    612
+   ],
+   "contract_pool_before": [
+    574,
+    612
+   ],
+   "site_pool_after": [
+    574,
+    612
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "David Erastus"
+   ]
+  },
+  {
+   "contract_site": 40,
+   "site": 3357,
+   "site_name": "ATTA RENTALS",
+   "site_pool_before": [
+    552,
+    605
+   ],
+   "contract_pool_before": [
+    552,
+    605
+   ],
+   "site_pool_after": [
+    552,
+    605
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Kayofa Jonas"
+   ]
+  },
+  {
+   "contract_site": 24,
+   "site": 4246,
+   "site_name": "Windhoek Eye Institution - Main Site",
+   "site_pool_before": [
+    590,
+    634
+   ],
+   "contract_pool_before": [
+    590,
+    634
+   ],
+   "site_pool_after": [
+    590,
+    634
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 39,
+   "site": 3700,
+   "site_name": "Magnolia Investments Five cc",
+   "site_pool_before": [
+    621,
+    689
+   ],
+   "contract_pool_before": [
+    621,
+    689
+   ],
+   "site_pool_after": [
+    621,
+    689
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 8,
+   "site": 4200,
+   "site_name": "Hochland Service Station",
+   "site_pool_before": [
+    656,
+    684
+   ],
+   "contract_pool_before": [
+    656,
+    684
+   ],
+   "site_pool_after": [
+    656,
+    684
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 9,
+   "site": 3477,
+   "site_name": "EFFORT INVESTMENT HOLDINGS (Pty) Ltd",
+   "site_pool_before": [
+    521
+   ],
+   "contract_pool_before": [
+    521
+   ],
+   "site_pool_after": [
+    521,
+    582
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 14,
+   "site": 4204,
+   "site_name": "Pioneerspark",
+   "site_pool_before": [],
+   "contract_pool_before": [],
+   "site_pool_after": [
+    519,
+    682
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    false,
+    "2026-10-05"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 22,
+   "site": 4245,
+   "site_name": "China State Construction Engineering Corporation(Southern Africa)(pty) Ltd - Main Site",
+   "site_pool_before": [],
+   "contract_pool_before": [],
+   "site_pool_after": [
+    682,
+    591,
+    673,
+    558,
+    632,
+    602,
+    540,
+    653,
+    551,
+    633,
+    636,
+    685,
+    610,
+    542,
+    657
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    false,
+    "2026-10-05"
+   ],
+   "unmatched": [
+    "Nashiwaya phillemon",
+    "Olavi Joseph",
+    "Tjiposa K",
+    "Hamukonda F",
+    "Shilongo Onesmus",
+    "Hengombe Petrus",
+    "Teodor Teodor",
+    "Nduukeme Josef",
+    "Tobias Sakaria",
+    "Teofilus Ferdinard"
+   ]
+  },
+  {
+   "contract_site": 26,
+   "site": 4248,
+   "site_name": "China Railway Seventh Group Namibia (PTY) LTD - Main Site",
+   "site_pool_before": [
+    533,
+    557,
+    570,
+    587,
+    592,
+    599,
+    606,
+    616,
+    623,
+    629,
+    646,
+    669
+   ],
+   "contract_pool_before": [
+    533,
+    557,
+    570,
+    587,
+    592,
+    599,
+    606,
+    616,
+    623,
+    629,
+    646,
+    669
+   ],
+   "site_pool_after": [
+    533,
+    557,
+    570,
+    587,
+    592,
+    599,
+    606,
+    616,
+    623,
+    629,
+    646,
+    669,
+    666
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Immanuel Hausiku",
+    "Jafet Gabreil",
+    "Asino Jonathan",
+    "Mwashindange Festus",
+    "Frans Kosmas",
+    "Matias Ananias",
+    "Hamwati Lotnard"
+   ]
+  },
+  {
+   "contract_site": 32,
+   "site": 4015,
+   "site_name": "Scrap Salvage Pty Ltd",
+   "site_pool_before": [
+    534,
+    547,
+    550,
+    567,
+    571,
+    601,
+    609,
+    662
+   ],
+   "contract_pool_before": [
+    534,
+    547,
+    550,
+    567,
+    571,
+    601,
+    609,
+    662
+   ],
+   "site_pool_after": [
+    534,
+    547,
+    550,
+    567,
+    571,
+    601,
+    609,
+    662
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": [
+    "Muharukua Maveip",
+    "Nekongo Jonas",
+    "Shinendima Paulus"
+   ]
+  },
+  {
+   "contract_site": 36,
+   "site": 3660,
+   "site_name": "Kunene Building Supplies cc",
+   "site_pool_before": [
+    523,
+    659
+   ],
+   "contract_pool_before": [
+    523,
+    659
+   ],
+   "site_pool_after": [
+    523,
+    659
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  },
+  {
+   "contract_site": 44,
+   "site": 3363,
+   "site_name": "Afrideca Plant Hire",
+   "site_pool_before": [
+    520,
+    608,
+    639
+   ],
+   "contract_pool_before": [
+    520,
+    608,
+    639
+   ],
+   "site_pool_after": [
+    520,
+    608,
+    639
+   ],
+   "prev_mode_source_date": [
+    "site_only",
+    "DogForce Guard Roaster 21 Aug - 20 Sep 2026",
+    "2026-10-11"
+   ],
+   "unmatched": []
+  }
+ ]
+}

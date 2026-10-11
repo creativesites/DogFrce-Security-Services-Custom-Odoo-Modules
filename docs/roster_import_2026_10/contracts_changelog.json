@@ -1,0 +1,252 @@
+{
+ "run": "2026-10-11 18:06:34",
+ "created": [
+  [
+   "res.partner",
+   4951,
+   "Emerincia Plot"
+  ],
+  [
+   "security.client.contract",
+   38,
+   "Emerincia Plot"
+  ],
+  [
+   "security.contract.shift.requirement",
+   127,
+   "Emerincia Plot tmpl 5"
+  ],
+  [
+   "security.contract.shift.requirement",
+   128,
+   "Emerincia Plot tmpl 4"
+  ],
+  [
+   "security.contract.site",
+   65,
+   "Emerincia Plot"
+  ],
+  [
+   "security.contract.post",
+   65,
+   "Emerincia Plot"
+  ],
+  [
+   "security.client.contract",
+   39,
+   "Unigas"
+  ],
+  [
+   "security.contract.shift.requirement",
+   129,
+   "Unigas tmpl 5"
+  ],
+  [
+   "security.contract.shift.requirement",
+   130,
+   "Unigas tmpl 4"
+  ],
+  [
+   "security.contract.site",
+   66,
+   "Unigas"
+  ],
+  [
+   "security.contract.post",
+   66,
+   "Unigas"
+  ],
+  [
+   "res.partner",
+   4952,
+   "New Era"
+  ],
+  [
+   "security.client.contract",
+   40,
+   "New Era"
+  ],
+  [
+   "security.contract.shift.requirement",
+   131,
+   "New Era Head Office, Warehouse & Shop tmpl 5"
+  ],
+  [
+   "security.contract.shift.requirement",
+   132,
+   "New Era Head Office, Warehouse & Shop tmpl 4"
+  ],
+  [
+   "security.contract.site",
+   67,
+   "New Era Head Office, Warehouse & Shop"
+  ],
+  [
+   "security.contract.post",
+   67,
+   "New Era Head Office, Warehouse & Shop"
+  ],
+  [
+   "security.contract.shift.requirement",
+   133,
+   "New Era Central Hospital & State House tmpl 5"
+  ],
+  [
+   "security.contract.shift.requirement",
+   134,
+   "New Era Central Hospital & State House tmpl 4"
+  ],
+  [
+   "security.contract.site",
+   68,
+   "New Era Central Hospital & State House"
+  ],
+  [
+   "security.contract.post",
+   68,
+   "New Era Central Hospital & State House"
+  ],
+  [
+   "security.client.contract",
+   41,
+   "Scrap Southern"
+  ],
+  [
+   "security.contract.shift.requirement",
+   135,
+   "Scrap Salvage - Southern tmpl 5"
+  ],
+  [
+   "security.contract.shift.requirement",
+   136,
+   "Scrap Salvage - Southern tmpl 4"
+  ],
+  [
+   "security.contract.site",
+   69,
+   "Scrap Salvage - Southern"
+  ],
+  [
+   "security.contract.post",
+   69,
+   "Scrap Salvage - Southern"
+  ],
+  [
+   "activated",
+   38,
+   "Emerincia Plot"
+  ],
+  [
+   "security.client.site",
+   4264,
+   "Emerincia Plot"
+  ],
+  [
+   "activated",
+   39,
+   "Unigas"
+  ],
+  [
+   "security.client.site",
+   4265,
+   "Unigas"
+  ],
+  [
+   "activated",
+   40,
+   "New Era"
+  ],
+  [
+   "security.client.site",
+   4266,
+   "New Era Head Office, Warehouse & Shop"
+  ],
+  [
+   "security.client.site",
+   4267,
+   "New Era Central Hospital & State House"
+  ],
+  [
+   "activated",
+   41,
+   "Scrap Southern"
+  ],
+  [
+   "security.client.site",
+   4268,
+   "Scrap Salvage - Southern"
+  ]
+ ],
+ "notes": [
+  {
+   "site": "Emerincia Plot",
+   "service": "24h",
+   "pool": [
+    "Matheus Frans Kondjeni",
+    "Nghitewa Petrus",
+    "Amalwa Paulus Immanuel",
+    "Kangura Willhard Thifafure"
+   ],
+   "unmatched_names": [
+    "Mbaumba Kaveipi",
+    "Kahuthe Bonifatius"
+   ],
+   "sheet_needed": 2,
+   "sheet_allocated": 3
+  },
+  {
+   "site": "Unigas",
+   "service": "night_sun_ph",
+   "pool": [
+    "Katangolo Julius Ngendina",
+    "Intja Markus"
+   ],
+   "unmatched_names": [],
+   "sheet_needed": 1,
+   "sheet_allocated": 2
+  },
+  {
+   "site": "New Era Head Office, Warehouse & Shop",
+   "service": "24h",
+   "pool": [
+    "Nangonya Erastus"
+   ],
+   "unmatched_names": [
+    "Tjihoto Mbimbo",
+    "Isaaks Chali",
+    "Swartbooi David",
+    "Kandjimi Moses",
+    "Kalondo Teodor",
+    "Ngombe Zejavi",
+    "Muniwe Simafo",
+    "Shilongo Paulus"
+   ],
+   "sheet_needed": 2,
+   "sheet_allocated": 3
+  },
+  {
+   "site": "New Era Central Hospital & State House",
+   "service": "night_sun_ph",
+   "pool": [
+    "Kaura  Unomasa",
+    "Haihambo Reinhold Pombili",
+    "Nekwaya Teofilus Sakaria"
+   ],
+   "unmatched_names": [
+    "Shoopala Fillemon"
+   ],
+   "sheet_needed": 1,
+   "sheet_allocated": null
+  },
+  {
+   "site": "Scrap Salvage - Southern",
+   "service": "night_sun_ph",
+   "pool": [
+    "Ndjunga Muniwe"
+   ],
+   "unmatched_names": [],
+   "sheet_needed": 1,
+   "sheet_allocated": null
+  }
+ ]
+}

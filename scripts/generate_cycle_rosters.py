@@ -7,6 +7,7 @@ import json, os
 payload = json.load(open(os.environ["PAYLOAD_PATH"]))
 MANUAL, SKIP = {8, 30, 24}, {40}
 Batch = env["security.roster.batch"]
+log = []
 tot = ass = 0
 for cs_id in map(int, payload["sites"]):
     if cs_id in MANUAL | SKIP:
@@ -15,17 +16,20 @@ for cs_id in map(int, payload["sites"]):
     b = Batch.search([("site_id", "=", site.id), ("date_from", "=", "2026-09-21"), ("state", "!=", "cancelled")], limit=1)
     if not b:
         print("NO BATCH", site.name); continue
+    pre_assigned = set(b.slot_ids.filtered("employee_id").ids)
     b._get_effective_site_pool(site)
     b.roster_site_pool_ids.filtered(lambda p: p.site_id == site).action_reset_to_site_defaults()
     if not b.slot_ids:
         b.action_generate_slots()
     b.action_auto_fill_slots()
+    log.append({"batch": b.id, "site": site.name, "slots_assigned_by_this_run": sorted(set(b.slot_ids.filtered("employee_id").ids) - pre_assigned)})
     sl = b.slot_ids.filtered(lambda s: s.state != "cancelled")
     pool = set(site.site_guard_pool_ids.ids)
     out = len(sl.filtered(lambda s: s.employee_id and s.employee_id.id not in pool))
     n_ass = len(sl.filtered("employee_id")); tot += len(sl); ass += n_ass
     print("%-45s pool %2d slots %3d assigned %3d gaps %3d outside_pool %d relief %d" % (
         site.name[:45], len(pool), len(sl), n_ass, len(sl.filtered("critical_gap")), out, len(sl.filtered("is_relief"))))
+json.dump(log, open(os.environ.get("LOG_PATH", "/tmp/roster_changelog.json"), "w"))
 print("TOTAL", ass, "/", tot)
 if os.environ.get("APPLY") == "1":
     env.cr.commit(); print("COMMITTED")
