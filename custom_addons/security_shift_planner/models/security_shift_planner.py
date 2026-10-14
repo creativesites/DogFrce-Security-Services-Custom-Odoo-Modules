@@ -1204,3 +1204,96 @@ class SecurityRosterSlot(models.Model):
             slot.override_reason = reason or ""
             entry = f"[{now.strftime('%Y-%m-%d %H:%M')} UTC] Override by {user_name}: {reason or '(no reason given)'}"
             slot.note = (slot.note + "\n" + entry).strip() if slot.note else entry
+
+
+class SecurityRosterAttentionBoard(models.Model):
+    """First-glance roster view: what needs fixing across ALL sites, worst first.
+
+    Used by the Rostering Hub's default screen. Counts are computed on the server so the
+    browser never loads every slot in the cycle.
+    """
+    _inherit = "security.roster.slot"
+
+    @api.model
+    def get_attention_board(self, ref_date=None, date_from=None, date_to=None, page=1, page_size=10):
+        Batch = self.env["security.roster.batch"]
+        if date_from and date_to:
+            d0, d1 = fields.Date.to_date(date_from), fields.Date.to_date(date_to)
+        else:
+            d0, d1 = Batch.get_operational_cycle_dates(fields.Date.to_date(ref_date) if ref_date else fields.Date.today())
+
+        slots = self.search([
+            ("shift_date", ">=", d0),
+            ("shift_date", "<=", d1),
+            ("state", "!=", "cancelled"),
+            ("batch_id.state", "!=", "cancelled"),
+            ("site_id", "!=", False),
+        ])
+
+        try:
+            cap = int(self.env["ir.config_parameter"].sudo().get_param("security.max_working_days_per_cycle", "22"))
+        except (TypeError, ValueError):
+            cap = 22
+        holidays = set(self.env["security.public.holiday"].search([
+            ("holiday_date", ">=", d0), ("holiday_date", "<=", d1), ("active", "=", True),
+        ]).mapped("holiday_date"))
+
+        sites = {}
+        by_guard_day = {}
+        summary = {"unfilled_slots": 0, "critical_gaps": 0, "clashes": 0, "guards_over_cap": 0,
+                   "sunday_ph_unfilled": 0, "relief_slots": 0, "total_slots": 0}
+
+        for s in slots:
+            site = s.site_id
+            rec = sites.setdefault(site.id, {
+                "site_id": site.id, "site_name": site.name,
+                "client": s.partner_id.name or site.partner_id.name or "",
+                "total": 0, "unfilled": 0, "critical": 0, "clashes": 0, "relief": 0,
+            })
+            rec["total"] += 1
+            summary["total_slots"] += 1
+            if s.is_relief:
+                rec["relief"] += 1
+                summary["relief_slots"] += 1
+            if not s.employee_id:
+                rec["unfilled"] += 1
+                summary["unfilled_slots"] += 1
+                is_sun_ph = s.shift_date.weekday() == 6 or s.shift_date in holidays
+                if is_sun_ph:
+                    summary["sunday_ph_unfilled"] += 1
+            if s.critical_gap:
+                rec["critical"] += 1
+                summary["critical_gaps"] += 1
+            else:
+                pass
+            if s.employee_id:
+                by_guard_day.setdefault((s.employee_id.id, s.shift_date), []).append(s)
+
+        # A guard on two shifts on the same day is a clash (counted against each site involved).
+        guard_days = {}
+        for (emp_id, day), group in by_guard_day.items():
+            if len(group) > 1:
+                summary["clashes"] += len(group)
+                for s in group:
+                    sites[s.site_id.id]["clashes"] += 1
+            guard_days.setdefault(emp_id, set()).add(day)
+        summary["guards_over_cap"] = sum(1 for days in guard_days.values() if len(days) > cap)
+
+        ordered = sorted(
+            sites.values(),
+            key=lambda r: (-(r["unfilled"] + r["clashes"] * 2 + r["critical"]), r["site_name"]),
+        )
+        total_sites = len(ordered)
+        page = max(int(page or 1), 1)
+        page_size = max(min(int(page_size or 10), 50), 1)
+        start = (page - 1) * page_size
+        return {
+            "cycle": {"from": str(d0), "to": str(d1)},
+            "summary": summary,
+            "sites_needing_action": sum(1 for r in ordered if r["unfilled"] or r["clashes"] or r["critical"]),
+            "sites": ordered[start:start + page_size],
+            "total_sites": total_sites,
+            "page": page,
+            "page_size": page_size,
+            "day_cap": cap,
+        }
