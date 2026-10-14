@@ -49,6 +49,7 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 
 | Role | Display name | Login | Password | Access |
 |---|---|---|---|---|
+| System Administrator / Tech Lead | Winston Zulu | `winston@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform & superadmin access |
 | Owner / Full Admin | Kuume | `kuume@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — owner dashboard, payroll, billing, AI, settings |
 | System Administrator | DogForce Administrator | `admin@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — same as owner |
 | Operations Manager | Wilbert | `wilbert@dogforcesecurityservices.com` | `[In Password Vault]` | Rosters, attendance, leave approvals, client sites |
