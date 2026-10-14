@@ -50,7 +50,7 @@ Quick reference for working on this repo with Codex. Everything Codex needs to u
 | Role | Display name | Login | Password | Access |
 |---|---|---|---|---|
 | System Administrator / Tech Lead | Winston Zulu | `winston@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform & superadmin access |
-| Owner / Full Admin | Kuume | `kuume@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — owner dashboard, payroll, billing, AI, settings |
+| Owner / Full Admin / CEO | Kuume | `ceo@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — owner dashboard, payroll, billing, AI, settings |
 | System Administrator | DogForce Administrator | `admin@dogforcesecurityservices.com` | `[In Password Vault]` | Full platform — same as owner |
 | Operations Manager | Wilbert | `wilbert@dogforcesecurityservices.com` | `[In Password Vault]` | Rosters, attendance, leave approvals, client sites |
 | Odoo superadmin | — | `admin` | `[In Password Vault]` | Full Odoo backend incl. technical menus |
@@ -63,6 +63,7 @@ The mobile app maps Odoo users to roles by checking the login/name string:
 
 | Odoo account | Mobile role | App section |
 |---|---|---|
+| `ceo@dogforcesecurityservices.com` | `owner` | Owner dashboard tabs |
 | `kuume@dogforcesecurityservices.com` | `owner` | Owner dashboard tabs |
 | `admin@dogforcesecurityservices.com` | `owner` | Owner dashboard tabs |
 | `wilbert@dogforcesecurityservices.com` | `manager` | Manager dashboard tabs |
