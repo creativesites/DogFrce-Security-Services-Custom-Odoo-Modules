@@ -664,3 +664,10 @@ textarea.rh-input { resize: vertical; }
         touch-action: manipulation;
     }
 }
+
+/* Needs-attention panel (default hub screen) */
+.rh-attn-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; min-width: 150px; }
+.rh-attn-num { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.rh-attn-lbl { font-size: 0.8rem; color: #64748b; }
+.rh-attn-bad { border-color: #f87171; background: #fef2f2; }
+.rh-attn-bad .rh-attn-num { color: #b91c1c; }

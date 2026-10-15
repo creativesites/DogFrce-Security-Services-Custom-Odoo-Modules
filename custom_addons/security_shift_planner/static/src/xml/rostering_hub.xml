@@ -248,6 +248,47 @@
              ══════════════════════════════════════════════════════════════ -->
         <t t-if="state.view === 'dashboard'">
 
+          <!-- Needs attention: first thing managers see, worst sites first -->
+          <div class="rh-attn mb-4" t-if="state.attention">
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+              <div>
+                <div class="rh-empty-title" style="text-align:left">Needs attention</div>
+                <div class="text-muted small">Cycle <t t-esc="state.attention.cycle.from"/> to <t t-esc="state.attention.cycle.to"/> · all sites · worst first</div>
+              </div>
+            </div>
+            <div class="d-flex flex-wrap gap-3 mb-3">
+              <div class="rh-attn-card"><div class="rh-attn-num"><t t-esc="state.attention.summary.unfilled_slots"/></div><div class="rh-attn-lbl">Unfilled shifts</div></div>
+              <div class="rh-attn-card"><div class="rh-attn-num"><t t-esc="state.attention.sites_needing_action"/></div><div class="rh-attn-lbl">Sites needing action</div></div>
+              <div class="rh-attn-card" t-att-class="state.attention.summary.clashes ? 'rh-attn-bad' : ''"><div class="rh-attn-num"><t t-esc="state.attention.summary.clashes"/></div><div class="rh-attn-lbl">Clashes (double-booked)</div></div>
+              <div class="rh-attn-card" t-att-class="state.attention.summary.guards_over_cap ? 'rh-attn-bad' : ''"><div class="rh-attn-num"><t t-esc="state.attention.summary.guards_over_cap"/></div><div class="rh-attn-lbl">Guards over <t t-esc="state.attention.day_cap"/> days</div></div>
+              <div class="rh-attn-card"><div class="rh-attn-num"><t t-esc="state.attention.summary.sunday_ph_unfilled"/></div><div class="rh-attn-lbl">Unfilled Sun / public holiday</div></div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-2">
+                <thead><tr><th>Site</th><th>Client</th><th class="text-end">Unfilled</th><th class="text-end">Clashes</th><th class="text-end">Shifts</th><th></th></tr></thead>
+                <tbody>
+                  <t t-foreach="state.attention.sites" t-as="row" t-key="row.site_id">
+                    <tr>
+                      <td><t t-esc="row.site_name"/></td>
+                      <td class="text-muted small"><t t-esc="row.client"/></td>
+                      <td class="text-end"><span t-att-class="row.unfilled ? 'text-danger fw-bold' : 'text-success'"><t t-esc="row.unfilled"/></span></td>
+                      <td class="text-end"><span t-att-class="row.clashes ? 'text-danger fw-bold' : ''"><t t-esc="row.clashes"/></span></td>
+                      <td class="text-end"><t t-esc="row.total"/></td>
+                      <td class="text-end"><button class="rh-btn rh-btn-primary btn-sm" t-on-click="() => this.openSiteFromAttention(row.site_id)">Open roster</button></td>
+                    </tr>
+                  </t>
+                </tbody>
+              </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="text-muted small">Showing <t t-esc="state.attention.sites.length"/> of <t t-esc="state.attention.total_sites"/> sites · page <t t-esc="state.attentionPage"/></span>
+              <div class="d-flex gap-2">
+                <button class="rh-btn btn-sm" t-on-click="() => this.attentionPageChange(-1)" t-att-disabled="state.attentionPage &lt;= 1">Previous</button>
+                <button class="rh-btn btn-sm" t-on-click="() => this.attentionPageChange(1)">Next</button>
+              </div>
+            </div>
+          </div>
+
           <!-- No batch selected -->
           <t t-if="!state.batchId">
             <div class="rh-empty-state">

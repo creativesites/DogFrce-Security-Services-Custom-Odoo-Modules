@@ -33,6 +33,11 @@ class RosteringHub extends Component {
             generating:    false,
             creating:      false,
 
+            // ── needs-attention panel (default screen)
+            attention: null,
+            attentionPage: 1,
+            attentionLoading: false,
+
             // ── batch list
             batches: [],
             batchId: null,
@@ -120,6 +125,7 @@ class RosteringHub extends Component {
             await this.loadAllSites();
             await this.loadBatches();
             await this.loadAllGuards();
+            await this.loadAttention(1);
         });
     }
 
@@ -202,6 +208,39 @@ class RosteringHub extends Component {
         } catch {
             this.state.allSites = [];
         }
+    }
+
+    async loadAttention(page = 1) {
+        this.state.attentionLoading = true;
+        try {
+            const res = await this.orm.call("security.roster.slot", "get_attention_board", [], {
+                page, page_size: 10,
+            });
+            this.state.attention = res;
+            this.state.attentionPage = res.page;
+        } catch (e) {
+            this.state.attention = null;
+        } finally {
+            this.state.attentionLoading = false;
+        }
+    }
+
+    async attentionPageChange(delta) {
+        const pages = Math.max(1, Math.ceil((this.state.attention?.total_sites || 0) / 10));
+        const next = Math.min(Math.max(1, this.state.attentionPage + delta), pages);
+        if (next !== this.state.attentionPage) await this.loadAttention(next);
+    }
+
+    async openSiteFromAttention(siteId) {
+        const batch = this.state.batches.find(b => b.site_id && b.site_id[0] === siteId);
+        if (!batch) {
+            this.env.services.notification.add("No roster batch exists for this site yet.", { type: "warning" });
+            return;
+        }
+        this.state.batchId = batch.id;
+        this.state.batch   = batch;
+        this.state.view    = "roster";
+        await this.loadBoardData();
     }
 
     async loadBatches() {
