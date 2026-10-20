@@ -49,6 +49,22 @@
         <field name="target">current</field>
     </record>
 
+    <!-- Roster Board (new) — sites by day, filters, 21st-20th cycle -->
+    <record id="action_roster_cycle" model="ir.actions.client">
+        <field name="name">Roster Board (new)</field>
+        <field name="tag">security_shift_planner.roster_cycle</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_roster_cycle"
+        name="Roster Board (new)"
+        parent="security_operations.menu_security_roster"
+        action="action_roster_cycle"
+        sequence="0"
+        groups="hr.group_hr_user"
+    />
+
     <menuitem
         id="menu_rostering_hub"
         name="Rostering Hub"

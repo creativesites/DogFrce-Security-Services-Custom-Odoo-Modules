@@ -1297,3 +1297,102 @@ class SecurityRosterAttentionBoard(models.Model):
             "page_size": page_size,
             "day_cap": cap,
         }
+
+
+class SecurityRosterCycleGrid(models.Model):
+    """Roster Board data: sites as rows, days of the 21st-20th cycle as columns.
+
+    Filters: sites, shift template, day type (weekday / Saturday / Sunday / public holiday),
+    and status (all / unfilled / clashes / assigned). Paged by site.
+    """
+    _inherit = "security.roster.slot"
+
+    @api.model
+    def get_roster_cycle_grid(self, date_from, date_to, site_ids=None, shift_template_id=None,
+                              day_type="all", status="all", search="", page=1, page_size=15):
+        d0, d1 = fields.Date.to_date(date_from), fields.Date.to_date(date_to)
+        domain = [
+            ("shift_date", ">=", d0), ("shift_date", "<=", d1),
+            ("state", "!=", "cancelled"), ("batch_id.state", "!=", "cancelled"),
+            ("site_id", "!=", False),
+        ]
+        if site_ids:
+            domain.append(("site_id", "in", list(site_ids)))
+        if shift_template_id:
+            domain.append(("shift_template_id", "=", int(shift_template_id)))
+        slots = self.search(domain)
+
+        holidays = set(self.env["security.public.holiday"].search([
+            ("holiday_date", ">=", d0), ("holiday_date", "<=", d1), ("active", "=", True),
+        ]).mapped("holiday_date"))
+
+        def kind(day):
+            if day in holidays:
+                return "ph"
+            wd = day.weekday()
+            return "sun" if wd == 6 else ("sat" if wd == 5 else "weekday")
+
+        # clashes: same guard, same day, more than one slot
+        by_guard_day = {}
+        for s in slots:
+            if s.employee_id:
+                by_guard_day.setdefault((s.employee_id.id, s.shift_date), []).append(s.id)
+        clash_slot_ids = {sid for ids in by_guard_day.values() if len(ids) > 1 for sid in ids}
+
+        days = []
+        d = d0
+        while d <= d1:
+            days.append({"date": str(d), "kind": kind(d), "dow": d.strftime("%a")})
+            d = d + timedelta(days=1)
+
+        sites = {}
+        for s in slots:
+            if day_type != "all" and kind(s.shift_date) != day_type:
+                continue
+            row = sites.setdefault(s.site_id.id, {
+                "site_id": s.site_id.id, "site_name": s.site_id.name,
+                "client": s.partner_id.name or s.site_id.partner_id.name or "",
+                "cells": {}, "total": 0, "unfilled": 0, "clashes": 0,
+            })
+            key = str(s.shift_date)
+            cell = row["cells"].setdefault(key, {"total": 0, "unfilled": 0, "clashes": 0, "critical": 0})
+            cell["total"] += 1
+            row["total"] += 1
+            if not s.employee_id:
+                cell["unfilled"] += 1
+                row["unfilled"] += 1
+            if s.id in clash_slot_ids:
+                cell["clashes"] += 1
+                row["clashes"] += 1
+            if s.critical_gap:
+                cell["critical"] += 1
+
+        rows = list(sites.values())
+        if search:
+            q = search.lower()
+            rows = [r for r in rows if q in r["site_name"].lower() or q in r["client"].lower()]
+        if status == "unfilled":
+            rows = [r for r in rows if r["unfilled"]]
+        elif status == "clashes":
+            rows = [r for r in rows if r["clashes"]]
+        elif status == "assigned":
+            rows = [r for r in rows if r["total"] and not r["unfilled"]]
+        rows.sort(key=lambda r: (-(r["unfilled"] + 2 * r["clashes"]), r["site_name"]))
+
+        page = max(int(page or 1), 1)
+        page_size = max(min(int(page_size or 15), 50), 1)
+        start = (page - 1) * page_size
+        total_slots = sum(r["total"] for r in rows)
+        return {
+            "days": days,
+            "rows": rows[start:start + page_size],
+            "total_sites": len(rows),
+            "page": page,
+            "page_size": page_size,
+            "summary": {
+                "slots": total_slots,
+                "unfilled": sum(r["unfilled"] for r in rows),
+                "clashes": sum(r["clashes"] for r in rows),
+                "sites": len(rows),
+            },
+        }

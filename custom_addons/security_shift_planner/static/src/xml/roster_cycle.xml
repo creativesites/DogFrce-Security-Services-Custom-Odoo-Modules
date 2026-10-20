@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+<t t-name="security_shift_planner.RosterCycle" owl="1">
+  <div class="rc-root o_action">
+    <header class="rc-header">
+      <div class="rc-title-row">
+        <div>
+          <h4 class="rc-title">Roster Board</h4>
+          <div class="rc-sub">Sites by day for one operational cycle (21st to 20th). Unfilled and clashes first.</div>
+        </div>
+        <div class="rc-cycles">
+          <t t-foreach="cycles" t-as="c" t-key="c.from">
+            <button class="rc-chip" t-att-class="state.cycle.from === c.from ? 'active' : ''" t-on-click="() => this.setCycle(c)"><t t-esc="c.label"/></button>
+          </t>
+        </div>
+      </div>
+
+      <div class="rc-summary" t-if="state.data">
+        <div class="rc-stat"><div class="rc-num"><t t-esc="state.data.summary.sites"/></div><div class="rc-lbl">Sites</div></div>
+        <div class="rc-stat" t-att-class="state.data.summary.unfilled ? 'rc-stat-bad' : ''"><div class="rc-num"><t t-esc="state.data.summary.unfilled"/></div><div class="rc-lbl">Unfilled shifts</div></div>
+        <div class="rc-stat" t-att-class="state.data.summary.clashes ? 'rc-stat-bad' : ''"><div class="rc-num"><t t-esc="state.data.summary.clashes"/></div><div class="rc-lbl">Clashes</div></div>
+        <div class="rc-stat"><div class="rc-num"><t t-esc="state.data.summary.slots"/></div><div class="rc-lbl">Shifts in view</div></div>
+      </div>
+
+      <div class="rc-filters">
+        <input class="rc-search" type="text" placeholder="Search site or client…" t-att-value="state.search" t-on-change="onSearch"/>
+        <div class="rc-group">
+          <t t-foreach="statuses" t-as="s" t-key="s.key">
+            <button class="rc-chip" t-att-class="isActive(state.status, s.key)" t-on-click="() => this.setStatus(s.key)"><t t-esc="s.label"/></button>
+          </t>
+        </div>
+        <div class="rc-group">
+          <t t-foreach="dayTypes" t-as="d" t-key="d.key">
+            <button class="rc-chip" t-att-class="isActive(state.dayType, d.key)" t-on-click="() => this.setDayType(d.key)"><t t-esc="d.label"/></button>
+          </t>
+        </div>
+      </div>
+    </header>
+
+    <div class="rc-body" t-if="state.loading and !state.data"><div class="rc-loading">Loading roster…</div></div>
+
+    <main class="rc-main" t-if="state.data">
+      <t t-if="state.data.rows.length === 0">
+        <div class="rc-empty-state">No sites match these filters for this cycle.</div>
+      </t>
+      <t t-if="state.data.rows.length">
+        <div class="rc-grid-wrap">
+          <table class="rc-grid">
+            <thead>
+              <tr>
+                <th class="rc-site-col">Site</th>
+                <t t-foreach="state.data.days" t-as="day" t-key="day.date">
+                  <th t-att-class="'rc-day rc-day-' + day.kind"><div><t t-esc="day.dow"/></div><div class="rc-daynum"><t t-esc="day.date.slice(8,10)"/></div></th>
+                </t>
+                <th class="rc-tot">Filled</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="state.data.rows" t-as="row" t-key="row.site_id">
+                <tr>
+                  <td class="rc-site-col">
+                    <div class="rc-site-name"><t t-esc="row.site_name"/></div>
+                    <div class="rc-client"><t t-esc="row.client"/></div>
+                  </td>
+                  <t t-foreach="state.data.days" t-as="day" t-key="day.date">
+                    <td t-att-class="cellClass(row.cells[day.date], day)"><t t-esc="cellText(row.cells[day.date])"/></td>
+                  </t>
+                  <td class="rc-tot"><t t-esc="row.total - row.unfilled"/> / <t t-esc="row.total"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+        <div class="rc-pager">
+          <span class="rc-lbl">Page <t t-esc="state.page"/> of <t t-esc="pages"/> · <t t-esc="state.data.total_sites"/> sites</span>
+          <div class="rc-group">
+            <button class="rc-chip" t-att-disabled="state.page &lt;= 1" t-on-click="() => this.goPage(-1)">Previous</button>
+            <button class="rc-chip" t-att-disabled="state.page &gt;= pages" t-on-click="() => this.goPage(1)">Next</button>
+          </div>
+        </div>
+      </t>
+    </main>
+  </div>
+</t>
+</templates>
