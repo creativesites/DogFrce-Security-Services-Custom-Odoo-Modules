@@ -153,10 +153,10 @@
         </field>
     </record>
 
-    <!-- Menu Item under Operations -->
+    <!-- Menu Item under Clients & Sites -->
     <menuitem id="menu_security_contract_adhoc"
               name="Ad-Hoc Guard Requests"
-              parent="security_operations.menu_security_operations_contracts"
+              parent="security_operations.menu_security_billing_root"
               action="action_security_contract_adhoc_request"
-              sequence="25"/>
+              sequence="15"/>
 </odoo>
