@@ -85,8 +85,24 @@ Status: DRAFT. Based on the highlights only. To be revised when the full transcr
 4. Default roster view: "this week" or "today"?
 5. Keep certifications visible at all, or hide them from the employee form?
 
-## Verification (per phase)
-- Odoo module update on a staging copy (or a DB backup restore) before production.
-- Unit tests in `security_operations/tests/` for the sync and ad-hoc logic.
-- Browser check of each screen as Wilbert (Operations Manager) and as a supervisor.
-- Backup before each production deployment.
+## Joint Architecture Plan — Automated Rostering & Filter Evolution (Oct 20)
+
+### The Core Architectural Problem
+The original system was batch-centric:
+- Every slot belonged to a `security.roster.batch`.
+- Fairness checks (22 working days cap, max 1 Sunday) queried `batch_id`.
+- The interactive Roster Board (`roster_board.js`) required picking a single batch from a dropdown before displaying any slots.
+
+The recent update created `Roster Board (new)` with a 21st–20th cycle picker and site-by-day table, but stripped all operational capabilities (it became a non-interactive count matrix rather than a working roster board).
+
+### The End-to-End Architectural Target
+1. **Decouple Constraints from `batch_id`**: Update fairness algorithms to evaluate over the operational cycle date range (`shift_date >= d0 AND shift_date <= d1`) rather than `batch_id`.
+2. **Unified Filter Engine**: Replace batch-only loading with a multi-parameter query engine supporting Cycle (21st–20th), Site, Client, Shift Template (Day/Night), Day Type (Weekday, Saturday, Sunday, Namibian Public Holiday), and Status (Gaps, Clashes, Relief, Filled).
+3. **Dual-Layer Interactive UI**:
+   - **Layer 1 (Macro Grid)**: Site-by-day high-density overview with cycle KPIs.
+   - **Layer 2 (Micro Assignment Drawer)**: Clicking any cell opens the day's post/shift slots for that site, with guard allocation drawer, eligibility checks, conflict alerts, and quick assignment.
+   - **Site Navigation**: Clicking a site name opens the full-cycle site roster view.
+4. **Emergency Cycle Provisioning**:
+   - The current cycle ends today (20 Oct). The 21 Oct – 20 Nov cycle has 0 slots.
+   - Fix operational requirement ID 54 (Windhoek Eye) and generate the upcoming cycle slots immediately.
+

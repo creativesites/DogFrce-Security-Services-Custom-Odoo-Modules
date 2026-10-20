@@ -6,7 +6,7 @@
       <div class="rc-title-row">
         <div>
           <h4 class="rc-title">Roster Board</h4>
-          <div class="rc-sub">Sites by day for one operational cycle (21st to 20th). Unfilled and clashes first.</div>
+          <div class="rc-sub">Operational Cycle (21st to 20th). Interactive site-by-day workbench with live guard allocation.</div>
         </div>
         <div class="rc-cycles">
           <t t-foreach="cycles" t-as="c" t-key="c.from">
@@ -17,13 +17,22 @@
 
       <div class="rc-summary" t-if="state.data">
         <div class="rc-stat"><div class="rc-num"><t t-esc="state.data.summary.sites"/></div><div class="rc-lbl">Sites</div></div>
-        <div class="rc-stat" t-att-class="state.data.summary.unfilled ? 'rc-stat-bad' : ''"><div class="rc-num"><t t-esc="state.data.summary.unfilled"/></div><div class="rc-lbl">Unfilled shifts</div></div>
+        <div class="rc-stat" t-att-class="state.data.summary.unfilled ? 'rc-stat-bad' : ''"><div class="rc-num"><t t-esc="state.data.summary.unfilled"/></div><div class="rc-lbl">Unfilled Shifts</div></div>
         <div class="rc-stat" t-att-class="state.data.summary.clashes ? 'rc-stat-bad' : ''"><div class="rc-num"><t t-esc="state.data.summary.clashes"/></div><div class="rc-lbl">Clashes</div></div>
-        <div class="rc-stat"><div class="rc-num"><t t-esc="state.data.summary.slots"/></div><div class="rc-lbl">Shifts in view</div></div>
+        <div class="rc-stat"><div class="rc-num"><t t-esc="state.data.summary.slots"/></div><div class="rc-lbl">Total Shifts</div></div>
       </div>
 
       <div class="rc-filters">
-        <input class="rc-search" type="text" placeholder="Search site or client…" t-att-value="state.search" t-on-change="onSearch"/>
+        <input class="rc-search" type="text" placeholder="Search site, client or guard…" t-att-value="state.search" t-on-change="onSearch"/>
+
+        <!-- Shift Template Filter -->
+        <select class="rc-select" t-on-change="setShiftTemplate">
+          <option value="all">All Shifts (Day &amp; Night)</option>
+          <t t-foreach="state.shiftTemplates" t-as="st" t-key="st.id">
+            <option t-att-value="st.id" t-att-selected="state.shiftTemplate == st.id"><t t-esc="st.name"/></option>
+          </t>
+        </select>
+
         <div class="rc-group">
           <t t-foreach="statuses" t-as="s" t-key="s.key">
             <button class="rc-chip" t-att-class="isActive(state.status, s.key)" t-on-click="() => this.setStatus(s.key)"><t t-esc="s.label"/></button>
@@ -37,18 +46,18 @@
       </div>
     </header>
 
-    <div class="rc-body" t-if="state.loading and !state.data"><div class="rc-loading">Loading roster…</div></div>
+    <div class="rc-body" t-if="state.loading and !state.data"><div class="rc-loading">Loading operational roster…</div></div>
 
     <main class="rc-main" t-if="state.data">
       <t t-if="state.data.rows.length === 0">
-        <div class="rc-empty-state">No sites match these filters for this cycle.</div>
+        <div class="rc-empty-state">No sites match the selected filters for this cycle.</div>
       </t>
       <t t-if="state.data.rows.length">
         <div class="rc-grid-wrap">
           <table class="rc-grid">
             <thead>
               <tr>
-                <th class="rc-site-col">Site</th>
+                <th class="rc-site-col">Site / Client</th>
                 <t t-foreach="state.data.days" t-as="day" t-key="day.date">
                   <th t-att-class="'rc-day rc-day-' + day.kind"><div><t t-esc="day.dow"/></div><div class="rc-daynum"><t t-esc="day.date.slice(8,10)"/></div></th>
                 </t>
@@ -59,11 +68,15 @@
               <t t-foreach="state.data.rows" t-as="row" t-key="row.site_id">
                 <tr>
                   <td class="rc-site-col">
-                    <div class="rc-site-name"><t t-esc="row.site_name"/></div>
+                    <div class="rc-site-name rc-clickable" t-on-click="() => this.openSite(row.site_id)" title="Click to view Client Site"><t t-esc="row.site_name"/> ↗</div>
                     <div class="rc-client"><t t-esc="row.client"/></div>
                   </td>
                   <t t-foreach="state.data.days" t-as="day" t-key="day.date">
-                    <td t-att-class="cellClass(row.cells[day.date], day)"><t t-esc="cellText(row.cells[day.date])"/></td>
+                    <td t-att-class="cellClass(row.cells[day.date], day)"
+                        t-on-click="() => this.openDayDrawer(row, day)"
+                        t-att-title="row.cells[day.date] and row.cells[day.date].total ? 'Click to inspect &amp; assign guards (' + row.site_name + ' on ' + day.date + ')' : ''">
+                      <t t-esc="cellText(row.cells[day.date])"/>
+                    </td>
                   </t>
                   <td class="rc-tot"><t t-esc="row.total - row.unfilled"/> / <t t-esc="row.total"/></td>
                 </tr>
@@ -80,6 +93,149 @@
         </div>
       </t>
     </main>
+
+    <!-- Slide-Over Interactive Slot Assignment Drawer -->
+    <div class="rc-drawer-overlay" t-if="state.selectedDay" t-on-click.self="closeDrawer">
+      <div class="rc-drawer">
+        <header class="rc-drawer-header">
+          <div>
+            <div class="rc-drawer-badge"><t t-esc="state.selectedDay.dow"/> · <t t-esc="state.selectedDay.shift_date"/></div>
+            <h5 class="rc-drawer-title"><t t-esc="state.selectedDay.site_name"/></h5>
+            <div class="rc-drawer-client"><t t-esc="state.selectedDay.client_name"/></div>
+          </div>
+          <button class="rc-drawer-close" t-on-click="closeDrawer">✕</button>
+        </header>
+
+        <div class="rc-drawer-body">
+          <t t-if="state.loadingDay">
+            <div class="rc-loading">Loading shift slots &amp; guard pool…</div>
+          </t>
+
+          <t t-if="!state.loadingDay and state.dayData">
+            <t t-if="!state.dayData.slots or state.dayData.slots.length === 0">
+              <div class="rc-empty-state">No active shift slots found for this site on this date.</div>
+            </t>
+
+            <t t-foreach="state.dayData.slots" t-as="slot" t-key="slot.id">
+              <div class="rc-slot-card" t-att-class="slot.employee ? 'rc-slot-assigned' : 'rc-slot-gap'">
+                <div class="rc-slot-header">
+                  <div>
+                    <span class="rc-slot-post"><t t-esc="slot.post_name"/></span>
+                    <span class="rc-slot-shift"><t t-esc="slot.shift_template_name"/> (<t t-esc="slot.start_hour"/>:00 – <t t-esc="slot.end_hour"/>:00)</span>
+                  </div>
+                  <div>
+                    <span t-if="!slot.employee" class="rc-badge-pill rc-badge-unfilled">🔴 Unfilled Gap</span>
+                    <span t-if="slot.employee and slot.is_relief" class="rc-badge-pill rc-badge-relief">Relief Guard</span>
+                    <span t-if="slot.employee and !slot.is_relief" class="rc-badge-pill rc-badge-filled">🟢 Filled</span>
+                  </div>
+                </div>
+
+                <!-- Assigned Guard Section -->
+                <div class="rc-slot-guard-row" t-if="slot.employee">
+                  <div class="rc-guard-avatar">🛡️</div>
+                  <div class="rc-guard-info">
+                    <div class="rc-guard-name">
+                      <t t-esc="slot.employee.name"/>
+                      <span class="rc-badge-id" t-if="slot.employee.code"><t t-esc="slot.employee.code"/></span>
+                      <span class="rc-badge-grade"><t t-esc="slot.employee.grade"/></span>
+                    </div>
+
+                    <!-- Namibian Operational Skills Pills -->
+                    <div class="rc-guard-skills">
+                      <span class="rc-skill-tag" t-att-class="slot.employee.can_read ? 'skill-good' : 'skill-bad'">
+                        <t t-esc="slot.employee.can_read ? '📖 Reads: Yes' : '📖 Cannot Read'"/>
+                      </span>
+                      <span class="rc-skill-tag" t-att-class="slot.employee.can_write ? 'skill-good' : 'skill-bad'">
+                        <t t-esc="slot.employee.can_write ? '✍️ Writes (' + slot.employee.writes_neatly + ')' : '✍️ Cannot Write'"/>
+                      </span>
+                      <span class="rc-skill-tag skill-lang">
+                        🗣️ Eng: <t t-esc="slot.employee.english"/>
+                      </span>
+                      <span class="rc-skill-tag skill-lang" t-if="slot.employee.afrikaans !== 'none'">
+                        🗣️ Afr: <t t-esc="slot.employee.afrikaans"/>
+                      </span>
+                      <span class="rc-skill-tag skill-smartness">
+                        ⭐ Smartness: <t t-esc="slot.employee.smartness"/>/5
+                      </span>
+                    </div>
+                  </div>
+                  <div class="rc-guard-actions">
+                    <button class="rc-btn-sm" t-on-click="() => this.toggleAssignDrawer(slot.id)">Replace</button>
+                    <button class="rc-btn-sm rc-btn-danger" t-on-click="() => this.clearSlot(slot.id)">Clear</button>
+                  </div>
+                </div>
+
+                <!-- Unassigned Prompt -->
+                <div class="rc-slot-unassigned-row" t-if="!slot.employee and state.activeSlotId !== slot.id">
+                  <div class="rc-unassigned-msg">No guard assigned to this shift.</div>
+                  <button class="rc-btn rc-btn-primary" t-on-click="() => this.toggleAssignDrawer(slot.id)">
+                    ⚡ Assign Guard from Pool
+                  </button>
+                </div>
+
+                <!-- Guard Allocation Selector (Opens when slot is active) -->
+                <div class="rc-pool-panel" t-if="state.activeSlotId === slot.id">
+                  <div class="rc-pool-header">
+                    <div class="rc-pool-tabs">
+                      <button class="rc-pool-tab" t-att-class="state.poolTab === 'regular' ? 'active' : ''" t-on-click="() => this.setPoolTab('regular')">
+                        Site Pool (<t t-esc="slot.regular_guards.length"/>)
+                      </button>
+                      <button class="rc-pool-tab" t-att-class="state.poolTab === 'relief' ? 'active' : ''" t-on-click="() => this.setPoolTab('relief')">
+                        Relief Pool (<t t-esc="slot.relief_guards.length"/>)
+                      </button>
+                    </div>
+                    <input class="rc-pool-search" type="text" placeholder="Search guard in pool…" t-att-value="state.poolSearch" t-on-input="onPoolSearch"/>
+                  </div>
+
+                  <div class="rc-pool-list">
+                    <t t-set="guards" t-value="this.getPoolGuards(slot)"/>
+                    <t t-if="!guards or guards.length === 0">
+                      <div class="rc-pool-empty">No guards available matching search in this pool.</div>
+                    </t>
+                    <t t-foreach="guards" t-as="g" t-key="g.id">
+                      <div class="rc-pool-item" t-att-class="g.is_eligible ? '' : 'item-warning'">
+                        <div class="rc-pool-item-info">
+                          <div class="rc-pool-item-title">
+                            <span class="rc-item-name"><t t-esc="g.name"/></span>
+                            <span class="rc-badge-id" t-if="g.code"><t t-esc="g.code"/></span>
+                            <span class="rc-badge-grade"><t t-esc="g.grade"/></span>
+                            <span t-if="!g.is_eligible" class="rc-badge-conflict">⚠️ Warning</span>
+                          </div>
+
+                          <!-- Guard Namibian Skills Mini-Strip -->
+                          <div class="rc-guard-skills">
+                            <span class="rc-skill-tag" t-att-class="g.can_read ? 'skill-good' : 'skill-bad'">
+                              <t t-esc="g.can_read ? 'Read: Yes' : 'Read: No'"/>
+                            </span>
+                            <span class="rc-skill-tag skill-lang">
+                              Eng: <t t-esc="g.english"/>
+                            </span>
+                            <span class="rc-skill-tag skill-smartness">
+                              Smart: <t t-esc="g.smartness"/>/5
+                            </span>
+                          </div>
+
+                          <!-- Conflicts / warnings -->
+                          <div class="rc-conflict-reasons" t-if="g.reasons and g.reasons.length">
+                            <t t-foreach="g.reasons" t-as="r" t-key="r">
+                              <div class="rc-reason">• <t t-esc="r"/></div>
+                            </t>
+                          </div>
+                        </div>
+
+                        <button class="rc-btn-assign" t-on-click="() => this.assignGuard(slot.id, g.id)">
+                          Assign
+                        </button>
+                      </div>
+                    </t>
+                  </div>
+                </div>
+              </div>
+            </t>
+          </t>
+        </div>
+      </div>
+    </div>
   </div>
 </t>
 </templates>

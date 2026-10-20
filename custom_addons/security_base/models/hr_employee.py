@@ -5,13 +5,80 @@ from odoo.exceptions import ValidationError
 class HrEmployee(models.Model):
     _inherit = "hr.employee"
 
-    employee_code = fields.Char(string="Employee Code / Guard ID", copy=False)
+    employee_code = fields.Char(string="Employee ID", copy=False, index=True)
     security_guard = fields.Boolean(default=False, tracking=True)
     security_grade_id = fields.Many2one("security.grade", tracking=True)
     security_hourly_rate = fields.Float(
         default=0.0,
         help="Optional employee-specific hourly rate. If blank, payroll uses the guard grade rate.",
     )
+
+    # Namibian Guard Operational Profile & Literacy
+    security_can_read = fields.Boolean(
+        string="Can Read",
+        default=True,
+        tracking=True,
+        help="Guard can read incident logs, site instructions, and handovers.",
+    )
+    security_can_write = fields.Boolean(
+        string="Can Write",
+        default=True,
+        tracking=True,
+        help="Guard can write reports and log entries.",
+    )
+    security_writes_neatly = fields.Selection(
+        [
+            ("neat", "Neat / Legible"),
+            ("average", "Average"),
+            ("poor", "Poor / Hard to Read"),
+        ],
+        string="Handwriting Neatness",
+        default="average",
+        tracking=True,
+        help="Quality of handwriting in occurrence books and log sheets.",
+    )
+    security_english_level = fields.Selection(
+        [
+            ("none", "None"),
+            ("basic", "Basic"),
+            ("good", "Good"),
+            ("fluent", "Fluent"),
+        ],
+        string="English Level",
+        default="basic",
+        tracking=True,
+        help="Spoken and written English communication.",
+    )
+    security_afrikaans_level = fields.Selection(
+        [
+            ("none", "None"),
+            ("basic", "Basic"),
+            ("good", "Good"),
+            ("fluent", "Fluent"),
+        ],
+        string="Afrikaans Level",
+        default="none",
+        tracking=True,
+        help="Spoken Afrikaans communication.",
+    )
+    security_smartness_rating = fields.Selection(
+        [
+            ("1", "1 - Basic / Developing"),
+            ("2", "2 - Fair"),
+            ("3", "3 - Smart & Reliable"),
+            ("4", "4 - Very Sharp"),
+            ("5", "5 - Exceptional / Executive Post"),
+        ],
+        string="Smartness / Alertness",
+        default="3",
+        tracking=True,
+        help="Supervisor assessment of alertness, presentation, and quick thinking.",
+    )
+    security_skills_notes = fields.Text(
+        string="Skills & Suitability Notes",
+        help="Supervisor assessment of post suitability (e.g. suitable for clinic, executive reception, night patrol).",
+    )
+
     security_certification_ids = fields.Many2many(
         "security.certification",
         "hr_employee_security_certification_rel",

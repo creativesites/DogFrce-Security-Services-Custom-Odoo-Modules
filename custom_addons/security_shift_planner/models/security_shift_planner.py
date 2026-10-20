@@ -479,10 +479,24 @@ class SecurityRosterSlot(models.Model):
             names = self.env["security.certification"].browse(list(missing)).mapped("name")
             warnings.append(f"Missing Certifications: {employee.name} lacks: {', '.join(names)}.")
 
+        # Helper: operational cycle window (21st to 20th)
+        cycle_start, cycle_end = None, None
+        if self.shift_date:
+            d = self.shift_date
+            if self.batch_id and self.batch_id.date_from and self.batch_id.date_to:
+                cycle_start, cycle_end = self.batch_id.date_from, self.batch_id.date_to
+            elif d.day >= 21:
+                cycle_start = d.replace(day=21)
+                cycle_end = d.replace(year=d.year + 1, month=1, day=20) if d.month == 12 else d.replace(month=d.month + 1, day=20)
+            else:
+                cycle_end = d.replace(day=20)
+                cycle_start = d.replace(year=d.year - 1, month=12, day=21) if d.month == 1 else d.replace(month=d.month - 1, day=21)
+
         # 6. Hard Fairness Constraint: Maximum 1 Sunday per Cycle
-        if self.shift_date and self.shift_date.weekday() == 6 and self.batch_id:
+        if self.shift_date and self.shift_date.weekday() == 6 and cycle_start and cycle_end:
             other_sundays = self.search([
-                ("batch_id", "=", self.batch_id.id),
+                ("shift_date", ">=", cycle_start),
+                ("shift_date", "<=", cycle_end),
                 ("employee_id", "=", employee.id),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", self.id),
@@ -490,11 +504,11 @@ class SecurityRosterSlot(models.Model):
             if other_sundays:
                 warnings.append(
                     f"Sunday Limit Breach: {employee.name} is already assigned to a Sunday on "
-                    f"{other_sundays[0].shift_date} in this roster cycle (maximum 1 Sunday allowed)."
+                    f"{other_sundays[0].shift_date} in this operational cycle (maximum 1 Sunday allowed)."
                 )
 
         # 7. Hard Fairness Constraint: Maximum Working Days per Cycle (Default: 22)
-        if self.batch_id:
+        if cycle_start and cycle_end:
             max_days = 22
             try:
                 param_days = self.env["ir.config_parameter"].sudo().get_param(
@@ -504,7 +518,8 @@ class SecurityRosterSlot(models.Model):
             except (TypeError, ValueError):
                 pass
             assigned_dates = self.search([
-                ("batch_id", "=", self.batch_id.id),
+                ("shift_date", ">=", cycle_start),
+                ("shift_date", "<=", cycle_end),
                 ("employee_id", "=", employee.id),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", self.id),
@@ -513,7 +528,7 @@ class SecurityRosterSlot(models.Model):
             if unique_days >= max_days:
                 warnings.append(
                     f"Working Days Cap: {employee.name} has already reached {unique_days}/{max_days} "
-                    "working days in this roster cycle."
+                    "working days in this operational cycle."
                 )
 
         return {"hard_block": False, "reasons": warnings}
@@ -544,7 +559,14 @@ class SecurityRosterSlot(models.Model):
             return {
                 "id": g.id,
                 "name": g.name,
+                "code": g.employee_code or "—",
                 "grade": g.security_grade_id.name if g.security_grade_id else "—",
+                "can_read": getattr(g, "security_can_read", True),
+                "can_write": getattr(g, "security_can_write", True),
+                "writes_neatly": getattr(g, "security_writes_neatly", "average"),
+                "english": getattr(g, "security_english_level", "basic"),
+                "afrikaans": getattr(g, "security_afrikaans_level", "none"),
+                "smartness": getattr(g, "security_smartness_rating", "3"),
                 "is_pool_member": is_pool_member,
                 "is_assigned_to_this_slot": bool(self.employee_id and self.employee_id.id == g.id),
                 "is_eligible": not is_blocked,
@@ -1396,3 +1418,73 @@ class SecurityRosterCycleGrid(models.Model):
                 "sites": len(rows),
             },
         }
+
+    @api.model
+    def get_filter_options(self):
+        """Return available shift templates and filter metadata for the Roster Board."""
+        templates = self.env["security.shift.template"].search_read(
+            [], ["id", "name", "start_hour", "end_hour"], order="start_hour asc"
+        )
+        return {
+            "shift_templates": templates,
+        }
+
+    @api.model
+    def get_slots_for_day(self, site_id, shift_date):
+        """Return all active slots for a specific site on a given date,
+        along with assigned guards and available guards from the pool for quick assignment.
+        """
+        d = fields.Date.to_date(shift_date)
+        site = self.env["security.client.site"].browse(int(site_id))
+        if not site.exists():
+            return {"error": "Site not found"}
+
+        slots = self.search([
+            ("site_id", "=", site.id),
+            ("shift_date", "=", d),
+            ("state", "!=", "cancelled"),
+            ("batch_id.state", "!=", "cancelled"),
+        ], order="post_id, shift_template_id")
+
+        slot_data = []
+        for s in slots:
+            pool_info = s.get_slot_pool_info()
+            emp = s.employee_id
+            emp_dict = None
+            if emp:
+                emp_dict = {
+                    "id": emp.id,
+                    "name": emp.name,
+                    "code": emp.employee_code or "—",
+                    "grade": emp.security_grade_id.name if emp.security_grade_id else "—",
+                    "can_read": getattr(emp, "security_can_read", True),
+                    "can_write": getattr(emp, "security_can_write", True),
+                    "writes_neatly": getattr(emp, "security_writes_neatly", "average"),
+                    "english": getattr(emp, "security_english_level", "basic"),
+                    "afrikaans": getattr(emp, "security_afrikaans_level", "none"),
+                    "smartness": getattr(emp, "security_smartness_rating", "3"),
+                }
+            slot_data.append({
+                "id": s.id,
+                "post_name": s.post_id.name if s.post_id else "Main Post",
+                "shift_template_id": s.shift_template_id.id if s.shift_template_id else False,
+                "shift_template_name": s.shift_template_id.name if s.shift_template_id else "Shift",
+                "start_hour": s.shift_template_id.start_hour if s.shift_template_id else 6.0,
+                "end_hour": s.shift_template_id.end_hour if s.shift_template_id else 18.0,
+                "state": s.state,
+                "critical_gap": s.critical_gap,
+                "is_relief": s.is_relief,
+                "employee": emp_dict,
+                "regular_guards": pool_info.get("regular_guards", []),
+                "relief_guards": pool_info.get("relief_guards", [])[:50],
+            })
+
+        return {
+            "site_id": site.id,
+            "site_name": site.name,
+            "client_name": site.partner_id.name if site.partner_id else "",
+            "shift_date": str(d),
+            "dow": d.strftime("%A"),
+            "slots": slot_data,
+        }
+
