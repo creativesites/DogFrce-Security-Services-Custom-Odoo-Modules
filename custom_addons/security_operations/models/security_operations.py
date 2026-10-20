@@ -1346,74 +1346,14 @@ class SecurityRosterBatch(models.Model):
 
     @api.model
     def action_cron_auto_generate_next_month_batches(self):
-        """Cron (runs monthly on the 20th): auto-generate the next 21st-to-20th roster batches for all active contracts."""
+        """Cron (16th of each month): roster the 21st-to-20th cycle that starts on the next 21st, for sites with a guard pool."""
         today = date.today()
-        # Next cycle reference: if today is the 20th, tomorrow is the 21st starting the next cycle
-        ref_date = today + timedelta(days=2)
-        date_from, date_to = self.get_operational_cycle_dates(ref_date)
-
-        contract_model = self.env["security.client.contract"] if "security.client.contract" in self.env else None
-        if not contract_model:
-            return
-
-        active_contracts = contract_model.search([
-            ("state", "=", "active"),
-            ("date_start", "<=", str(date_to)),
-            "|",
-            ("date_end", "=", False),
-            ("date_end", ">=", str(date_from)),
-        ])
-
-        notif_model = self.env["security.notification"] if "security.notification" in self.env else None
-        created_batches = 0
-        total_slots = 0
-
-        for contract in active_contracts:
-            sites = contract.contract_site_ids.mapped("site_id")
-            if not sites and contract.site_id:
-                sites = contract.site_id
-
-            for site in sites:
-                if not site.active:
-                    continue
-                # Skip if batch already exists for this site and cycle
-                existing = self.search([
-                    ("site_id", "=", site.id),
-                    ("date_from", "=", str(date_from)),
-                    ("date_to", "=", str(date_to)),
-                    ("state", "!=", "cancelled"),
-                ], limit=1)
-                if existing:
-                    continue
-
-                batch = self.create({
-                    "date_from": date_from,
-                    "date_to": date_to,
-                    "site_id": site.id,
-                    "partner_id": contract.partner_id.id,
-                })
-                try:
-                    batch.action_generate_slots()
-                    # Auto-assign eligible guards using scoring engine
-                    if hasattr(batch, "action_auto_fill_slots"):
-                        batch.action_auto_fill_slots()
-                    total_slots += batch.generated_slot_count
-                    created_batches += 1
-                except ValidationError:
-                    batch.unlink()
-                    continue
-
-        if notif_model and created_batches:
-            cycle_label = f"{date_from.strftime('%d %b')} – {date_to.strftime('%d %b %Y')}"
-            notif_model.sudo().create({
-                "title": f"Rosters Auto-Generated: Cycle {cycle_label}",
-                "body": (
-                    f"{created_batches} roster batch(es) generated for cycle {cycle_label} "
-                    f"with {total_slots} slots across active contracts. Guards have been auto-assigned."
-                ),
-                "notification_type": "roster_gap",
-                "severity": "info",
-            })
+        if today.day <= 21:
+            start = today.replace(day=21)
+        else:
+            start = (today.replace(day=1) + relativedelta(months=1)).replace(day=21)
+        _, end = self.get_operational_cycle_dates(start)
+        return self.action_run_cycle_autoroster(cycle_type="next", date_from=start, date_to=end)
 
     @api.model
     def action_cron_sync_ready_contracts_roster(self):
@@ -1421,17 +1361,21 @@ class SecurityRosterBatch(models.Model):
         return self.action_run_cycle_autoroster(cycle_type="current")
 
     @api.model
-    def action_run_cycle_autoroster(self, cycle_type="current", contract_ids=None):
+    def action_run_cycle_autoroster(self, cycle_type="current", contract_ids=None, date_from=None, date_to=None):
         """
         Runs automated rostering for specified cycle ('current' or 'next') or contracts.
         Generates roster batches, creates slots from shift requirements, and fills them via auto-assignment.
+        Only sites with a regular guard pool are rostered: a site without a pool would otherwise be
+        filled from every guard in the company.
         """
-        today = date.today()
-        if cycle_type == "next":
-            ref_date = today + timedelta(days=25)
+        if not (date_from and date_to):
+            today = date.today()
+            ref_date = today + timedelta(days=25) if cycle_type == "next" else today
+            date_from, date_to = self.get_operational_cycle_dates(ref_date)
         else:
-            ref_date = today
-        date_from, date_to = self.get_operational_cycle_dates(ref_date)
+            date_from = fields.Date.to_date(date_from)
+            date_to = fields.Date.to_date(date_to)
+        skipped_no_pool = []
 
         if "security.client.contract" not in self.env:
             return {"success": False, "message": "Contract model not found"}
@@ -1454,6 +1398,9 @@ class SecurityRosterBatch(models.Model):
 
             for site in sites:
                 if not site.active:
+                    continue
+                if not site.site_guard_pool_ids:
+                    skipped_no_pool.append(site.name)
                     continue
                 batch = self.search([
                     ("site_id", "=", site.id),
@@ -1503,7 +1450,8 @@ class SecurityRosterBatch(models.Model):
             "total_assigned": total_assigned,
             "unassigned_gaps": total_slots - total_assigned,
             "fill_rate": fill_rate,
-            "message": f"Cycle {cycle_label}: {created_batches} created, {updated_batches} updated. {total_assigned}/{total_slots} slots filled ({fill_rate}%).",
+            "skipped_no_pool": skipped_no_pool,
+            "message": f"Cycle {cycle_label}: {created_batches} created, {updated_batches} updated. {total_assigned}/{total_slots} slots filled ({fill_rate}%). {len(skipped_no_pool)} site(s) skipped: no guard pool.",
         }
 
     @api.model
