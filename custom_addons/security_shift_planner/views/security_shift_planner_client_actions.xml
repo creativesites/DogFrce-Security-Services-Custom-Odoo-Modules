@@ -51,7 +51,7 @@
 
     <menuitem
         id="menu_rostering_hub"
-        name="Roster Board"
+        name="Rostering Hub"
         parent="security_operations.menu_security_roster"
         action="action_rostering_hub"
         sequence="1"
@@ -67,7 +67,7 @@
 
     <menuitem
         id="menu_roster_board"
-        name="Roster Board (legacy)"
+        name="Roster Board"
         parent="security_operations.menu_security_roster"
         action="action_roster_board"
         sequence="2"
