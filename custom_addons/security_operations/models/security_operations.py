@@ -1376,6 +1376,9 @@ class SecurityRosterBatch(models.Model):
             date_from = fields.Date.to_date(date_from)
             date_to = fields.Date.to_date(date_to)
         skipped_no_pool = []
+        # Sites kept for manual testing are never rostered automatically (set in System Parameters).
+        manual_ids = {int(x) for x in (self.env["ir.config_parameter"].sudo().get_param(
+            "security.roster.manual_site_ids", "") or "").replace(" ", "").split(",") if x.isdigit()}
 
         if "security.client.contract" not in self.env:
             return {"success": False, "message": "Contract model not found"}
@@ -1398,6 +1401,8 @@ class SecurityRosterBatch(models.Model):
 
             for site in sites:
                 if not site.active:
+                    continue
+                if site.id in manual_ids:
                     continue
                 if not site.site_guard_pool_ids:
                     skipped_no_pool.append(site.name)
