@@ -26,16 +26,16 @@
                 <field name="partner_id" string="Client"/>
                 <field name="site_id" string="Site"/>
                 <field name="contract_id" string="Contract"/>
+                <separator/>
                 <filter name="filter_active" string="Active / Scheduled" domain="[('state', 'in', ('confirmed', 'scheduled'))]"/>
                 <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
                 <filter name="filter_scheduled" string="Roster Generated" domain="[('state', '=', 'scheduled')]"/>
                 <filter name="filter_completed" string="Completed" domain="[('state', '=', 'completed')]"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
-                    <filter name="group_site" string="Site" context="{'group_by': 'site_id'}"/>
-                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
-                    <filter name="group_start_date" string="Start Date" context="{'group_by': 'date_start:month'}"/>
-                </group>
+                <separator/>
+                <filter name="group_partner" string="Group by Client" context="{'group_by': 'partner_id'}"/>
+                <filter name="group_site" string="Group by Site" context="{'group_by': 'site_id'}"/>
+                <filter name="group_state" string="Group by Status" context="{'group_by': 'state'}"/>
+                <filter name="group_start_date" string="Group by Start Date" context="{'group_by': 'date_start'}"/>
             </search>
         </field>
     </record>
