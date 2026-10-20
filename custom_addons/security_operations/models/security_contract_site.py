@@ -175,3 +175,33 @@ class SecurityContractSite(models.Model):
             "view_mode": "form",
             "target": "current",
         }
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.context.get("syncing_contract_site"):
+            for cs in self:
+                if cs.site_id and cs.site_id.exists():
+                    sync_vals = {}
+                    if "name" in vals:
+                        sync_vals["name"] = cs.name
+                    if "location" in vals:
+                        sync_vals["location"] = cs.location
+                    if "site_type" in vals:
+                        sync_vals["site_type"] = cs.site_type
+                    if "supervisor_id" in vals:
+                        sync_vals["supervisor_id"] = cs.supervisor_id.id if cs.supervisor_id else False
+                    if "contact_name" in vals:
+                        sync_vals["contact_name"] = cs.contact_name
+                    if "contact_phone" in vals:
+                        sync_vals["contact_phone"] = cs.contact_phone
+                    if "contact_email" in vals:
+                        sync_vals["contact_email"] = cs.contact_email
+                    if "note" in vals:
+                        sync_vals["note"] = cs.note
+                    if "contract_guard_pool_ids" in vals:
+                        sync_vals["site_guard_pool_ids"] = [(6, 0, cs.contract_guard_pool_ids.ids)]
+                    if "guard_pool_mode" in vals:
+                        sync_vals["guard_pool_mode"] = cs.guard_pool_mode
+                    if sync_vals:
+                        cs.site_id.with_context(syncing_contract_site=True).write(sync_vals)
+        return res

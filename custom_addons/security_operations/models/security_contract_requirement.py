@@ -262,16 +262,17 @@ class SecurityContractShiftRequirement(models.Model):
 
     def write(self, vals):
         res = super().write(vals)
-        sync_keys = [
-            "guard_count", "monday", "tuesday", "wednesday", "thursday",
-            "friday", "saturday", "sunday", "public_holiday", "bill_rate",
-            "pay_rate", "rate_multiplier", "fairness_weight", "preferred_employee_id",
-            "allow_preferred_only"
-        ]
-        op_vals = {k: vals[k] for k in sync_keys if k in vals}
-        if op_vals:
-            for req in self:
-                if req.requirement_id and req.requirement_id.exists():
-                    req.requirement_id.write(op_vals)
+        if not self.env.context.get("syncing_contract_site"):
+            sync_keys = [
+                "guard_count", "monday", "tuesday", "wednesday", "thursday",
+                "friday", "saturday", "sunday", "public_holiday", "bill_rate",
+                "pay_rate", "rate_multiplier", "fairness_weight", "preferred_employee_id",
+                "allow_preferred_only"
+            ]
+            op_vals = {k: vals[k] for k in sync_keys if k in vals}
+            if op_vals:
+                for req in self:
+                    if req.requirement_id and req.requirement_id.exists():
+                        req.requirement_id.with_context(syncing_contract_site=True).write(op_vals)
         return res
 

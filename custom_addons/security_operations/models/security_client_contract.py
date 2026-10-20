@@ -93,6 +93,15 @@ class SecurityClientContract(models.Model):
         store=True,
         string="Est. Monthly Slots",
     )
+    adhoc_request_ids = fields.One2many(
+        "security.contract.adhoc.request",
+        "contract_id",
+        string="Ad-Hoc Guard Requests",
+    )
+    adhoc_requests_count = fields.Integer(
+        compute="_compute_adhoc_requests_count",
+        string="Ad-Hoc Requests",
+    )
 
     readiness_pct = fields.Float(
         compute="_compute_setup_health",
@@ -117,6 +126,11 @@ class SecurityClientContract(models.Model):
             contract.posts_count = sum(contract.contract_site_ids.mapped("post_count"))
             contract.requirements_count = sum(contract.contract_site_ids.mapped("requirement_count"))
             contract.estimated_monthly_slots = sum(contract.contract_site_ids.mapped("estimated_monthly_slots"))
+
+    @api.depends("adhoc_request_ids")
+    def _compute_adhoc_requests_count(self):
+        for contract in self:
+            contract.adhoc_requests_count = len(contract.adhoc_request_ids)
 
     @api.depends("partner_id", "date_start", "contract_site_ids",
                  "contract_site_ids.post_line_ids", "contract_site_ids.requirement_line_ids",
@@ -560,3 +574,35 @@ class SecurityClientContract(models.Model):
             start_date = prev_m.replace(day=21)
             end_date = ref.replace(day=20)
         return start_date, end_date
+
+    def action_request_adhoc_guard(self):
+        """Open form to create an ad-hoc guard request for this contract."""
+        self.ensure_one()
+        first_site = self.contract_site_ids.mapped("site_id")[:1]
+        if not first_site and self.site_id:
+            first_site = self.site_id
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Request Additional Guard — {self.name}",
+            "res_model": "security.contract.adhoc.request",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_contract_id": self.id,
+                "default_site_id": first_site.id if first_site else False,
+                "default_date_start": fields.Date.today(),
+                "default_date_end": fields.Date.today(),
+            },
+        }
+
+    def action_view_adhoc_requests(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Ad-Hoc Requests — {self.name}",
+            "res_model": "security.contract.adhoc.request",
+            "view_mode": "list,form",
+            "domain": [("contract_id", "=", self.id)],
+            "context": {"default_contract_id": self.id},
+            "target": "current",
+        }

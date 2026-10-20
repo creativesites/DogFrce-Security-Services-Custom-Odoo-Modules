@@ -66,6 +66,9 @@
                 <header>
                     <button name="action_open_contract_workspace" type="object"
                             string="Open Contract Workspace" class="oe_highlight btn-primary"/>
+                    <button name="action_request_adhoc_guard" type="object"
+                            string="Request Additional Guard" class="btn-secondary"
+                            invisible="state not in ('draft', 'active')"/>
                     <button name="action_activate" type="object" string="Activate Setup"
                             invisible="state != 'draft'" class="btn-secondary"/>
                     <button name="action_terminate" type="object" string="Terminate"
@@ -91,6 +94,10 @@
                                 name="%(security_operations.action_security_contract_requirement)d"
                                 context="{'search_default_contract_id': id}">
                             <field name="requirements_count" widget="statinfo" string="Shifts"/>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-plus-circle" type="object"
+                                name="action_view_adhoc_requests">
+                            <field name="adhoc_requests_count" widget="statinfo" string="Ad-Hoc"/>
                         </button>
                         <button class="oe_stat_button" icon="fa-calendar" disabled="1">
                             <field name="estimated_monthly_slots" widget="statinfo" string="Mo. Slots"/>
@@ -185,6 +192,29 @@
                             <group>
                                 <field name="site_id"/>
                             </group>
+                        </page>
+                        <page string="Ad-Hoc Guard Requests" name="adhoc_requests">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small">Ad-hoc and emergency guard deployments requested by the client.</span>
+                                <button name="action_request_adhoc_guard" type="object" string="New Ad-Hoc Request"
+                                        class="btn btn-outline-primary btn-sm" icon="fa-plus"/>
+                            </div>
+                            <field name="adhoc_request_ids" nolabel="1">
+                                <list decoration-info="state == 'draft'"
+                                      decoration-warning="state == 'confirmed'"
+                                      decoration-success="state == 'scheduled'"
+                                      decoration-muted="state in ('cancelled', 'completed')">
+                                    <field name="name"/>
+                                    <field name="site_id"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="date_start"/>
+                                    <field name="date_end"/>
+                                    <field name="guard_count" string="Guards"/>
+                                    <field name="slots_count" string="Slots"/>
+                                    <field name="slots_assigned_count" string="Filled"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
                         </page>
                         <page string="Notes &amp; Terms" name="notes">
                             <field name="note" placeholder="Contract terms and operational notes…"/>

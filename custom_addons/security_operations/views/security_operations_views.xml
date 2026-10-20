@@ -173,23 +173,28 @@
         <field name="name">security.client.site.list</field>
         <field name="model">security.client.site</field>
         <field name="arch" type="xml">
-            <list decoration-muted="not active" decoration-danger="risk_level == 'critical'" decoration-warning="risk_level == 'high'">
-                <field name="code"/>
+            <list decoration-muted="not active"
+                  decoration-success="setup_status == 'ready'"
+                  decoration-warning="setup_status == 'needs_setup'"
+                  decoration-danger="risk_level == 'critical'">
+                <field name="code" optional="show"/>
                 <field name="name"/>
-                <field name="partner_id"/>
-                <field name="site_type"/>
-                <field name="supervisor_id"/>
+                <field name="partner_id" string="Client"/>
+                <field name="site_type" optional="show"/>
+                <field name="supervisor_id" optional="show"/>
+                <field name="contract_id" optional="show" string="Contract"/>
+                <field name="guard_pool_count" string="Guard Team"/>
                 <field name="post_count" string="Posts"/>
-                <field name="site_coverage_today" widget="percentage" string="Coverage Today"/>
+                <field name="shift_requirement_count" string="Shifts" optional="show"/>
+                <field name="active_slot_count" string="Today's Slots" optional="hide"/>
                 <field name="setup_status" widget="badge"
                        decoration-success="setup_status == 'ready'"
-                       decoration-warning="setup_status in ('missing_shifts', 'no_supervisor', 'uncontracted')"
-                       decoration-danger="setup_status == 'missing_posts'"/>
+                       decoration-warning="setup_status == 'needs_setup'"/>
                 <field name="contract_status" widget="badge"
                        decoration-success="contract_status == 'valid'"
                        decoration-warning="contract_status == 'expiring_soon'"
                        decoration-danger="contract_status in ('expired', 'none')"/>
-                <field name="risk_level" widget="badge"
+                <field name="risk_level" widget="badge" optional="hide"
                        decoration-success="risk_level == 'low'"
                        decoration-warning="risk_level == 'medium'"
                        decoration-danger="risk_level in ('high', 'critical')"/>
@@ -309,34 +314,62 @@
         <field name="arch" type="xml">
             <form string="Client Site Command Center">
                 <header>
-                    <button name="action_open_contract" type="object" string="Open Contract Setup"
-                            class="btn-primary" invisible="not is_contract_managed"/>
+                    <button name="action_sync_with_contract" type="object" string="Sync with Contract"
+                            class="oe_highlight btn-primary" invisible="not contract_id"/>
+                    <button name="action_request_adhoc_guard" type="object" string="Request Additional Guard"
+                            class="btn-secondary"/>
                     <button name="action_open_site_hub" type="object" string="Open Site Hub"
                             class="btn-secondary"
                             title="Open the interactive Site Management Hub"/>
+                    <button name="action_open_contract" type="object" string="Open Contract Setup"
+                            class="btn-link" invisible="not contract_id"/>
                 </header>
                 <sheet>
                     <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
                     <field name="is_contract_managed" invisible="1"/>
 
+                    <!-- Contract Sync Banner -->
                     <div class="alert alert-info d-flex align-items-center justify-content-between mb-3"
-                         role="alert" invisible="not is_contract_managed">
+                         role="alert" invisible="not contract_id">
                         <div class="d-flex align-items-center">
-                            <i class="fa fa-briefcase fa-2x me-3 text-primary" title="Contract Managed" aria-label="Contract Managed"/>
+                            <i class="fa fa-handshake-o fa-2x me-3 text-primary" title="Contract Synchronized" aria-label="Contract Synchronized"/>
                             <div>
-                                <strong>Contract Managed Site:</strong> Commercial staffing recipes, posts, and rates are controlled by
+                                <strong>Commercial Contract Linked:</strong> Governed by
                                 <field name="contract_id" readonly="1" class="fw-bold ms-1"/>.
+                                Posts, shifts, and guard counts are synchronized two-way with this contract.
                             </div>
                         </div>
-                        <button name="action_open_contract" type="object" string="Open Contract Setup"
-                                class="btn btn-outline-primary btn-sm"/>
+                        <div class="d-flex gap-2">
+                            <button name="action_sync_with_contract" type="object" string="Sync Now"
+                                    class="btn btn-primary btn-sm"/>
+                            <button name="action_open_contract" type="object" string="View Contract"
+                                    class="btn btn-outline-primary btn-sm"/>
+                        </div>
                     </div>
 
                     <div class="oe_button_box" name="button_box">
-                        <button name="action_open_posts" type="object" class="oe_stat_button" icon="fa-map-marker">
+                        <button name="action_open_posts" type="object" class="oe_stat_button" icon="fa-shield">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value"><field name="post_count"/></span>
-                                <span class="o_stat_text">Post Positions</span>
+                                <span class="o_stat_text">Posts</span>
+                            </div>
+                        </button>
+                        <button name="action_open_requirements" type="object" class="oe_stat_button" icon="fa-clock-o">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="shift_requirement_count"/></span>
+                                <span class="o_stat_text">Shifts</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-users" disabled="1">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="guard_pool_count"/></span>
+                                <span class="o_stat_text">Guard Team</span>
+                            </div>
+                        </button>
+                        <button name="action_view_adhoc_requests" type="object" class="oe_stat_button" icon="fa-plus-circle">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="adhoc_requests_count"/></span>
+                                <span class="o_stat_text">Ad-Hoc</span>
                             </div>
                         </button>
                         <button name="action_open_slots" type="object" class="oe_stat_button" icon="fa-calendar-check-o">
@@ -348,10 +381,14 @@
                     </div>
 
                     <div class="oe_title">
-                        <label for="name" class="oe_edit_only"/>
-                        <h1><field name="name" placeholder="e.g. Kansanshi Mine — Main Facility" default_focus="1"/></h1>
+                        <span class="o_form_label">Client Deployment Site</span>
+                        <h1><field name="name" placeholder="e.g. Windhoek Eye Institution — Main Facility" default_focus="1"/></h1>
                         <div class="d-flex align-items-center gap-2 mt-1">
-                            <field name="code" placeholder="Code e.g. SITE-KNS-001" class="fw-bold fs-5 text-muted"/>
+                            <field name="code" placeholder="Code e.g. SITE-WHK-001" class="fw-bold fs-5 text-muted"/>
+                            <field name="setup_status" widget="badge"
+                                   decoration-success="setup_status == 'ready'"
+                                   decoration-warning="setup_status == 'needs_setup'"
+                                   readonly="1"/>
                             <field name="contract_status" widget="badge"
                                    decoration-success="contract_status == 'valid'"
                                    decoration-warning="contract_status == 'expiring_soon'"
@@ -366,13 +403,15 @@
                     </div>
 
                     <group>
-                        <group>
+                        <group string="Commercial &amp; Supervisory">
                             <field name="partner_id" placeholder="Select Client..." domain="[('is_company','=',True)]"/>
-                            <field name="location" placeholder="Physical address..."/>
-                            <field name="supervisor_id" placeholder="Assign Security Supervisor..."/>
-                        </group>
-                        <group>
                             <field name="site_type"/>
+                            <field name="supervisor_id" placeholder="Assign Security Supervisor..."/>
+                            <field name="contract_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Location &amp; Operational Setup">
+                            <field name="location" placeholder="Physical street address or area..."/>
+                            <field name="guard_pool_mode"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="is_demo" groups="base.group_system"/>
                             <field name="active" invisible="1"/>
@@ -380,33 +419,44 @@
                     </group>
 
                     <notebook>
-                        <page string="Posts &amp; Shifts" name="posts">
-                            <separator string="Post Positions"/>
+                        <page string="Posts &amp; Shift Requirements" name="posts">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0 text-primary"><i class="fa fa-shield me-1"/>Post Positions</h6>
+                            </div>
                             <field name="post_ids">
                                 <list editable="bottom">
                                     <field name="name"/>
                                     <field name="code"/>
                                     <field name="post_type_id"/>
-                                    <field name="required_guard_count" sum="Total Guards"/>
+                                    <field name="required_guard_count" sum="Total Positions"/>
                                     <field name="active" widget="boolean_toggle"/>
                                 </list>
                             </field>
 
-                            <separator string="Shift Requirements"/>
+                            <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+                                <h6 class="mb-0 text-primary"><i class="fa fa-clock-o me-1"/>Shift Staffing Schedules</h6>
+                            </div>
                             <field name="shift_requirement_ids">
                                 <list editable="bottom">
                                     <field name="post_id"/>
                                     <field name="shift_template_id"/>
                                     <field name="guard_count" sum="Total Shift Guards"/>
-                                    <field name="bill_rate"/>
-                                    <field name="pay_rate"/>
-                                    <field name="rate_multiplier"/>
-                                    <field name="fairness_weight"/>
+                                    <field name="monday" string="Mon"/>
+                                    <field name="tuesday" string="Tue"/>
+                                    <field name="wednesday" string="Wed"/>
+                                    <field name="thursday" string="Thu"/>
+                                    <field name="friday" string="Fri"/>
+                                    <field name="saturday" string="Sat"/>
+                                    <field name="sunday" string="Sun"/>
+                                    <field name="public_holiday" string="PH"/>
+                                    <field name="bill_rate" string="Bill (N$)"/>
+                                    <field name="pay_rate" string="Pay (N$)"/>
                                     <field name="active" widget="boolean_toggle"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Regular Site Guards" name="guard_pool">
+
+                        <page string="Regular Guard Team" name="guard_pool">
                             <div class="alert alert-warning d-flex align-items-center mb-3" role="alert" invisible="not guard_pool_capacity_warning">
                                 <i class="fa fa-exclamation-triangle fa-2x me-3"/>
                                 <div><field name="guard_pool_capacity_warning" readonly="1"/></div>
@@ -441,31 +491,62 @@
                                     <field name="name"/>
                                     <field name="employee_code" string="Guard ID"/>
                                     <field name="security_grade_id"/>
+                                    <field name="security_can_read" string="Reads" widget="boolean_toggle" readonly="1"/>
+                                    <field name="security_can_write" string="Writes" widget="boolean_toggle" readonly="1"/>
+                                    <field name="security_english_level" string="English"/>
                                     <field name="security_reliability_score"/>
                                     <field name="security_disqualified" widget="boolean_toggle" readonly="1"/>
                                 </list>
                             </field>
                         </page>
 
-                        <page string="Contacts &amp; Location" name="location">
+                        <page string="Ad-Hoc Guard Requests" name="adhoc_requests">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <h6 class="mb-0 text-primary"><i class="fa fa-plus-circle me-1"/>Ad-Hoc &amp; Temporary Guard Requests</h6>
+                                    <span class="text-muted small">Client requests for extra guards during events, surges, or temporary cover.</span>
+                                </div>
+                                <button name="action_request_adhoc_guard" type="object" string="Request Additional Guard"
+                                        class="btn btn-outline-primary btn-sm" icon="fa-plus"/>
+                            </div>
+                            <field name="adhoc_request_ids" nolabel="1">
+                                <list decoration-info="state == 'draft'"
+                                      decoration-warning="state == 'confirmed'"
+                                      decoration-success="state == 'scheduled'"
+                                      decoration-muted="state in ('cancelled', 'completed')">
+                                    <field name="name"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="date_start"/>
+                                    <field name="date_end"/>
+                                    <field name="guard_count" string="Guards"/>
+                                    <field name="bill_rate" string="Rate (N$)"/>
+                                    <field name="slots_count" string="Slots"/>
+                                    <field name="slots_assigned_count" string="Filled"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Contacts &amp; Geofencing" name="location">
                             <group>
-                                <group string="Site Contact">
+                                <group string="Primary Site Contact">
                                     <field name="contact_name" placeholder="Contact Person Name..."/>
-                                    <field name="contact_phone" placeholder="+260 97 ..."/>
+                                    <field name="contact_phone" placeholder="+264 81 ..."/>
                                     <field name="contact_email" placeholder="site.manager@client.com"/>
                                 </group>
-                                <group string="GPS &amp; Clock-In Geofence (optional)">
-                                    <field name="gps_lat" placeholder="-12.123456"/>
-                                    <field name="gps_lng" placeholder="28.123456"/>
+                                <group string="GPS Coordinates &amp; Clock-In Geofence">
+                                    <field name="gps_lat" placeholder="-22.560900"/>
+                                    <field name="gps_lng" placeholder="17.065800"/>
                                     <field name="geofence_radius"/>
                                 </group>
                             </group>
                         </page>
 
-                        <page string="Notes &amp; Exclusions" name="exclusions">
-                            <separator string="Operational Notes"/>
-                            <field name="note" placeholder="Special emergency protocols, entry procedures, or access guidelines..."/>
-                            <separator string="Guard Exclusions"/>
+                        <page string="Operational Notes &amp; Exclusions" name="exclusions">
+                            <group string="Operational Protocols">
+                                <field name="note" nolabel="1" placeholder="Special emergency protocols, entry procedures, gate handover guidelines..."/>
+                            </group>
+                            <separator string="Guard Exclusions (Guards restricted from this site)"/>
                             <field name="exclusion_ids">
                                 <list editable="bottom">
                                     <field name="employee_id"/>

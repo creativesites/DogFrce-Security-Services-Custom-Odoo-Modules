@@ -191,7 +191,17 @@ class SecurityClientSite(models.Model):
     )
 
     post_count = fields.Integer(compute="_compute_counts", string="Posts Count")
+    shift_requirement_count = fields.Integer(compute="_compute_counts", string="Shift Requirements")
     active_slot_count = fields.Integer(compute="_compute_counts", string="Today's Slots")
+    adhoc_request_ids = fields.One2many(
+        "security.contract.adhoc.request",
+        "site_id",
+        string="Ad-Hoc Guard Requests",
+    )
+    adhoc_requests_count = fields.Integer(
+        compute="_compute_adhoc_requests_count",
+        string="Ad-Hoc Requests",
+    )
 
     @api.depends("site_guard_pool_ids", "shift_requirement_ids.guard_count", "shift_requirement_ids.active", "shift_requirement_ids.monday", "shift_requirement_ids.tuesday", "shift_requirement_ids.wednesday", "shift_requirement_ids.thursday", "shift_requirement_ids.friday", "shift_requirement_ids.saturday", "shift_requirement_ids.sunday")
     def _compute_guard_pool_stats(self):
@@ -247,12 +257,18 @@ class SecurityClientSite(models.Model):
             else:
                 site.setup_status = "needs_setup"
 
-    @api.depends("post_ids", "post_ids.active")
+    @api.depends("adhoc_request_ids")
+    def _compute_adhoc_requests_count(self):
+        for site in self:
+            site.adhoc_requests_count = len(site.adhoc_request_ids)
+
+    @api.depends("post_ids", "post_ids.active", "shift_requirement_ids", "shift_requirement_ids.active")
     def _compute_counts(self):
         today = fields.Date.today()
         slot_model = self.env["security.roster.slot"]
         for site in self:
             site.post_count = len(site.post_ids.filtered("active"))
+            site.shift_requirement_count = len(site.shift_requirement_ids.filtered("active"))
             site.active_slot_count = slot_model.search_count([
                 ("site_id", "=", site.id),
                 ("shift_date", "=", today),
@@ -579,6 +595,207 @@ class SecurityClientSite(models.Model):
             "target": "current",
         }
 
+    def action_sync_with_contract(self):
+        """Manually synchronize this site and all its posts/requirements with the linked contract."""
+        self.ensure_one()
+        contract = self.contract_id
+        if not contract:
+            c_site = self.env["security.contract.site"].search([("site_id", "=", self.id)], limit=1)
+            if c_site:
+                contract = c_site.contract_id
+                self.contract_id = contract.id
+        if not contract:
+            raise UserError(f"Site '{self.name}' is not currently linked to a Client Contract.")
+
+        c_site = self.env["security.contract.site"].search([
+            ("contract_id", "=", contract.id),
+            "|", ("site_id", "=", self.id), ("name", "=", self.name),
+        ], limit=1)
+        if not c_site:
+            c_site = self.env["security.contract.site"].create({
+                "contract_id": contract.id,
+                "site_id": self.id,
+                "name": self.name,
+                "code": self.code,
+                "location": self.location,
+                "site_type": self.site_type,
+                "supervisor_id": self.supervisor_id.id if self.supervisor_id else False,
+                "contact_name": self.contact_name,
+                "contact_phone": self.contact_phone,
+                "contact_email": self.contact_email,
+                "note": self.note,
+                "contract_guard_pool_ids": [(6, 0, self.site_guard_pool_ids.ids)],
+                "guard_pool_mode": self.guard_pool_mode,
+            })
+        else:
+            c_site.with_context(syncing_contract_site=True).write({
+                "site_id": self.id,
+                "name": self.name,
+                "location": self.location,
+                "site_type": self.site_type,
+                "supervisor_id": self.supervisor_id.id if self.supervisor_id else False,
+                "contact_name": self.contact_name,
+                "contact_phone": self.contact_phone,
+                "contact_email": self.contact_email,
+                "note": self.note,
+                "contract_guard_pool_ids": [(6, 0, self.site_guard_pool_ids.ids)],
+                "guard_pool_mode": self.guard_pool_mode,
+            })
+
+        for post in self.post_ids:
+            c_post = c_site.post_line_ids.filtered(lambda cp: cp.post_id.id == post.id or cp.name == post.name)[:1]
+            if not c_post:
+                c_post = self.env["security.contract.post"].create({
+                    "contract_site_id": c_site.id,
+                    "post_id": post.id,
+                    "name": post.name,
+                    "code": post.code,
+                    "post_type_id": post.post_type_id.id if post.post_type_id else False,
+                    "required_guard_count": post.required_guard_count or 1,
+                })
+                post.contract_post_id = c_post.id
+            else:
+                c_post.with_context(syncing_contract_site=True).write({
+                    "post_id": post.id,
+                    "name": post.name,
+                    "post_type_id": post.post_type_id.id if post.post_type_id else False,
+                    "required_guard_count": post.required_guard_count or 1,
+                })
+
+            for req in post.shift_requirement_ids:
+                c_req = c_post.requirement_line_ids.filtered(lambda cr: cr.requirement_id.id == req.id or cr.shift_template_id.id == req.shift_template_id.id)[:1]
+                if not c_req:
+                    c_req = self.env["security.contract.shift.requirement"].create({
+                        "contract_site_id": c_site.id,
+                        "contract_post_id": c_post.id,
+                        "requirement_id": req.id,
+                        "shift_template_id": req.shift_template_id.id,
+                        "guard_count": req.guard_count,
+                        "monday": req.monday,
+                        "tuesday": req.tuesday,
+                        "wednesday": req.wednesday,
+                        "thursday": req.thursday,
+                        "friday": req.friday,
+                        "saturday": req.saturday,
+                        "sunday": req.sunday,
+                        "public_holiday": req.public_holiday,
+                        "bill_rate": req.bill_rate,
+                        "pay_rate": req.pay_rate,
+                    })
+                    req.contract_requirement_id = c_req.id
+                else:
+                    c_req.with_context(syncing_contract_site=True).write({
+                        "requirement_id": req.id,
+                        "guard_count": req.guard_count,
+                        "monday": req.monday,
+                        "tuesday": req.tuesday,
+                        "wednesday": req.wednesday,
+                        "thursday": req.thursday,
+                        "friday": req.friday,
+                        "saturday": req.saturday,
+                        "sunday": req.sunday,
+                        "public_holiday": req.public_holiday,
+                        "bill_rate": req.bill_rate,
+                        "pay_rate": req.pay_rate,
+                    })
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Contract Synchronized",
+                "message": f"Site '{self.name}' and all posts/requirements were synchronized with Contract '{contract.name}'.",
+                "sticky": False,
+                "type": "success",
+            },
+        }
+
+    def action_request_adhoc_guard(self):
+        """Open modal to create an ad-hoc guard request for this site."""
+        self.ensure_one()
+        contract = self.contract_id
+        if not contract:
+            c_site = self.env["security.contract.site"].search([("site_id", "=", self.id)], limit=1)
+            if c_site:
+                contract = c_site.contract_id
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Request Additional Guard — {self.name}",
+            "res_model": "security.contract.adhoc.request",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_site_id": self.id,
+                "default_contract_id": contract.id if contract else False,
+                "default_date_start": fields.Date.today(),
+                "default_date_end": fields.Date.today(),
+            },
+        }
+
+    def action_view_adhoc_requests(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Ad-Hoc Requests — {self.name}",
+            "res_model": "security.contract.adhoc.request",
+            "view_mode": "list,form",
+            "domain": [("site_id", "=", self.id)],
+            "context": {"default_site_id": self.id},
+            "target": "current",
+        }
+
+    def action_open_requirements(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": f"Shift Requirements — {self.name}",
+            "res_model": "security.shift.requirement",
+            "view_mode": "list,form",
+            "domain": [("site_id", "=", self.id)],
+            "context": {"default_site_id": self.id},
+            "target": "current",
+        }
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.context.get("syncing_contract_site"):
+            for site in self:
+                contract = site.contract_id
+                if not contract:
+                    c_site = self.env["security.contract.site"].search([("site_id", "=", site.id)], limit=1)
+                    if c_site:
+                        contract = c_site.contract_id
+                if contract:
+                    contract_sites = self.env["security.contract.site"].search([
+                        ("contract_id", "=", contract.id),
+                        "|", ("site_id", "=", site.id), ("name", "=", site.name),
+                    ])
+                    if contract_sites:
+                        sync_vals = {}
+                        if "name" in vals:
+                            sync_vals["name"] = site.name
+                        if "location" in vals:
+                            sync_vals["location"] = site.location
+                        if "site_type" in vals:
+                            sync_vals["site_type"] = site.site_type
+                        if "supervisor_id" in vals:
+                            sync_vals["supervisor_id"] = site.supervisor_id.id if site.supervisor_id else False
+                        if "contact_name" in vals:
+                            sync_vals["contact_name"] = site.contact_name
+                        if "contact_phone" in vals:
+                            sync_vals["contact_phone"] = site.contact_phone
+                        if "contact_email" in vals:
+                            sync_vals["contact_email"] = site.contact_email
+                        if "note" in vals:
+                            sync_vals["note"] = site.note
+                        if "site_guard_pool_ids" in vals:
+                            sync_vals["contract_guard_pool_ids"] = [(6, 0, site.site_guard_pool_ids.ids)]
+                        if "guard_pool_mode" in vals:
+                            sync_vals["guard_pool_mode"] = site.guard_pool_mode
+                        if sync_vals:
+                            contract_sites.with_context(syncing_contract_site=True).write(sync_vals)
+        return res
+
 
 class SecurityPost(models.Model):
     _name = "security.post"
@@ -657,7 +874,15 @@ class SecurityPost(models.Model):
     def write(self, vals):
         if vals.get("site_id") and not vals.get("partner_id"):
             vals["partner_id"] = self.env["security.client.site"].browse(vals["site_id"]).partner_id.id
-        return super().write(vals)
+        res = super().write(vals)
+        if not self.env.context.get("syncing_contract_site"):
+            sync_keys = ["name", "post_type_id", "required_guard_count"]
+            c_vals = {k: vals[k] for k in sync_keys if k in vals}
+            if c_vals:
+                for post in self:
+                    if post.contract_post_id and post.contract_post_id.exists():
+                        post.contract_post_id.with_context(syncing_contract_site=True).write(c_vals)
+        return res
 
 
 class SecurityShiftTemplate(models.Model):
@@ -830,6 +1055,22 @@ class SecurityShiftRequirement(models.Model):
                 raise ValidationError("Shift requirement rate multiplier must be greater than zero.")
             if requirement.fairness_weight < 0:
                 raise ValidationError("Fairness weight cannot be negative.")
+
+    def write(self, vals):
+        res = super().write(vals)
+        if not self.env.context.get("syncing_contract_site"):
+            sync_keys = [
+                "guard_count", "monday", "tuesday", "wednesday", "thursday",
+                "friday", "saturday", "sunday", "public_holiday", "bill_rate",
+                "pay_rate", "rate_multiplier", "fairness_weight", "preferred_employee_id",
+                "allow_preferred_only"
+            ]
+            c_vals = {k: vals[k] for k in sync_keys if k in vals}
+            if c_vals:
+                for req in self:
+                    if req.contract_requirement_id and req.contract_requirement_id.exists():
+                        req.contract_requirement_id.with_context(syncing_contract_site=True).write(c_vals)
+        return res
 
 
 class SecuritySiteRequirement(models.Model):
@@ -1630,6 +1871,13 @@ class SecurityRosterSlot(models.Model):
     partner_id = fields.Many2one(related="post_id.partner_id", store=True)
     site_id = fields.Many2one(related="post_id.site_id", store=True)
     post_type_id = fields.Many2one(related="post_id.post_type_id", store=True)
+    adhoc_request_id = fields.Many2one(
+        "security.contract.adhoc.request",
+        string="Ad-Hoc Request",
+        ondelete="set null",
+        index=True,
+        help="Ad-hoc request that originated this shift slot.",
+    )
     shift_template_id = fields.Many2one(
         "security.shift.template",
         required=True,

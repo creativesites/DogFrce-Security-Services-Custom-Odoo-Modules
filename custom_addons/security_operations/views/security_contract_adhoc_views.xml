@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Ad-Hoc Request Actions -->
+    <record id="action_security_contract_adhoc_request" model="ir.actions.act_window">
+        <field name="name">Ad-Hoc Guard Requests</field>
+        <field name="res_model">security.contract.adhoc.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create an Ad-Hoc / Additional Guard Request!
+            </p>
+            <p>
+                When a client requests extra guards for an event, weekend surge, or temporary coverage, log the request here to generate roster slots and track client billing.
+            </p>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_security_contract_adhoc_search" model="ir.ui.view">
+        <field name="name">security.contract.adhoc.request.search</field>
+        <field name="model">security.contract.adhoc.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Ad-Hoc Requests">
+                <field name="name" string="Reference"/>
+                <field name="partner_id" string="Client"/>
+                <field name="site_id" string="Site"/>
+                <field name="contract_id" string="Contract"/>
+                <filter name="filter_active" string="Active / Scheduled" domain="[('state', 'in', ('confirmed', 'scheduled'))]"/>
+                <filter name="filter_draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="filter_scheduled" string="Roster Generated" domain="[('state', '=', 'scheduled')]"/>
+                <filter name="filter_completed" string="Completed" domain="[('state', '=', 'completed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_partner" string="Client" context="{'group_by': 'partner_id'}"/>
+                    <filter name="group_site" string="Site" context="{'group_by': 'site_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_start_date" string="Start Date" context="{'group_by': 'date_start:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_security_contract_adhoc_list" model="ir.ui.view">
+        <field name="name">security.contract.adhoc.request.list</field>
+        <field name="model">security.contract.adhoc.request</field>
+        <field name="arch" type="xml">
+            <list string="Ad-Hoc Guard Requests"
+                  decoration-muted="state == 'cancelled'"
+                  decoration-info="state == 'draft'"
+                  decoration-warning="state == 'confirmed'"
+                  decoration-success="state in ('scheduled', 'completed')">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="site_id"/>
+                <field name="contract_id"/>
+                <field name="shift_template_id"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="guard_count" sum="Total Guards"/>
+                <field name="bill_rate" optional="show"/>
+                <field name="slots_count" string="Slots"/>
+                <field name="slots_assigned_count" string="Filled"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'confirmed'"
+                       decoration-success="state == 'scheduled'"
+                       decoration-muted="state in ('cancelled', 'completed')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_security_contract_adhoc_form" model="ir.ui.view">
+        <field name="name">security.contract.adhoc.request.form</field>
+        <field name="model">security.contract.adhoc.request</field>
+        <field name="arch" type="xml">
+            <form string="Ad-Hoc / Additional Guard Request">
+                <header>
+                    <button name="action_confirm" type="object" string="Confirm Request"
+                            class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_generate_slots" type="object" string="Generate Roster Slots"
+                            class="btn-primary" invisible="state != 'confirmed'"/>
+                    <button name="action_view_slots" type="object" string="View Roster Slots"
+                            class="btn-secondary" invisible="slots_count == 0"/>
+                    <button name="action_reset_draft" type="object" string="Reset to Draft"
+                            invisible="state not in ('cancelled', 'confirmed')"/>
+                    <button name="action_cancel" type="object" string="Cancel Request"
+                            invisible="state in ('completed', 'cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,confirmed,scheduled,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_slots" type="object" class="oe_stat_button" icon="fa-calendar">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="slots_count"/></span>
+                                <span class="o_stat_text">Roster Slots</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <span class="o_form_label">Ad-Hoc Guard Request</span>
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <group>
+                        <group string="Commercial &amp; Location">
+                            <field name="contract_id" options="{'no_create': True}"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="site_id" domain="[('contract_id', '=', contract_id)]" options="{'no_create': True}"/>
+                            <field name="post_id" domain="[('site_id', '=', site_id)]"/>
+                        </group>
+                        <group string="Schedule &amp; Guard Requirement">
+                            <field name="shift_template_id" options="{'no_create': True}"/>
+                            <label for="date_start" string="Request Duration"/>
+                            <div class="d-flex align-items-center gap-2">
+                                <field name="date_start" class="oe_inline"/>
+                                <span class="text-muted">to</span>
+                                <field name="date_end" class="oe_inline"/>
+                            </div>
+                            <field name="guard_count"/>
+                            <field name="bill_rate"/>
+                        </group>
+                    </group>
+
+                    <group string="Justification &amp; Client Reference">
+                        <field name="reason" nolabel="1" placeholder="Specify why the client requested extra guards (e.g. weekend event, stocktake audit, temporary gate coverage)..."/>
+                    </group>
+
+                    <notebook>
+                        <page string="Generated Roster Slots" name="slots" invisible="slots_count == 0">
+                            <field name="slot_ids" readonly="1">
+                                <list decoration-success="state == 'assigned'"
+                                      decoration-warning="state == 'draft'">
+                                    <field name="shift_date"/>
+                                    <field name="shift_template_id"/>
+                                    <field name="employee_id"/>
+                                    <field name="is_relief" widget="boolean_toggle"/>
+                                    <field name="state" widget="badge"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Operational Notes" name="notes">
+                            <field name="note" placeholder="Internal instructions for supervisors / controllers..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Menu Item under Operations -->
+    <menuitem id="menu_security_contract_adhoc"
+              name="Ad-Hoc Guard Requests"
+              parent="security_operations.menu_security_operations_contracts"
+              action="action_security_contract_adhoc_request"
+              sequence="25"/>
+</odoo>
