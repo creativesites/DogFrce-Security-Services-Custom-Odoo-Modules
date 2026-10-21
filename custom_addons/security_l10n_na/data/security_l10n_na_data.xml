@@ -247,4 +247,80 @@
         <field name="country_code">NA</field>
         <field name="holiday_date">2026-12-26</field>
     </record>
+
+    <!-- ================================================================ -->
+    <!-- Namibian Public Holidays — 2027                                  -->
+    <!-- Independence Day (21 Mar) falls on Sunday → observed Mon 22 Mar   -->
+    <!-- Family Day (26 Dec) falls on Sunday → observed Mon 27 Dec         -->
+    <!-- ================================================================ -->
+    <record id="security_public_holiday_na_2027_new_year" model="security.public.holiday">
+        <field name="name">New Year's Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-01-01</field>
+    </record>
+    <record id="security_public_holiday_na_2027_independence" model="security.public.holiday">
+        <field name="name">Independence Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-03-21</field>
+    </record>
+    <record id="security_public_holiday_na_2027_independence_observed" model="security.public.holiday">
+        <field name="name">Independence Day (observed)</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-03-22</field>
+    </record>
+    <record id="security_public_holiday_na_2027_good_friday" model="security.public.holiday">
+        <field name="name">Good Friday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-03-26</field>
+    </record>
+    <record id="security_public_holiday_na_2027_easter_monday" model="security.public.holiday">
+        <field name="name">Easter Monday</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-03-29</field>
+    </record>
+    <record id="security_public_holiday_na_2027_workers_day" model="security.public.holiday">
+        <field name="name">Workers' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-05-01</field>
+    </record>
+    <record id="security_public_holiday_na_2027_cassinga_day" model="security.public.holiday">
+        <field name="name">Cassinga Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-05-04</field>
+    </record>
+    <record id="security_public_holiday_na_2027_ascension" model="security.public.holiday">
+        <field name="name">Ascension Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-05-06</field>
+    </record>
+    <record id="security_public_holiday_na_2027_africa_day" model="security.public.holiday">
+        <field name="name">Africa Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-05-25</field>
+    </record>
+    <record id="security_public_holiday_na_2027_heroes_day" model="security.public.holiday">
+        <field name="name">Heroes' Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-08-26</field>
+    </record>
+    <record id="security_public_holiday_na_2027_human_rights_day" model="security.public.holiday">
+        <field name="name">Human Rights Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-12-10</field>
+    </record>
+    <record id="security_public_holiday_na_2027_christmas" model="security.public.holiday">
+        <field name="name">Christmas Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-12-25</field>
+    </record>
+    <record id="security_public_holiday_na_2027_family_day" model="security.public.holiday">
+        <field name="name">Family Day</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-12-26</field>
+    </record>
+    <record id="security_public_holiday_na_2027_family_day_observed" model="security.public.holiday">
+        <field name="name">Family Day (observed)</field>
+        <field name="country_code">NA</field>
+        <field name="holiday_date">2027-12-27</field>
+    </record>
 </odoo>
