@@ -22,7 +22,7 @@ class SecurityContractPost(models.Model):
         string="Contract Site",
     )
     sequence = fields.Integer(default=10)
-    name = fields.Char(required=True, string="Post Name", placeholder="e.g. Main Gate")
+    name = fields.Char(required=True, string="Post Name")
     code = fields.Char(string="Post Code")
     post_type_id = fields.Many2one(
         "security.post.type",

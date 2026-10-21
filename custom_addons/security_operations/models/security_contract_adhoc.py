@@ -65,7 +65,6 @@ class SecurityContractAdhocRequest(models.Model):
     )
     reason = fields.Text(
         string="Request Reason / Client Ref",
-        placeholder="e.g. Client requested 1 extra guard for warehouse stocktake audit...",
         required=True,
     )
     note = fields.Text("Internal Operational Notes")
@@ -168,8 +167,22 @@ class SecurityContractAdhocRequest(models.Model):
         current_date = self.date_start
         created_slots = slot_model
         while current_date <= self.date_end:
+            # Look up active batch for this site/date
+            batch = self.env["security.roster.batch"].search([
+                ("site_id", "=", self.site_id.id),
+                ("date_from", "<=", current_date),
+                ("date_to", ">=", current_date),
+                ("state", "!=", "cancelled"),
+            ], limit=1)
+            if not batch:
+                batch = self.env["security.roster.batch"].search([
+                    ("date_from", "<=", current_date),
+                    ("date_to", ">=", current_date),
+                    ("state", "!=", "cancelled"),
+                ], limit=1)
+
             for _ in range(self.guard_count):
-                slot = slot_model.create({
+                vals = {
                     "site_id": self.site_id.id,
                     "partner_id": self.partner_id.id,
                     "post_id": post.id,
@@ -180,7 +193,10 @@ class SecurityContractAdhocRequest(models.Model):
                     "fairness_warning": "Ad-Hoc Additional Guard",
                     "adhoc_request_id": self.id,
                     "state": "draft",
-                })
+                }
+                if batch:
+                    vals["batch_id"] = batch.id
+                slot = slot_model.create(vals)
                 created_slots |= slot
             current_date += timedelta(days=1)
 

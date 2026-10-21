@@ -1335,7 +1335,8 @@ class SecurityRosterCycleGrid(models.Model):
         d0, d1 = fields.Date.to_date(date_from), fields.Date.to_date(date_to)
         domain = [
             ("shift_date", ">=", d0), ("shift_date", "<=", d1),
-            ("state", "!=", "cancelled"), ("batch_id.state", "!=", "cancelled"),
+            ("state", "!=", "cancelled"),
+            "|", ("batch_id", "=", False), ("batch_id.state", "!=", "cancelled"),
             ("site_id", "!=", False),
         ]
         if site_ids:
@@ -1421,12 +1422,16 @@ class SecurityRosterCycleGrid(models.Model):
 
     @api.model
     def get_filter_options(self):
-        """Return available shift templates and filter metadata for the Roster Board."""
+        """Return available shift templates, sites, and filter metadata for the Roster Board."""
         templates = self.env["security.shift.template"].search_read(
             [], ["id", "name", "start_hour", "end_hour"], order="start_hour asc"
         )
+        sites = self.env["security.client.site"].search_read(
+            [("active", "=", True)], ["id", "name"], order="name asc"
+        )
         return {
             "shift_templates": templates,
+            "sites": sites,
         }
 
     @api.model
@@ -1443,7 +1448,7 @@ class SecurityRosterCycleGrid(models.Model):
             ("site_id", "=", site.id),
             ("shift_date", "=", d),
             ("state", "!=", "cancelled"),
-            ("batch_id.state", "!=", "cancelled"),
+            "|", ("batch_id", "=", False), ("batch_id.state", "!=", "cancelled"),
         ], order="post_id, shift_template_id")
 
         slot_data = []

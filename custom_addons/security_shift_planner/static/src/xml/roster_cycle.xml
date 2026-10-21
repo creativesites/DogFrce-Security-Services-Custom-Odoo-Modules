@@ -25,6 +25,14 @@
       <div class="rc-filters">
         <input class="rc-search" type="text" placeholder="Search site, client or guard…" t-att-value="state.search" t-on-change="onSearch"/>
 
+        <!-- Site Selector Filter -->
+        <select class="rc-select" t-on-change="setSite">
+          <option value="all">All Sites</option>
+          <t t-foreach="state.sites" t-as="site" t-key="site.id">
+            <option t-att-value="site.id" t-att-selected="state.siteId == site.id"><t t-esc="site.name"/></option>
+          </t>
+        </select>
+
         <!-- Shift Template Filter -->
         <select class="rc-select" t-on-change="setShiftTemplate">
           <option value="all">All Shifts (Day &amp; Night)</option>

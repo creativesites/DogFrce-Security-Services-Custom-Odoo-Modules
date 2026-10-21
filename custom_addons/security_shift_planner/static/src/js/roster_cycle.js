@@ -56,6 +56,8 @@ export class RosterCycle extends Component {
 
         this.state = useState({
             cycle: current,
+            siteId: "all",
+            sites: [],
             dayType: "all",
             status: "all",
             shiftTemplate: "all",
@@ -103,6 +105,7 @@ export class RosterCycle extends Component {
         try {
             const res = await this.orm.call("security.roster.slot", "get_filter_options", []);
             this.state.shiftTemplates = res.shift_templates || [];
+            this.state.sites = res.sites || [];
         } catch (e) {
             console.warn("Could not load filter options", e);
         }
@@ -114,6 +117,7 @@ export class RosterCycle extends Component {
             const data = await this.orm.call("security.roster.slot", "get_roster_cycle_grid", [], {
                 date_from: this.state.cycle.from,
                 date_to: this.state.cycle.to,
+                site_ids: this.state.siteId !== "all" ? [parseInt(this.state.siteId)] : null,
                 day_type: this.state.dayType,
                 status: this.state.status,
                 shift_template_id: this.state.shiftTemplate !== "all" ? parseInt(this.state.shiftTemplate) : null,
@@ -130,6 +134,7 @@ export class RosterCycle extends Component {
     }
 
     async setCycle(c) { this.state.cycle = c; this.state.page = 1; await this.load(); }
+    async setSite(ev) { this.state.siteId = ev.target.value; this.state.page = 1; await this.load(); }
     async setDayType(k) { this.state.dayType = k; this.state.page = 1; await this.load(); }
     async setStatus(k) { this.state.status = k; this.state.page = 1; await this.load(); }
     async setShiftTemplate(ev) { this.state.shiftTemplate = ev.target.value; this.state.page = 1; await this.load(); }
