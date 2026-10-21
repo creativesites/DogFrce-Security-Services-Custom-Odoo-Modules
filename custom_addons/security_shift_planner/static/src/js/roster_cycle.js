@@ -224,7 +224,7 @@ export class RosterCycle extends Component {
 
     async clearSlot(slotId) {
         try {
-            await this.orm.call("security.roster.slot", "write", [[slotId], { employee_id: false, state: "unassigned" }]);
+            await this.orm.call("security.roster.slot", "write", [[slotId], { employee_id: false, state: "draft" }]);
             this.notification.add("Shift cleared", { type: "info" });
             await this.loadDaySlots();
             this.load(); // refresh background grid metrics
