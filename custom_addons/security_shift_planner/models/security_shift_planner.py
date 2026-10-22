@@ -149,7 +149,11 @@ class SecurityRosterBatch(models.Model):
             if hasattr(self, "_get_effective_site_pool"):
                 self._get_effective_site_pool(st)
 
-        leave_model = self.env.get("security.leave.request")
+        existing_slots_map = {
+            (s.post_id.id, s.shift_template_id.id, fields.Date.to_string(s.shift_date)): s
+            for s in self.slot_ids
+        }
+
         new_slots = []
         for s in source.slot_ids.filtered(lambda x: x.state != "cancelled"):
             s_date = fields.Date.from_string(s.shift_date)
@@ -185,12 +189,12 @@ class SecurityRosterBatch(models.Model):
                     else:
                         # 3. Check approved leave on new_date
                         on_leave = False
-                        if leave_model:
-                            on_leave = bool(leave_model.search_count([
+                        if "security.leave.request" in self.env:
+                            on_leave = bool(self.env["security.leave.request"].search_count([
                                 ("employee_id", "=", emp.id),
                                 ("state", "=", "approved"),
-                                ("date_from", "<=", new_date_str),
-                                ("date_to", ">=", new_date_str),
+                                ("date_from", "<=", new_date),
+                                ("date_to", ">=", new_date),
                             ]))
                         if on_leave:
                             wrong_fit = f"Carried-forward guard {emp.name} is on approved leave on {new_date_str}."
@@ -201,7 +205,6 @@ class SecurityRosterBatch(models.Model):
                                 is_relief_val = True
 
                 vals = {
-                    "batch_id": self.id,
                     "post_id": s.post_id.id,
                     "shift_template_id": s.shift_template_id.id,
                     "shift_date": new_date_str,
@@ -211,11 +214,16 @@ class SecurityRosterBatch(models.Model):
                     "is_relief": is_relief_val,
                     "wrong_fit_reasons": wrong_fit,
                 }
-                new_slots.append(vals)
+                key = (s.post_id.id, s.shift_template_id.id, new_date_str)
+                if key in existing_slots_map:
+                    existing_slots_map[key].write(vals)
+                else:
+                    vals["batch_id"] = self.id
+                    new_slots.append(vals)
 
         if new_slots:
             self.env["security.roster.slot"].create(new_slots)
-        else:
+        elif not existing_slots_map:
             self.action_generate_slots()
         self.state = "generated"
 
@@ -865,12 +873,28 @@ class SecurityRosterSlot(models.Model):
             )
         )
 
+        def _set_unassigned_reasons(slot):
+            slot.critical_gap = True
+            if slot.shift_requirement_id and slot.shift_requirement_id.allow_preferred_only:
+                slot.wrong_fit_reasons = "Preferred-only guard is unavailable or ineligible."
+            else:
+                p_mode = "site_only"
+                if slot.site_id:
+                    if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                        _pool, p_mode = slot.batch_id._get_effective_site_pool(slot.site_id)
+                    else:
+                        p_mode = slot.site_id.guard_pool_mode or "site_only"
+                if p_mode == "site_only":
+                    slot.wrong_fit_reasons = "No eligible regular site guard available in site pool. Relief fallback is disabled for this site."
+                else:
+                    slot.wrong_fit_reasons = "No eligible regular or relief guard candidate meets constraints."
+
         for slot in unassigned:
             slot.action_suggest_guards()
             eligible = slot._get_eligible_guards(slot)
             if not eligible:
                 no_candidates += 1
-                slot.critical_gap = True
+                _set_unassigned_reasons(slot)
                 continue
 
             date_key = str(slot.shift_date)
@@ -896,7 +920,7 @@ class SecurityRosterSlot(models.Model):
             eligible = fair_eligible
             if not eligible:
                 no_candidates += 1
-                slot.critical_gap = True
+                _set_unassigned_reasons(slot)
                 continue
 
             scored = []
@@ -946,20 +970,7 @@ class SecurityRosterSlot(models.Model):
 
             if not assigned_flag:
                 no_candidates += 1
-                slot.critical_gap = True
-                p_mode = "site_only"
-                if slot.shift_requirement_id and slot.shift_requirement_id.allow_preferred_only:
-                    slot.wrong_fit_reasons = "Preferred-only guard is unavailable or ineligible."
-                else:
-                    if slot.site_id:
-                        if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
-                            _pool, p_mode = slot.batch_id._get_effective_site_pool(slot.site_id)
-                        else:
-                            p_mode = slot.site_id.guard_pool_mode or "site_only"
-                    if p_mode == "site_only":
-                        slot.wrong_fit_reasons = "No eligible regular site guard available in site pool. Relief fallback is disabled for this site."
-                    else:
-                        slot.wrong_fit_reasons = "No eligible regular or relief guard candidate meets constraints."
+                _set_unassigned_reasons(slot)
 
         parts = [f"{filled} slot(s) auto-assigned"]
         if no_candidates:
