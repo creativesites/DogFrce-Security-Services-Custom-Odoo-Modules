@@ -369,7 +369,11 @@ class TestSiteGuardPool(TransactionCase):
             "partner_id": self.client.id,
             "site_guard_pool_ids": [(6, 0, [self.all_guards[0].id, self.all_guards[1].id])],
         })
-        post_c = self.env["security.post"].create({"name": "Post C", "site_id": site_c.id})
+        post_c = self.env["security.post"].create({
+            "name": "Post C",
+            "site_id": site_c.id,
+            "post_type_id": self.post_type.id,
+        })
         for i in range(4):
             self.env["security.shift.requirement"].create({
                 "site_id": site_c.id,
@@ -391,12 +395,12 @@ class TestSiteGuardPool(TransactionCase):
         wizard.action_parse_and_preview()
 
         self.assertEqual(len(wizard.line_ids), 2)
-        matched_line = wizard.line_ids.filtered(lambda l: l.raw_employee_name == self.all_guards[0].name)
-        unmatched_line = wizard.line_ids.filtered(lambda l: "NonExistent" in l.raw_employee_name)
+        matched_line = wizard.line_ids.filtered(lambda l: l.raw_guard_name == self.all_guards[0].name)
+        unmatched_line = wizard.line_ids.filtered(lambda l: "NonExistent" in l.raw_guard_name)
 
         self.assertEqual(matched_line.match_status, "exact")
         self.assertEqual(unmatched_line.match_status, "unmatched")
-        self.assertFalse(unmatched_line.is_confirmed)
+        self.assertFalse(unmatched_line.employee_id)
 
     def test_17_import_wizard_confirmation_commits_guards(self):
         """Scenario 17: Import wizard confirmation commits confirmed guards to site pool."""
