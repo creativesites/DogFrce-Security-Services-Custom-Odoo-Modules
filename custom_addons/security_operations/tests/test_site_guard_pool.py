@@ -30,6 +30,11 @@ class TestSiteGuardPool(TransactionCase):
             "hourly_rate": 35.0,
             "sequence": 1,
         })
+        cls.post_type = cls.env["security.post.type"].create({
+            "name": "Standard Guard Post",
+            "code": "SGP",
+            "min_grade_id": cls.grade_a.id,
+        })
 
         # Create 20 security guards
         cls.all_guards = []
@@ -53,6 +58,7 @@ class TestSiteGuardPool(TransactionCase):
         cls.post_a = cls.env["security.post"].create({
             "name": "Main Gate Sentry",
             "site_id": cls.site_a.id,
+            "post_type_id": cls.post_type.id,
         })
 
         # Site B with 3 regular guards in site_then_relief mode
@@ -65,6 +71,7 @@ class TestSiteGuardPool(TransactionCase):
         cls.post_b = cls.env["security.post"].create({
             "name": "Warehouse Depot Post",
             "site_id": cls.site_b.id,
+            "post_type_id": cls.post_type.id,
         })
 
     def _create_batch_and_slot(self, site, post, shift_date=None, shift_template=None):
