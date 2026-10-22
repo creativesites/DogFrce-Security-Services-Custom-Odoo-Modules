@@ -140,7 +140,7 @@ class TestSiteGuardPool(TransactionCase):
                 "date_from": test_date,
                 "date_to": test_date,
                 "state": "approved",
-                "leave_type": "annual",
+                "leave_type_id": self.leave_type.id,
             })
 
         batch, slot = self._create_batch_and_slot(self.site_a, self.post_a, shift_date=test_date)
@@ -161,7 +161,7 @@ class TestSiteGuardPool(TransactionCase):
                 "date_from": test_date,
                 "date_to": test_date,
                 "state": "approved",
-                "leave_type": "annual",
+                "leave_type_id": self.leave_type.id,
             })
 
         batch, slot = self._create_batch_and_slot(self.site_b, self.post_b, shift_date=test_date)
@@ -341,8 +341,7 @@ class TestSiteGuardPool(TransactionCase):
             "leave_type_id": self.leave_type.id,
         })
 
-        batch2.copy_source_batch_id = batch1.id
-        batch2.action_copy_from_previous_batch()
+        batch2.action_copy_from_previous_batch(batch1.id)
 
         # Slot 2 should remain unassigned because guard is on leave
         self.assertFalse(slot2.employee_id)
@@ -377,7 +376,14 @@ class TestSiteGuardPool(TransactionCase):
                 "site_id": site_c.id,
                 "post_id": post_c.id,
                 "shift_template_id": self.shift_day.id,
-                "day_of_week": str(i),
+                "guard_count": 1,
+                "monday": True,
+                "tuesday": True,
+                "wednesday": True,
+                "thursday": True,
+                "friday": True,
+                "saturday": True,
+                "sunday": True,
             })
 
         site_c.invalidate_recordset(["guard_pool_capacity_warning", "peak_staffing_required"])
@@ -393,8 +399,8 @@ class TestSiteGuardPool(TransactionCase):
         wizard.action_parse_and_preview()
 
         self.assertEqual(len(wizard.line_ids), 2)
-        matched_line = wizard.line_ids.filtered(lambda l: l.raw_guard_name == self.all_guards[0].name)
-        unmatched_line = wizard.line_ids.filtered(lambda l: "NonExistent" in l.raw_guard_name)
+        matched_line = wizard.line_ids.filtered(lambda l: l.employee_id == self.all_guards[0])
+        unmatched_line = wizard.line_ids.filtered(lambda l: not l.employee_id)
 
         self.assertEqual(matched_line.match_status, "exact")
         self.assertEqual(unmatched_line.match_status, "unmatched")

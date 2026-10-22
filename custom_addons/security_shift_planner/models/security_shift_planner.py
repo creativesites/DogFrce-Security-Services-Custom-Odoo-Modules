@@ -946,15 +946,18 @@ class SecurityRosterSlot(models.Model):
                 no_candidates += 1
                 slot.critical_gap = True
                 p_mode = "site_only"
-                if slot.site_id:
-                    if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
-                        _pool, p_mode = slot.batch_id._get_effective_site_pool(slot.site_id)
-                    else:
-                        p_mode = slot.site_id.guard_pool_mode or "site_only"
-                if p_mode == "site_only":
-                    slot.wrong_fit_reasons = "No eligible regular site guard available in site pool. Relief fallback is disabled for this site."
+                if slot.shift_requirement_id and slot.shift_requirement_id.allow_preferred_only:
+                    slot.wrong_fit_reasons = "Preferred-only guard is unavailable or ineligible."
                 else:
-                    slot.wrong_fit_reasons = "No eligible regular or relief guard candidate meets constraints."
+                    if slot.site_id:
+                        if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                            _pool, p_mode = slot.batch_id._get_effective_site_pool(slot.site_id)
+                        else:
+                            p_mode = slot.site_id.guard_pool_mode or "site_only"
+                    if p_mode == "site_only":
+                        slot.wrong_fit_reasons = "No eligible regular site guard available in site pool. Relief fallback is disabled for this site."
+                    else:
+                        slot.wrong_fit_reasons = "No eligible regular or relief guard candidate meets constraints."
 
         parts = [f"{filled} slot(s) auto-assigned"]
         if no_candidates:
