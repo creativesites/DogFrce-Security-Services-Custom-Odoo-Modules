@@ -7,18 +7,33 @@ import { user } from "@web/core/user";
 import { RosterGrid } from "./roster_grid";
 import { RosteringMegaMenu } from "./rostering_mega_menu";
 
+function ymd(d) {
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${d.getFullYear()}-${m}-${day}`;
+}
+
+function cycleFor(ref) {
+    const y = ref.getFullYear(), m = ref.getMonth();
+    const start = ref.getDate() >= 21 ? new Date(y, m, 21) : new Date(y, m - 1, 21);
+    const end = new Date(start.getFullYear(), start.getMonth() + 1, 20);
+    return {
+        from: ymd(start),
+        to: ymd(end),
+        label: `${start.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${end.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+    };
+}
+
 /**
  * RosterBoard — Tier-3 OWL client action.
  *
- * An interactive weekly/monthly timeline showing all roster slots for a batch.
+ * An interactive weekly/monthly timeline showing all roster slots for an operational cycle or site.
  * - Rows:  Sites → Posts
- * - Cols:  Dates within the batch's date range
- * - Cells: One card per slot (assigned guard name, or "Unassigned")
+ * - Cols:  Dates within the active cycle (21st to 20th)
+ * - Cells: One card per slot (assigned guard name, readiness score, relief badge, or "Unassigned")
  *
- * Clicking an unassigned slot opens GuardPoolSidebar which shows ranked
- * suggestions from the Python scoring engine (SecurityRosterSlot.action_suggest_guards).
- * Clicking "Assign" calls action_assign_to_slot via ORM, which returns either
- * a display_notification dict (on error) or null (on success).
+ * Decoupled from mandatory batch selection. Supports filtering by Operational Cycle, Site, Client,
+ * Shift Template, Guard search, Gaps-only, and Relief-only.
  */
 class RosterBoard extends Component {
     static components = { RosterGrid, RosteringMegaMenu };
@@ -30,6 +45,14 @@ class RosterBoard extends Component {
         this.actionService = useService("action");
         this.notification = useService("notification");
 
+        // Operational cycles: 3 back and 3 forward from today
+        const today = new Date();
+        this.cycles = [];
+        for (let i = -3; i <= 3; i++) {
+            this.cycles.push(cycleFor(new Date(today.getFullYear(), today.getMonth() + i, 21)));
+        }
+        const currentCycle = cycleFor(today);
+
         this.state = useState({
             loading: false,
             autoFilling: false,
@@ -39,6 +62,21 @@ class RosterBoard extends Component {
             showBatchesDrawer: false,
             batchesFilter: "all",
             batchesSearch: "",
+
+            // Operational Cycle & Multi-Filters
+            cycle: currentCycle,
+            cycles: this.cycles,
+            filterSiteId: "all",
+            filterClientId: "all",
+            filterShiftId: "all",
+            shiftTemplates: [],
+            allClients: [],
+            allSites: [],
+            showGapsOnly: false,
+            showReliefOnly: false,
+            sitePage: 1,
+            sitePageSize: 8,
+
             companyCycle: {
                 startDay: 21,
                 endDay: 20,
@@ -46,14 +84,12 @@ class RosterBoard extends Component {
             },
             batches: [],
             batchId: null,
-            batchDateFrom: null,
-            batchDateTo: null,
+            batchDateFrom: currentCycle.from,
+            batchDateTo: currentCycle.to,
             dates: [],
             sites: [],
             posts: [],
             slots: [],
-            filterSiteId: null,
-            showGapsOnly: false,
             selectedSlot: null,
             suggestions: [],
             suggestionsLoaded: false,
@@ -147,7 +183,14 @@ class RosterBoard extends Component {
         this.closeMegaMenu = this.closeMegaMenu.bind(this);
 
         onWillStart(async () => {
-            await Promise.all([this.loadCompanyCycle(), this.loadBatches(), this.loadAllSites(), this.loadAllGuards()]);
+            await Promise.all([
+                this.loadCompanyCycle(),
+                this.loadBatches(),
+                this.loadAllSites(),
+                this.loadAllGuards(),
+                this.loadShiftTemplates(),
+            ]);
+            await this.loadBoard();
         });
     }
 
@@ -157,6 +200,20 @@ class RosterBoard extends Component {
 
     closeMegaMenu() {
         this.state.showMegaMenu = false;
+    }
+
+    async loadShiftTemplates() {
+        try {
+            const templates = await this.orm.searchRead(
+                "security.shift.template",
+                [],
+                ["id", "name", "start_hour", "end_hour"],
+                { order: "start_hour asc" }
+            );
+            this.state.shiftTemplates = templates;
+        } catch {
+            this.state.shiftTemplates = [];
+        }
     }
 
     async loadAllGuards() {
@@ -218,48 +275,83 @@ class RosterBoard extends Component {
             { order: "name" }
         );
         this.state.allSites = sites;
+
+        // Extract distinct clients for filtering
+        const clientMap = new Map();
+        for (const s of sites) {
+            if (s.partner_id && Array.isArray(s.partner_id)) {
+                clientMap.set(s.partner_id[0], { id: s.partner_id[0], name: s.partner_id[1] });
+            }
+        }
+        this.state.allClients = Array.from(clientMap.values()).sort((a, b) => a.name.localeCompare(b.name));
     }
 
     async loadBoard() {
-        if (!this.state.batchId) return;
         this.state.loading = true;
         this.state.selectedSlot = null;
         this.state.suggestions = [];
         this.state.suggestionsLoaded = false;
         this.state.assignError = null;
 
-        const batch = this.state.batches.find((b) => b.id === this.state.batchId);
-        if (!batch) { this.state.loading = false; return; }
+        // Determine effective dates from batch or operational cycle
+        if (this.state.batchId) {
+            const batch = this.state.batches.find((b) => b.id === this.state.batchId);
+            if (batch && batch.date_from && batch.date_to) {
+                this.state.batchDateFrom = batch.date_from;
+                this.state.batchDateTo = batch.date_to;
+            }
+        } else if (this.state.cycle) {
+            this.state.batchDateFrom = this.state.cycle.from;
+            this.state.batchDateTo = this.state.cycle.to;
+        }
 
-        this.state.batchDateFrom = batch.date_from;
-        this.state.batchDateTo = batch.date_to;
-        this.state.dates = this._buildDateRange(batch.date_from, batch.date_to);
+        this.state.dates = this._buildDateRange(this.state.batchDateFrom, this.state.batchDateTo);
 
-        // Load all slots for this batch (include cancelled so we can grey them out)
-        const slots = await this.orm.searchRead(
-            "security.roster.slot",
-            [["batch_id", "=", this.state.batchId]],
-            [
-                "id", "shift_date", "site_id", "post_id", "post_type_id",
-                "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning", "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
-                "readiness_score", "readiness_state", "readiness_summary",
-                "is_relief", "relief_reason", "is_preferred_assignment",
-            ]
-        );
+        // Build domain matching cycle dates and selected filters
+        const domain = [
+            ["shift_date", ">=", this.state.batchDateFrom],
+            ["shift_date", "<=", this.state.batchDateTo],
+            ["state", "!=", "cancelled"],
+            "|", ["batch_id", "=", false], ["batch_id.state", "!=", "cancelled"],
+        ];
 
-        // Fetch shift template hours for display
-        const templateIds = [...new Set(
-            slots.map((s) => s.shift_template_id && s.shift_template_id[0]).filter(Boolean)
-        )];
-        let templateMap = {};
-        if (templateIds.length) {
-            const templates = await this.orm.searchRead(
-                "security.shift.template",
-                [["id", "in", templateIds]],
-                ["id", "start_hour", "end_hour"]
+        if (this.state.batchId) {
+            domain.push(["batch_id", "=", this.state.batchId]);
+        }
+        if (this.state.filterSiteId && this.state.filterSiteId !== "all") {
+            domain.push(["site_id", "=", parseInt(this.state.filterSiteId)]);
+        }
+        if (this.state.filterClientId && this.state.filterClientId !== "all") {
+            domain.push(["partner_id", "=", parseInt(this.state.filterClientId)]);
+        }
+        if (this.state.filterShiftId && this.state.filterShiftId !== "all") {
+            domain.push(["shift_template_id", "=", parseInt(this.state.filterShiftId)]);
+        }
+
+        let slots = [];
+        try {
+            slots = await this.orm.searchRead(
+                "security.roster.slot",
+                domain,
+                [
+                    "id", "shift_date", "site_id", "partner_id", "post_id", "post_type_id",
+                    "shift_template_id", "employee_id", "state", "suggestion_count",
+                    "fairness_warning", "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
+                    "readiness_score", "readiness_state", "readiness_summary",
+                    "is_relief", "relief_reason", "is_preferred_assignment",
+                ],
+                { limit: 4000 }
             );
-            templates.forEach((t) => { templateMap[t.id] = t; });
+        } catch (e) {
+            console.error("Could not load roster slots:", e);
+            this.notification.add("Could not load roster slots: " + (e.message || e), { type: "danger" });
+            slots = [];
+        }
+
+        // Map template hours for display
+        let templateMap = {};
+        for (const t of this.state.shiftTemplates) {
+            templateMap[t.id] = t;
         }
 
         // Enrich slots
@@ -270,6 +362,8 @@ class RosterBoard extends Component {
                 shift_date: s.shift_date,
                 site_id: s.site_id ? s.site_id[0] : null,
                 site_name: s.site_id ? s.site_id[1] : "—",
+                client_id: s.partner_id ? s.partner_id[0] : null,
+                client_name: s.partner_id ? s.partner_id[1] : "",
                 post_id: s.post_id ? s.post_id[0] : null,
                 post_name: s.post_id ? s.post_id[1] : "—",
                 employee_id: s.employee_id ? s.employee_id[0] : null,
@@ -284,6 +378,9 @@ class RosterBoard extends Component {
                 is_relief: !!s.is_relief,
                 relief_reason: s.relief_reason || "",
                 is_preferred_assignment: !!s.is_preferred_assignment,
+                readiness_score: s.readiness_score,
+                readiness_state: s.readiness_state,
+                readiness_summary: s.readiness_summary,
                 shift_label: tmpl ? this._formatShift(tmpl) : "",
             };
         });
@@ -372,71 +469,70 @@ class RosterBoard extends Component {
         };
     }
 
-    // Reload only the slot data for the current batch (used after assign/unassign/auto-fill)
+    // Reload board data (used after assign/unassign/auto-fill)
     async loadSlots(batchId) {
-        const slots = await this.orm.searchRead(
-            "security.roster.slot",
-            [["batch_id", "=", batchId]],
-            [
-                "id", "shift_date", "site_id", "post_id", "post_type_id",
-                "shift_template_id", "employee_id", "state", "suggestion_count",
-                "fairness_warning", "critical_gap", "is_override", "override_reason", "wrong_fit_reasons",
-                "is_relief", "relief_reason", "is_preferred_assignment",
-            ]
-        );
-
-        const templateIds = [...new Set(
-            slots.map((s) => s.shift_template_id && s.shift_template_id[0]).filter(Boolean)
-        )];
-        let templateMap = {};
-        if (templateIds.length) {
-            const templates = await this.orm.searchRead(
-                "security.shift.template",
-                [["id", "in", templateIds]],
-                ["id", "start_hour", "end_hour"]
-            );
-            templates.forEach((t) => { templateMap[t.id] = t; });
-        }
-
-        this.state.slots = slots.map((s) => {
-            const tmpl = s.shift_template_id ? templateMap[s.shift_template_id[0]] : null;
-            return {
-                id: s.id,
-                shift_date: s.shift_date,
-                site_id: s.site_id ? s.site_id[0] : null,
-                site_name: s.site_id ? s.site_id[1] : "—",
-                post_id: s.post_id ? s.post_id[0] : null,
-                post_name: s.post_id ? s.post_id[1] : "—",
-                employee_id: s.employee_id ? s.employee_id[0] : null,
-                employee_name: s.employee_id ? s.employee_id[1] : null,
-                state: s.state,
-                suggestion_count: s.suggestion_count,
-                conflict: !!s.fairness_warning,
-                critical_gap: !!s.critical_gap,
-                is_override: !!s.is_override,
-                override_reason: s.override_reason || "",
-                wrong_fit_reasons: s.wrong_fit_reasons || "",
-                is_relief: !!s.is_relief,
-                relief_reason: s.relief_reason || "",
-                is_preferred_assignment: !!s.is_preferred_assignment,
-                shift_label: tmpl ? this._formatShift(tmpl) : "",
-            };
-        });
-
-        this._updateStats();
+        await this.loadBoard();
     }
 
     // ─── Computed getters ───────────────────────────────────────────
 
+    get sitesForFilter() {
+        if (!this.state.filterClientId || this.state.filterClientId === "all") {
+            return this.state.allSites;
+        }
+        const cid = parseInt(this.state.filterClientId);
+        return this.state.allSites.filter((s) => {
+            if (!s.partner_id) return false;
+            const pid = Array.isArray(s.partner_id) ? s.partner_id[0] : s.partner_id;
+            return pid === cid;
+        });
+    }
+
+    get filteredSlots() {
+        let slots = this.state.slots;
+        if (this.state.showGapsOnly) {
+            slots = slots.filter((s) => !s.employee_id && s.state !== "cancelled");
+        }
+        if (this.state.showReliefOnly) {
+            slots = slots.filter((s) => s.is_relief);
+        }
+        if (this.state.guardSearch && this.state.guardSearch.trim()) {
+            const q = this.state.guardSearch.trim().toLowerCase();
+            slots = slots.filter((s) => s.employee_name && s.employee_name.toLowerCase().includes(q));
+        }
+        return slots;
+    }
+
     get visibleSites() {
         let sites = this.state.sites;
-        if (this.state.filterSiteId) {
-            sites = sites.filter((s) => s.id === this.state.filterSiteId);
+        if (this.state.filterSiteId && this.state.filterSiteId !== "all") {
+            const sid = parseInt(this.state.filterSiteId);
+            sites = sites.filter((s) => s.id === sid);
         }
         if (this.state.showGapsOnly) {
             sites = sites.filter((s) => this._siteHasGap(s.id));
         }
+        if (this.state.showReliefOnly || (this.state.guardSearch && this.state.guardSearch.trim())) {
+            const matchingSiteIds = new Set(this.filteredSlots.map((s) => s.site_id).filter(Boolean));
+            sites = sites.filter((s) => matchingSiteIds.has(s.id));
+        }
         return sites;
+    }
+
+    get totalFilteredSitesCount() {
+        return this.visibleSites.length;
+    }
+
+    get totalSitePages() {
+        return Math.ceil(this.totalFilteredSitesCount / this.state.sitePageSize) || 1;
+    }
+
+    get paginatedSites() {
+        if (this.state.filterSiteId && this.state.filterSiteId !== "all") {
+            return this.visibleSites;
+        }
+        const start = (this.state.sitePage - 1) * this.state.sitePageSize;
+        return this.visibleSites.slice(start, start + this.state.sitePageSize);
     }
 
     get batchesList() {
@@ -858,23 +954,67 @@ class RosterBoard extends Component {
 
     // ─── Board Event handlers ─────────────────────────────────────────────
 
-    async onBatchChange(ev) {
+    async onCycleChange(ev) {
         const val = ev.target.value;
-        this.state.batchId = val ? parseInt(val) : null;
-        this.state.filterSiteId = null;
-        this.state.slots = [];
-        this.state.sites = [];
-        this.state.posts = [];
-        this.state.dates = [];
-        this.state.assignError = null;
-        if (this.state.batchId) {
+        const found = this.state.cycles.find((c) => c.key === val);
+        if (found) {
+            this.state.cycle = found;
+            this.state.batchId = null;
+            this.state.sitePage = 1;
             await this.loadBoard();
         }
     }
 
-    onSiteFilterChange(ev) {
+    async onClientFilterChange(ev) {
         const val = ev.target.value;
-        this.state.filterSiteId = val ? parseInt(val) : null;
+        this.state.filterClientId = val || "all";
+        this.state.filterSiteId = "all";
+        this.state.sitePage = 1;
+        await this.loadBoard();
+    }
+
+    async onSiteFilterChange(ev) {
+        const val = ev.target.value;
+        this.state.filterSiteId = val || "all";
+        this.state.sitePage = 1;
+        await this.loadBoard();
+    }
+
+    async onShiftFilterChange(ev) {
+        const val = ev.target.value;
+        this.state.filterShiftId = val || "all";
+        this.state.sitePage = 1;
+        await this.loadBoard();
+    }
+
+    async onBatchChange(ev) {
+        const val = ev.target.value;
+        this.state.batchId = val ? parseInt(val) : null;
+        this.state.sitePage = 1;
+        this.state.assignError = null;
+        await this.loadBoard();
+    }
+
+    onGuardSearchInput(ev) {
+        this.state.guardSearch = ev.target.value;
+        this.state.sitePage = 1;
+    }
+
+    toggleReliefOnly() {
+        this.state.showReliefOnly = !this.state.showReliefOnly;
+        this.state.sitePage = 1;
+    }
+
+    prevSitePage() {
+        if (this.state.sitePage > 1) {
+            this.state.sitePage--;
+        }
+    }
+
+    nextSitePage() {
+        if (this.state.sitePage < this.totalSitePages) {
+            this.state.sitePage++;
+        }
     }
 
     async refreshBoard() {
@@ -1246,9 +1386,7 @@ class RosterBoard extends Component {
             await this.orm.create("security.roster.slot", slotVals);
             this.notification.add(count + " slot(s) created.", { type: "success", title: "Slots Created" });
             this.closeCreateSlot();
-            if (this.state.batchId) {
-                await this.loadSlots(this.state.batchId);
-            }
+            await this.loadBoard();
         } catch (e) {
             this.notification.add("Failed to create slot: " + (e.message || e), { type: "danger" });
         } finally {

@@ -398,6 +398,76 @@ class SecurityRosterSlot(models.Model):
         help="Set by auto-fill when no eligible guard was found for this slot.",
     )
 
+    def _get_slot_datetime_range(self):
+        """Return (start_datetime, end_datetime) for this slot."""
+        self.ensure_one()
+        if not self.shift_date:
+            return None, None
+        start_h = self.shift_template_id.start_hour if self.shift_template_id else 6.0
+        end_h = self.shift_template_id.end_hour if self.shift_template_id else 18.0
+
+        start_dt = datetime.datetime.combine(self.shift_date, datetime.time(0, 0)) + timedelta(hours=start_h)
+        if end_h <= start_h:
+            # Overnight shift (e.g. 18:00 to 06:00 next day)
+            end_dt = datetime.datetime.combine(self.shift_date + timedelta(days=1), datetime.time(0, 0)) + timedelta(hours=end_h)
+        else:
+            end_dt = datetime.datetime.combine(self.shift_date, datetime.time(0, 0)) + timedelta(hours=end_h)
+        return start_dt, end_dt
+
+    def _check_turnaround_rest(self, employee, min_rest_hours=12.0):
+        """
+        Check if guard receives at least min_rest_hours (default 12h) before and after adjacent shifts.
+        Returns (passes: bool, reason: str or None).
+        """
+        self.ensure_one()
+        if not self.shift_date:
+            return True, None
+        self_start, self_end = self._get_slot_datetime_range()
+        if not self_start or not self_end:
+            return True, None
+
+        emp_id = employee.id if hasattr(employee, "id") else employee
+        d_from = self.shift_date - timedelta(days=2)
+        d_to = self.shift_date + timedelta(days=2)
+        adjacent_slots = self.search([
+            ("employee_id", "=", emp_id),
+            ("shift_date", ">=", d_from),
+            ("shift_date", "<=", d_to),
+            ("state", "not in", ("cancelled",)),
+            ("id", "!=", self.id),
+        ])
+
+        for other in adjacent_slots:
+            o_start, o_end = other._get_slot_datetime_range()
+            if not o_start or not o_end:
+                continue
+
+            # Check direct overlap
+            if o_start < self_end and self_start < o_end:
+                return False, f"Turnaround Rest Breach: direct shift overlap with {other.site_id.name or 'another site'} on {other.shift_date}."
+
+            # If other shift ends before this one starts
+            if o_end <= self_start:
+                gap_hours = (self_start - o_end).total_seconds() / 3600.0
+                if gap_hours < min_rest_hours:
+                    prev_tmpl = other.shift_template_id.name if other.shift_template_id else "previous shift"
+                    return False, (
+                        f"Turnaround Rest Breach: only {gap_hours:.1f}h rest after {prev_tmpl} on {other.shift_date} "
+                        f"(ends at {o_end.strftime('%H:%M')}). Minimum {min_rest_hours:.0f}h rest required by Namibian standard."
+                    )
+
+            # If this shift ends before other shift starts
+            if self_end <= o_start:
+                gap_hours = (o_start - self_end).total_seconds() / 3600.0
+                if gap_hours < min_rest_hours:
+                    next_tmpl = other.shift_template_id.name if other.shift_template_id else "next shift"
+                    return False, (
+                        f"Turnaround Rest Breach: only {gap_hours:.1f}h rest before {next_tmpl} on {other.shift_date} "
+                        f"(starts at {o_start.strftime('%H:%M')}). Minimum {min_rest_hours:.0f}h rest required by Namibian standard."
+                    )
+
+        return True, None
+
     def check_guard_eligibility(self, employee):
         """
         Check if an employee is eligible for assignment to this slot.
@@ -530,6 +600,20 @@ class SecurityRosterSlot(models.Model):
                     f"Working Days Cap: {employee.name} has already reached {unique_days}/{max_days} "
                     "working days in this operational cycle."
                 )
+
+        # 8. Shift Turnaround Rest Check (Minimum 12 hours rest)
+        min_rest_hours = 12.0
+        try:
+            param = self.env["ir.config_parameter"].sudo().get_param(
+                "security.min_rest_hours", "12"
+            )
+            min_rest_hours = float(param)
+        except (TypeError, ValueError):
+            pass
+
+        passes_rest, rest_reason = self._check_turnaround_rest(employee, min_rest_hours=min_rest_hours)
+        if not passes_rest and rest_reason:
+            warnings.append(rest_reason)
 
         return {"hard_block": False, "reasons": warnings}
 
@@ -1006,11 +1090,11 @@ class SecurityRosterSlot(models.Model):
                 ("partner_id", "=", partner_id),
             ]).mapped("employee_id").ids)
 
-        # Pre-fetch fatigue constraints — min rest hours between shifts
-        min_rest_hours = 10.0
+        # Pre-fetch fatigue constraints — min rest hours between shifts (Namibia standard: 12h)
+        min_rest_hours = 12.0
         try:
             param = self.env["ir.config_parameter"].sudo().get_param(
-                "security.min_rest_hours", "10"
+                "security.min_rest_hours", "12"
             )
             min_rest_hours = float(param)
         except (TypeError, ValueError):
@@ -1030,12 +1114,26 @@ class SecurityRosterSlot(models.Model):
         except (TypeError, ValueError):
             pass
 
-        if slot.batch_id:
-            # Count across ALL sites in the same roster cycle, so a guard on several
-            # site teams cannot exceed the cycle limits by working at each site.
+        # Decoupled operational cycle dates (from batch or standard 21st-20th cycle)
+        cycle_from = False
+        cycle_to = False
+        if slot.batch_id and slot.batch_id.date_from and slot.batch_id.date_to:
+            cycle_from = slot.batch_id.date_from
+            cycle_to = slot.batch_id.date_to
+        elif slot.shift_date:
+            d = slot.shift_date
+            if d.day >= 21:
+                cycle_from = d.replace(day=21)
+                cycle_to = d.replace(year=d.year + 1, month=1, day=20) if d.month == 12 else d.replace(month=d.month + 1, day=20)
+            else:
+                cycle_to = d.replace(day=20)
+                cycle_from = d.replace(year=d.year - 1, month=12, day=21) if d.month == 1 else d.replace(month=d.month - 1, day=21)
+
+        if cycle_from and cycle_to:
+            # Count across ALL sites in the same operational cycle
             batch_slots = self.search([
-                ("shift_date", ">=", slot.batch_id.date_from),
-                ("shift_date", "<=", slot.batch_id.date_to),
+                ("shift_date", ">=", cycle_from),
+                ("shift_date", "<=", cycle_to),
                 ("employee_id", "!=", False),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", slot.id),
@@ -1051,9 +1149,6 @@ class SecurityRosterSlot(models.Model):
                 for gid, d_set in guard_days.items():
                     if len(d_set) >= max_work_days:
                         guards_at_max_days.add(gid)
-
-        # For the shift start hour, compute from template
-        target_start_hour = slot.shift_template_id.start_hour if slot.shift_template_id else 0.0
 
         def _passes_hard_constraints(employee):
             if employee.id in guards_on_leave:
@@ -1083,24 +1178,10 @@ class SecurityRosterSlot(models.Model):
                 return False
             if req_attributes and (req_attributes - set(employee.security_attribute_ids.ids)):
                 return False
-            if slot.shift_date and min_rest_hours > 0:
-                look_back_date = slot.shift_date - timedelta(days=2)
-                recent_slot = self.search([
-                    ("employee_id", "=", employee.id),
-                    ("shift_date", ">=", look_back_date),
-                    ("shift_date", "<", slot.shift_date),
-                    ("state", "not in", ("cancelled",)),
-                ], order="shift_date desc, id desc", limit=1)
-                if recent_slot:
-                    last_date = recent_slot.shift_date
-                    last_end_hour = (
-                        recent_slot.shift_template_id.end_hour
-                        if recent_slot.shift_template_id else 8.0
-                    )
-                    days_diff = (slot.shift_date - last_date).days
-                    rest_hours = days_diff * 24 - last_end_hour + target_start_hour
-                    if rest_hours < min_rest_hours:
-                        return False
+            if min_rest_hours > 0:
+                passes_rest, _ = slot._check_turnaround_rest(employee, min_rest_hours=min_rest_hours)
+                if not passes_rest:
+                    return False
             if post_type_for_docs and hasattr(post_type_for_docs, "required_document_type_ids") and post_type_for_docs.required_document_type_ids:
                 today_d = fields.Date.context_today(self)
                 doc_model = self.env.get("security.employee.document")
@@ -1186,10 +1267,25 @@ class SecurityRosterSlot(models.Model):
                 score += 10
                 parts.append("△ Above minimum grade: +10")
 
-        # Fairness penalty (shifts already in this batch)
-        if slot.batch_id:
+        # Fairness penalty (shifts already in this cycle)
+        cycle_from = False
+        cycle_to = False
+        if slot.batch_id and slot.batch_id.date_from and slot.batch_id.date_to:
+            cycle_from = slot.batch_id.date_from
+            cycle_to = slot.batch_id.date_to
+        elif slot.shift_date:
+            d = slot.shift_date
+            if d.day >= 21:
+                cycle_from = d.replace(day=21)
+                cycle_to = d.replace(year=d.year + 1, month=1, day=20) if d.month == 12 else d.replace(month=d.month + 1, day=20)
+            else:
+                cycle_to = d.replace(day=20)
+                cycle_from = d.replace(year=d.year - 1, month=12, day=21) if d.month == 1 else d.replace(month=d.month - 1, day=21)
+
+        if cycle_from and cycle_to:
             shifts_this_period = self.search_count([
-                ("batch_id", "=", slot.batch_id.id),
+                ("shift_date", ">=", cycle_from),
+                ("shift_date", "<=", cycle_to),
                 ("employee_id", "=", employee.id),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", slot.id),
@@ -1197,7 +1293,21 @@ class SecurityRosterSlot(models.Model):
             penalty = min(shifts_this_period * 5, 30)
             if penalty > 0:
                 score -= penalty
-                parts.append(f"⚠ Fairness penalty: -{penalty} ({shifts_this_period} shifts this period)")
+                parts.append(f"⚠ Fairness penalty: -{penalty} ({shifts_this_period} shifts this cycle)")
+
+        # Namibian OB Book Literacy & Communication bonus
+        if getattr(employee, "security_writes_neatly", False) == "neat":
+            score += 5
+            parts.append("✓ Neat handwriting for Occurrence Book: +5")
+        if getattr(employee, "security_can_read", False) and getattr(employee, "security_can_write", False):
+            score += 5
+            parts.append("✓ Full literacy (Read & Write): +5")
+        if getattr(employee, "security_english_level", False) in ("good", "fluent"):
+            score += 5
+            parts.append(f"✓ English communication ({employee.security_english_level}): +5")
+        if getattr(employee, "security_afrikaans_level", False) in ("good", "fluent"):
+            score += 5
+            parts.append(f"✓ Afrikaans communication ({employee.security_afrikaans_level}): +5")
 
         # AWOL / absence penalty
         attendance_model_avail = self.env["security.attendance.record"]

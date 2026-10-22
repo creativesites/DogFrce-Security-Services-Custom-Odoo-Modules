@@ -63,26 +63,24 @@
                 <i class="fa fa-plus me-1"/> New Batch
             </button>
 
-            <t t-if="state.batchId">
-                <button class="btn btn-sm btn-light border text-muted px-3"
-                        t-on-click="refreshBoard"
-                        t-att-disabled="state.loading or state.autoFilling">
-                    <i t-att-class="state.loading ? 'fa fa-spinner fa-spin me-1' : 'fa fa-refresh me-1'"/> Refresh
-                </button>
-                <button class="btn btn-sm btn-outline-secondary px-3"
-                        t-on-click="openCreateSlot">
-                    <i class="fa fa-plus me-1"/> New Slot
-                </button>
-                <button class="btn btn-sm text-white px-3 fw-semibold"
-                        style="background: var(--ds-accent); border-color: var(--ds-accent);"
-                        t-on-click="autoAssignAll"
-                        t-att-disabled="state.autoAssigning or state.loading or unassignedCount === 0">
-                    <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin me-1' : 'fa fa-bolt me-1'"/>
-                    <t t-if="state.autoAssigning">Auto-Assigning…</t>
-                    <t t-elif="unassignedCount > 0">Auto-Assign All (<t t-esc="unassignedCount"/>)</t>
-                    <t t-else="">All Assigned</t>
-                </button>
-            </t>
+            <button class="btn btn-sm btn-light border text-muted px-3"
+                    t-on-click="refreshBoard"
+                    t-att-disabled="state.loading or state.autoFilling">
+                <i t-att-class="state.loading ? 'fa fa-spinner fa-spin me-1' : 'fa fa-refresh me-1'"/> Refresh
+            </button>
+            <button class="btn btn-sm btn-outline-secondary px-3"
+                    t-on-click="openCreateSlot">
+                <i class="fa fa-plus me-1"/> New Slot
+            </button>
+            <button class="btn btn-sm text-white px-3 fw-semibold"
+                    style="background: var(--ds-accent); border-color: var(--ds-accent);"
+                    t-on-click="autoAssignAll"
+                    t-att-disabled="state.autoAssigning or state.loading or unassignedCount === 0">
+                <i t-att-class="state.autoAssigning ? 'fa fa-spinner fa-spin me-1' : 'fa fa-bolt me-1'"/>
+                <t t-if="state.autoAssigning">Auto-Assigning…</t>
+                <t t-elif="unassignedCount > 0">Auto-Assign All (<t t-esc="unassignedCount"/>)</t>
+                <t t-else="">All Assigned</t>
+            </button>
         </div>
     </header>
 
@@ -90,13 +88,64 @@
          FILTER & KPI CONTROL BAR
          ═══════════════════════════════════════════════════════════ -->
     <div class="rb-control-bar px-4 py-2 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-3">
-        <!-- Left: Batch & Site Filters -->
+        <!-- Left: Cycle, Client, Site, Shift, Guard Filters -->
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <!-- Batch selector -->
+            <!-- Cycle selector -->
+            <div class="d-flex align-items-center gap-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Cycle:</span>
+                <select class="form-select form-select-sm rb-select" style="min-width: 170px;" t-on-change="onCycleChange">
+                    <t t-foreach="state.cycles" t-as="c" t-key="c.key">
+                        <option t-att-value="c.key"
+                                t-att-selected="state.cycle and state.cycle.key === c.key"
+                                t-esc="c.label"/>
+                    </t>
+                </select>
+            </div>
+
+            <!-- Client Filter -->
+            <div class="d-flex align-items-center gap-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Client:</span>
+                <select class="form-select form-select-sm rb-select" style="max-width: 180px;" t-on-change="onClientFilterChange">
+                    <option value="all">All Clients</option>
+                    <t t-foreach="state.allClients" t-as="client" t-key="client.id">
+                        <option t-att-value="client.id"
+                                t-att-selected="state.filterClientId == client.id"
+                                t-esc="client.name"/>
+                    </t>
+                </select>
+            </div>
+
+            <!-- Site Filter -->
+            <div class="d-flex align-items-center gap-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Site:</span>
+                <select class="form-select form-select-sm rb-select" style="max-width: 200px;" t-on-change="onSiteFilterChange">
+                    <option value="all">All Sites (<t t-esc="state.sites.length"/>)</option>
+                    <t t-foreach="sitesForFilter" t-as="site" t-key="site.id">
+                        <option t-att-value="site.id"
+                                t-att-selected="state.filterSiteId == site.id"
+                                t-esc="site.name"/>
+                    </t>
+                </select>
+            </div>
+
+            <!-- Shift Filter -->
+            <div class="d-flex align-items-center gap-1">
+                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Shift:</span>
+                <select class="form-select form-select-sm rb-select" style="min-width: 120px;" t-on-change="onShiftFilterChange">
+                    <option value="all">All Shifts</option>
+                    <t t-foreach="state.shiftTemplates" t-as="tmpl" t-key="tmpl.id">
+                        <option t-att-value="tmpl.id"
+                                t-att-selected="state.filterShiftId == tmpl.id"
+                                t-esc="tmpl.name"/>
+                    </t>
+                </select>
+            </div>
+
+            <!-- Batch selector (optional) -->
             <div class="d-flex align-items-center gap-1">
                 <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Batch:</span>
-                <select class="form-select form-select-sm rb-select" style="min-width: 200px;" t-on-change="onBatchChange">
-                    <option value="">-- Select Roster Batch --</option>
+                <select class="form-select form-select-sm rb-select" style="max-width: 160px;" t-on-change="onBatchChange">
+                    <option value="">Any / Unbatched</option>
                     <t t-foreach="state.batches" t-as="batch" t-key="batch.id">
                         <option t-att-value="batch.id"
                                 t-att-selected="batch.id === state.batchId"
@@ -105,33 +154,42 @@
                 </select>
             </div>
 
-            <!-- Site Filter -->
-            <div t-if="state.batchId" class="d-flex align-items-center gap-1">
-                <span class="text-muted small fw-semibold text-uppercase" style="font-size: 11px;">Site:</span>
-                <select class="form-select form-select-sm rb-select" style="min-width: 160px;" t-on-change="onSiteFilterChange">
-                    <option value="">All Sites</option>
-                    <t t-foreach="state.sites" t-as="site" t-key="site.id">
-                        <option t-att-value="site.id"
-                                t-att-selected="site.id === state.filterSiteId"
-                                t-esc="site.name"/>
-                    </t>
-                </select>
+            <!-- Guard search input -->
+            <div class="d-flex align-items-center gap-1">
+                <div class="input-group input-group-sm" style="width: 160px;">
+                    <span class="input-group-text bg-white border-end-0 py-0 text-muted"><i class="fa fa-search" style="font-size:11px;"/></span>
+                    <input type="text" class="form-control form-control-sm border-start-0 ps-1"
+                           placeholder="Filter guard…"
+                           t-att-value="state.guardSearch"
+                           t-on-input="onGuardSearchInput"/>
+                </div>
             </div>
 
             <!-- Gaps Only Toggle -->
-            <div t-if="state.batchId" class="ms-2">
-                <button t-att-class="state.showGapsOnly ? 'btn btn-sm btn-danger px-3' : 'btn btn-sm btn-light border text-muted px-3'"
+            <div>
+                <button t-att-class="state.showGapsOnly ? 'btn btn-sm btn-danger px-2' : 'btn btn-sm btn-light border text-muted px-2'"
                         t-on-click="toggleGapsOnly"
-                        t-att-disabled="state.loading">
-                    <i class="fa fa-filter me-1"/>
-                    <t t-if="state.showGapsOnly">Show All Slots</t>
+                        t-att-disabled="state.loading"
+                        title="Show only posts with open unassigned shifts">
+                    <i class="fa fa-exclamation-triangle me-1"/>
+                    <t t-if="state.showGapsOnly">All Slots</t>
                     <t t-else="">Gaps Only</t>
+                </button>
+            </div>
+
+            <!-- Relief Only Toggle -->
+            <div>
+                <button t-att-class="state.showReliefOnly ? 'btn btn-sm btn-warning text-dark px-2' : 'btn btn-sm btn-light border text-muted px-2'"
+                        t-on-click="toggleReliefOnly"
+                        t-att-disabled="state.loading"
+                        title="Show only relief guard slots">
+                    <i class="fa fa-life-ring me-1"/> Relief
                 </button>
             </div>
         </div>
 
         <!-- Right: Live Operational KPI Summary Bar -->
-        <div t-if="state.batchId" class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
             <!-- Coverage Meter -->
             <div class="rb-meter-pill d-flex align-items-center gap-2 px-3 py-1 bg-white border rounded-3">
                 <div class="d-flex flex-column">
@@ -180,7 +238,7 @@
     <div class="rb-main d-flex flex-column">
 
         <!-- Smart Prescriptive Recommendations Strip -->
-        <div t-if="state.batchId and state.smartRecommendations and state.smartRecommendations.length" class="px-4 py-2 bg-light border-bottom">
+        <div t-if="state.smartRecommendations and state.smartRecommendations.length" class="px-4 py-2 bg-light border-bottom">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div class="fw-bold text-dark" style="font-size:13px;">
                     <i class="fa fa-magic me-2" style="color:#8b5cf6;"/>Smart Prescriptive Actions
@@ -227,32 +285,46 @@
                     </div>
                 </t>
 
-                <!-- Empty / no batch selected -->
-                <t t-elif="!state.batchId">
-                    <div class="d-flex flex-column align-items-center justify-content-center" style="height:100%; color:#94a3b8;">
-                        <i class="fa fa-calendar-o" style="font-size:48px; margin-bottom:16px; color:#cbd5e1;"/>
-                        <div style="font-size:13px; margin-bottom:12px;">Choose a roster batch from the selector above to view the board.</div>
-                        <button class="btn btn-sm btn-outline-primary" t-on-click="openBatchesManager">
-                            <i class="fa fa-folder-open-o me-1"/> Browse All Batches
-                        </button>
-                    </div>
-                </t>
-
                 <!-- No slots found -->
                 <t t-elif="visibleSites.length === 0">
                     <div class="d-flex flex-column align-items-center justify-content-center" style="height:100%; color:#94a3b8;">
                         <i class="fa fa-inbox" style="font-size:48px; margin-bottom:16px; color:#cbd5e1;"/>
-                        <div style="font-size:14px;">No slots found for this batch.</div>
+                        <div style="font-size:14px; margin-bottom:12px;">No slots found for the selected cycle and filters.</div>
+                        <button class="btn btn-sm btn-outline-primary" t-on-click="openCreateSlot">
+                            <i class="fa fa-plus me-1"/> Create New Shift Slot
+                        </button>
                     </div>
                 </t>
 
                 <!-- Roster grid component -->
                 <t t-else="">
+                    <!-- Pagination bar if multiple pages -->
+                    <div t-if="totalSitePages &gt; 1" class="d-flex align-items-center justify-content-between px-3 py-2 bg-light border-bottom" style="font-size:12px;">
+                        <div class="text-muted">
+                            Showing sites <span class="fw-bold text-dark"><t t-esc="(state.sitePage - 1) * state.sitePageSize + 1"/></span> to <span class="fw-bold text-dark"><t t-esc="Math.min(state.sitePage * state.sitePageSize, totalFilteredSitesCount)"/></span> of <span class="fw-bold text-dark"><t t-esc="totalFilteredSitesCount"/></span> sites
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                    t-on-click="prevSitePage"
+                                    t-att-disabled="state.sitePage &lt;= 1">
+                                <i class="fa fa-chevron-left me-1"/> Prev
+                            </button>
+                            <span class="px-2 text-muted fw-semibold">
+                                Page <t t-esc="state.sitePage"/> / <t t-esc="totalSitePages"/>
+                            </span>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                    t-on-click="nextSitePage"
+                                    t-att-disabled="state.sitePage &gt;= totalSitePages">
+                                Next <i class="fa fa-chevron-right ms-1"/>
+                            </button>
+                        </div>
+                    </div>
+
                     <RosterGrid
                         mode="'full'"
                         dates="state.dates"
-                        sites="visibleSites"
-                        slots="state.slots"
+                        sites="paginatedSites"
+                        slots="filteredSlots"
                         selectedSlotId="state.selectedSlot ? state.selectedSlot.id : null"
                         onSelectSlot="(slot) => this.selectSlot(slot)"
                         onSlotContextMenu="(slot, ev) => this.onSlotContextMenu(slot, ev)"
