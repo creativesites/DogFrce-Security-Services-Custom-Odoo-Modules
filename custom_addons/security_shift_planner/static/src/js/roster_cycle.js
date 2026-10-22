@@ -134,6 +134,12 @@ export class RosterCycle extends Component {
     }
 
     async setCycle(c) { this.state.cycle = c; this.state.page = 1; await this.load(); }
+    async focusSite(siteId) {
+        this.state.siteId = String(siteId);
+        this.state.page = 1;
+        await this.load();
+    }
+
     async setSite(ev) { this.state.siteId = ev.target.value; this.state.page = 1; await this.load(); }
     async setDayType(k) { this.state.dayType = k; this.state.page = 1; await this.load(); }
     async setStatus(k) { this.state.status = k; this.state.page = 1; await this.load(); }

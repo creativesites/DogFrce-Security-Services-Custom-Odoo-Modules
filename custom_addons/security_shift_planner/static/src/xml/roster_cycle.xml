@@ -76,7 +76,8 @@
               <t t-foreach="state.data.rows" t-as="row" t-key="row.site_id">
                 <tr>
                   <td class="rc-site-col">
-                    <div class="rc-site-name rc-clickable" t-on-click="() => this.openSite(row.site_id)" title="Click to view Client Site"><t t-esc="row.site_name"/> ↗</div>
+                    <div class="rc-site-name rc-clickable" t-on-click="() => this.focusSite(row.site_id)" title="Show only this site's full cycle"><t t-esc="row.site_name"/></div>
+                    <div class="rc-site-open" t-on-click="() => this.openSite(row.site_id)" title="Open the client site record">Open record ↗</div>
                     <div class="rc-client"><t t-esc="row.client"/></div>
                   </td>
                   <t t-foreach="state.data.days" t-as="day" t-key="day.date">
