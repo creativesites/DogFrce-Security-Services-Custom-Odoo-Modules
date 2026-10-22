@@ -119,7 +119,7 @@ class TestSiteGuardPool(TransactionCase):
                 "date_from": test_date,
                 "date_to": test_date,
                 "state": "approved",
-                "leave_type": "annual",
+                "leave_type_id": self.leave_type.id,
             })
 
         batch, slot = self._create_batch_and_slot(self.site_a, self.post_a, shift_date=test_date)

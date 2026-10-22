@@ -157,7 +157,9 @@ class SecurityRosterBatch(models.Model):
             new_date_str = fields.Date.to_string(new_date)
 
             # Only include if within target batch date range
-            if self.date_from <= new_date_str <= self.date_to:
+            b_from = fields.Date.to_date(self.date_from)
+            b_to = fields.Date.to_date(self.date_to)
+            if b_from <= new_date <= b_to:
                 target_emp_id = False
                 state_val = "draft"
                 wrong_fit = False
@@ -1016,10 +1018,9 @@ class SecurityRosterSlot(models.Model):
         )
 
         # Pre-fetch approved leave requests for shift_date
-        leave_model = self.env["security.leave.request"] if "security.leave.request" in self.env else False
         guards_on_leave = set()
-        if leave_model and slot.shift_date:
-            leaves = leave_model.search([
+        if "security.leave.request" in self.env and slot.shift_date:
+            leaves = self.env["security.leave.request"].search([
                 ("state", "=", "approved"),
                 ("date_from", "<=", slot.shift_date),
                 ("date_to", ">=", slot.shift_date),
