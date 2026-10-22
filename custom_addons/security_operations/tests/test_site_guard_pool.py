@@ -35,6 +35,12 @@ class TestSiteGuardPool(TransactionCase):
             "code": "SGP",
             "min_grade_id": cls.grade_a.id,
         })
+        cls.leave_type = cls.env["security.leave.type"].create({
+            "name": "Annual Leave Test",
+            "code": "ANNUAL_TEST",
+            "allocation_type": "accrual",
+            "days_per_year": 24,
+        })
 
         # Create 20 security guards
         cls.all_guards = []
@@ -197,7 +203,7 @@ class TestSiteGuardPool(TransactionCase):
             "date_from": test_date,
             "date_to": test_date,
             "state": "approved",
-            "leave_type": "annual",
+            "leave_type_id": self.leave_type.id,
         })
 
         req = self.env["security.shift.requirement"].create({
@@ -334,7 +340,7 @@ class TestSiteGuardPool(TransactionCase):
             "date_from": date(2026, 4, 8),
             "date_to": date(2026, 4, 8),
             "state": "approved",
-            "leave_type": "annual",
+            "leave_type_id": self.leave_type.id,
         })
 
         batch2.copy_source_batch_id = batch1.id

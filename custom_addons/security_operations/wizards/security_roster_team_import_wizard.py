@@ -294,7 +294,8 @@ class SecurityRosterTeamImportWizard(models.TransientModel):
     def _normalize_name(self, text):
         if not text:
             return ""
-        text = text.lower()
+        text = text.lower().strip()
+        text = re.sub(r"^(guard|officer|mr|ms|mrs|s/o)\.?\s+", "", text, flags=re.IGNORECASE)
         text = re.sub(r"[^\w\s]", " ", text)
         return " ".join(text.split())
 
