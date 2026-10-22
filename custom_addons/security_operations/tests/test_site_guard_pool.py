@@ -38,8 +38,6 @@ class TestSiteGuardPool(TransactionCase):
         cls.leave_type = cls.env["security.leave.type"].create({
             "name": "Annual Leave Test",
             "code": "ANNUAL_TEST",
-            "allocation_type": "accrual",
-            "days_per_year": 24,
         })
 
         # Create 20 security guards
