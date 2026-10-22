@@ -334,6 +334,117 @@ class SecurityClientSite(models.Model):
             },
         }
 
+    def action_sync_current_cycle_slots(self):
+        """
+        Mid-Cycle Requirement Spawn:
+        Generates missing roster slots for the remainder of the current operational cycle
+        (from today up to the cycle end, e.g. 20th), ensuring newly added posts or increased
+        guard counts immediately get scheduled without touching existing assigned slots.
+        """
+        self.ensure_one()
+        Batch = self.env["security.roster.batch"]
+        Slot = self.env["security.roster.slot"]
+        Requirement = self.env["security.shift.requirement"]
+
+        today = fields.Date.today()
+        cycle_from, cycle_to = Batch.get_operational_cycle_dates(today)
+
+        start_date = max(today, cycle_from)
+        if start_date > cycle_to:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("Cycle Complete"),
+                    "message": _("The current cycle has already ended (%s).") % cycle_to,
+                    "type": "info",
+                },
+            }
+
+        active_batch = Batch.search([
+            ("date_from", "=", str(cycle_from)),
+            ("date_to", "=", str(cycle_to)),
+            ("state", "!=", "cancelled"),
+            "|", ("site_id", "=", self.id), ("site_id", "=", False),
+        ], order="site_id desc, id desc", limit=1)
+
+        requirements = Requirement.search([
+            ("site_id", "=", self.id),
+            ("active", "=", True),
+            ("guard_count", ">", 0),
+        ])
+
+        if not requirements:
+            raise ValidationError(_("No active shift requirements found for site '%s'. Please configure posts and shift requirements first.") % self.name)
+
+        created_count = 0
+        target_date = start_date
+        while target_date <= cycle_to:
+            for req in requirements:
+                if not req._is_active_on_date(target_date):
+                    continue
+                for guard_idx in range(req.guard_count):
+                    slot_num = guard_idx + 1
+                    domain = [
+                        ("site_id", "=", self.id),
+                        ("post_id", "=", req.post_id.id),
+                        ("shift_template_id", "=", req.shift_template_id.id),
+                        ("shift_date", "=", target_date),
+                        ("slot_number", "=", slot_num),
+                        ("state", "!=", "cancelled"),
+                    ]
+                    existing = Slot.search_count(domain)
+                    if existing:
+                        continue
+
+                    vals = {
+                        "slot_number": slot_num,
+                        "shift_date": target_date,
+                        "shift_requirement_id": req.id,
+                        "post_id": req.post_id.id,
+                        "site_id": self.id,
+                        "partner_id": self.partner_id.id,
+                        "shift_template_id": req.shift_template_id.id,
+                    }
+                    if active_batch:
+                        vals["batch_id"] = active_batch.id
+
+                    if guard_idx == 0 and req.preferred_employee_id:
+                        pref = req.preferred_employee_id
+                        if not pref.security_disqualified and pref.active:
+                            vals["employee_id"] = pref.id
+                            vals["state"] = "assigned"
+                            vals["is_preferred_assignment"] = True
+
+                    Slot.create(vals)
+                    created_count += 1
+            target_date += timedelta(days=1)
+
+        if created_count > 0:
+            msg = _("Successfully generated %d missing shift slot(s) for site '%s' through cycle end (%s).") % (
+                created_count, self.name, cycle_to
+            )
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("Cycle Slots Synchronized"),
+                    "message": msg,
+                    "type": "success",
+                    "sticky": False,
+                },
+            }
+        else:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("Already Up-to-Date"),
+                    "message": _("All shift requirements for site '%s' already have slots generated through %s.") % (self.name, cycle_to),
+                    "type": "info",
+                },
+            }
+
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
@@ -875,6 +986,17 @@ class SecurityPost(models.Model):
         if vals.get("site_id") and not vals.get("partner_id"):
             vals["partner_id"] = self.env["security.client.site"].browse(vals["site_id"]).partner_id.id
         res = super().write(vals)
+        if "active" in vals and not vals["active"]:
+            today = fields.Date.today()
+            # Cancel future open/unassigned slots for deactivated posts to avoid ghost critical gaps
+            future_open_slots = self.env["security.roster.slot"].search([
+                ("post_id", "in", self.ids),
+                ("shift_date", ">=", today),
+                ("employee_id", "=", False),
+                ("state", "not in", ("cancelled",)),
+            ])
+            if future_open_slots:
+                future_open_slots.write({"state": "cancelled"})
         if not self.env.context.get("syncing_contract_site"):
             sync_keys = ["name", "post_type_id", "required_guard_count"]
             c_vals = {k: vals[k] for k in sync_keys if k in vals}

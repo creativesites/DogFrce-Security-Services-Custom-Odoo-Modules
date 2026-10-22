@@ -224,6 +224,7 @@ class SecurityNotification(models.Model):
                 ("employee_id", "=", False),
                 ("state", "not in", ["cancelled"]),
             ])
+            imminent_by_site = {}
             for slot in unassigned:
                 tmpl = slot.shift_template_id
                 if not tmpl:
@@ -231,26 +232,36 @@ class SecurityNotification(models.Model):
                 h = int(tmpl.start_hour)
                 m = int(round((tmpl.start_hour - h) * 60))
                 slot_start = datetime.combine(today, _time(h, m))
-                if not (now_utc <= slot_start <= gap_window_end):
-                    continue
+                if now_utc <= slot_start <= gap_window_end:
+                    site = slot.site_id
+                    if site:
+                        imminent_by_site.setdefault(site, []).append((slot, tmpl))
+
+            for site, site_slots in imminent_by_site.items():
                 existing = self.search([
                     ("notification_type", "=", "roster_gap"),
-                    ("related_model", "=", "security.roster.slot"),
-                    ("related_id", "=", slot.id),
+                    ("related_model", "=", "security.client.site"),
+                    ("related_id", "=", site.id),
+                    ("create_date", ">=", fields.Datetime.to_string(datetime.combine(today, _time(0, 0)))),
                     ("state", "!=", "dismissed"),
                 ], limit=1)
-                if not existing:
-                    site_name = slot.site_id.name if slot.site_id else "Unknown Site"
+                count = len(site_slots)
+                shift_names = ", ".join(sorted({tmpl.name for _, tmpl in site_slots}))
+                title = f"Unassigned Slots: {site.name} ({count} gap{'s' if count > 1 else ''})"
+                body = (
+                    f"{site.name} has {count} unfilled shift slot(s) starting within 2 hours "
+                    f"({shift_names}). Immediate guard assignment required."
+                )
+                if existing:
+                    existing.write({"title": title, "body": body, "severity": "critical"})
+                else:
                     self.create({
-                        "title": f"Unassigned Slot: {site_name}",
-                        "body": (
-                            f"Slot at {site_name} (post: {slot.post_id.name if slot.post_id else 'N/A'}, "
-                            f"shift: {tmpl.name}) starts within 2 hours with no guard assigned."
-                        ),
+                        "title": title,
+                        "body": body,
                         "notification_type": "roster_gap",
                         "severity": "critical",
-                        "related_model": "security.roster.slot",
-                        "related_id": slot.id,
+                        "related_model": "security.client.site",
+                        "related_id": site.id,
                     })
 
         record_model = self.env.get("security.attendance.record")

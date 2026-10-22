@@ -22,7 +22,6 @@ class TestSiteGuardPool(TransactionCase):
             "name": "Day Shift 12h",
             "start_hour": 6.0,
             "end_hour": 18.0,
-            "shift_category": "day",
             "duration_hours": 12.0,
         })
         cls.grade_a = cls.env["security.grade"].create({

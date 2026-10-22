@@ -1,8 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Auto-Rostering Dashboard — Automated shift generation & intelligent guard allocation -->
+    <!-- 1. Primary Operational Roster Workbench: Detailed Post & Guard Grid with multi-filters -->
+    <record id="action_roster_board" model="ir.actions.client">
+        <field name="name">📅 Roster Workbench</field>
+        <field name="tag">security_shift_planner.roster_board</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_roster_board"
+        name="📅 Roster Workbench"
+        parent="security_operations.menu_security_roster"
+        action="action_roster_board"
+        sequence="1"
+        groups="security_base.group_security_supervisor,security_base.group_security_manager,hr.group_hr_user"
+    />
+
+    <!-- 2. Site Coverage Matrix: High-level site fulfillment matrix across 21st-20th cycle -->
+    <record id="action_roster_cycle" model="ir.actions.client">
+        <field name="name">🏢 Site Coverage Matrix</field>
+        <field name="tag">security_shift_planner.roster_cycle</field>
+        <field name="target">current</field>
+    </record>
+
+    <menuitem
+        id="menu_roster_cycle"
+        name="🏢 Site Coverage Matrix"
+        parent="security_operations.menu_security_roster"
+        action="action_roster_cycle"
+        sequence="2"
+        groups="security_base.group_security_supervisor,security_base.group_security_manager,hr.group_hr_user"
+    />
+
+    <!-- 3. Auto-Rostering Engine — Automated shift generation & intelligent guard allocation -->
     <record id="action_autorostering_dashboard" model="ir.actions.client">
-        <field name="name">🤖 Auto-Rostering Center</field>
+        <field name="name">🤖 Auto-Roster Engine</field>
         <field name="tag">security_shift_planner.autorostering_dashboard</field>
         <field name="target">current</field>
     </record>
@@ -12,8 +44,8 @@
         name="🤖 Auto-Roster Engine"
         parent="security_operations.menu_security_roster"
         action="action_autorostering_dashboard"
-        sequence="0"
-        groups="hr.group_hr_user"
+        sequence="3"
+        groups="security_base.group_security_supervisor,security_base.group_security_manager,hr.group_hr_user"
     />
 
     <!-- Operational quick link in Operations root menu -->
@@ -26,82 +58,19 @@
         groups="security_base.group_security_supervisor"
     />
 
-    <!-- Rostering Mega Menu — Executive Command Center (sequence 1) -->
-    <record id="action_rostering_mega_menu" model="ir.actions.client">
-        <field name="name">⚡ Rostering Mega Menu</field>
-        <field name="tag">security_shift_planner.rostering_mega_menu</field>
-        <field name="target">current</field>
-    </record>
-
-    <menuitem
-        id="menu_rostering_mega_menu"
-        name="⚡ Mega Menu"
-        parent="security_operations.menu_security_roster"
-        action="action_rostering_mega_menu"
-        sequence="1"
-        groups="hr.group_hr_user"
-    />
-
-    <!-- Rostering Hub — primary rostering workspace (sequence 1 = second in menu) -->
-    <record id="action_rostering_hub" model="ir.actions.client">
-        <field name="name">Rostering Hub</field>
-        <field name="tag">security_shift_planner.rostering_hub</field>
-        <field name="target">current</field>
-    </record>
-
-    <!-- Roster Board (new) — sites by day, filters, 21st-20th cycle -->
-    <record id="action_roster_cycle" model="ir.actions.client">
-        <field name="name">Roster Board (new)</field>
-        <field name="tag">security_shift_planner.roster_cycle</field>
-        <field name="target">current</field>
-    </record>
-
-    <menuitem
-        id="menu_roster_cycle"
-        name="Roster Board (new)"
-        parent="security_operations.menu_security_roster"
-        action="action_roster_cycle"
-        sequence="0"
-        groups="hr.group_hr_user"
-    />
-
-    <menuitem
-        id="menu_rostering_hub"
-        name="Rostering Hub"
-        parent="security_operations.menu_security_roster"
-        action="action_rostering_hub"
-        sequence="1"
-        groups="hr.group_hr_user"
-    />
-
-    <!-- Roster Board — legacy kanban/drag-drop view -->
-    <record id="action_roster_board" model="ir.actions.client">
-        <field name="name">Roster Board</field>
-        <field name="tag">security_shift_planner.roster_board</field>
-        <field name="target">current</field>
-    </record>
-
-    <menuitem
-        id="menu_roster_board"
-        name="Roster Board"
-        parent="security_operations.menu_security_roster"
-        action="action_roster_board"
-        sequence="2"
-        groups="hr.group_hr_user"
-    />
-
+    <!-- 4. Weekly Check-in: Ops review, signoffs, and attendance reconciliation -->
     <record id="action_weekly_checkin" model="ir.actions.client">
-        <field name="name">Weekly Check-in</field>
+        <field name="name">📋 Weekly Check-in</field>
         <field name="tag">security_shift_planner.weekly_checkin</field>
         <field name="target">current</field>
     </record>
 
     <menuitem
         id="menu_weekly_checkin"
-        name="Weekly Check-in"
+        name="📋 Weekly Check-in"
         parent="security_operations.menu_security_roster"
         action="action_weekly_checkin"
-        sequence="3"
-        groups="hr.group_hr_user"
+        sequence="4"
+        groups="security_base.group_security_supervisor,security_base.group_security_manager,hr.group_hr_user"
     />
 </odoo>

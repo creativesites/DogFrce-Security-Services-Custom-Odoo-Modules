@@ -5,7 +5,6 @@ import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { user } from "@web/core/user";
 import { RosterGrid } from "./roster_grid";
-import { RosteringMegaMenu } from "./rostering_mega_menu";
 
 function ymd(d) {
     const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -18,25 +17,15 @@ function cycleFor(ref) {
     const start = ref.getDate() >= 21 ? new Date(y, m, 21) : new Date(y, m - 1, 21);
     const end = new Date(start.getFullYear(), start.getMonth() + 1, 20);
     return {
+        key: `${ymd(start)}_${ymd(end)}`,
         from: ymd(start),
         to: ymd(end),
         label: `${start.toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${end.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
     };
 }
 
-/**
- * RosterBoard — Tier-3 OWL client action.
- *
- * An interactive weekly/monthly timeline showing all roster slots for an operational cycle or site.
- * - Rows:  Sites → Posts
- * - Cols:  Dates within the active cycle (21st to 20th)
- * - Cells: One card per slot (assigned guard name, readiness score, relief badge, or "Unassigned")
- *
- * Decoupled from mandatory batch selection. Supports filtering by Operational Cycle, Site, Client,
- * Shift Template, Guard search, Gaps-only, and Relief-only.
- */
 class RosterBoard extends Component {
-    static components = { RosterGrid, RosteringMegaMenu };
+    static components = { RosterGrid };
     static props = { "*": true };
     static template = "security_shift_planner.RosterBoard";
 
@@ -179,8 +168,6 @@ class RosterBoard extends Component {
 
         this.closeOverrideModal = this.closeOverrideModal.bind(this);
         this.confirmOverrideAssign = this.confirmOverrideAssign.bind(this);
-        this.openMegaMenu = this.openMegaMenu.bind(this);
-        this.closeMegaMenu = this.closeMegaMenu.bind(this);
 
         onWillStart(async () => {
             await Promise.all([
@@ -192,14 +179,6 @@ class RosterBoard extends Component {
             ]);
             await this.loadBoard();
         });
-    }
-
-    openMegaMenu() {
-        this.state.showMegaMenu = true;
-    }
-
-    closeMegaMenu() {
-        this.state.showMegaMenu = false;
     }
 
     async loadShiftTemplates() {

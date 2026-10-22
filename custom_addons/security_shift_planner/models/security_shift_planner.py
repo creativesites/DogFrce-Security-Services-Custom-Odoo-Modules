@@ -245,116 +245,30 @@ class SecurityRosterBatch(models.Model):
 
     def action_auto_fill_slots(self):
         """
-        Greedy auto-fill: assigns the highest-scoring eligible guard to each
-        unassigned slot, processing high-value shifts first.
-
-        assigned_today tracks within-run assignments to prevent double-booking.
-
-        NOTE: rest-hour constraints between slots filled in the same run are not
-        enforced here. Add a _is_still_eligible() check after each assignment
-        once rest-hour rules are implemented on SecurityRosterSlot (Phase 2).
-
-        Notification create calls use sudo() to avoid cascading writes if a
-        write listener on security.attendance.record recomputes batch fields and
-        tries to trigger further notifications (no_notify context pattern).
+        Batch auto-fill: delegates directly to the unified SecurityRosterSlot.action_auto_assign_all
+        engine, ensuring 100% consistent constraints, intra-run rest checks, and scoring rules.
         """
-        filled = 0
-        gaps = 0
+        filled_total = 0
+        gaps_total = 0
         for batch in self:
             unassigned = batch.slot_ids.filtered(
                 lambda s: not s.employee_id and s.state != "cancelled"
             )
-            # Hardest-to-fill slots first (difficulty = grade requirement + high-value flag),
-            # then by date and shift start time.
-            def _difficulty(s):
-                d = 0
-                if s.high_value_shift:
-                    d += 50
-                if s.post_id and s.post_id.post_type_id and s.post_id.post_type_id.min_grade_id:
-                    d += s.post_id.post_type_id.min_grade_id.sequence * 10
-                return d
+            if not unassigned:
+                continue
+            unassigned.action_auto_assign_all()
+            gaps = len(batch.slot_ids.filtered(lambda s: not s.employee_id and s.state != "cancelled"))
+            filled = len(batch.slot_ids.filtered(lambda s: s.employee_id and s.state != "cancelled"))
+            filled_total += filled
+            gaps_total += gaps
 
-            unassigned = unassigned.sorted(
-                key=lambda s: (
-                    -_difficulty(s),
-                    str(s.shift_date) if s.shift_date else "",
-                    s.shift_template_id.start_hour if s.shift_template_id else 0,
-                )
-            )
-            # {shift_date_str: set(employee_id)} — prevents double-booking in this run
-            assigned_today = {}
-            run_sundays = {}
-            run_days = {}
-            max_cycle_days = 22
-            try:
-                p_days = self.env["ir.config_parameter"].sudo().get_param("security.max_working_days_per_cycle", "22")
-                max_cycle_days = int(p_days)
-            except (TypeError, ValueError):
-                pass
-
-            for slot in unassigned:
-                slot.critical_gap = False
-                eligible = slot._get_eligible_guards(slot)
-                if not eligible:
-                    slot.critical_gap = True
-                    gaps += 1
-                    continue
-                # Exclude guards assigned in this run (DB query is already done in
-                # _get_eligible_guards; assigned_today covers intra-run assignments)
-                date_key = str(slot.shift_date)
-                run_assigned = assigned_today.get(date_key, set())
-                is_sun = slot.shift_date and slot.shift_date.weekday() == 6
-                fair_eligible = []
-                for emp, sc in eligible:
-                    if emp.id in run_assigned:
-                        continue
-                    if is_sun and run_sundays.get(emp.id, 0) >= 1:
-                        continue
-                    if len(run_days.get(emp.id, set())) >= max_cycle_days:
-                        continue
-                    fair_eligible.append((emp, sc))
-                eligible = fair_eligible
-                if not eligible:
-                    slot.critical_gap = True
-                    gaps += 1
-                    continue
-                # Score remaining candidates and assign the best
-                scored = []
-                for employee, _ in eligible:
-                    score, _breakdown = slot._score_guard(slot, employee)
-                    scored.append((score, employee))
-                scored.sort(key=lambda x: x[0], reverse=True)
-
-                assigned_flag = False
-                for _best_score, best_employee in scored:
-                    try:
-                        slot.employee_id = best_employee.id
-                        slot.state = "assigned"
-                        slot.critical_gap = False
-                        assigned_today.setdefault(date_key, set()).add(best_employee.id)
-                        run_days.setdefault(best_employee.id, set()).add(slot.shift_date)
-                        if is_sun:
-                            run_sundays[best_employee.id] = run_sundays.get(best_employee.id, 0) + 1
-                        filled += 1
-                        assigned_flag = True
-                        break
-                    except Exception as err:
-                        slot.employee_id = False
-                        continue
-
-                if not assigned_flag:
-                    slot.critical_gap = True
-                    gaps += 1
             if gaps and "security.notification" in self.env:
                 manager_group = self.env.ref(
                     "security_base.group_security_manager", raise_if_not_found=False
                 )
-                if manager_group:
-                    manager_users = self.env["res.users"].search(
-                        [("group_ids", "in", [manager_group.id])]
-                    )
-                else:
-                    manager_users = self.env["res.users"].browse()
+                manager_users = self.env["res.users"].search(
+                    [("group_ids", "in", [manager_group.id])]
+                ) if manager_group else self.env["res.users"].browse()
                 self.env["security.notification"].sudo().create({
                     "title": f"Auto-Fill: {gaps} Critical Gap(s) — {batch.name}",
                     "body": (
@@ -368,17 +282,17 @@ class SecurityRosterBatch(models.Model):
                     "related_model": "security.roster.batch",
                     "related_id": batch.id,
                 })
-        msg = f"{filled} slot(s) filled automatically."
-        if gaps:
-            msg += f" {gaps} critical gap(s) could not be filled — review red cells."
+        msg = f"{filled_total} slot(s) filled automatically."
+        if gaps_total:
+            msg += f" {gaps_total} critical gap(s) could not be filled — review red cells."
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
-                "title": "Auto-Fill Complete",
+                "title": "Batch Auto-Fill Complete",
                 "message": msg,
-                "type": "success" if not gaps else "warning",
-                "sticky": gaps > 0,
+                "type": "success" if not gaps_total else "warning",
+                "sticky": False,
             },
         }
 
@@ -414,7 +328,7 @@ class SecurityRosterSlot(models.Model):
             end_dt = datetime.datetime.combine(self.shift_date, datetime.time(0, 0)) + timedelta(hours=end_h)
         return start_dt, end_dt
 
-    def _check_turnaround_rest(self, employee, min_rest_hours=12.0):
+    def _check_turnaround_rest(self, employee, min_rest_hours=12.0, extra_ranges=None):
         """
         Check if guard receives at least min_rest_hours (default 12h) before and after adjacent shifts.
         Returns (passes: bool, reason: str or None).
@@ -425,6 +339,25 @@ class SecurityRosterSlot(models.Model):
         self_start, self_end = self._get_slot_datetime_range()
         if not self_start or not self_end:
             return True, None
+
+        if extra_ranges:
+            for o_start, o_end, o_desc in extra_ranges:
+                if o_start < self_end and self_start < o_end:
+                    return False, f"Turnaround Rest Breach: direct shift overlap with {o_desc}."
+                if o_end <= self_start:
+                    gap_hours = (self_start - o_end).total_seconds() / 3600.0
+                    if gap_hours < min_rest_hours:
+                        return False, (
+                            f"Turnaround Rest Breach: only {gap_hours:.1f}h rest after {o_desc}. "
+                            f"Minimum {min_rest_hours:.0f}h rest required by Namibian standard."
+                        )
+                if self_end <= o_start:
+                    gap_hours = (o_start - self_end).total_seconds() / 3600.0
+                    if gap_hours < min_rest_hours:
+                        return False, (
+                            f"Turnaround Rest Breach: only {gap_hours:.1f}h rest before {o_desc}. "
+                            f"Minimum {min_rest_hours:.0f}h rest required by Namibian standard."
+                        )
 
         emp_id = employee.id if hasattr(employee, "id") else employee
         d_from = self.shift_date - timedelta(days=2)
@@ -899,10 +832,17 @@ class SecurityRosterSlot(models.Model):
         assigned_today = {}
         run_sundays = {}
         run_days = {}
+        run_assigned_shifts = {}
         max_cycle_days = 22
+        min_rest_hours = 12.0
         try:
             p_days = self.env["ir.config_parameter"].sudo().get_param("security.max_working_days_per_cycle", "22")
             max_cycle_days = int(p_days)
+        except (TypeError, ValueError):
+            pass
+        try:
+            p_rest = self.env["ir.config_parameter"].sudo().get_param("security.min_rest_hours", "12")
+            min_rest_hours = float(p_rest)
         except (TypeError, ValueError):
             pass
 
@@ -934,6 +874,7 @@ class SecurityRosterSlot(models.Model):
             date_key = str(slot.shift_date)
             run_assigned = assigned_today.get(date_key, set())
             is_sun = slot.shift_date and slot.shift_date.weekday() == 6
+            self_start, self_end = slot._get_slot_datetime_range()
             fair_eligible = []
             for emp, sc in eligible:
                 if emp.id in run_assigned:
@@ -942,6 +883,13 @@ class SecurityRosterSlot(models.Model):
                     continue
                 if len(run_days.get(emp.id, set())) >= max_cycle_days:
                     continue
+                # Intra-run turnaround rest check
+                if self_start and self_end and emp.id in run_assigned_shifts:
+                    passes_intra, _reason = slot._check_turnaround_rest(
+                        emp, min_rest_hours=min_rest_hours, extra_ranges=run_assigned_shifts[emp.id]
+                    )
+                    if not passes_intra:
+                        continue
                 fair_eligible.append((emp, sc))
             eligible = fair_eligible
             if not eligible:
@@ -981,6 +929,10 @@ class SecurityRosterSlot(models.Model):
                     )
                     assigned_today.setdefault(date_key, set()).add(best_employee.id)
                     run_days.setdefault(best_employee.id, set()).add(slot.shift_date)
+                    if self_start and self_end:
+                        run_assigned_shifts.setdefault(best_employee.id, []).append(
+                            (self_start, self_end, f"{slot.site_id.name or 'site'} on {slot.shift_date}")
+                        )
                     if is_sun:
                         run_sundays[best_employee.id] = run_sundays.get(best_employee.id, 0) + 1
                     filled += 1

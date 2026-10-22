@@ -9,11 +9,6 @@
 
 <div class="o_roster_board rb-shell">
 
-    <!-- Mega Menu Overlay -->
-    <t t-if="state.showMegaMenu">
-        <RosteringMegaMenu closeModal="closeMegaMenu"/>
-    </t>
-
     <!-- ═══════════════════════════════════════════════════════════
          PAGE HEADER — Clean Corporate Light
          ═══════════════════════════════════════════════════════════ -->
@@ -46,12 +41,6 @@
 
         <!-- Header Actions -->
         <div class="d-flex align-items-center gap-2 flex-wrap">
-            <button class="btn btn-sm btn-outline-info px-2 py-1"
-                    t-on-click="openMegaMenu"
-                    title="Open Rostering Mega Menu">
-                <i class="fa fa-th-large me-1"/>
-                <small class="fw-bold">Menu</small>
-            </button>
             <button class="btn btn-sm btn-light border text-muted px-3"
                     t-on-click="openBatchesManager"
                     title="Manage All Batches">
