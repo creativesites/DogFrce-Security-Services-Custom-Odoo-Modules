@@ -953,6 +953,213 @@ class SecurityAttendanceRecord(models.Model):
             date = record.shift_date or ""
             record.name = f"{employee} - {date}"
 
+    def action_dispatch_replacement(self):
+        """Open the one-click relief guard dispatch wizard for this AWOL / absent slot."""
+        self.ensure_one()
+        if not self.roster_slot_id:
+            raise UserError(_("No roster slot is linked to this attendance record."))
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Dispatch AWOL Replacement — %s") % (self.site_id.name or "Site"),
+            "res_model": "security.attendance.dispatch.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_attendance_record_id": self.id,
+                "default_roster_slot_id": self.roster_slot_id.id,
+                "default_site_id": self.site_id.id,
+                "default_post_id": self.post_id.id,
+                "default_shift_date": self.shift_date,
+                "default_original_employee_id": self.employee_id.id if self.employee_id else False,
+            },
+        }
+
+
+class SecurityAttendanceDispatchWizard(models.TransientModel):
+    _name = "security.attendance.dispatch.wizard"
+    _description = "Dispatch AWOL Relief Replacement Wizard"
+
+    attendance_record_id = fields.Many2one(
+        "security.attendance.record",
+        string="Attendance Record",
+        required=True,
+    )
+    roster_slot_id = fields.Many2one(
+        "security.roster.slot",
+        string="Roster Slot",
+        related="attendance_record_id.roster_slot_id",
+        readonly=True,
+    )
+    site_id = fields.Many2one(
+        "security.client.site",
+        string="Client Site",
+        related="roster_slot_id.site_id",
+        readonly=True,
+    )
+    post_id = fields.Many2one(
+        "security.post",
+        string="Post",
+        related="roster_slot_id.post_id",
+        readonly=True,
+    )
+    shift_date = fields.Date(
+        string="Shift Date",
+        related="roster_slot_id.shift_date",
+        readonly=True,
+    )
+    shift_template_id = fields.Many2one(
+        "security.shift.template",
+        string="Shift Template",
+        related="roster_slot_id.shift_template_id",
+        readonly=True,
+    )
+    original_employee_id = fields.Many2one(
+        "hr.employee",
+        string="AWOL Guard",
+        related="attendance_record_id.employee_id",
+        readonly=True,
+    )
+    replacement_employee_id = fields.Many2one(
+        "hr.employee",
+        string="Replacement Guard",
+        required=True,
+        domain="[('security_guard', '=', True), ('active', '=', True), ('security_disqualified', '=', False)]",
+    )
+    relief_reason = fields.Char(
+        string="Dispatch Reason / Note",
+        default="Emergency AWOL Relief Cover",
+    )
+    recommended_guards_html = fields.Html(
+        string="Top Eligible Relief Candidates",
+        compute="_compute_recommended_guards",
+        sanitize=False,
+    )
+
+    @api.depends("roster_slot_id")
+    def _compute_recommended_guards(self):
+        for wiz in self:
+            slot = wiz.roster_slot_id
+            if not slot or not hasattr(slot, "_get_eligible_guards"):
+                wiz.recommended_guards_html = "<p class='text-muted'>No slot details available.</p>"
+                continue
+
+            try:
+                eligible = slot._get_eligible_guards(slot)
+                if not eligible:
+                    wiz.recommended_guards_html = (
+                        "<div class='alert alert-warning p-2 small mb-2'>"
+                        "No automated eligible relief candidates found. Please pick an active guard manually below."
+                        "</div>"
+                    )
+                    continue
+
+                scored = []
+                for emp, _ in eligible:
+                    score, breakdown = slot._score_guard(slot, emp) if hasattr(slot, "_score_guard") else (float(emp.security_reliability_score), "")
+                    scored.append((score, emp, breakdown))
+                scored.sort(key=lambda x: x[0], reverse=True)
+
+                cards = ["<div class='row g-2 mb-2'>"]
+                for score, emp, breakdown in scored[:3]:
+                    badges = []
+                    if getattr(emp, "security_writes_neatly", False) == "neat":
+                        badges.append("<span class='badge bg-success text-white me-1' style='font-size:10px;'>✍️ Neat OB</span>")
+                    if getattr(emp, "security_can_read", False) and getattr(emp, "security_can_write", False):
+                        badges.append("<span class='badge bg-primary text-white me-1' style='font-size:10px;'>📖 Literate</span>")
+                    eng = getattr(emp, "security_english_level", False)
+                    if eng in ("good", "fluent"):
+                        badges.append(f"<span class='badge bg-info text-white me-1' style='font-size:10px;'>EN: {eng.title()}</span>")
+                    afr = getattr(emp, "security_afrikaans_level", False)
+                    if afr in ("good", "fluent"):
+                        badges.append(f"<span class='badge bg-warning text-dark me-1' style='font-size:10px;'>AF: {afr.title()}</span>")
+
+                    grade = emp.security_grade_id.name if emp.security_grade_id else "—"
+                    cards.append(f"""
+                        <div class='col-md-4'>
+                            <div class='border rounded p-2 bg-white shadow-sm'>
+                                <div class='d-flex justify-content-between align-items-center'>
+                                    <strong class='text-dark' style='font-size:12px;'>{emp.name}</strong>
+                                    <span class='badge bg-primary' style='font-size:10px;'>{score:.0f} pts</span>
+                                </div>
+                                <div class='text-muted small mt-1' style='font-size:11px;'>Grade {grade} · Rel: {emp.security_reliability_score}%</div>
+                                <div class='mt-2'>{''.join(badges)}</div>
+                            </div>
+                        </div>
+                    """)
+                cards.append("</div>")
+                wiz.recommended_guards_html = "".join(cards)
+
+                if not wiz.replacement_employee_id and scored:
+                    wiz.replacement_employee_id = scored[0][1].id
+            except Exception as e:
+                wiz.recommended_guards_html = f"<p class='text-danger'>Error calculating suggestions: {e}</p>"
+
+    def action_confirm_dispatch(self):
+        self.ensure_one()
+        slot = self.roster_slot_id
+        rep_emp = self.replacement_employee_id
+        orig_emp = self.original_employee_id
+
+        if not slot:
+            raise UserError(_("No roster slot linked to this attendance record."))
+        if not rep_emp:
+            raise UserError(_("Please select a replacement guard."))
+
+        reason_text = f"AWOL replacement for {orig_emp.name if orig_emp else 'guard'}: {self.relief_reason or ''}".strip()
+        slot.write({
+            "employee_id": rep_emp.id,
+            "state": "assigned",
+            "is_relief": True,
+            "relief_reason": reason_text,
+            "note": (slot.note or "") + f"\n[{fields.Datetime.now().strftime('%Y-%m-%d %H:%M')}] AWOL Dispatch: {rep_emp.name} replaced {orig_emp.name if orig_emp else 'guard'}.",
+        })
+
+        batch = self.attendance_record_id.attendance_batch_id
+        if batch and rep_emp:
+            existing_rec = self.env["security.attendance.record"].search([
+                ("attendance_batch_id", "=", batch.id),
+                ("employee_id", "=", rep_emp.id),
+                ("roster_slot_id", "=", slot.id),
+            ], limit=1)
+            if not existing_rec:
+                self.env["security.attendance.record"].create({
+                    "attendance_batch_id": batch.id,
+                    "roster_slot_id": slot.id,
+                    "manual_presence": "not_marked",
+                    "status": "scheduled",
+                })
+
+        Notification = self.env.get("security.notification")
+        if Notification:
+            recipients = self.env.user
+            if self.site_id.supervisor_id:
+                sup_user = self.env["res.users"].search([("employee_id", "=", self.site_id.supervisor_id.id)], limit=1)
+                if sup_user:
+                    recipients |= sup_user
+            Notification.create({
+                "title": f"Relief Dispatched: {rep_emp.name}",
+                "body": f"{rep_emp.name} dispatched to {self.site_id.name} to replace AWOL guard {orig_emp.name if orig_emp else 'guard'}.",
+                "notification_type": "relief_dispatch",
+                "severity": "info",
+                "recipient_ids": [(6, 0, recipients.ids)],
+                "related_model": "security.roster.slot",
+                "related_id": slot.id,
+            })
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Replacement Dispatched"),
+                "message": _("Guard %s successfully dispatched to %s (%s).") % (
+                    rep_emp.name, self.site_id.name, self.post_id.name
+                ),
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ATTENDANCE SUMMARY GRID DATA PROVIDER

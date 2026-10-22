@@ -156,6 +156,10 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <button name="action_dispatch_replacement" type="object" string="Dispatch Replacement Guard"
+                            class="oe_highlight btn-danger"
+                            invisible="absence_type != 'awol' and manual_presence != 'awol'"
+                            title="Quickly assign and dispatch a suggested relief guard to cover this post"/>
                     <field name="status" widget="statusbar"
                            statusbar_visible="scheduled,present,late,early_leave,absent,incomplete"
                            readonly="1"/>
@@ -448,5 +452,47 @@
         sequence="10"
         groups="hr.group_hr_user"
     />
+
+    <!-- ══════════════════════════════════════════════════════════════
+         DISPATCH AWOL RELIEF REPLACEMENT — WIZARD FORM VIEW
+         ══════════════════════════════════════════════════════════════ -->
+    <record id="view_security_attendance_dispatch_wizard_form" model="ir.ui.view">
+        <field name="name">security.attendance.dispatch.wizard.form</field>
+        <field name="model">security.attendance.dispatch.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Dispatch AWOL Relief Guard">
+                <sheet>
+                    <div class="alert alert-danger d-flex align-items-center mb-3 p-2">
+                        <i class="fa fa-exclamation-triangle fa-2x me-3 text-danger"/>
+                        <div>
+                            <strong>AWOL Guard Alert:</strong>
+                            <div class="small">The scheduled guard is absent without leave. Select an eligible relief guard below to deploy immediate coverage.</div>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Shift Details">
+                            <field name="site_id"/>
+                            <field name="post_id"/>
+                            <field name="shift_template_id"/>
+                            <field name="shift_date"/>
+                            <field name="original_employee_id"/>
+                        </group>
+                        <group string="Relief Assignment">
+                            <field name="replacement_employee_id" options="{'no_create': True}"/>
+                            <field name="relief_reason"/>
+                        </group>
+                    </group>
+
+                    <separator string="Top Recommended Relief Guards"/>
+                    <field name="recommended_guards_html" readonly="1" nolabel="1"/>
+                </sheet>
+                <footer>
+                    <button name="action_confirm_dispatch" type="object" string="Confirm &amp; Dispatch Guard" class="btn-danger"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
 
 </odoo>

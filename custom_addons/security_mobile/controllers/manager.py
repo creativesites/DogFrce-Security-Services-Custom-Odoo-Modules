@@ -64,16 +64,20 @@ def _serialize_rec(rec):
     emp  = rec.employee_id
     return {
         "record_id": rec.id,
-        "guard": {"id": emp.id, "name": emp.name,
-                  "grade": emp.security_grade_id.name if emp.security_grade_id else None},
-        "post": slot.post_id.name if slot else None,
-        "shift": slot.shift_template_id.name if slot else None,
+        "slot_id": slot.id if slot else None,
+        "guard": {"id": emp.id if emp else None, "name": emp.name if emp else "Unassigned",
+                  "grade": emp.security_grade_id.name if emp and emp.security_grade_id else None},
+        "post": slot.post_id.name if slot else (rec.post_id.name if hasattr(rec, 'post_id') and rec.post_id else None),
+        "shift": slot.shift_template_id.name if slot else (rec.shift_template_id.name if hasattr(rec, 'shift_template_id') and rec.shift_template_id else None),
         "manual_presence": rec.manual_presence or "not_marked",
         "check_in": rec.check_in.isoformat() if rec.check_in else None,
         "check_out": rec.check_out.isoformat() if rec.check_out else None,
         "late_minutes": getattr(rec, "late_minutes", 0),
         "overtime_hours": getattr(rec, "overtime_hours", 0),
         "overtime_approved": getattr(rec, "overtime_approved", False),
+        "slot_state": slot.state if slot else "assigned",
+        "is_relief": bool(getattr(slot, "is_relief", False)) if slot else False,
+        "relief_reason": (getattr(slot, "relief_reason", "") or "") if slot else "",
     }
 
 
@@ -112,7 +116,7 @@ class ManagerController(http.Controller):
                 auth="user", methods=["GET"], type="http", csrf=False, cors="*")
     @require_group(GROUP_MANAGER, GROUP_OWNER)
     def manager_site_detail(self, site_id, **kw):
-        """Detailed roster for one site. ?date=YYYY-MM-DD"""
+        """Detailed roster for one site with unified scheduled slots & live attendance. ?date=YYYY-MM-DD"""
         try:
             target_date = date.fromisoformat(kw["date"]) if "date" in kw else date.today()
         except ValueError:
@@ -123,31 +127,94 @@ class ManagerController(http.Controller):
         if not site.exists():
             return _json_err(f"Site {site_id} not found.", status=404)
 
+        # 1. Fetch all active roster slots for this site and date
+        slots = env["security.roster.slot"].sudo().search(
+            [("site_id", "=", site_id), ("shift_date", "=", target_date),
+             ("state", "!=", "cancelled")],
+            order="shift_template_id, post_id, id"
+        )
+
+        # 2. Fetch attendance batch (if any)
         batch = env["security.attendance.batch"].sudo().search(
             [("site_id", "=", site_id), ("attendance_date", "=", target_date)], limit=1
         )
+
+        records_by_slot = {}
+        records_by_emp = {}
+        handled_record_ids = set()
+        overtime_pending = []
 
         if batch:
             records = env["security.attendance.record"].sudo().search(
                 [("attendance_batch_id", "=", batch.id)], order="employee_id asc"
             )
-            roster = [_serialize_rec(r) for r in records]
-            overtime_pending = [_serialize_rec(r) for r in records
-                                if getattr(r, "overtime_hours", 0) > 0
-                                and not getattr(r, "overtime_approved", False)]
+            for r in records:
+                if r.roster_slot_id:
+                    records_by_slot[r.roster_slot_id.id] = r
+                elif r.employee_id:
+                    records_by_emp[r.employee_id.id] = r
+
+                if getattr(r, "overtime_hours", 0) > 0 and not getattr(r, "overtime_approved", False):
+                    overtime_pending.append(_serialize_rec(r))
         else:
-            slots = env["security.roster.slot"].sudo().search(
-                [("site_id", "=", site_id), ("shift_date", "=", target_date),
-                 ("state", "!=", "cancelled")], order="shift_template_id, post_id"
-            )
-            roster = [{"slot_id": s.id, "record_id": None,
-                       "guard": {"id": s.employee_id.id if s.employee_id else None,
-                                 "name": s.employee_id.name if s.employee_id else "Unassigned",
-                                 "grade": s.employee_id.security_grade_id.name
-                                 if s.employee_id and s.employee_id.security_grade_id else None},
-                       "post": s.post_id.name, "shift": s.shift_template_id.name,
-                       "manual_presence": "not_marked"} for s in slots]
-            overtime_pending = []
+            records = env["security.attendance.record"].sudo().browse([])
+
+        roster = []
+
+        # 3. Unify slots with attendance presence
+        for s in slots:
+            rec = records_by_slot.get(s.id)
+            if not rec and s.employee_id and s.employee_id.id in records_by_emp:
+                rec = records_by_emp[s.employee_id.id]
+
+            emp = (rec.employee_id if (rec and rec.employee_id) else s.employee_id)
+            grade_name = emp.security_grade_id.name if (emp and emp.security_grade_id) else None
+
+            if rec:
+                handled_record_ids.add(rec.id)
+                roster.append({
+                    "slot_id": s.id,
+                    "record_id": rec.id,
+                    "guard": {"id": emp.id if emp else None, "name": emp.name if emp else "Unassigned", "grade": grade_name},
+                    "post": s.post_id.name if s.post_id else (rec.post_id.name if hasattr(rec, 'post_id') and rec.post_id else None),
+                    "shift": s.shift_template_id.name if s.shift_template_id else (rec.shift_template_id.name if hasattr(rec, 'shift_template_id') and rec.shift_template_id else None),
+                    "manual_presence": rec.manual_presence or "not_marked",
+                    "check_in": rec.check_in.isoformat() if rec.check_in else None,
+                    "check_out": rec.check_out.isoformat() if rec.check_out else None,
+                    "late_minutes": getattr(rec, "late_minutes", 0),
+                    "overtime_hours": getattr(rec, "overtime_hours", 0),
+                    "overtime_approved": getattr(rec, "overtime_approved", False),
+                    "slot_state": s.state,
+                    "is_relief": bool(getattr(s, "is_relief", False)),
+                    "relief_reason": getattr(s, "relief_reason", "") or "",
+                })
+            else:
+                roster.append({
+                    "slot_id": s.id,
+                    "record_id": None,
+                    "guard": {"id": emp.id if emp else None, "name": emp.name if emp else "Unassigned", "grade": grade_name},
+                    "post": s.post_id.name if s.post_id else None,
+                    "shift": s.shift_template_id.name if s.shift_template_id else None,
+                    "manual_presence": "not_marked",
+                    "check_in": None,
+                    "check_out": None,
+                    "late_minutes": 0,
+                    "overtime_hours": 0.0,
+                    "overtime_approved": False,
+                    "slot_state": s.state,
+                    "is_relief": bool(getattr(s, "is_relief", False)),
+                    "relief_reason": getattr(s, "relief_reason", "") or "",
+                })
+
+        # 4. Append ad-hoc attendance records not linked to existing roster slots
+        if batch:
+            for r in records:
+                if r.id not in handled_record_ids:
+                    extra = _serialize_rec(r)
+                    extra["slot_state"] = "ad_hoc"
+                    extra["is_relief"] = False
+                    extra["relief_reason"] = ""
+                    roster.append(extra)
 
         return _json_ok({
             "date": str(target_date),
