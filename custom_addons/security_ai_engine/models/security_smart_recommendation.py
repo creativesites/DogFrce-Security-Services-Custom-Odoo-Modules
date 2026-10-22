@@ -112,7 +112,7 @@ class SecuritySmartRecommendation(models.Model):
                 guard_slots[emp].append(slot)
 
         # Unassigned slots or low-hour guards
-        unassigned_slots = slot_model.search([("state", "=", "unassigned")])
+        unassigned_slots = slot_model.search([("employee_id", "=", False), ("state", "=", "draft")])
         if batch_id:
             unassigned_slots = unassigned_slots.filtered(lambda s: s.batch_id.id == batch_id)
 
