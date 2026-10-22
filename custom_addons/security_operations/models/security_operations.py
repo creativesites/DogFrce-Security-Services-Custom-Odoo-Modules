@@ -1617,7 +1617,8 @@ class SecurityRosterBatch(models.Model):
             date_from = fields.Date.to_date(date_from)
             date_to = fields.Date.to_date(date_to)
         skipped_no_pool = []
-        # Sites kept for manual testing are never rostered automatically (set in System Parameters).
+        skipped_manual = []
+        # Sites kept for manual testing are never auto-filled (set in System Parameters).
         manual_ids = {int(x) for x in (self.env["ir.config_parameter"].sudo().get_param(
             "security.roster.manual_site_ids", "") or "").replace(" ", "").split(",") if x.isdigit()}
 
@@ -1643,11 +1644,15 @@ class SecurityRosterBatch(models.Model):
             for site in sites:
                 if not site.active:
                     continue
-                if site.id in manual_ids:
+
+                has_reqs = self.env["security.shift.requirement"].search_count([
+                    ("site_id", "=", site.id),
+                    ("active", "=", True),
+                ])
+                if not has_reqs:
+                    _logger.info("Skipping site %s: no active shift requirements configured.", site.name)
                     continue
-                if not site.site_guard_pool_ids:
-                    skipped_no_pool.append(site.name)
-                    continue
+
                 batch = self.search([
                     ("site_id", "=", site.id),
                     ("date_from", "=", str(date_from)),
@@ -1668,8 +1673,14 @@ class SecurityRosterBatch(models.Model):
                 try:
                     if not batch.slot_ids:
                         batch.action_generate_slots()
-                    if hasattr(batch, "action_auto_fill_slots"):
-                        batch.action_auto_fill_slots()
+
+                    if site.id in manual_ids:
+                        skipped_manual.append(site.name)
+                    elif site.site_guard_pool_ids:
+                        if hasattr(batch, "action_auto_fill_slots"):
+                            batch.action_auto_fill_slots()
+                    else:
+                        skipped_no_pool.append(site.name)
 
                     if is_new:
                         created_batches += 1
@@ -1697,7 +1708,8 @@ class SecurityRosterBatch(models.Model):
             "unassigned_gaps": total_slots - total_assigned,
             "fill_rate": fill_rate,
             "skipped_no_pool": skipped_no_pool,
-            "message": f"Cycle {cycle_label}: {created_batches} created, {updated_batches} updated. {total_assigned}/{total_slots} slots filled ({fill_rate}%). {len(skipped_no_pool)} site(s) skipped: no guard pool.",
+            "skipped_manual": skipped_manual,
+            "message": f"Cycle {cycle_label}: {created_batches} created, {updated_batches} updated. {total_assigned}/{total_slots} slots filled ({fill_rate}%). {len(skipped_no_pool)} site(s) unpooled (open gaps), {len(skipped_manual)} manual site(s).",
         }
 
     @api.model
