@@ -1798,7 +1798,7 @@ class SecurityRosterBatch(models.Model):
 
                     if site.id in manual_ids:
                         skipped_manual.append(site.name)
-                    elif site.site_guard_pool_ids:
+                    elif site.site_guard_pool_ids or site.guard_pool_mode == "site_then_relief":
                         if hasattr(batch, "action_auto_fill_slots"):
                             batch.action_auto_fill_slots()
                     else:

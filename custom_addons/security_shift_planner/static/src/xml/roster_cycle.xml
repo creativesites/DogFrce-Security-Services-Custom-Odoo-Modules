@@ -232,7 +232,7 @@
                           </div>
                         </div>
 
-                        <button class="rc-btn-assign" t-on-click="() => this.assignGuard(slot.id, g.id)">
+                        <button class="rc-btn-assign" t-on-click="() => this.assignGuard(slot.id, g.id, g.name)">
                           Assign
                         </button>
                       </div>
@@ -242,6 +242,34 @@
               </div>
             </t>
           </t>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manager Override Modal -->
+    <div class="rc-override-modal-backdrop" t-if="state.overrideModal and state.overrideModal.visible" t-on-click.self="closeOverrideModal">
+      <div class="rc-override-modal">
+        <div class="rc-override-modal-header">
+          <h5 class="rc-override-modal-title">⚠️ Manager Override Required</h5>
+          <button class="rc-drawer-close" t-on-click="closeOverrideModal">✕</button>
+        </div>
+        <div class="rc-override-modal-body">
+          <p>Assigning <b><t t-esc="state.overrideModal.guardName"/></b> has the following warnings / constraints:</p>
+          <div class="rc-conflict-reasons-box">
+            <t t-foreach="state.overrideModal.reasons" t-as="r" t-key="r">
+              <div class="rc-reason-item">⚠️ <t t-esc="r"/></div>
+            </t>
+          </div>
+          <div class="rc-override-field">
+            <label class="rc-field-label">Override Reason (Required for Audit Trail):</label>
+            <input type="text" class="rc-input-override" placeholder="e.g. Approved by Operations Manager due to relief shortage"
+                   t-att-value="state.overrideModal.reasonInput"
+                   t-on-input="(ev) => this.state.overrideModal.reasonInput = ev.target.value"/>
+          </div>
+        </div>
+        <div class="rc-override-modal-footer">
+          <button class="rc-btn rc-btn-secondary" t-on-click="closeOverrideModal">Cancel</button>
+          <button class="rc-btn rc-btn-primary" t-on-click="submitOverride">Confirm Override</button>
         </div>
       </div>
     </div>

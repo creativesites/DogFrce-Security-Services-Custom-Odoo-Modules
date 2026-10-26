@@ -75,6 +75,7 @@ export class RosterCycle extends Component {
             activeSlotId: null,
             poolTab: "regular",
             poolSearch: "",
+            overrideModal: null,
         });
 
         onWillStart(async () => {
@@ -221,16 +222,50 @@ export class RosterCycle extends Component {
         );
     }
 
-    async assignGuard(slotId, guardId) {
+    async assignGuard(slotId, guardId, guardName = "", override = false, overrideReason = "") {
         try {
-            await this.orm.call("security.roster.slot", "action_manual_assign", [[slotId], guardId]);
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_manual_assign",
+                [[slotId], guardId, override, overrideReason]
+            );
+            if (res && res.status === "override_required") {
+                this.state.overrideModal = {
+                    visible: true,
+                    slotId: slotId,
+                    guardId: guardId,
+                    guardName: guardName || res.guard_name || "Guard",
+                    reasons: res.reasons || [],
+                    reasonInput: "",
+                };
+                return;
+            }
+            if (res && res.status === "error") {
+                this.notification.add(res.message || "Assignment rejected.", { type: "danger" });
+                return;
+            }
             this.notification.add("Guard assigned successfully", { type: "success" });
             this.state.activeSlotId = null;
+            this.state.overrideModal = null;
             await this.loadDaySlots();
             this.load(); // refresh background grid metrics
         } catch (e) {
             this.notification.add("Assignment failed: " + (e.message || e), { type: "danger" });
         }
+    }
+
+    async submitOverride() {
+        if (!this.state.overrideModal) return;
+        const { slotId, guardId, guardName, reasonInput } = this.state.overrideModal;
+        if (!reasonInput || !reasonInput.trim()) {
+            this.notification.add("Please provide an override reason.", { type: "warning" });
+            return;
+        }
+        await this.assignGuard(slotId, guardId, guardName, true, reasonInput.trim());
+    }
+
+    closeOverrideModal() {
+        this.state.overrideModal = null;
     }
 
     async clearSlot(slotId) {

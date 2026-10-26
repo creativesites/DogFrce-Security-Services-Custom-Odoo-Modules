@@ -265,7 +265,7 @@ def _execute_tool(name: str, args: dict, session, env) -> dict:
                 "active_guards": env["hr.employee"].search_count([["security_guard", "=", True], ["active", "=", True]]),
                 "today_present": env["security.attendance.record"].search_count([["shift_date", "=", today_str], ["status", "in", ["present", "late"]]]),
                 "today_awol": env["security.attendance.record"].search_count([["shift_date", "=", today_str], ["absence_type", "=", "awol"]]),
-                "unassigned_slots": env["security.roster.slot"].search_count([["state", "=", "confirmed"], ["employee_id", "=", False]]),
+                "unassigned_slots": env["security.roster.slot"].search_count([["state", "!=", "cancelled"], ["employee_id", "=", False]]),
                 "pending_leave": env["security.leave.request"].search_count([["state", "=", "draft"]]),
                 "open_incidents": env["security.incident"].search_count([["state", "=", "draft"]]),
                 "draft_invoices": env["security.billing.invoice"].search_count([["state", "=", "draft"]]),
@@ -280,7 +280,7 @@ def _execute_tool(name: str, args: dict, session, env) -> dict:
             return {
                 "pending_leave_requests": env["security.leave.request"].search_count([["state", "=", "draft"]]),
                 "open_incidents": env["security.incident"].search_count([["state", "=", "draft"]]),
-                "unassigned_slots": env["security.roster.slot"].search_count([["state", "=", "confirmed"], ["employee_id", "=", False]]),
+                "unassigned_slots": env["security.roster.slot"].search_count([["state", "!=", "cancelled"], ["employee_id", "=", False]]),
                 "draft_invoices": env["security.billing.invoice"].search_count([["state", "=", "draft"]]),
                 "overdue_invoices": env["security.billing.invoice"].search_count([["state", "not in", ["paid", "cancelled"]], ["due_date", "<", today_str]]),
                 "expiring_documents": env["security.employee.document"].search_count([["expiry_status", "=", "expiring"]]),

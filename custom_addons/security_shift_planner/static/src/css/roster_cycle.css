@@ -238,3 +238,101 @@
 }
 .rc-btn-assign:hover { background: #0d2346; }
 .rc-pool-empty { padding: 14px; text-align: center; color: #64748b; font-size: 0.78rem; }
+
+/* Override Modal */
+.rc-override-modal-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.rc-override-modal {
+  background: #fff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2), 0 10px 10px -5px rgba(0,0,0,0.04);
+  overflow: hidden;
+  animation: rcFadeIn 0.15s ease-out;
+}
+@keyframes rcFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.rc-override-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fffbeb;
+}
+.rc-override-modal-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #92400e;
+}
+.rc-override-modal-body {
+  padding: 16px 18px;
+  font-size: 0.85rem;
+  color: #334155;
+}
+.rc-conflict-reasons-box {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 14px;
+}
+.rc-reason-item {
+  color: #991b1b;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.rc-reason-item:last-child { margin-bottom: 0; }
+.rc-override-field {
+  margin-top: 12px;
+}
+.rc-field-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.78rem;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+.rc-input-override {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  background: #fff;
+  box-sizing: border-box;
+}
+.rc-input-override:focus {
+  outline: 2px solid #1b3a6b;
+  border-color: #1b3a6b;
+}
+.rc-override-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+.rc-btn-secondary {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+.rc-btn-secondary:hover {
+  background: #f1f5f9;
+}

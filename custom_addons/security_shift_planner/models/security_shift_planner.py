@@ -941,7 +941,10 @@ class SecurityRosterSlot(models.Model):
                             eff_pool, _mode = slot.batch_id._get_effective_site_pool(slot.site_id)
                         elif slot.site_id.site_guard_pool_ids:
                             eff_pool = slot.site_id.site_guard_pool_ids
-                        if eff_pool and best_employee.id not in eff_pool.ids:
+                        if not eff_pool:
+                            is_relief_val = True
+                            relief_reason_val = "Assigned from company pool (no regular site team)"
+                        elif best_employee.id not in eff_pool.ids:
                             is_relief_val = True
                             relief_reason_val = "No eligible regular site guard available (relief fallback)"
 
