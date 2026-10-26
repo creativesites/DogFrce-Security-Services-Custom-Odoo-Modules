@@ -59,21 +59,21 @@ class TestRosterScheduleImport(TransactionCase):
         # Create guards with varying naming structures
         cls.guard1 = cls.env["hr.employee"].create({
             "name": "Petrus Shilongo",
-            "guard_code": "DF001",
+            "employee_code": "DF001",
             "security_guard": True,
             "active": True,
             "security_disqualified": False,
         })
         cls.guard2 = cls.env["hr.employee"].create({
             "name": "Johannes Amukoto",
-            "guard_code": "DF002",
+            "employee_code": "DF002",
             "security_guard": True,
             "active": True,
             "security_disqualified": False,
         })
         cls.guard3 = cls.env["hr.employee"].create({
             "name": "Matheus Shikongo",
-            "guard_code": "DF003",
+            "employee_code": "DF003",
             "security_guard": True,
             "active": True,
             "security_disqualified": False,
