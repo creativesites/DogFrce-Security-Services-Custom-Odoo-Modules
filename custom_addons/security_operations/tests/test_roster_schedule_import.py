@@ -143,8 +143,8 @@ class TestRosterScheduleImport(TransactionCase):
         # Apply import
         wizard.action_apply_import()
 
-        self.existing_slot_unassigned.refresh()
-        self.existing_slot_assigned.refresh()
+        self.existing_slot_unassigned.invalidate_recordset()
+        self.existing_slot_assigned.invalidate_recordset()
 
         self.assertEqual(self.existing_slot_unassigned.employee_id.id, self.guard1.id)
         self.assertFalse(self.existing_slot_unassigned.critical_gap)

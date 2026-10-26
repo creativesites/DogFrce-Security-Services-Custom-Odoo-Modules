@@ -687,15 +687,20 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
             if raw_parts and raw_parts == g_parts:
                 return g, 95
 
-        # 4. Fuzzy
+        # 4. Fuzzy & Token-sorted fuzzy (handles reversed surname/first name + typos)
+        clean_sorted = " ".join(sorted(clean.split()))
         best_guard = None
         best_ratio = 0.0
         for g in all_guards:
-            ratio = difflib.SequenceMatcher(None, clean, self._clean_name(g.name)).ratio()
+            g_clean = self._clean_name(g.name)
+            r1 = difflib.SequenceMatcher(None, clean, g_clean).ratio()
+            g_sorted = " ".join(sorted(g_clean.split()))
+            r2 = difflib.SequenceMatcher(None, clean_sorted, g_sorted).ratio()
+            ratio = max(r1, r2)
             if ratio > best_ratio:
                 best_ratio = ratio
                 best_guard = g
-        if best_guard and best_ratio >= 0.80:
+        if best_guard and best_ratio >= 0.78:
             return best_guard, int(best_ratio * 100)
 
         return False, 0
