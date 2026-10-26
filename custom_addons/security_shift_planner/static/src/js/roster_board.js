@@ -1254,6 +1254,24 @@ class RosterBoard extends Component {
         }
     }
 
+    openScheduleImportWizard() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "security.roster.schedule.import.wizard",
+            views: [[false, "form"]],
+            target: "new",
+            context: {
+                default_date_from: this.state.batchDateFrom,
+                default_date_to: this.state.batchDateTo,
+                default_site_id: this.state.filters.siteId ? parseInt(this.state.filters.siteId) : false,
+            },
+        }, {
+            onClose: () => {
+                this.loadBatchData();
+            }
+        });
+    }
+
     async openCreateSlot() {
         if (!this.state.createSlot.dataLoaded) {
             const [allSites, allPosts, templates, employees] = await Promise.all([

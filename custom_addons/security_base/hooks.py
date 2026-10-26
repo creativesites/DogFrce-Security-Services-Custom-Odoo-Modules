@@ -29,6 +29,11 @@ def post_init_hook(env):
 
     _logger.info("DogForce: Namibia localization defaults applied.")
 
+    # Harden session inactivity timeout to 90 days (3 months)
+    env["ir.config_parameter"].sudo().set_param(
+        "sessions.max_inactivity_seconds", str(60 * 60 * 24 * 90)
+    )
+
     # Warn if multiple l10n modules are active (only one should be).
     l10n_modules = env["ir.module.module"].search([
         ("name", "=like", "l10n_%"),

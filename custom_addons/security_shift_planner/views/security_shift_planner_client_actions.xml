@@ -73,4 +73,14 @@
         sequence="4"
         groups="security_base.group_security_supervisor,security_base.group_security_manager,hr.group_hr_user"
     />
+
+    <!-- 5. Import Manual Excel Roster Schedule -->
+    <menuitem
+        id="menu_security_roster_schedule_import"
+        name="📥 Import Excel Roster"
+        parent="security_operations.menu_security_roster"
+        action="security_operations.action_security_roster_schedule_import_wizard"
+        sequence="5"
+        groups="security_base.group_security_supervisor,security_base.group_security_manager,hr.group_hr_user"
+    />
 </odoo>

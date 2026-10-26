@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form View -->
+    <record id="view_security_roster_schedule_import_wizard_form" model="ir.ui.view">
+        <field name="name">security.roster.schedule.import.wizard.form</field>
+        <field name="model">security.roster.schedule.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Excel / Manual Roster Schedule">
+                <field name="state" invisible="1"/>
+
+                <!-- Stage 1: Upload & Configure -->
+                <div invisible="state != 'upload'">
+                    <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                        <i class="fa fa-calendar-check-o fa-2x me-3"/>
+                        <div>
+                            <strong>Manual Roster Schedule Importer:</strong> Upload your ongoing Excel roster (<code>.xlsx</code> or <code>.csv</code>) or paste roster table text. 
+                            The system supports both date-column matrices (days 21 to 20 across columns) and tabular rows (Site, Date, Shift, Guard). 
+                            It will match guards, detect shift gaps, and override or fill live roster slots seamlessly.
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Schedule Cycle &amp; Target Site">
+                            <field name="site_id" options="{'no_create': True}" placeholder="Auto-detect from sheet if left blank"/>
+                            <field name="date_from"/>
+                            <field name="date_to"/>
+                            <field name="default_shift_template_id" options="{'no_create': True}"/>
+                        </group>
+                        <group string="Import Rules &amp; Conflict Handling">
+                            <field name="override_assigned" widget="boolean_toggle"/>
+                            <field name="create_missing_slots" widget="boolean_toggle"/>
+                            <field name="import_mode" widget="radio"/>
+                        </group>
+                    </group>
+                    <group string="Spreadsheet / Text Input">
+                        <field name="file_data" filename="file_name" widget="binary" invisible="import_mode != 'file'" required="import_mode == 'file'"/>
+                        <field name="file_name" invisible="1"/>
+                        <field name="raw_text" placeholder="Paste table data or schedule text here..." invisible="import_mode != 'text'" required="import_mode == 'text'"/>
+                    </group>
+                </div>
+
+                <!-- Stage 2: Review & Validate -->
+                <div invisible="state != 'preview'">
+                    <div class="d-flex align-items-center justify-content-between p-3 bg-light border rounded mb-3">
+                        <div>
+                            <h5 class="mb-1 text-primary fw-bold">Roster Schedule Preview</h5>
+                            <span class="text-muted small">Cycle: <field name="date_from" readonly="1"/> to <field name="date_to" readonly="1"/></span>
+                        </div>
+                        <div class="d-flex gap-2 text-center">
+                            <div class="px-2 py-1 bg-white border rounded">
+                                <div class="fs-5 fw-bold text-dark"><field name="total_lines"/></div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">Total Shifts</div>
+                            </div>
+                            <div class="px-2 py-1 bg-white border rounded">
+                                <div class="fs-5 fw-bold text-success"><field name="fill_gaps_count"/></div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">Gaps Filled</div>
+                            </div>
+                            <div class="px-2 py-1 bg-white border rounded">
+                                <div class="fs-5 fw-bold text-primary"><field name="override_count"/></div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">Overrides</div>
+                            </div>
+                            <div class="px-2 py-1 bg-white border rounded">
+                                <div class="fs-5 fw-bold text-warning"><field name="clash_count"/></div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">Clashes/Notes</div>
+                            </div>
+                            <div class="px-2 py-1 bg-white border rounded">
+                                <div class="fs-5 fw-bold text-danger"><field name="unmatched_guards"/></div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">Unmatched</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning py-2 mb-3" invisible="clash_count == 0">
+                        <i class="fa fa-exclamation-triangle me-1"/>
+                        <strong>Attention:</strong> There are <field name="clash_count"/> shifts with warnings or double-booking conflicts. Review them below before applying. Uncheck 'Apply' for any shift you do not wish to import.
+                    </div>
+
+                    <field name="line_ids">
+                        <list editable="bottom" 
+                              decoration-success="clash_type == 'none' and action_type in ('fill', 'create')" 
+                              decoration-info="action_type == 'override'" 
+                              decoration-warning="clash_type in ('double_booking', 'leave')" 
+                              decoration-danger="clash_type in ('disqualified', 'no_guard', 'no_site')">
+                            <field name="apply_line" widget="boolean_toggle" string="Apply"/>
+                            <field name="shift_date"/>
+                            <field name="site_id" options="{'no_create': True}" placeholder="Search site..."/>
+                            <field name="shift_template_id" options="{'no_create': True}"/>
+                            <field name="employee_id" options="{'no_create': True}" placeholder="Search guard..."/>
+                            <field name="raw_guard_name" readonly="1" string="Guard in Sheet"/>
+                            <field name="action_type" widget="badge" 
+                                   decoration-success="action_type == 'fill'" 
+                                   decoration-info="action_type == 'override'" 
+                                   decoration-secondary="action_type == 'keep'" 
+                                   decoration-primary="action_type == 'create'"/>
+                            <field name="existing_employee_id" readonly="1" string="Current Assigned"/>
+                            <field name="clash_type" widget="badge" 
+                                   decoration-success="clash_type == 'none'" 
+                                   decoration-warning="clash_type in ('double_booking', 'leave')" 
+                                   decoration-danger="clash_type in ('disqualified', 'no_guard', 'no_site')"/>
+                            <field name="clash_detail" readonly="1"/>
+                        </list>
+                    </field>
+                </div>
+
+                <footer>
+                    <button name="action_parse_and_preview" string="Parse &amp; Review Schedule →" type="object" class="btn-primary" invisible="state != 'upload'"/>
+                    <button name="action_apply_import" string="Apply &amp; Override Live Schedule" type="object" class="btn-success" invisible="state != 'preview'"/>
+                    <button name="action_back_to_upload" string="← Back" type="object" class="btn-secondary" invisible="state != 'preview'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_security_roster_schedule_import_wizard" model="ir.actions.act_window">
+        <field name="name">Import Manual Excel Roster</field>
+        <field name="res_model">security.roster.schedule.import.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

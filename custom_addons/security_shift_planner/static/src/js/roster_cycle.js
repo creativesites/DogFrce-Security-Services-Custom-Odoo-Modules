@@ -287,6 +287,27 @@ export class RosterCycle extends Component {
             views: [[false, "form"]],
         });
     }
+
+    openScheduleImportWizard() {
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            res_model: "security.roster.schedule.import.wizard",
+            views: [[false, "form"]],
+            target: "new",
+            context: {
+                default_date_from: this.state.cycle.from,
+                default_date_to: this.state.cycle.to,
+                default_site_id: this.state.siteId !== "all" ? parseInt(this.state.siteId) : false,
+            },
+        }, {
+            onClose: () => {
+                this.load();
+                if (this.state.activeCell) {
+                    this.loadDaySlots();
+                }
+            }
+        });
+    }
 }
 
 registry.category("actions").add("security_shift_planner.roster_cycle", RosterCycle);

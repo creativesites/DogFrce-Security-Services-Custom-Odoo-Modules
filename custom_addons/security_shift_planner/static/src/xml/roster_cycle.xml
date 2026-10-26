@@ -12,6 +12,7 @@
           <t t-foreach="cycles" t-as="c" t-key="c.from">
             <button class="rc-chip" t-att-class="state.cycle.from === c.from ? 'active' : ''" t-on-click="() => this.setCycle(c)"><t t-esc="c.label"/></button>
           </t>
+          <button class="rc-chip" style="background: #0284c7; color: white; font-weight: 600; border-color: #0284c7;" t-on-click="() => this.openScheduleImportWizard()" title="Import Excel Roster to fill and override shifts">📥 Import Excel</button>
         </div>
       </div>
 

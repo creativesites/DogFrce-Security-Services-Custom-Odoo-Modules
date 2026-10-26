@@ -61,6 +61,11 @@
                     t-on-click="openCreateSlot">
                 <i class="fa fa-plus me-1"/> New Slot
             </button>
+            <button class="btn btn-sm btn-outline-primary px-3"
+                    t-on-click="openScheduleImportWizard"
+                    title="Import Excel Roster &amp; Override Schedule">
+                <i class="fa fa-file-excel-o me-1"/> Import Excel
+            </button>
             <button class="btn btn-sm text-white px-3 fw-semibold"
                     style="background: var(--ds-accent); border-color: var(--ds-accent);"
                     t-on-click="autoAssignAll"
