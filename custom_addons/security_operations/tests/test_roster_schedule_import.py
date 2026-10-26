@@ -61,6 +61,7 @@ class TestRosterScheduleImport(TransactionCase):
             "name": "Petrus Shilongo",
             "employee_code": "DF001",
             "security_guard": True,
+            "security_grade_id": cls.grade_a.id,
             "active": True,
             "security_disqualified": False,
         })
@@ -68,6 +69,7 @@ class TestRosterScheduleImport(TransactionCase):
             "name": "Johannes Amukoto",
             "employee_code": "DF002",
             "security_guard": True,
+            "security_grade_id": cls.grade_a.id,
             "active": True,
             "security_disqualified": False,
         })
@@ -75,6 +77,7 @@ class TestRosterScheduleImport(TransactionCase):
             "name": "Matheus Shikongo",
             "employee_code": "DF003",
             "security_guard": True,
+            "security_grade_id": cls.grade_a.id,
             "active": True,
             "security_disqualified": False,
         })
