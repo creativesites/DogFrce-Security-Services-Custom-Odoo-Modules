@@ -257,3 +257,48 @@ class TestRosterScheduleImport(TransactionCase):
         self.assertTrue(slot_relief, "Slot should be created")
         self.assertTrue(slot_relief.is_relief, "Non-pool guard should be flagged as relief when auto-enroll is False")
 
+    def test_05_auto_enroll_multi_guard_matrix_populates_pool(self):
+        """Verify importing a roster with pool enrollment automatically populates site.site_guard_pool_ids with multiple guards."""
+        new_site = self.env["security.client.site"].create({
+            "name": "Klein Windhoek Embassy Post",
+            "code": "KWE01",
+            "partner_id": self.client.id,
+            "guard_pool_mode": "site_only",
+        })
+        self.env["security.post"].create({
+            "name": "Main Entrance Gate",
+            "site_id": new_site.id,
+            "post_type_id": self.post_type.id,
+        })
+
+        # New site has 0 guards in regular pool
+        self.assertEqual(len(new_site.site_guard_pool_ids), 0)
+
+        csv_text = (
+            "Site,Date,Shift,Guard\n"
+            "Klein Windhoek Embassy Post,2026-10-28,Day,Petrus Shilongo\n"
+            "Klein Windhoek Embassy Post,2026-10-28,Night,Johannes Amukoto\n"
+            "Klein Windhoek Embassy Post,2026-10-29,Day,Matheus Shikongo\n"
+        )
+        wizard = self.env["security.roster.schedule.import.wizard"].create({
+            "site_id": new_site.id,
+            "date_from": date(2026, 10, 21),
+            "date_to": date(2026, 11, 20),
+            "import_mode": "text",
+            "raw_text": csv_text,
+            "create_missing_slots": True,
+            "auto_enroll_guard_pool": True,
+        })
+        wizard.action_parse_and_preview()
+        self.assertEqual(len(wizard.line_ids), 3)
+
+        wizard.action_apply_import()
+
+        # All 3 guards must now be enrolled in new_site.site_guard_pool_ids
+        new_site.invalidate_recordset()
+        enrolled_ids = new_site.site_guard_pool_ids.ids
+        self.assertIn(self.guard1.id, enrolled_ids, "Petrus Shilongo must be in pool")
+        self.assertIn(self.guard2.id, enrolled_ids, "Johannes Amukoto must be in pool")
+        self.assertIn(self.guard3.id, enrolled_ids, "Matheus Shikongo must be in pool")
+        self.assertEqual(len(new_site.site_guard_pool_ids), 3)
+

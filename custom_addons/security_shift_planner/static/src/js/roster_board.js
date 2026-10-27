@@ -116,6 +116,39 @@ class RosterBoard extends Component {
                 submitting: false,
                 error: "",
             },
+            // Today's Roll Call & Live Gap Dispatch State
+            showTodayRollCall: false,
+            previousCycleBeforeRollCall: null,
+
+            // One-Click Guard Shift Swap Modal State
+            swapModal: {
+                visible: false,
+                slotA: null,
+                slotB: null,
+                slotAId: null,
+                slotBId: null,
+                reason: "",
+                preValidation: null,
+                validating: false,
+                submitting: false,
+                error: "",
+                searchQuery: "",
+            },
+
+            // Relief Candidate Pool Dispatch Modal State
+            candidatePoolModal: {
+                visible: false,
+                slot: null,
+                poolTab: "relief", // "relief", "regular", "all"
+                searchQuery: "",
+                loading: false,
+                submitting: false,
+                regularGuards: [],
+                reliefGuards: [],
+                allGuards: [],
+                error: "",
+                overrideModal: null,
+            },
             // Create-batch dialog
             createDialog: {
                 visible: false,
@@ -467,8 +500,91 @@ class RosterBoard extends Component {
         });
     }
 
+    get todayRollCallStats() {
+        const todayStr = ymd(new Date());
+        const todaySlots = this.state.slots.filter((s) => s.shift_date === todayStr && s.state !== "cancelled");
+        const total = todaySlots.length;
+        const assigned = todaySlots.filter((s) => s.employee_id).length;
+        const unassigned = total - assigned;
+        return { total, assigned, unassigned };
+    }
+
+    async toggleTodayRollCall() {
+        this.state.showTodayRollCall = !this.state.showTodayRollCall;
+        this.state.sitePage = 1;
+        const today = new Date();
+        const todayStr = ymd(today);
+
+        if (this.state.showTodayRollCall) {
+            this.state.previousCycleBeforeRollCall = this.state.cycle;
+            this.state.cycle = {
+                key: `today_${todayStr}`,
+                from: todayStr,
+                to: todayStr,
+                label: `Today (${today.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })})`,
+            };
+            this.state.batchDateFrom = todayStr;
+            this.state.batchDateTo = todayStr;
+        } else {
+            if (this.state.previousCycleBeforeRollCall) {
+                this.state.cycle = this.state.previousCycleBeforeRollCall;
+            } else {
+                this.state.cycle = cycleFor(new Date());
+            }
+            this.state.batchDateFrom = this.state.cycle.from;
+            this.state.batchDateTo = this.state.cycle.to;
+        }
+        await this.loadBoard();
+    }
+
+    get assignedSlotsForSwap() {
+        return this.state.slots
+            .filter((s) => s.employee_id && s.state !== "cancelled")
+            .sort((a, b) => (a.shift_date || "").localeCompare(b.shift_date || "") || (a.site_name || "").localeCompare(b.site_name || ""));
+    }
+
+    get eligibleSlotBCandidates() {
+        const slotA = this.state.swapModal.slotA;
+        const q = (this.state.swapModal.searchQuery || "").toLowerCase();
+        return this.assignedSlotsForSwap
+            .filter((s) => !slotA || s.id !== slotA.id)
+            .filter((s) => {
+                if (!q) return true;
+                return (
+                    (s.employee_name && s.employee_name.toLowerCase().includes(q)) ||
+                    (s.post_name && s.post_name.toLowerCase().includes(q)) ||
+                    (s.site_name && s.site_name.toLowerCase().includes(q)) ||
+                    (s.shift_date && s.shift_date.includes(q))
+                );
+            });
+    }
+
+    get candidatesForDispatch() {
+        const modal = this.state.candidatePoolModal;
+        if (!modal) return [];
+        let list = [];
+        if (modal.poolTab === "relief") {
+            list = modal.reliefGuards;
+        } else if (modal.poolTab === "regular") {
+            list = modal.regularGuards;
+        } else {
+            list = modal.allGuards;
+        }
+        const q = (modal.searchQuery || "").toLowerCase();
+        if (!q) return list;
+        return list.filter((g) =>
+            (g.name && g.name.toLowerCase().includes(q)) ||
+            (g.code && g.code.toLowerCase().includes(q)) ||
+            (g.grade && g.grade.toLowerCase().includes(q))
+        );
+    }
+
     get filteredSlots() {
         let slots = this.state.slots;
+        if (this.state.showTodayRollCall) {
+            const todayStr = ymd(new Date());
+            slots = slots.filter((s) => s.shift_date === todayStr);
+        }
         if (this.state.showGapsOnly) {
             slots = slots.filter((s) => !s.employee_id && s.state !== "cancelled");
         }
@@ -487,6 +603,13 @@ class RosterBoard extends Component {
         if (this.state.filterSiteId && this.state.filterSiteId !== "all") {
             const sid = parseInt(this.state.filterSiteId);
             sites = sites.filter((s) => s.id === sid);
+        }
+        if (this.state.showTodayRollCall) {
+            const todayStr = ymd(new Date());
+            const sitesWithTodayShifts = new Set(
+                this.state.slots.filter((s) => s.shift_date === todayStr && s.state !== "cancelled").map((s) => s.site_id).filter(Boolean)
+            );
+            sites = sites.filter((s) => sitesWithTodayShifts.has(s.id));
         }
         if (this.state.showGapsOnly) {
             sites = sites.filter((s) => this._siteHasGap(s.id));
