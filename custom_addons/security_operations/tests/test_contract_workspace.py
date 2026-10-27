@@ -60,7 +60,7 @@ class TestContractWorkspace(TransactionCase):
         # Empty contract has 0 sites
         with self.assertRaises(UserError) as cm:
             self.contract.action_activate()
-        self.assertIn("has no sites configured", str(cm.exception))
+        self.assertIn("No sites configured", str(cm.exception))
 
         # Add a site without posts
         c_site = self.env["security.contract.site"].create({
@@ -69,12 +69,12 @@ class TestContractWorkspace(TransactionCase):
             "location": "Northern Industrial",
             "supervisor_id": self.supervisor.id,
         })
-        self.contract._compute_summary_metrics()
+        self.contract._compute_summary_counts()
         self.contract._evaluate_setup_health()
 
         with self.assertRaises(UserError) as cm:
             self.contract.action_activate()
-        self.assertIn("has no security posts defined", str(cm.exception))
+        self.assertIn("Sites have no posts", str(cm.exception))
 
         # Add a post without shift requirements
         c_post = self.env["security.contract.post"].create({
@@ -82,12 +82,12 @@ class TestContractWorkspace(TransactionCase):
             "name": "Main Gate",
             "required_guard_count": 1,
         })
-        self.contract._compute_summary_metrics()
+        self.contract._compute_summary_counts()
         self.contract._evaluate_setup_health()
 
         with self.assertRaises(UserError) as cm:
             self.contract.action_activate()
-        self.assertIn("has no shift requirements", str(cm.exception))
+        self.assertIn("Shift requirements missing", str(cm.exception))
 
     def test_atomic_activation_and_sync(self):
         """A complete contract setup syncs atomically to live operational records."""
@@ -118,7 +118,7 @@ class TestContractWorkspace(TransactionCase):
             "pay_rate": 55.0,
         })
 
-        self.contract._compute_summary_metrics()
+        self.contract._compute_summary_counts()
         self.contract._evaluate_setup_health()
         self.assertEqual(self.contract.readiness_pct, 100)
 
@@ -162,7 +162,7 @@ class TestContractWorkspace(TransactionCase):
         # Add rate card line to contract
         self.env["security.contract.rate"].create({
             "contract_id": self.contract.id,
-            "shift_category": "day",
+            "shift_category": "normal",
             "hourly_rate": 95.0,
         })
 

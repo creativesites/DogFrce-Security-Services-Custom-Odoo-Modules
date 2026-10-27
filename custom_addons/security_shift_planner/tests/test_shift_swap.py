@@ -324,3 +324,52 @@ class TestShiftSwap(TransactionCase):
         res_blank = slot1.action_swap_guards(slot2.id, reason="   ")
         self.assertEqual(res_blank["status"], "error")
         self.assertIn("reason", res_blank["message"].lower())
+
+    def test_05_today_roll_call_query(self):
+        """Verify get_today_roll_call returns accurate roll call telemetry for today."""
+        today = date(2026, 10, 27)
+        # Create 1 assigned slot on today
+        slot_assigned = self.env["security.roster.slot"].create({
+            "batch_id": self.batch.id,
+            "site_id": self.site.id,
+            "post_id": self.post_gate.id,
+            "shift_template_id": self.shift_day.id,
+            "shift_date": today,
+            "employee_id": self.guard_alpha.id,
+            "state": "assigned",
+        })
+        # Create 1 unassigned slot on today (critical gap)
+        slot_gap = self.env["security.roster.slot"].create({
+            "batch_id": self.batch.id,
+            "site_id": self.site.id,
+            "post_id": self.post_vault.id,
+            "shift_template_id": self.shift_day.id,
+            "shift_date": today,
+            "employee_id": False,
+            "state": "draft",
+        })
+        # Create 1 slot on yesterday (should NOT be included in today's roll call)
+        slot_yesterday = self.env["security.roster.slot"].create({
+            "batch_id": self.batch.id,
+            "site_id": self.site.id,
+            "post_id": self.post_gate.id,
+            "shift_template_id": self.shift_day.id,
+            "shift_date": today - timedelta(days=1),
+            "employee_id": self.guard_beta.id,
+            "state": "assigned",
+        })
+
+        roll_call = self.env["security.roster.slot"].get_today_roll_call(today_date=today)
+        self.assertEqual(roll_call["date"], str(today))
+        today_slot_ids = [s["id"] for s in roll_call["slots"]]
+        self.assertIn(slot_assigned.id, today_slot_ids)
+        self.assertIn(slot_gap.id, today_slot_ids)
+        self.assertNotIn(slot_yesterday.id, today_slot_ids)
+
+        assigned_in_data = [s for s in roll_call["slots"] if s["id"] == slot_assigned.id][0]
+        self.assertTrue(assigned_in_data["employee_id"])
+        self.assertEqual(assigned_in_data["employee_name"], self.guard_alpha.name)
+
+        gap_in_data = [s for s in roll_call["slots"] if s["id"] == slot_gap.id][0]
+        self.assertFalse(gap_in_data["employee_id"])
+        self.assertTrue(gap_in_data["critical_gap"])

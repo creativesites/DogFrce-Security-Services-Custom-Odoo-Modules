@@ -95,7 +95,7 @@ class TestRosterScoring(TransactionCase):
             "name": "August K4 Copy",
             "date_from": "2026-09-01",
             "date_to": "2026-09-30",
-            "site_ids": [(4, self.site.id)],
+            "site_id": self.site.id,
         })
         result = new_batch.action_copy_from_previous_month()
         self.assertIsNotNone(result)
