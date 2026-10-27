@@ -44,7 +44,7 @@ class TestFairnessConstraints(TransactionCase):
             "partner_id": cls.partner.id,
             "date_from": "2026-02-21",
             "date_to": "2026-03-20",
-            "site_ids": [(4, cls.site.id)],
+            "site_id": cls.site.id,
         })
 
         cls.guard = env["hr.employee"].create({
