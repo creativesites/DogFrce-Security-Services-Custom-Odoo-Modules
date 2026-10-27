@@ -1554,39 +1554,258 @@ class RosterBoard extends Component {
     }
 
     openSwapDialog(slot) {
-        this.closeContextMenu();
-        this.state.swapDialog = { visible: true, slot, reason: "" };
+        this.openSwapModal(slot);
     }
 
     closeSwapDialog() {
-        this.state.swapDialog = { visible: false, slot: null, reason: "" };
+        this.closeSwapModal();
     }
 
     async confirmSwap() {
-        const { slot, reason } = this.state.swapDialog;
-        if (!slot) return;
-        this.closeSwapDialog();
+        await this.confirmExecuteSwap();
+    }
+
+    // ─── One-Click Guard Shift Swap Modal ───────────────────────────
+
+    openSwapModal(slot = null) {
+        this.closeContextMenu();
+        let slotA = slot;
+        if (!slotA && this.state.selectedSlot && this.state.selectedSlot.employee_id) {
+            slotA = this.state.selectedSlot;
+        }
+        const assigned = this.state.slots.filter((s) => s.employee_id && s.state !== "cancelled");
+        if (!slotA && assigned.length > 0) {
+            slotA = assigned[0];
+        }
+
+        this.state.swapModal = {
+            visible: true,
+            slotA: slotA,
+            slotAId: slotA ? slotA.id : null,
+            slotB: null,
+            slotBId: null,
+            reason: "",
+            preValidation: null,
+            validating: false,
+            submitting: false,
+            error: "",
+            searchQuery: "",
+        };
+    }
+
+    closeSwapModal() {
+        this.state.swapModal = {
+            visible: false,
+            slotA: null,
+            slotB: null,
+            slotAId: null,
+            slotBId: null,
+            reason: "",
+            preValidation: null,
+            validating: false,
+            submitting: false,
+            error: "",
+            searchQuery: "",
+        };
+    }
+
+    async onSelectSwapSlotA(ev) {
+        const slotId = parseInt(ev.target.value);
+        const slot = this.state.slots.find((s) => s.id === slotId) || null;
+        this.state.swapModal.slotA = slot;
+        this.state.swapModal.slotAId = slotId;
+        this.state.swapModal.preValidation = null;
+        if (this.state.swapModal.slotBId) {
+            await this.runSwapPreValidation();
+        }
+    }
+
+    async onSelectSwapSlotB(ev) {
+        const slotId = parseInt(ev.target.value);
+        const slot = this.state.slots.find((s) => s.id === slotId) || null;
+        this.state.swapModal.slotB = slot;
+        this.state.swapModal.slotBId = slotId;
+        await this.runSwapPreValidation();
+    }
+
+    async runSwapPreValidation() {
+        const { slotAId, slotBId } = this.state.swapModal;
+        if (!slotAId || !slotBId || slotAId === slotBId) {
+            this.state.swapModal.preValidation = null;
+            return;
+        }
+        this.state.swapModal.validating = true;
+        this.state.swapModal.error = "";
         try {
-            if (reason) {
-                await this.orm.call(
-                    "security.roster.slot",
-                    "action_log_override",
-                    [[slot.id], reason]
-                );
-            }
-            await this.orm.write("security.roster.slot", [slot.id], {
-                employee_id: false,
-                state: "draft",
-            });
-            await this.loadSlots(this.state.batchId);
-            const updated = this.state.slots.find((s) => s.id === slot.id);
-            if (updated) this.selectSlot(updated);
-            this.notification.add(
-                "Guard removed. Pick a replacement from the suggestions panel.",
-                { type: "info" }
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_validate_swap",
+                [[slotAId], slotBId]
             );
+            this.state.swapModal.preValidation = res;
+            if (res && res.status === "error") {
+                this.state.swapModal.error = res.message;
+            }
+        } catch (err) {
+            this.state.swapModal.error = err.message || "Pre-validation failed.";
+        } finally {
+            this.state.swapModal.validating = false;
+        }
+    }
+
+    setSwapReason(reasonText) {
+        this.state.swapModal.reason = reasonText;
+    }
+
+    async confirmExecuteSwap() {
+        const modal = this.state.swapModal;
+        if (!modal.slotAId || !modal.slotBId) {
+            this.state.swapModal.error = "Please select both shifts to swap.";
+            return;
+        }
+        if (!modal.reason || !modal.reason.trim()) {
+            this.state.swapModal.error = "A manager audit reason is mandatory for shift swaps (e.g. Mutual swap request or Medical reallocation).";
+            return;
+        }
+        this.state.swapModal.submitting = true;
+        this.state.swapModal.error = "";
+
+        try {
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_swap_guards",
+                [[modal.slotAId], modal.slotBId, modal.reason.trim(), true]
+            );
+
+            if (res && res.status === "error") {
+                this.state.swapModal.error = res.message;
+                this.state.swapModal.submitting = false;
+                return;
+            }
+
+            this.notification.add(
+                res.message || "Guard shift swap successfully executed!",
+                { type: "success" }
+            );
+            this.closeSwapModal();
+            await this.loadBoard();
         } catch (e) {
-            this.notification.add("Swap failed: " + (e.message || e), { type: "danger" });
+            this.state.swapModal.error = e.message || "Swap execution failed.";
+            this.state.swapModal.submitting = false;
+        }
+    }
+
+    // ─── Today's Gap Dispatch & Candidate Pool Modal ────────────────
+
+    async openDispatchReliefModal(slot) {
+        this.state.candidatePoolModal = {
+            visible: true,
+            slot: slot,
+            poolTab: "relief",
+            searchQuery: "",
+            loading: true,
+            submitting: false,
+            regularGuards: [],
+            reliefGuards: [],
+            allGuards: this.state.allGuards || [],
+            error: "",
+            overrideModal: null,
+        };
+
+        try {
+            const poolInfo = await this.orm.call(
+                "security.roster.slot",
+                "get_slot_pool_info",
+                [[slot.id]]
+            );
+            if (this.state.candidatePoolModal.visible) {
+                this.state.candidatePoolModal.regularGuards = poolInfo.regular_guards || [];
+                this.state.candidatePoolModal.reliefGuards = poolInfo.relief_guards || [];
+            }
+        } catch (err) {
+            console.error("Could not load slot pool info", err);
+        } finally {
+            if (this.state.candidatePoolModal.visible) {
+                this.state.candidatePoolModal.loading = false;
+            }
+        }
+    }
+
+    closeCandidatePoolModal() {
+        this.state.candidatePoolModal = {
+            visible: false,
+            slot: null,
+            poolTab: "relief",
+            searchQuery: "",
+            loading: false,
+            submitting: false,
+            regularGuards: [],
+            reliefGuards: [],
+            allGuards: [],
+            error: "",
+            overrideModal: null,
+        };
+    }
+
+    async dispatchCandidateGuard(guardId, guardName, isOverride = false, overrideReason = "") {
+        const modal = this.state.candidatePoolModal;
+        if (!modal || !modal.slot) return;
+        modal.submitting = true;
+        modal.error = "";
+
+        try {
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_manual_assign",
+                [[modal.slot.id], guardId, isOverride, overrideReason]
+            );
+
+            if (res && res.status === "override_required") {
+                modal.overrideModal = {
+                    visible: true,
+                    slotId: modal.slot.id,
+                    guardId: guardId,
+                    guardName: guardName || res.guard_name || "Guard",
+                    reasons: res.reasons || [],
+                    reasonInput: "",
+                };
+                modal.submitting = false;
+                return;
+            }
+
+            if (res && res.status === "error") {
+                modal.error = res.message;
+                this.notification.add(res.message, { type: "danger" });
+                modal.submitting = false;
+                return;
+            }
+
+            this.notification.add(
+                `Relief guard ${guardName} successfully dispatched to ${modal.slot.post_name}!`,
+                { type: "success" }
+            );
+            this.closeCandidatePoolModal();
+            await this.loadBoard();
+        } catch (e) {
+            modal.error = e.message || "Dispatch failed.";
+            modal.submitting = false;
+        }
+    }
+
+    async submitDispatchOverride() {
+        const modal = this.state.candidatePoolModal;
+        if (!modal || !modal.overrideModal) return;
+        const { guardId, guardName, reasonInput } = modal.overrideModal;
+        if (!reasonInput || !reasonInput.trim()) {
+            this.notification.add("An override reason is required.", { type: "warning" });
+            return;
+        }
+        await this.dispatchCandidateGuard(guardId, guardName, true, reasonInput.trim());
+    }
+
+    closeDispatchOverride() {
+        if (this.state.candidatePoolModal) {
+            this.state.candidatePoolModal.overrideModal = null;
         }
     }
 
