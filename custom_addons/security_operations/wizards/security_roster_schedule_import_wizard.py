@@ -57,6 +57,11 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
         default=True,
         help="If a shift date/time in the spreadsheet does not exist yet, generate a new roster slot automatically.",
     )
+    auto_enroll_guard_pool = fields.Boolean(
+        string="Auto-Enroll Guards to Site Pool",
+        default=True,
+        help="If checked, any imported guard assigned to shifts on a site who is not yet in the site's regular guard pool will be automatically added to that site's pool.",
+    )
     default_shift_template_id = fields.Many2one(
         "security.shift.template",
         string="Default Shift Template",
@@ -331,6 +336,31 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
 
         source_info = f"Excel Roster Import ({self.file_name or 'Manual File'})"
 
+        # Track 1: Pool Auto-Learner: Auto-enroll imported guards to site regular guard pool
+        enrolled_guards_by_site = {}
+        if self.auto_enroll_guard_pool:
+            for s in sites:
+                site_guards = valid_lines.filtered(lambda l: l.site_id.id == s.id).mapped("employee_id")
+                new_guards = site_guards - s.site_guard_pool_ids
+                if new_guards:
+                    s.write({
+                        "site_guard_pool_ids": [(4, g.id) for g in new_guards],
+                        "guard_pool_source": s.guard_pool_source or f"Auto-learned from {self.file_name or 'Excel Import'}",
+                        "guard_pool_source_date": s.guard_pool_source_date or fields.Date.today(),
+                    })
+                    enrolled_guards_by_site[s.id] = new_guards
+                    if hasattr(s, "message_post"):
+                        s.message_post(
+                            body=_(
+                                "<b>Site Pool Auto-Learner:</b> Auto-enrolled %d guard(s) from roster import (%s): %s"
+                            ) % (
+                                len(new_guards),
+                                self.file_name or "Spreadsheet",
+                                ", ".join(new_guards.mapped("name")),
+                            ),
+                            message_type="notification",
+                        )
+
         for line in valid_lines:
             target_slot = line.existing_slot_id
             batch = site_batches.get(line.site_id.id)
@@ -357,6 +387,9 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
                 elif not eff_pool:
                     vals["is_relief"] = True
                     vals["relief_reason"] = f"Assigned via {source_info} (no regular site pool)"
+                else:
+                    vals["is_relief"] = False
+                    vals["relief_reason"] = False
 
                 target_slot.write(vals)
                 updated_slots += 1
@@ -377,6 +410,12 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
                 if eff_pool and line.employee_id.id not in eff_pool.ids:
                     vals["is_relief"] = True
                     vals["relief_reason"] = f"Relief guard assigned via {source_info}"
+                elif not eff_pool:
+                    vals["is_relief"] = True
+                    vals["relief_reason"] = f"Assigned via {source_info} (no regular site pool)"
+                else:
+                    vals["is_relief"] = False
+                    vals["relief_reason"] = False
 
                 slot_model.create(vals)
                 created_slots += 1
@@ -384,6 +423,7 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
 
         self.state = "done"
 
+        total_enrolled = sum(len(g_set) for g_set in enrolled_guards_by_site.values())
         msg = (
             f"Manual Excel Roster successfully imported!\n"
             f"• {updated_slots} existing shifts updated\n"
@@ -391,6 +431,8 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
             f"• {filled_slots} open gaps filled\n"
             f"• {overridden_slots} guard assignments overridden."
         )
+        if total_enrolled:
+            msg += f"\n• {total_enrolled} guard(s) auto-enrolled to site regular pool(s)."
 
         return {
             "type": "ir.actions.client",

@@ -29,6 +29,7 @@
                         <group string="Import Rules &amp; Conflict Handling">
                             <field name="override_assigned" widget="boolean_toggle"/>
                             <field name="create_missing_slots" widget="boolean_toggle"/>
+                            <field name="auto_enroll_guard_pool" widget="boolean_toggle"/>
                             <field name="import_mode" widget="radio"/>
                         </group>
                     </group>

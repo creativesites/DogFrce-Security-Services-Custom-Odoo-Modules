@@ -249,7 +249,7 @@
                             <div class="d-flex align-items-center justify-content-between">
                                 <span class="badge bg-primary text-white" style="font-size:10px;" t-esc="rec.impact_display"/>
                                 <t t-if="rec.financial_saving &gt; 0">
-                                    <span class="badge bg-success text-white" style="font-size:10px;">Saves ZMW <t t-esc="rec.financial_saving"/></span>
+                                    <span class="badge bg-success text-white" style="font-size:10px;">Saves N$ <t t-esc="rec.financial_saving"/></span>
                                 </t>
                             </div>
                             <div class="fw-bold text-dark mt-1" style="font-size:12px;" t-esc="rec.name"/>

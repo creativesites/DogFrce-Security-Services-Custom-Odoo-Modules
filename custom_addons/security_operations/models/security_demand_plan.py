@@ -126,22 +126,22 @@ class SecurityDemandPlan(models.Model):
 
     # Financial Rates & Cost Projections
     guard_monthly_pay = fields.Float(
-        string="Guard Monthly Pay Rate (ZMW)",
+        string="Guard Monthly Pay Rate (NAD)",
         default=4500.0,
         required=True,
     )
     supervisor_monthly_pay = fields.Float(
-        string="Supervisor Monthly Pay Rate (ZMW)",
+        string="Supervisor Monthly Pay Rate (NAD)",
         default=6500.0,
         required=True,
     )
     vehicle_monthly_cost = fields.Float(
-        string="Vehicle Monthly Operating Cost (ZMW)",
+        string="Vehicle Monthly Operating Cost (NAD)",
         default=12000.0,
         help="Fuel, maintenance, insurance, and wear per vehicle.",
     )
     bill_rate_per_post_hour = fields.Float(
-        string="Post Bill Rate / Hour (ZMW)",
+        string="Post Bill Rate / Hour (NAD)",
         default=38.50,
         required=True,
         help="Client bill rate per post hour.",
@@ -154,32 +154,32 @@ class SecurityDemandPlan(models.Model):
         store=True,
     )
     monthly_bill_revenue = fields.Float(
-        string="Monthly Bill Revenue (ZMW)",
+        string="Monthly Bill Revenue (NAD)",
         compute="_compute_sizing_and_finances",
         store=True,
     )
     monthly_guard_payroll = fields.Float(
-        string="Guard Payroll Cost (ZMW)",
+        string="Guard Payroll Cost (NAD)",
         compute="_compute_sizing_and_finances",
         store=True,
     )
     monthly_supervisor_payroll = fields.Float(
-        string="Supervisor Payroll Cost (ZMW)",
+        string="Supervisor Payroll Cost (NAD)",
         compute="_compute_sizing_and_finances",
         store=True,
     )
     monthly_payroll_cost = fields.Float(
-        string="Total Payroll Cost (ZMW)",
+        string="Total Payroll Cost (NAD)",
         compute="_compute_sizing_and_finances",
         store=True,
     )
     monthly_equipment_cost = fields.Float(
-        string="Monthly Equipment Operating Cost (ZMW)",
+        string="Monthly Equipment Operating Cost (NAD)",
         compute="_compute_sizing_and_finances",
         store=True,
     )
     monthly_gross_profit = fields.Float(
-        string="Projected Monthly Gross Profit (ZMW)",
+        string="Projected Monthly Gross Profit (NAD)",
         compute="_compute_sizing_and_finances",
         store=True,
     )
@@ -376,7 +376,7 @@ class SecurityDemandPlan(models.Model):
                 f"Generated from Demand Plan '{self.name}'.\n"
                 f"Sizing: {self.needed_guards} Guards, {self.needed_supervisors} Supervisors, "
                 f"{self.needed_vehicles} Patrol Vehicles, {self.needed_radios} Radios, {self.needed_torches} Torches.\n"
-                f"Projected Monthly Gross Profit: ZMW {self.monthly_gross_profit:,.2f} ({self.gross_margin_pct}% Margin)."
+                f"Projected Monthly Gross Profit: N$ {self.monthly_gross_profit:,.2f} ({self.gross_margin_pct}% Margin)."
             ),
         })
 

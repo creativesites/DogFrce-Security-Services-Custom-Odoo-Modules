@@ -49,7 +49,7 @@ class BillingCommandCenter extends Component {
     }
 
     fmt(amount) {
-        const sym = (this.state.data && this.state.data.currency_symbol) || "ZMW";
+        const sym = (this.state.data && this.state.data.currency_symbol) || "N$";
         return `${sym} ` + (amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 

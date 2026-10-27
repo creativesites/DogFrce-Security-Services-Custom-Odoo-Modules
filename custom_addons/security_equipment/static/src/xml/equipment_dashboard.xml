@@ -229,7 +229,7 @@
                                             <td class="text-center fw-semibold"><t t-esc="item.qty_total"/></td>
                                             <td class="text-center text-primary fw-semibold"><t t-esc="item.qty_issued"/></td>
                                             <td class="text-center text-success fw-bold"><t t-esc="item.qty_available"/></td>
-                                            <td class="text-end font-monospace fw-semibold">ZMW <t t-esc="item.unit_cost"/></td>
+                                            <td class="text-end font-monospace fw-semibold">N$ <t t-esc="item.unit_cost"/></td>
                                         </tr>
                                     </t>
                                 </tbody>

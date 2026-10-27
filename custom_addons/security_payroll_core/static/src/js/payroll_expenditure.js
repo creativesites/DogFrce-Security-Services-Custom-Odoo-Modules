@@ -15,7 +15,7 @@ export class PayrollExpenditure extends Component {
 
         this.state = useState({
             loading: true,
-            currencySymbol: "ZMW",
+            currencySymbol: "N$",
             periods: [],
             selectedPeriodId: null,
             byEmployee: [],
@@ -39,11 +39,11 @@ export class PayrollExpenditure extends Component {
             if (companies.length && companies[0].currency_id) {
                 const currencies = await this.orm.read("res.currency", [companies[0].currency_id[0]], ["symbol", "name"]);
                 if (currencies.length) {
-                    this.state.currencySymbol = currencies[0].symbol || currencies[0].name || "ZMW";
+                    this.state.currencySymbol = currencies[0].symbol || currencies[0].name || "N$";
                 }
             }
         } catch (_e) {
-            this.state.currencySymbol = "ZMW";
+            this.state.currencySymbol = "N$";
         }
     }
 
@@ -282,7 +282,7 @@ export class PayrollExpenditure extends Component {
     // ── Formatting helpers ───────────────────────────────────────────────────
 
     formatCurrency(v) {
-        const sym = this.state.currencySymbol || "ZMW";
+        const sym = this.state.currencySymbol || "N$";
         if (!v && v !== 0) return `${sym} 0.00`;
         return (
             `${sym} ` +

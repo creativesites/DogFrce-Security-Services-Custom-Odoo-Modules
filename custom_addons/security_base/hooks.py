@@ -14,6 +14,17 @@ def post_init_hook(env):
         return
 
     nad = env["res.currency"].search([("name", "=", "NAD")], limit=1)
+    if nad:
+        # Enforce Namibian Dollar symbol and formatting conventions
+        nad.sudo().write({
+            "symbol": "N$",
+            "position": "before",
+            "active": True,
+        })
+        # Deactivate all foreign currencies to force system-wide single currency (NAD)
+        other_currencies = env["res.currency"].search([("name", "!=", "NAD"), ("active", "=", True)])
+        if other_currencies:
+            other_currencies.sudo().write({"active": False})
 
     for company in env["res.company"].search([]):
         vals = {}

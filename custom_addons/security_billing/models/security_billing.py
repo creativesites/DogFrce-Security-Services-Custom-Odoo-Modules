@@ -1085,7 +1085,7 @@ class SecurityBillingDashboard(models.AbstractModel):
                 "overdue": is_overdue,
             })
 
-        currency_sym = self.env.company.currency_id.symbol or "ZMW"
+        currency_sym = self.env.company.currency_id.symbol or "N$"
 
         return {
             "month_label": today.strftime("%B %Y"),

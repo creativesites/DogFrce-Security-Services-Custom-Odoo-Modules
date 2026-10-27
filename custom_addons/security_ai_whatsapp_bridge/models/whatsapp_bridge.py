@@ -658,19 +658,20 @@ class SecurityWhatsAppBridge(models.AbstractModel):
             overtime_amount = total_guards_on_payroll * 200.0
             net_payable = gross_payroll + guard_allowances + overtime_amount - statutory_deductions
 
+        sym = self.env.company.currency_id.symbol or "N$"
         return (
             "💼 *DogForce Executive Intelligence* — *Owner & Payroll Summary*\n"
             f"📅 *Date:* {today}\n\n"
             "💰 *Financial & Commercial Metrics:*\n"
             f"• 🏢 *Active Client Sites:* `{active_sites}`\n"
-            f"• 💵 *Est. Monthly Recurring Billing:* `ZMW {monthly_revenue:,.2f}`\n"
+            f"• 💵 *Est. Monthly Recurring Billing:* `{sym} {monthly_revenue:,.2f}`\n"
             f"• 🛡️ *Active Guard Posts Today:* `{total_posts}`\n\n"
             "💵 *Monthly Guard Payroll Breakdown:*\n"
             f"• 👥 *Total Guards on Payroll:* `{total_guards_on_payroll}`\n"
-            f"• 📈 *Gross Payroll Base:* `ZMW {gross_payroll:,.2f}`\n"
-            f"• ➕ *Allowances & Overtime:* `ZMW {(guard_allowances + overtime_amount):,.2f}`\n"
-            f"• ➖ *Statutory Deductions (NAPSA/NHIMA/PAYE):* `ZMW {statutory_deductions:,.2f}`\n"
-            f"• 💳 *Net Payroll Payable:* `ZMW {net_payable:,.2f}`\n\n"
+            f"• 📈 *Gross Payroll Base:* `{sym} {gross_payroll:,.2f}`\n"
+            f"• ➕ *Allowances & Overtime:* `{sym} {(guard_allowances + overtime_amount):,.2f}`\n"
+            f"• ➖ *Statutory Deductions (SSC/PAYE):* `{sym} {statutory_deductions:,.2f}`\n"
+            f"• 💳 *Net Payroll Payable:* `{sym} {net_payable:,.2f}`\n\n"
             "📊 *Operational Health & SLA Risk:*\n"
             f"• 🟢 *Roster Coverage Rate:* `{coverage_pct}%`\n"
             f"• 🔴 *Unexcused AWOL Gaps:* `{awol_count} Shifts`\n"

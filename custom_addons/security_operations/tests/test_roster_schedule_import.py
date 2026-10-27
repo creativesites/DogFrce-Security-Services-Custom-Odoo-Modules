@@ -195,3 +195,65 @@ class TestRosterScheduleImport(TransactionCase):
         self.assertEqual(len(wizard.line_ids), 2)
         for l in wizard.line_ids:
             self.assertEqual(l.clash_type, "double_booking", "Multiple shifts on same date should warn double-booking")
+
+    def test_04_auto_enroll_imported_guards_to_site_pool(self):
+        """Test Track 1 Pool Auto-Learner: auto-enrolling imported guards into site regular pool."""
+        # Pre-condition: site pool only contains guard1
+        self.assertEqual(self.site.site_guard_pool_ids.ids, [self.guard1.id])
+        self.assertNotIn(self.guard2.id, self.site.site_guard_pool_ids.ids)
+
+        # 1. Test with auto_enroll_guard_pool = True (default)
+        csv_text_enroll = (
+            "Site,Date,Shift,Guard\n"
+            "Eros Main Depot,2026-10-26,Day,Johannes Amukoto\n"
+        )
+        wizard_enroll = self.env["security.roster.schedule.import.wizard"].create({
+            "site_id": self.site.id,
+            "date_from": date(2026, 10, 21),
+            "date_to": date(2026, 11, 20),
+            "import_mode": "text",
+            "raw_text": csv_text_enroll,
+            "create_missing_slots": True,
+            "auto_enroll_guard_pool": True,
+        })
+        wizard_enroll.action_parse_and_preview()
+        wizard_enroll.action_apply_import()
+
+        # Guard2 must now be auto-enrolled into site guard pool
+        self.assertIn(self.guard2.id, self.site.site_guard_pool_ids.ids, "Guard2 should be auto-enrolled to site pool")
+        created_slot = self.env["security.roster.slot"].search([
+            ("site_id", "=", self.site.id),
+            ("shift_date", "=", date(2026, 10, 26)),
+            ("employee_id", "=", self.guard2.id),
+        ], limit=1)
+        self.assertTrue(created_slot, "Roster slot should be created")
+        self.assertFalse(created_slot.is_relief, "Auto-enrolled regular pool guard should not be flagged as relief")
+
+        # 2. Test with auto_enroll_guard_pool = False
+        self.assertNotIn(self.guard3.id, self.site.site_guard_pool_ids.ids)
+        csv_text_no_enroll = (
+            "Site,Date,Shift,Guard\n"
+            "Eros Main Depot,2026-10-27,Day,Matheus Shikongo\n"
+        )
+        wizard_no_enroll = self.env["security.roster.schedule.import.wizard"].create({
+            "site_id": self.site.id,
+            "date_from": date(2026, 10, 21),
+            "date_to": date(2026, 11, 20),
+            "import_mode": "text",
+            "raw_text": csv_text_no_enroll,
+            "create_missing_slots": True,
+            "auto_enroll_guard_pool": False,
+        })
+        wizard_no_enroll.action_parse_and_preview()
+        wizard_no_enroll.action_apply_import()
+
+        # Guard3 must NOT be enrolled, and slot should be flagged as relief
+        self.assertNotIn(self.guard3.id, self.site.site_guard_pool_ids.ids, "Guard3 should not be in pool when auto-enroll is disabled")
+        slot_relief = self.env["security.roster.slot"].search([
+            ("site_id", "=", self.site.id),
+            ("shift_date", "=", date(2026, 10, 27)),
+            ("employee_id", "=", self.guard3.id),
+        ], limit=1)
+        self.assertTrue(slot_relief, "Slot should be created")
+        self.assertTrue(slot_relief.is_relief, "Non-pool guard should be flagged as relief when auto-enroll is False")
+

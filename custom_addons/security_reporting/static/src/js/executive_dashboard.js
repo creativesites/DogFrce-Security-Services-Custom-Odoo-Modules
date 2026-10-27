@@ -17,6 +17,7 @@ export class ExecutiveDashboard extends Component {
             loading: true,
             companyName: "Loading...",
             companyId: 1,
+            currencySymbol: "N$",
             kpis: {
                 // Operations
                 activeGuards: 0,
@@ -130,12 +131,18 @@ export class ExecutiveDashboard extends Component {
         const lastMonthEnd = this._lastMonthEnd();
 
         try {
-            // Fetch company info
+            // Fetch company info and currency
             try {
-                const company = await this.orm.searchRead("res.company", [], ["name"], { limit: 1 });
+                const company = await this.orm.searchRead("res.company", [], ["name", "currency_id"], { limit: 1 });
                 if (company.length) {
                     this.state.companyName = company[0].name;
                     this.state.companyId = company[0].id;
+                    if (company[0].currency_id) {
+                        const curr = await this.orm.read("res.currency", [company[0].currency_id[0]], ["symbol", "name"]);
+                        if (curr.length) {
+                            this.state.currencySymbol = curr[0].symbol || curr[0].name || "N$";
+                        }
+                    }
                 }
             } catch (_e) {}
 
@@ -456,7 +463,7 @@ export class ExecutiveDashboard extends Component {
     // ── Formatting ────────────────────────────────────────────────────────────
 
     formatCurrency(v) {
-        const sym = (this.state.data && this.state.data.currency_symbol) || "ZMW";
+        const sym = this.state.currencySymbol || (this.state.data && this.state.data.currency_symbol) || "N$";
         return `${sym} ` + Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 

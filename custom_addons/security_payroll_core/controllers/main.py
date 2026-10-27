@@ -147,8 +147,8 @@ class PayslipDesignerController(http.Controller):
             period_id=MockObject(
                 name='July 2026',
                 rule_set_id=MockObject(
-                    country_code='ZM',
-                    currency_id=MockObject(name='ZMW'),
+                    country_code='NA',
+                    currency_id=MockObject(name='NAD'),
                     template_id=False,
                 ),
             ),
