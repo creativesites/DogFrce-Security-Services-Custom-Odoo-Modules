@@ -3,6 +3,7 @@ import logging
 from datetime import timedelta
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError, ValidationError
 
 _logger = logging.getLogger(__name__)
 
@@ -1872,8 +1873,10 @@ class SecurityRosterSlot(models.Model):
             vals_b["override_reason"] = False
             vals_b["wrong_fit_reasons"] = False
 
-        slot_a.write(vals_a)
+        # Release slot_a employee first to prevent double-booking collision during atomic swap
+        slot_a.write({"employee_id": False, "state": "draft"})
         slot_b.write(vals_b)
+        slot_a.write(vals_a)
 
         # 3. Log Chatter & Audit Trail
         user_name = self.env.user.name
