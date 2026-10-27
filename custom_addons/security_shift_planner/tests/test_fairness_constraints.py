@@ -92,30 +92,31 @@ class TestFairnessConstraints(TransactionCase):
         )
 
         # Create 22 working day slots starting from 2026-02-21
-        start_d = date(2026, 2, 21)
+        cur_date = date(2026, 2, 21)
         created_slots = []
-        for i in range(22):
-            cur_date = start_d + timedelta(days=i)
-            # Skip Sundays to isolate working days constraint
-            if cur_date.weekday() == 6:
-                cur_date += timedelta(days=1)
-            slot = self.env["security.roster.slot"].create({
-                "batch_id": self.batch.id,
-                "post_id": self.post.id,
-                "site_id": self.site.id,
-                "shift_date": cur_date.strftime("%Y-%m-%d"),
-                "shift_template_id": self.shift_day.id,
-                "employee_id": self.guard.id,
-                "state": "confirmed",
-            })
-            created_slots.append(slot)
+        while len(created_slots) < 22:
+            if cur_date.weekday() != 6:  # Skip Sundays to isolate working days constraint
+                slot = self.env["security.roster.slot"].create({
+                    "batch_id": self.batch.id,
+                    "post_id": self.post.id,
+                    "site_id": self.site.id,
+                    "shift_date": cur_date,
+                    "shift_template_id": self.shift_day.id,
+                    "employee_id": self.guard.id,
+                    "state": "confirmed",
+                })
+                created_slots.append(slot)
+            cur_date += timedelta(days=1)
 
         # Attempt 23rd day slot
+        while cur_date.weekday() == 6:
+            cur_date += timedelta(days=1)
+
         slot_23 = self.env["security.roster.slot"].create({
             "batch_id": self.batch.id,
             "post_id": self.post.id,
             "site_id": self.site.id,
-            "shift_date": "2026-03-18",
+            "shift_date": cur_date,
             "shift_template_id": self.shift_day.id,
             "state": "draft",
         })
