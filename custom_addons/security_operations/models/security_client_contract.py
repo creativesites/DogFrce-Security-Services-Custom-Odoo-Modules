@@ -450,12 +450,15 @@ class SecurityClientContract(models.Model):
                 for c_post in c_site.post_line_ids:
                     operational_post = c_post.post_id
                     if not operational_post or not operational_post.exists():
-                        operational_post = post_model.create({
+                        default_pt = c_post.post_type_id or self.env["security.post.type"].search([], limit=1)
+                        if not default_pt:
+                            default_pt = self.env["security.post.type"].create({"name": "Standard Security Post", "code": "STD_POST"})
+                        operational_post = post_model.with_context(allow_standalone_post=True).create({
                             "name": c_post.name,
                             "code": c_post.code,
                             "site_id": operational_site.id,
                             "partner_id": contract.partner_id.id,
-                            "post_type_id": c_post.post_type_id.id if c_post.post_type_id else False,
+                            "post_type_id": default_pt.id,
                             "required_guard_count": c_post.required_guard_count or 1,
                             "contract_post_id": c_post.id,
                             "is_contract_managed": True,

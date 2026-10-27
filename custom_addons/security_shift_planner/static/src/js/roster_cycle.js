@@ -76,6 +76,43 @@ export class RosterCycle extends Component {
             poolTab: "regular",
             poolSearch: "",
             overrideModal: null,
+
+            // Today's Roll Call & Live Gap Dispatch State
+            showTodayRollCall: false,
+            previousCycleBeforeRollCall: null,
+            todayRollCallData: null,
+            loadingRollCall: false,
+
+            // One-Click Guard Shift Swap Modal State
+            allAssignedSlots: [],
+            swapModal: {
+                visible: false,
+                slotA: null,
+                slotB: null,
+                slotAId: null,
+                slotBId: null,
+                reason: "",
+                preValidation: null,
+                validating: false,
+                submitting: false,
+                error: "",
+                searchQuery: "",
+            },
+
+            // Relief Candidate Pool Dispatch Modal State
+            candidatePoolModal: {
+                visible: false,
+                slot: null,
+                poolTab: "relief", // "relief", "regular", "all"
+                searchQuery: "",
+                loading: false,
+                submitting: false,
+                regularGuards: [],
+                reliefGuards: [],
+                allGuards: [],
+                error: "",
+                overrideModal: null,
+            },
         });
 
         onWillStart(async () => {
@@ -307,6 +344,382 @@ export class RosterCycle extends Component {
                 }
             }
         });
+    }
+
+    // --- Today's Roll Call & Live Gap Dispatch ---
+
+    async toggleTodayRollCall() {
+        this.state.showTodayRollCall = !this.state.showTodayRollCall;
+        const todayStr = ymd(new Date());
+
+        if (this.state.showTodayRollCall) {
+            this.state.previousCycleBeforeRollCall = this.state.cycle;
+            this.state.cycle = {
+                from: todayStr,
+                to: todayStr,
+                label: `Today (${todayStr})`,
+            };
+            this.state.page = 1;
+            await Promise.all([
+                this.load(),
+                this.loadTodayRollCall(),
+            ]);
+        } else {
+            if (this.state.previousCycleBeforeRollCall) {
+                this.state.cycle = this.state.previousCycleBeforeRollCall;
+            } else {
+                this.state.cycle = cycleFor(new Date());
+            }
+            this.state.page = 1;
+            await this.load();
+        }
+    }
+
+    async loadTodayRollCall() {
+        const todayStr = ymd(new Date());
+        this.state.loadingRollCall = true;
+        try {
+            const data = await this.orm.call(
+                "security.roster.slot",
+                "get_today_roll_call",
+                [],
+                { today_date: todayStr }
+            );
+            this.state.todayRollCallData = data;
+        } catch (e) {
+            console.error("Could not load today's roll call:", e);
+        } finally {
+            this.state.loadingRollCall = false;
+        }
+    }
+
+    // --- One-Click Guard Shift Swap Modal ---
+
+    async loadAllAssignedSlots() {
+        try {
+            const slots = await this.orm.searchRead(
+                "security.roster.slot",
+                [
+                    ["shift_date", ">=", this.state.cycle.from],
+                    ["shift_date", "<=", this.state.cycle.to],
+                    ["state", "!=", "cancelled"],
+                    ["employee_id", "!=", false],
+                ],
+                ["id", "shift_date", "site_id", "post_id", "shift_template_id", "employee_id"],
+                { limit: 1000, order: "shift_date, site_id" }
+            );
+            this.state.allAssignedSlots = slots.map((s) => ({
+                id: s.id,
+                shift_date: s.shift_date,
+                site_name: s.site_id ? s.site_id[1] : "—",
+                post_name: s.post_id ? s.post_id[1] : "—",
+                employee_id: s.employee_id ? s.employee_id[0] : null,
+                employee_name: s.employee_id ? s.employee_id[1] : "—",
+                shift_label: s.shift_template_id ? s.shift_template_id[1] : "Shift",
+            }));
+        } catch {
+            this.state.allAssignedSlots = [];
+        }
+    }
+
+    get assignedSlotsForSwap() {
+        return this.state.allAssignedSlots || [];
+    }
+
+    get eligibleSlotBCandidates() {
+        const slotA = this.state.swapModal.slotA;
+        const q = (this.state.swapModal.searchQuery || "").toLowerCase();
+        return this.assignedSlotsForSwap
+            .filter((s) => !slotA || s.id !== slotA.id)
+            .filter((s) => {
+                if (!q) return true;
+                return (
+                    (s.employee_name && s.employee_name.toLowerCase().includes(q)) ||
+                    (s.post_name && s.post_name.toLowerCase().includes(q)) ||
+                    (s.site_name && s.site_name.toLowerCase().includes(q)) ||
+                    (s.shift_date && s.shift_date.includes(q))
+                );
+            });
+    }
+
+    async openSwapModal(slot = null) {
+        let slotA = slot;
+        if (slotA) {
+            slotA = {
+                id: slot.id,
+                shift_date: slot.shift_date || this.state.selectedDay?.shift_date || "",
+                site_name: slot.site_name || this.state.selectedDay?.site_name || "—",
+                post_name: slot.post_name || "—",
+                employee_name: slot.employee ? slot.employee.name : (slot.employee_name || "Assigned Guard"),
+                shift_label: slot.shift_template_name || slot.shift_label || "Shift",
+            };
+        }
+        await this.loadAllAssignedSlots();
+        if (!slotA && this.state.allAssignedSlots.length > 0) {
+            slotA = this.state.allAssignedSlots[0];
+        }
+
+        this.state.swapModal = {
+            visible: true,
+            slotA: slotA,
+            slotAId: slotA ? slotA.id : null,
+            slotB: null,
+            slotBId: null,
+            reason: "",
+            preValidation: null,
+            validating: false,
+            submitting: false,
+            error: "",
+            searchQuery: "",
+        };
+    }
+
+    closeSwapModal() {
+        this.state.swapModal = {
+            visible: false,
+            slotA: null,
+            slotB: null,
+            slotAId: null,
+            slotBId: null,
+            reason: "",
+            preValidation: null,
+            validating: false,
+            submitting: false,
+            error: "",
+            searchQuery: "",
+        };
+    }
+
+    async onSelectSwapSlotA(ev) {
+        const slotId = parseInt(ev.target.value);
+        const slot = this.state.allAssignedSlots.find((s) => s.id === slotId) || null;
+        this.state.swapModal.slotA = slot;
+        this.state.swapModal.slotAId = slotId;
+        this.state.swapModal.preValidation = null;
+        if (this.state.swapModal.slotBId) {
+            await this.runSwapPreValidation();
+        }
+    }
+
+    async onSelectSwapSlotB(ev) {
+        const slotId = parseInt(ev.target.value);
+        const slot = this.state.allAssignedSlots.find((s) => s.id === slotId) || null;
+        this.state.swapModal.slotB = slot;
+        this.state.swapModal.slotBId = slotId;
+        await this.runSwapPreValidation();
+    }
+
+    async runSwapPreValidation() {
+        const { slotAId, slotBId } = this.state.swapModal;
+        if (!slotAId || !slotBId || slotAId === slotBId) {
+            this.state.swapModal.preValidation = null;
+            return;
+        }
+        this.state.swapModal.validating = true;
+        this.state.swapModal.error = "";
+        try {
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_validate_swap",
+                [[slotAId], slotBId]
+            );
+            this.state.swapModal.preValidation = res;
+            if (res && res.status === "error") {
+                this.state.swapModal.error = res.message;
+            }
+        } catch (err) {
+            this.state.swapModal.error = err.message || "Pre-validation failed.";
+        } finally {
+            this.state.swapModal.validating = false;
+        }
+    }
+
+    setSwapReason(reasonText) {
+        this.state.swapModal.reason = reasonText;
+    }
+
+    async confirmExecuteSwap() {
+        const modal = this.state.swapModal;
+        if (!modal.slotAId || !modal.slotBId) {
+            this.state.swapModal.error = "Please select both shifts to swap.";
+            return;
+        }
+        if (!modal.reason || !modal.reason.trim()) {
+            this.state.swapModal.error = "A manager audit reason is mandatory for shift swaps.";
+            return;
+        }
+        this.state.swapModal.submitting = true;
+        this.state.swapModal.error = "";
+
+        try {
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_swap_guards",
+                [[modal.slotAId], modal.slotBId, modal.reason.trim(), true]
+            );
+
+            if (res && res.status === "error") {
+                this.state.swapModal.error = res.message;
+                this.state.swapModal.submitting = false;
+                return;
+            }
+
+            this.notification.add(
+                res.message || "Guard shift swap successfully executed!",
+                { type: "success" }
+            );
+            this.closeSwapModal();
+            if (this.state.showTodayRollCall) {
+                await this.loadTodayRollCall();
+            }
+            if (this.state.selectedDay) {
+                await this.loadDaySlots();
+            }
+            await this.load();
+        } catch (e) {
+            this.state.swapModal.error = e.message || "Swap execution failed.";
+            this.state.swapModal.submitting = false;
+        }
+    }
+
+    // --- Candidate Pool Relief Dispatch Modal ---
+
+    get candidatesForDispatch() {
+        const modal = this.state.candidatePoolModal;
+        if (!modal) return [];
+        let list = [];
+        if (modal.poolTab === "relief") {
+            list = modal.reliefGuards;
+        } else if (modal.poolTab === "regular") {
+            list = modal.regularGuards;
+        } else {
+            list = modal.allGuards;
+        }
+        const q = (modal.searchQuery || "").toLowerCase();
+        if (!q) return list;
+        return list.filter((g) =>
+            (g.name && g.name.toLowerCase().includes(q)) ||
+            (g.code && g.code.toLowerCase().includes(q)) ||
+            (g.grade && g.grade.toLowerCase().includes(q))
+        );
+    }
+
+    async openDispatchReliefModal(slot) {
+        this.state.candidatePoolModal = {
+            visible: true,
+            slot: slot,
+            poolTab: "relief",
+            searchQuery: "",
+            loading: true,
+            submitting: false,
+            regularGuards: [],
+            reliefGuards: [],
+            allGuards: [],
+            error: "",
+            overrideModal: null,
+        };
+
+        try {
+            const poolInfo = await this.orm.call(
+                "security.roster.slot",
+                "get_slot_pool_info",
+                [[slot.id]]
+            );
+            if (this.state.candidatePoolModal.visible) {
+                this.state.candidatePoolModal.regularGuards = poolInfo.regular_guards || [];
+                this.state.candidatePoolModal.reliefGuards = poolInfo.relief_guards || [];
+            }
+        } catch (err) {
+            console.error("Could not load slot pool info", err);
+        } finally {
+            if (this.state.candidatePoolModal.visible) {
+                this.state.candidatePoolModal.loading = false;
+            }
+        }
+    }
+
+    closeCandidatePoolModal() {
+        this.state.candidatePoolModal = {
+            visible: false,
+            slot: null,
+            poolTab: "relief",
+            searchQuery: "",
+            loading: false,
+            submitting: false,
+            regularGuards: [],
+            reliefGuards: [],
+            allGuards: [],
+            error: "",
+            overrideModal: null,
+        };
+    }
+
+    async dispatchCandidateGuard(guardId, guardName, isOverride = false, overrideReason = "") {
+        const modal = this.state.candidatePoolModal;
+        if (!modal || !modal.slot) return;
+        modal.submitting = true;
+        modal.error = "";
+
+        try {
+            const res = await this.orm.call(
+                "security.roster.slot",
+                "action_manual_assign",
+                [[modal.slot.id], guardId, isOverride, overrideReason]
+            );
+
+            if (res && res.status === "override_required") {
+                modal.overrideModal = {
+                    visible: true,
+                    slotId: modal.slot.id,
+                    guardId: guardId,
+                    guardName: guardName || res.guard_name || "Guard",
+                    reasons: res.reasons || [],
+                    reasonInput: "",
+                };
+                modal.submitting = false;
+                return;
+            }
+
+            if (res && res.status === "error") {
+                modal.error = res.message;
+                this.notification.add(res.message, { type: "danger" });
+                modal.submitting = false;
+                return;
+            }
+
+            this.notification.add(
+                `Relief guard ${guardName} successfully dispatched to ${modal.slot.post_name}!`,
+                { type: "success" }
+            );
+            this.closeCandidatePoolModal();
+            if (this.state.showTodayRollCall) {
+                await this.loadTodayRollCall();
+            }
+            if (this.state.selectedDay) {
+                await this.loadDaySlots();
+            }
+            await this.load();
+        } catch (e) {
+            modal.error = e.message || "Dispatch failed.";
+            modal.submitting = false;
+        }
+    }
+
+    async submitDispatchOverride() {
+        const modal = this.state.candidatePoolModal;
+        if (!modal || !modal.overrideModal) return;
+        const { guardId, guardName, reasonInput } = modal.overrideModal;
+        if (!reasonInput || !reasonInput.trim()) {
+            this.notification.add("An override reason is required.", { type: "warning" });
+            return;
+        }
+        await this.dispatchCandidateGuard(guardId, guardName, true, reasonInput.trim());
+    }
+
+    closeDispatchOverride() {
+        if (this.state.candidatePoolModal) {
+            this.state.candidatePoolModal.overrideModal = null;
+        }
     }
 }
 

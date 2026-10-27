@@ -9,8 +9,10 @@
           <div class="rc-sub">Operational Cycle (21st to 20th). Interactive site-by-day workbench with live guard allocation.</div>
         </div>
         <div class="rc-cycles">
+          <button class="rc-chip" t-att-class="state.showTodayRollCall ? 'active rc-rollcall-active' : ''" t-on-click="() => this.toggleTodayRollCall()" style="font-weight:700;" title="Filter view exclusively to today's roll call and gap dispatch">📋 Today's Roll Call</button>
+          <button class="rc-chip" style="background: #2563eb; color: white; font-weight: 600; border-color: #2563eb;" t-on-click="() => this.openSwapModal()" title="One-Click Guard Shift Swap">🔄 Swap Guards</button>
           <t t-foreach="cycles" t-as="c" t-key="c.from">
-            <button class="rc-chip" t-att-class="state.cycle.from === c.from ? 'active' : ''" t-on-click="() => this.setCycle(c)"><t t-esc="c.label"/></button>
+            <button class="rc-chip" t-att-class="(!state.showTodayRollCall and state.cycle.from === c.from) ? 'active' : ''" t-on-click="() => { this.state.showTodayRollCall = false; this.setCycle(c); }"><t t-esc="c.label"/></button>
           </t>
           <button class="rc-chip" style="background: #0284c7; color: white; font-weight: 600; border-color: #0284c7;" t-on-click="() => this.openScheduleImportWizard()" title="Import Excel Roster to fill and override shifts">📥 Import Excel</button>
         </div>
@@ -58,10 +60,120 @@
     <div class="rc-body" t-if="state.loading and !state.data"><div class="rc-loading">Loading operational roster…</div></div>
 
     <main class="rc-main" t-if="state.data">
-      <t t-if="state.data.rows.length === 0">
+      <!-- ── Today's Roll Call & Live Gap Dispatch Dedicated View ── -->
+      <t t-if="state.showTodayRollCall and state.todayRollCallData">
+        <div class="rc-rollcall-dashboard p-3 bg-white border rounded-3 mb-3 shadow-sm">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 border-bottom">
+            <div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success text-white px-2 py-1" style="font-size:12px; font-weight:700;">🟢 TODAY'S ROLL CALL</span>
+                <h4 class="mb-0 fw-bold" style="color:#0f172a;"><t t-esc="state.todayRollCallData.date"/> Shift Deployment</h4>
+              </div>
+              <div class="text-muted small mt-1">Live operational dispatch status across all client posts.</div>
+            </div>
+
+            <!-- KPI Pill Strip -->
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <div class="rc-stat py-1 px-3">
+                <div class="rc-lbl">Total Posts Today</div>
+                <div class="rc-num fs-5"><t t-esc="state.todayRollCallData.total"/></div>
+              </div>
+              <div class="rc-stat py-1 px-3" style="border-color:#bbf7d0; background:#f0fdf4;">
+                <div class="rc-lbl text-success">Assigned On Duty</div>
+                <div class="rc-num fs-5 text-success"><t t-esc="state.todayRollCallData.assigned"/></div>
+              </div>
+              <div class="rc-stat py-1 px-3" style="border-color:#fca5a5; background:#fef2f2;">
+                <div class="rc-lbl text-danger">Critical Open Gaps</div>
+                <div class="rc-num fs-5 text-danger"><t t-esc="state.todayRollCallData.unassigned"/></div>
+              </div>
+              <div class="rc-stat py-1 px-3">
+                <div class="rc-lbl">Fulfillment Rate</div>
+                <div class="rc-num fs-5"><t t-esc="state.todayRollCallData.fulfillment_rate"/>%</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Roll Call Slots Table -->
+          <div class="table-responsive mt-3">
+            <table class="table table-hover align-middle mb-0" style="font-size:12px;">
+              <thead class="table-light">
+                <tr>
+                  <th style="min-width:180px;">Site / Client</th>
+                  <th style="min-width:140px;">Post</th>
+                  <th style="min-width:120px;">Shift Time</th>
+                  <th style="min-width:240px;">Guard Status</th>
+                  <th style="min-width:180px; text-align:right;">One-Click Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <t t-if="!state.todayRollCallData.slots or state.todayRollCallData.slots.length === 0">
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">No scheduled shifts found for today.</td>
+                  </tr>
+                </t>
+                <t t-foreach="state.todayRollCallData.slots" t-as="slot" t-key="slot.id">
+                  <tr t-att-style="'background:' + (slot.employee_id ? '#ffffff' : '#fff5f5')">
+                    <td>
+                      <div class="fw-bold text-dark"><t t-esc="slot.site_name"/></div>
+                      <div class="text-muted small"><t t-esc="slot.client_name"/></div>
+                    </td>
+                    <td>
+                      <div class="fw-semibold text-dark"><t t-esc="slot.post_name"/></div>
+                    </td>
+                    <td>
+                      <div class="badge bg-light text-dark border">
+                        <t t-esc="slot.shift_template_name"/> (<t t-esc="slot.start_hour"/>:00–<t t-esc="slot.end_hour"/>:00)
+                      </div>
+                    </td>
+                    <td>
+                      <t t-if="slot.employee_id">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="badge" style="background:#dcfce7; color:#15803d; font-weight:700;">🟢 ASSIGNED</span>
+                          <div>
+                            <span class="fw-bold text-dark"><t t-esc="slot.employee_name"/></span>
+                            <span t-if="slot.employee_code and slot.employee_code !== '—'" class="badge bg-light text-muted border ms-1"><t t-esc="slot.employee_code"/></span>
+                            <span class="badge bg-secondary ms-1"><t t-esc="slot.employee_grade"/></span>
+                          </div>
+                        </div>
+                      </t>
+                      <t t-else="">
+                        <div class="d-flex align-items-center gap-2">
+                          <span class="badge" style="background:#fee2e2; color:#b91c1c; font-weight:700;">🔴 UNASSIGNED CRITICAL GAP</span>
+                          <span class="text-danger small fst-italic">Requires immediate relief guard dispatch</span>
+                        </div>
+                      </t>
+                    </td>
+                    <td class="text-end">
+                      <t t-if="slot.employee_id">
+                        <button class="btn btn-sm btn-outline-primary py-1 px-2"
+                                style="font-size:11px;"
+                                t-on-click="() => this.openSwapModal(slot)"
+                                title="Swap this guard with another post">
+                          <i class="fa fa-exchange me-1"/> Swap Shift
+                        </button>
+                      </t>
+                      <t t-else="">
+                        <button class="btn btn-sm btn-danger py-1 px-3 fw-bold shadow-sm"
+                                style="font-size:11px;"
+                                t-on-click="() => this.openDispatchReliefModal(slot)"
+                                title="Open Candidate Pool to dispatch relief guard">
+                          <i class="fa fa-life-ring me-1"/> Dispatch Relief Guard
+                        </button>
+                      </t>
+                    </td>
+                  </tr>
+                </t>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </t>
+
+      <!-- ── Standard Multi-Day Cycle Grid Matrix ── -->
+      <t t-elif="state.data.rows.length === 0">
         <div class="rc-empty-state">No sites match the selected filters for this cycle.</div>
       </t>
-      <t t-if="state.data.rows.length">
+      <t t-elif="state.data.rows.length">
         <div class="rc-grid-wrap">
           <table class="rc-grid">
             <thead>
@@ -170,6 +282,7 @@
                     </div>
                   </div>
                   <div class="rc-guard-actions">
+                    <button class="rc-btn-sm" style="background:#e0f2fe; color:#0369a1; border-color:#bae6fd;" t-on-click="() => this.openSwapModal(slot)" title="Swap this guard with another shift">Swap</button>
                     <button class="rc-btn-sm" t-on-click="() => this.toggleAssignDrawer(slot.id)">Replace</button>
                     <button class="rc-btn-sm rc-btn-danger" t-on-click="() => this.clearSlot(slot.id)">Clear</button>
                   </div>
@@ -271,6 +384,246 @@
         <div class="rc-override-modal-footer">
           <button class="rc-btn rc-btn-secondary" t-on-click="closeOverrideModal">Cancel</button>
           <button class="rc-btn rc-btn-primary" t-on-click="submitOverride">Confirm Override</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         ONE-CLICK GUARD SHIFT SWAP MODAL
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="rc-override-modal-backdrop" t-if="state.swapModal.visible" t-on-click.self="closeSwapModal">
+      <div class="rc-override-modal" style="width: 660px; max-width: 95vw;">
+        <div class="rc-override-modal-header">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge" style="background:#e0f2fe; color:#0284c7; font-size:11px; font-weight:700;">🔄 GUARD SWAP</span>
+            <h5 class="rc-override-modal-title mb-0">One-Click Guard Shift Swap</h5>
+          </div>
+          <button class="rc-drawer-close" t-on-click="closeSwapModal">✕</button>
+        </div>
+
+        <div class="rc-override-modal-body d-flex flex-column gap-3">
+          <!-- Error banner -->
+          <div t-if="state.swapModal.error" class="alert alert-danger py-2 px-3 mb-0" style="font-size:12px;">
+            <i class="fa fa-exclamation-circle me-1"/>
+            <span t-esc="state.swapModal.error"/>
+          </div>
+
+          <!-- Slot Comparison Row -->
+          <div class="row g-2">
+            <div class="col-12 col-md-5">
+              <div class="p-2 border rounded" style="background:#f8fafc; font-size:12px;">
+                <div class="fw-bold text-primary mb-1">SLOT A (SOURCE)</div>
+                <select class="form-select form-select-sm mb-2" t-on-change="onSelectSwapSlotA">
+                  <t t-foreach="assignedSlotsForSwap" t-as="s" t-key="s.id">
+                    <option t-att-value="s.id" t-att-selected="state.swapModal.slotAId === s.id">
+                      <t t-esc="s.shift_date"/> · <t t-esc="s.site_name"/> · <t t-esc="s.employee_name"/> (<t t-esc="s.post_name"/>)
+                    </option>
+                  </t>
+                </select>
+                <t t-if="state.swapModal.slotA">
+                  <div class="fw-bold"><t t-esc="state.swapModal.slotA.employee_name"/></div>
+                  <div class="text-muted small"><t t-esc="state.swapModal.slotA.site_name"/> · <t t-esc="state.swapModal.slotA.post_name"/></div>
+                  <div class="text-muted small"><t t-esc="state.swapModal.slotA.shift_label"/></div>
+                </t>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-2 d-flex flex-column align-items-center justify-content-center text-center">
+              <div class="fs-4 text-primary">⇄</div>
+              <div class="text-muted small fw-bold" style="font-size:10px;">SWAP</div>
+            </div>
+
+            <div class="col-12 col-md-5">
+              <div class="p-2 border rounded" style="background:#f8fafc; font-size:12px;">
+                <div class="fw-bold text-success mb-1">SLOT B (TARGET)</div>
+                <select class="form-select form-select-sm mb-2" t-on-change="onSelectSwapSlotB">
+                  <option value="">— Pick Slot B to swap with —</option>
+                  <t t-foreach="eligibleSlotBCandidates" t-as="s" t-key="s.id">
+                    <option t-att-value="s.id" t-att-selected="state.swapModal.slotBId === s.id">
+                      <t t-esc="s.shift_date"/> · <t t-esc="s.site_name"/> · <t t-esc="s.employee_name"/> (<t t-esc="s.post_name"/>)
+                    </option>
+                  </t>
+                </select>
+                <t t-if="state.swapModal.slotB">
+                  <div class="fw-bold"><t t-esc="state.swapModal.slotB.employee_name"/></div>
+                  <div class="text-muted small"><t t-esc="state.swapModal.slotB.site_name"/> · <t t-esc="state.swapModal.slotB.post_name"/></div>
+                  <div class="text-muted small"><t t-esc="state.swapModal.slotB.shift_label"/></div>
+                </t>
+                <t t-else="">
+                  <div class="text-muted small fst-italic py-2 text-center">Select target shift</div>
+                </t>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pre-validation review -->
+          <t t-if="state.swapModal.validating">
+            <div class="p-2 bg-light border rounded text-center text-muted" style="font-size:11px;">
+              <i class="fa fa-spinner fa-spin me-1 text-primary"/> Pre-validating turnaround rest &amp; grade requirements…
+            </div>
+          </t>
+          <t t-elif="state.swapModal.preValidation and state.swapModal.preValidation.status === 'success'">
+            <div class="p-2 border rounded"
+                 t-att-style="'background:' + (state.swapModal.preValidation.requires_override ? '#fffbeb; border-color:#fef08a !important;' : '#f0fdf4; border-color:#bbf7d0 !important;')">
+              <div class="d-flex align-items-center justify-content-between mb-1" style="font-size:11px;">
+                <span class="fw-bold" t-att-style="'color:' + (state.swapModal.preValidation.requires_override ? '#b45309;' : '#15803d;')">
+                  <i t-att-class="state.swapModal.preValidation.requires_override ? 'fa fa-exclamation-triangle' : 'fa fa-check-circle'"/>
+                  <t t-if="state.swapModal.preValidation.can_swap_cleanly">Full Compliance: Turnaround rest &amp; grade met</t>
+                  <t t-else="">Manager Override Required</t>
+                </span>
+                <span class="badge" t-att-style="'background:' + (state.swapModal.preValidation.requires_override ? '#fde68a; color:#92400e;' : '#dcfce7; color:#166534;')">
+                  <t t-if="state.swapModal.preValidation.can_swap_cleanly">PASS</t>
+                  <t t-else="">OVERRIDE</t>
+                </span>
+              </div>
+              <div class="d-flex justify-content-between small py-1 border-bottom" style="font-size:10px;">
+                <span><b><t t-esc="state.swapModal.preValidation.guard_a.name"/></b> ➔ <t t-esc="state.swapModal.preValidation.guard_a.to_slot.post_name"/></span>
+                <span>
+                  <span t-if="state.swapModal.preValidation.guard_a.grade_ok" class="badge bg-success text-white me-1">Grade Met</span>
+                  <span t-else="" class="badge bg-danger text-white me-1">Grade Mismatch</span>
+                  <span t-if="state.swapModal.preValidation.guard_a.rest_ok" class="badge bg-success text-white">12h Rest OK</span>
+                  <span t-else="" class="badge bg-warning text-dark">Rest Warning</span>
+                </span>
+              </div>
+              <div class="d-flex justify-content-between small py-1" style="font-size:10px;">
+                <span><b><t t-esc="state.swapModal.preValidation.guard_b.name"/></b> ➔ <t t-esc="state.swapModal.preValidation.guard_b.to_slot.post_name"/></span>
+                <span>
+                  <span t-if="state.swapModal.preValidation.guard_b.grade_ok" class="badge bg-success text-white me-1">Grade Met</span>
+                  <span t-else="" class="badge bg-danger text-white me-1">Grade Mismatch</span>
+                  <span t-if="state.swapModal.preValidation.guard_b.rest_ok" class="badge bg-success text-white">12h Rest OK</span>
+                  <span t-else="" class="badge bg-warning text-dark">Rest Warning</span>
+                </span>
+              </div>
+            </div>
+          </t>
+
+          <!-- Audit Reason Input -->
+          <div class="rc-override-field">
+            <label class="rc-field-label">Manager Audit Reason (Required for Compliance):</label>
+            <div class="d-flex gap-1 flex-wrap mb-2">
+              <button class="rc-btn-sm" t-on-click="() => this.setSwapReason('Mutual swap request')">Mutual swap request</button>
+              <button class="rc-btn-sm" t-on-click="() => this.setSwapReason('Medical reallocation')">Medical reallocation</button>
+              <button class="rc-btn-sm" t-on-click="() => this.setSwapReason('Client request')">Client request</button>
+              <button class="rc-btn-sm" t-on-click="() => this.setSwapReason('Transport / logistical issue')">Transport / logistical issue</button>
+            </div>
+            <input type="text" class="rc-input-override"
+                   placeholder="Enter swap reason (e.g. Mutual swap requested by guards)…"
+                   t-att-value="state.swapModal.reason"
+                   t-on-input="(ev) => { this.state.swapModal.reason = ev.target.value; }"/>
+          </div>
+        </div>
+
+        <div class="rc-override-modal-footer">
+          <button class="rc-btn rc-btn-secondary" t-on-click="closeSwapModal">Cancel</button>
+          <button class="rc-btn rc-btn-primary"
+                  t-on-click="confirmExecuteSwap"
+                  t-att-disabled="!state.swapModal.slotAId or !state.swapModal.slotBId or !state.swapModal.reason or state.swapModal.submitting">
+            <i t-att-class="state.swapModal.submitting ? 'fa fa-spinner fa-spin me-1' : 'fa fa-exchange me-1'"/>
+            <t t-if="state.swapModal.submitting">Executing Swap…</t>
+            <t t-else="">Execute Atomic Swap</t>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         CANDIDATE POOL RELIEF DISPATCH MODAL
+         ═══════════════════════════════════════════════════════════ -->
+    <div class="rc-override-modal-backdrop" t-if="state.candidatePoolModal.visible" t-on-click.self="closeCandidatePoolModal">
+      <div class="rc-override-modal" style="width: 680px; max-width: 95vw;">
+        <div class="rc-override-modal-header">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-danger text-white" style="font-size:10px; font-weight:700;">⚡ RELIEF DISPATCH</span>
+              <h5 class="rc-override-modal-title mb-0">Dispatch Relief Guard to Open Gap</h5>
+            </div>
+            <t t-if="state.candidatePoolModal.slot">
+              <div class="text-muted small mt-1">
+                <b><t t-esc="state.candidatePoolModal.slot.site_name"/></b> · <t t-esc="state.candidatePoolModal.slot.post_name"/> · <t t-esc="state.candidatePoolModal.slot.shift_template_name"/>
+              </div>
+            </t>
+          </div>
+          <button class="rc-drawer-close" t-on-click="closeCandidatePoolModal">✕</button>
+        </div>
+
+        <div class="rc-override-modal-body d-flex flex-column gap-3">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-2 border-bottom">
+            <div class="rc-pool-tabs">
+              <button class="rc-pool-tab" t-att-class="state.candidatePoolModal.poolTab === 'relief' ? 'active' : ''"
+                      t-on-click="() => { state.candidatePoolModal.poolTab = 'relief'; }">
+                Relief Pool (<t t-esc="state.candidatePoolModal.reliefGuards.length"/>)
+              </button>
+              <button class="rc-pool-tab" t-att-class="state.candidatePoolModal.poolTab === 'regular' ? 'active' : ''"
+                      t-on-click="() => { state.candidatePoolModal.poolTab = 'regular'; }">
+                Site Team (<t t-esc="state.candidatePoolModal.regularGuards.length"/>)
+              </button>
+            </div>
+            <input class="rc-pool-search" type="text" placeholder="Filter guard name or code…"
+                   t-att-value="state.candidatePoolModal.searchQuery"
+                   t-on-input="(ev) => { state.candidatePoolModal.searchQuery = ev.target.value; }"/>
+          </div>
+
+          <!-- Candidates List -->
+          <div style="max-height: 320px; overflow-y: auto;" class="d-flex flex-column gap-2">
+            <t t-if="state.candidatePoolModal.loading">
+              <div class="py-4 text-center text-muted">
+                <i class="fa fa-spinner fa-spin me-1 text-primary"/> Loading candidate guard pool…
+              </div>
+            </t>
+            <t t-elif="candidatesForDispatch.length === 0">
+              <div class="py-3 text-center text-muted fst-italic">No guards found in this pool.</div>
+            </t>
+            <t t-else="">
+              <t t-foreach="candidatesForDispatch" t-as="g" t-key="g.id">
+                <div class="p-2 border rounded d-flex align-items-center justify-content-between gap-2"
+                     t-att-style="'background:' + (g.is_eligible === false ? '#fffbeb' : '#ffffff')">
+                  <div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="fw-bold"><t t-esc="g.name"/></span>
+                      <span t-if="g.code and g.code !== '—'" class="rc-badge-id"><t t-esc="g.code"/></span>
+                      <span class="rc-badge-grade"><t t-esc="g.grade"/></span>
+                      <span t-if="g.is_eligible === false" class="badge bg-warning text-dark" style="font-size:9px;">⚠️ Warning</span>
+                    </div>
+                    <div class="d-flex gap-1 flex-wrap mt-1">
+                      <span class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;"><t t-esc="g.can_read ? '📖 Read: Yes' : '📖 No Read'"/></span>
+                      <span class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;">Eng: <t t-esc="g.english"/></span>
+                      <span class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;">⭐ <t t-esc="g.smartness"/>/5</span>
+                    </div>
+                    <t t-if="g.reasons and g.reasons.length">
+                      <div class="text-danger small mt-1" style="font-size:10px;">
+                        <t t-foreach="g.reasons" t-as="r" t-key="r">
+                          <div>• <t t-esc="r"/></div>
+                        </t>
+                      </div>
+                    </t>
+                  </div>
+                  <button class="rc-btn rc-btn-primary" style="padding: 4px 12px; font-size: 11px;"
+                          t-on-click="() => this.dispatchCandidateGuard(g.id, g.name)"
+                          t-att-disabled="state.candidatePoolModal.submitting">
+                    Dispatch
+                  </button>
+                </div>
+              </t>
+            </t>
+          </div>
+
+          <!-- Dispatch Override Box -->
+          <t t-if="state.candidatePoolModal.overrideModal and state.candidatePoolModal.overrideModal.visible">
+            <div class="p-2 border rounded bg-light border-warning">
+              <div class="fw-bold text-warning small mb-1">⚠️ Manager Override Required for <t t-esc="state.candidatePoolModal.overrideModal.guardName"/></div>
+              <div class="d-flex gap-2">
+                <input type="text" class="rc-input-override form-control-sm" placeholder="Reason for override…"
+                       t-att-value="state.candidatePoolModal.overrideModal.reasonInput"
+                       t-on-input="(ev) => { state.candidatePoolModal.overrideModal.reasonInput = ev.target.value; }"/>
+                <button class="rc-btn rc-btn-primary" t-on-click="submitDispatchOverride">Confirm</button>
+                <button class="rc-btn rc-btn-secondary" t-on-click="closeDispatchOverride">Cancel</button>
+              </div>
+            </div>
+          </t>
+        </div>
+
+        <div class="rc-override-modal-footer">
+          <button class="rc-btn rc-btn-secondary" t-on-click="closeCandidatePoolModal">Close</button>
         </div>
       </div>
     </div>

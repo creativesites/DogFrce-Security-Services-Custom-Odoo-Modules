@@ -336,3 +336,25 @@
 .rc-btn-secondary:hover {
   background: #f1f5f9;
 }
+
+/* Today's Roll Call Active Toggle */
+.rc-chip.rc-rollcall-active {
+  background: #16a34a !important;
+  border-color: #15803d !important;
+  color: #fff !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.3);
+}
+
+.rc-btn-swap {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+.rc-btn-swap:hover {
+  background: #bae6fd;
+}
+
+.rc-rollcall-dashboard {
+  animation: rcFadeIn 0.2s ease-out;
+}

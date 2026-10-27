@@ -209,10 +209,14 @@ class TestContractWorkspace(TransactionCase):
             "partner_id": self.client.id,
             "location": "Swakopmund",
         })
+        leg_post_type = self.env["security.post.type"].search([], limit=1)
+        if not leg_post_type:
+            leg_post_type = self.env["security.post.type"].create({"name": "Standard Post", "code": "STD"})
         leg_post = self.env["security.post"].with_context(allow_standalone_post=True).create({
             "name": "Front Gate",
             "site_id": leg_site.id,
             "partner_id": self.client.id,
+            "post_type_id": leg_post_type.id,
             "required_guard_count": 1,
         })
         leg_req = self.env["security.shift.requirement"].create({

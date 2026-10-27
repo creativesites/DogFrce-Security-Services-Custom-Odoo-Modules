@@ -14,12 +14,14 @@ class TestRosterScoring(TransactionCase):
         cls.partner = env["res.partner"].create({"name": "Test Roster Client K4", "is_company": True})
         cls.site = env["security.client.site"].create({"name": "Test Roster Site K4", "partner_id": cls.partner.id})
 
-        cls.post_type = env["security.post.type"].create({"name": "Gate Post K4"})
-        cls.post = env["security.post"].create({
+        cls.post_type = env["security.post.type"].create({
+            "name": "Gate Post K4",
+            "min_grade_id": cls.grade_a.id,
+        })
+        cls.post = env["security.post"].with_context(allow_standalone_post=True).create({
             "name": "Main Gate K4",
             "site_id": cls.site.id,
             "post_type_id": cls.post_type.id,
-            "required_grade_id": cls.grade_a.id,
         })
         cls.shift = env["security.shift.template"].create({
             "name": "Day Shift K4",
@@ -30,7 +32,7 @@ class TestRosterScoring(TransactionCase):
             "name": "Test Batch K4",
             "date_from": "2026-08-01",
             "date_to": "2026-08-31",
-            "site_ids": [(4, cls.site.id)],
+            "site_id": cls.site.id,
         })
         cls.slot = env["security.roster.slot"].create({
             "batch_id": cls.batch.id,
@@ -38,7 +40,6 @@ class TestRosterScoring(TransactionCase):
             "site_id": cls.site.id,
             "shift_date": "2026-08-01",
             "shift_template_id": cls.shift.id,
-            "required_grade_id": cls.grade_a.id,
             "state": "confirmed",
         })
         cls.guard_a = env["hr.employee"].create({

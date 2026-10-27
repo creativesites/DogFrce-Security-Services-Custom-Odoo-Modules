@@ -66,6 +66,11 @@
                     title="Import Excel Roster &amp; Override Schedule">
                 <i class="fa fa-file-excel-o me-1"/> Import Excel
             </button>
+            <button class="btn btn-sm btn-outline-primary px-3"
+                    t-on-click="() => this.openSwapModal()"
+                    title="One-Click Guard Shift Swap">
+                <i class="fa fa-exchange me-1"/> Swap Guards
+            </button>
             <button class="btn btn-sm text-white px-3 fw-semibold"
                     style="background: var(--ds-accent); border-color: var(--ds-accent);"
                     t-on-click="autoAssignAll"
@@ -178,6 +183,22 @@
                         t-att-disabled="state.loading"
                         title="Show only relief guard slots">
                     <i class="fa fa-life-ring me-1"/> Relief
+                </button>
+            </div>
+
+            <!-- Today's Roll Call & Live Gap Dispatch Toggle -->
+            <div>
+                <button t-att-class="state.showTodayRollCall ? 'btn btn-sm btn-success text-white px-2 fw-bold shadow-sm' : 'btn btn-sm btn-light border text-muted px-2'"
+                        t-on-click="toggleTodayRollCall"
+                        t-att-disabled="state.loading"
+                        title="Today's Roll Call &amp; Live Gap Dispatch">
+                    <i class="fa fa-clipboard-check me-1"/>
+                    <span>Today's Roll Call</span>
+                    <t t-if="todayRollCallStats">
+                        <span t-att-class="'badge ms-1 ' + (state.showTodayRollCall ? 'bg-white text-success' : 'bg-secondary')">
+                            <t t-esc="todayRollCallStats.assigned"/>/<t t-esc="todayRollCallStats.total"/>
+                        </span>
+                    </t>
                 </button>
             </div>
         </div>
@@ -320,9 +341,11 @@
                         sites="paginatedSites"
                         slots="filteredSlots"
                         selectedSlotId="state.selectedSlot ? state.selectedSlot.id : null"
+                        isRollCallMode="state.showTodayRollCall"
                         onSelectSlot="(slot) => this.selectSlot(slot)"
                         onSlotContextMenu="(slot, ev) => this.onSlotContextMenu(slot, ev)"
-                        onDropSlot="(slot, ev) => this.onDropSlot(slot, ev)"/>
+                        onDropSlot="(slot, ev) => this.onDropSlot(slot, ev)"
+                        onDispatchRelief="(slot) => this.openDispatchReliefModal(slot)"/>
                 </t>
             </div><!-- /rb-timeline -->
 
@@ -381,9 +404,14 @@
                                     style="flex:1;"
                                     t-on-click="loadSuggestions"
                                     t-att-disabled="state.loadingSuggestions">
-                                <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-exchange me-1'"/>
+                                <i t-att-class="state.loadingSuggestions ? 'fa fa-spinner fa-spin me-1' : 'fa fa-search me-1'"/>
                                 <t t-if="state.loadingSuggestions">Loading…</t>
                                 <t t-else="">Find Replacement</t>
+                            </button>
+                            <button class="rb-btn rb-btn-outline-primary"
+                                    t-on-click="() => this.openSwapModal(state.selectedSlot)"
+                                    title="One-Click Guard Shift Swap">
+                                <i class="fa fa-exchange me-1"/>Swap Shift
                             </button>
                             <button class="rb-btn rb-btn-danger"
                                     t-on-click="unassignSlot">
@@ -900,11 +928,11 @@
                     <i class="fa fa-magic me-2" style="color:#3b82f6;"/>Suggest Guards
                 </button>
 
-                <!-- Swap Guard (opens override-reason dialog, then suggestion panel) -->
+                <!-- Swap Guard (opens atomic shift swap modal) -->
                 <button t-if="state.contextMenu.slot.employee_id"
                         class="rb-ctx-item"
-                        t-on-click="() => this.openSwapDialog(state.contextMenu.slot)">
-                    <i class="fa fa-exchange me-2" style="color:#8b5cf6;"/>Swap Guard
+                        t-on-click="() => this.openSwapModal(state.contextMenu.slot)">
+                    <i class="fa fa-exchange me-2" style="color:#2563eb;"/>Swap Guard Shift
                 </button>
 
                 <!-- Unassign Guard -->
@@ -931,57 +959,380 @@
     </t>
 
     <!-- ═══════════════════════════════════════════════════════════
-         SWAP DIALOG — override reason before re-assigning guard
+         ONE-CLICK GUARD SHIFT SWAP MODAL
          ═══════════════════════════════════════════════════════════ -->
-    <t t-if="state.swapDialog.visible">
-        <div style="position:fixed; inset:0; z-index:10000; background:rgba(15,23,42,.55); display:flex; align-items:center; justify-content:center;"
-             t-on-click.self="closeSwapDialog">
-            <div style="background:#fff; border-radius:14px; padding:28px; width:420px; max-width:92vw; box-shadow:0 24px 64px rgba(0,0,0,.28);">
+    <t t-if="state.swapModal.visible">
+        <div class="rb-modal-backdrop" style="position:fixed; inset:0; z-index:10005; background:rgba(15,23,42,.65); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:16px;"
+             t-on-click.self="closeSwapModal">
+            <div class="rb-modal-dialog" style="background:#fff; border-radius:16px; width:680px; max-width:96vw; max-height:92vh; overflow-y:auto; box-shadow:0 25px 70px rgba(0,0,0,.35); display:flex; flex-direction:column; border:1px solid #cbd5e1;">
 
                 <!-- Header -->
-                <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom" style="background:#f8fafc; border-top-left-radius:16px; border-top-right-radius:16px;">
                     <div>
-                        <div style="font-size:16px; font-weight:700; color:#1e293b;">Swap Guard</div>
-                        <div t-if="state.swapDialog.slot" style="font-size:12px; color:#64748b; margin-top:2px;">
-                            <t t-esc="state.swapDialog.slot.post_name"/>
-                            <span class="mx-1">·</span>
-                            <t t-esc="formatDateShort(state.swapDialog.slot.shift_date)"/>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge" style="background:#e0f2fe; color:#0284c7; font-size:12px; font-weight:700;"><i class="fa fa-exchange me-1"/>GUARD SWAP</span>
+                            <h5 class="mb-0 fw-bold" style="color:#0f172a; font-size:16px;">One-Click Guard Shift Swap</h5>
+                        </div>
+                        <div style="font-size:11px; color:#64748b; margin-top:3px;">
+                            Atomic shift exchange with real-time turnaround rest &amp; grade verification.
                         </div>
                     </div>
-                    <button style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:16px; line-height:1; padding:4px;"
-                            t-on-click="closeSwapDialog">
-                        <i class="fa fa-times"/>
+                    <button class="btn btn-sm btn-link text-muted p-0 fs-5 text-decoration-none" t-on-click="closeSwapModal">✕</button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-4 d-flex flex-column gap-3">
+                    <!-- Error message banner -->
+                    <div t-if="state.swapModal.error" class="alert alert-danger py-2 px-3 mb-0 d-flex align-items-center gap-2" style="font-size:12px; border-radius:8px;">
+                        <i class="fa fa-exclamation-circle"/>
+                        <span t-esc="state.swapModal.error"/>
+                    </div>
+
+                    <!-- Slot A and Slot B Selection / Comparison Cards -->
+                    <div class="row g-3 align-items-stretch">
+                        <!-- Slot A Card -->
+                        <div class="col-12 col-md-5">
+                            <div class="p-3 border rounded-3 h-100" style="background:#f8fafc;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="badge bg-primary text-white" style="font-size:10px; font-weight:700;">SLOT A (SOURCE)</span>
+                                    <span t-if="state.swapModal.slotA" class="badge bg-secondary" style="font-size:10px;" t-esc="state.swapModal.slotA.shift_date"/>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted mb-1" style="font-size:11px; font-weight:600;">Select Slot A:</label>
+                                    <select class="form-select form-select-sm" t-on-change="onSelectSwapSlotA">
+                                        <t t-foreach="assignedSlotsForSwap" t-as="s" t-key="s.id">
+                                            <option t-att-value="s.id" t-att-selected="state.swapModal.slotAId === s.id">
+                                                <t t-esc="s.shift_date"/> · <t t-esc="s.site_name"/> · <t t-esc="s.employee_name"/> (<t t-esc="s.post_name"/>)
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <t t-if="state.swapModal.slotA">
+                                    <div class="mt-2 pt-2 border-top" style="font-size:12px;">
+                                        <div class="fw-bold text-dark"><i class="fa fa-user me-1 text-primary"/><t t-esc="state.swapModal.slotA.employee_name"/></div>
+                                        <div class="text-muted small mt-1"><i class="fa fa-map-marker me-1"/><t t-esc="state.swapModal.slotA.site_name"/> · <t t-esc="state.swapModal.slotA.post_name"/></div>
+                                        <div class="text-muted small"><i class="fa fa-clock-o me-1"/><t t-esc="state.swapModal.slotA.shift_label || 'Scheduled Shift'"/></div>
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+
+                        <!-- Swap Arrow Column -->
+                        <div class="col-12 col-md-2 d-flex flex-column align-items-center justify-content-center text-center py-2">
+                            <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                 style="width:40px; height:40px; background:#eff6ff; border:1px solid #bfdbfe; color:#2563eb;">
+                                <i class="fa fa-exchange fs-5"/>
+                            </div>
+                            <div class="text-muted small fw-bold mt-1" style="font-size:10px; text-transform:uppercase;">SWAP</div>
+                        </div>
+
+                        <!-- Slot B Card -->
+                        <div class="col-12 col-md-5">
+                            <div class="p-3 border rounded-3 h-100" style="background:#f8fafc;">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="badge bg-success text-white" style="font-size:10px; font-weight:700;">SLOT B (TARGET)</span>
+                                    <span t-if="state.swapModal.slotB" class="badge bg-secondary" style="font-size:10px;" t-esc="state.swapModal.slotB.shift_date"/>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label text-muted mb-1" style="font-size:11px; font-weight:600;">Select Target Slot B:</label>
+                                    <select class="form-select form-select-sm" t-on-change="onSelectSwapSlotB">
+                                        <option value="">— Pick Slot B to swap with —</option>
+                                        <t t-foreach="eligibleSlotBCandidates" t-as="s" t-key="s.id">
+                                            <option t-att-value="s.id" t-att-selected="state.swapModal.slotBId === s.id">
+                                                <t t-esc="s.shift_date"/> · <t t-esc="s.site_name"/> · <t t-esc="s.employee_name"/> (<t t-esc="s.post_name"/>)
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <t t-if="state.swapModal.slotB">
+                                    <div class="mt-2 pt-2 border-top" style="font-size:12px;">
+                                        <div class="fw-bold text-dark"><i class="fa fa-user me-1 text-success"/><t t-esc="state.swapModal.slotB.employee_name"/></div>
+                                        <div class="text-muted small mt-1"><i class="fa fa-map-marker me-1"/><t t-esc="state.swapModal.slotB.site_name"/> · <t t-esc="state.swapModal.slotB.post_name"/></div>
+                                        <div class="text-muted small"><i class="fa fa-clock-o me-1"/><t t-esc="state.swapModal.slotB.shift_label || 'Scheduled Shift'"/></div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div class="text-muted small fst-italic py-3 text-center">
+                                        Select a second shift to preview atomic exchange.
+                                    </div>
+                                </t>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pre-Validation Review Box -->
+                    <t t-if="state.swapModal.validating">
+                        <div class="p-3 bg-light border rounded text-center text-muted" style="font-size:12px;">
+                            <i class="fa fa-spinner fa-spin me-1 text-primary"/> Running turnaround rest &amp; grade constraint pre-validation…
+                        </div>
+                    </t>
+                    <t t-elif="state.swapModal.preValidation and state.swapModal.preValidation.status === 'success'">
+                        <div class="border rounded-3 p-3"
+                             t-att-style="'background:' + (state.swapModal.preValidation.requires_override ? '#fffbeb; border-color:#fef08a !important;' : '#f0fdf4; border-color:#bbf7d0 !important;')">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="fw-bold d-flex align-items-center gap-1"
+                                     t-att-style="'font-size:12px; color:' + (state.swapModal.preValidation.requires_override ? '#b45309;' : '#15803d;')">
+                                    <i t-att-class="state.swapModal.preValidation.requires_override ? 'fa fa-exclamation-triangle' : 'fa fa-check-circle'"/>
+                                    <span t-if="state.swapModal.preValidation.can_swap_cleanly">Full Compliance: Both guards satisfy all rules</span>
+                                    <span t-elif="state.swapModal.preValidation.requires_override">Manager Override Required</span>
+                                    <span t-else="">Pre-Validation Check</span>
+                                </div>
+                                <span class="badge"
+                                      t-att-style="'font-size:10px; background:' + (state.swapModal.preValidation.requires_override ? '#fde68a; color:#92400e;' : '#dcfce7; color:#166534;')">
+                                    <t t-if="state.swapModal.preValidation.can_swap_cleanly">PASS (100% CLEAN)</t>
+                                    <t t-else="">OVERRIDE ALLOWED</t>
+                                </span>
+                            </div>
+
+                            <!-- Guard A -> Post B details -->
+                            <div class="d-flex align-items-center justify-content-between py-1 border-bottom border-light" style="font-size:11px;">
+                                <span><b><t t-esc="state.swapModal.preValidation.guard_a.name"/></b> ➔ Post: <t t-esc="state.swapModal.preValidation.guard_a.to_slot.post_name"/></span>
+                                <div>
+                                    <span t-if="state.swapModal.preValidation.guard_a.grade_ok" class="badge bg-success text-white me-1">Grade Met</span>
+                                    <span t-else="" class="badge bg-danger text-white me-1">Grade Mismatch</span>
+                                    <span t-if="state.swapModal.preValidation.guard_a.rest_ok" class="badge bg-success text-white">12h Rest OK</span>
+                                    <span t-else="" class="badge bg-warning text-dark">Rest Warning</span>
+                                </div>
+                            </div>
+
+                            <!-- Guard B -> Post A details -->
+                            <div class="d-flex align-items-center justify-content-between py-1" style="font-size:11px;">
+                                <span><b><t t-esc="state.swapModal.preValidation.guard_b.name"/></b> ➔ Post: <t t-esc="state.swapModal.preValidation.guard_b.to_slot.post_name"/></span>
+                                <div>
+                                    <span t-if="state.swapModal.preValidation.guard_b.grade_ok" class="badge bg-success text-white me-1">Grade Met</span>
+                                    <span t-else="" class="badge bg-danger text-white me-1">Grade Mismatch</span>
+                                    <span t-if="state.swapModal.preValidation.guard_b.rest_ok" class="badge bg-success text-white">12h Rest OK</span>
+                                    <span t-else="" class="badge bg-warning text-dark">Rest Warning</span>
+                                </div>
+                            </div>
+
+                            <!-- Warnings List -->
+                            <t t-if="state.swapModal.preValidation.guard_a.warnings.length or state.swapModal.preValidation.guard_b.warnings.length">
+                                <div class="mt-2 pt-2 border-top text-muted" style="font-size:11px;">
+                                    <t t-foreach="state.swapModal.preValidation.guard_a.warnings" t-as="w" t-key="w">
+                                        <div class="text-danger small">• <t t-esc="w"/></div>
+                                    </t>
+                                    <t t-foreach="state.swapModal.preValidation.guard_b.warnings" t-as="w" t-key="w">
+                                        <div class="text-danger small">• <t t-esc="w"/></div>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+
+                    <!-- Manager Audit Reason (Required) -->
+                    <div>
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label fw-bold mb-0" style="font-size:12px; color:#1e293b;">
+                                Manager Audit Reason <span class="text-danger">*</span>
+                            </label>
+                            <span class="text-muted small" style="font-size:10px;">Audit trail &amp; compliance logged</span>
+                        </div>
+
+                        <!-- Quick Reason Chips -->
+                        <div class="d-flex gap-1 flex-wrap mb-2">
+                            <button class="btn btn-sm btn-light border py-0 px-2" style="font-size:11px;" t-on-click="() => this.setSwapReason('Mutual swap request')">
+                                Mutual swap request
+                            </button>
+                            <button class="btn btn-sm btn-light border py-0 px-2" style="font-size:11px;" t-on-click="() => this.setSwapReason('Medical reallocation')">
+                                Medical reallocation
+                            </button>
+                            <button class="btn btn-sm btn-light border py-0 px-2" style="font-size:11px;" t-on-click="() => this.setSwapReason('Client site request')">
+                                Client site request
+                            </button>
+                            <button class="btn btn-sm btn-light border py-0 px-2" style="font-size:11px;" t-on-click="() => this.setSwapReason('Transport / logistical issue')">
+                                Transport / logistical issue
+                            </button>
+                            <button class="btn btn-sm btn-light border py-0 px-2" style="font-size:11px;" t-on-click="() => this.setSwapReason('Emergency relief')">
+                                Emergency relief
+                            </button>
+                        </div>
+
+                        <textarea class="form-control form-control-sm"
+                                  rows="2"
+                                  placeholder="e.g. Mutual swap requested by guards; verified 12h rest between shifts."
+                                  t-att-value="state.swapModal.reason"
+                                  t-on-input="(ev) => { this.state.swapModal.reason = ev.target.value; }"/>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="px-4 py-3 bg-light border-top d-flex justify-content-between align-items-center" style="border-bottom-left-radius:16px; border-bottom-right-radius:16px;">
+                    <button class="btn btn-sm btn-secondary px-3" t-on-click="closeSwapModal">Cancel</button>
+                    <button class="btn btn-sm text-white px-4 fw-bold"
+                            style="background: #2563eb; border-color: #2563eb;"
+                            t-on-click="confirmExecuteSwap"
+                            t-att-disabled="!state.swapModal.slotAId or !state.swapModal.slotBId or !state.swapModal.reason or state.swapModal.submitting">
+                        <i t-att-class="state.swapModal.submitting ? 'fa fa-spinner fa-spin me-1' : 'fa fa-exchange me-1'"/>
+                        <t t-if="state.swapModal.submitting">Executing Swap…</t>
+                        <t t-else="">Execute Atomic Swap</t>
                     </button>
                 </div>
+            </div>
+        </div>
+    </t>
 
-                <!-- Current guard info -->
-                <div t-if="state.swapDialog.slot and state.swapDialog.slot.employee_name"
-                     style="background:#fef9c3; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; margin-bottom:16px; font-size:12px; color:#92400e;">
-                    <i class="fa fa-user me-1"/>
-                    Replacing: <strong t-esc="state.swapDialog.slot.employee_name"/>
+    <!-- ═══════════════════════════════════════════════════════════
+         CANDIDATE POOL DISPATCH MODAL (Today's Live Gap Dispatch)
+         ═══════════════════════════════════════════════════════════ -->
+    <t t-if="state.candidatePoolModal.visible">
+        <div class="rb-modal-backdrop" style="position:fixed; inset:0; z-index:10005; background:rgba(15,23,42,.65); backdrop-filter:blur(3px); display:flex; align-items:center; justify-content:center; padding:16px;"
+             t-on-click.self="closeCandidatePoolModal">
+            <div class="rb-modal-dialog" style="background:#fff; border-radius:16px; width:700px; max-width:96vw; max-height:92vh; overflow-y:auto; box-shadow:0 25px 70px rgba(0,0,0,.35); display:flex; flex-direction:column; border:1px solid #cbd5e1;">
+
+                <!-- Header -->
+                <div class="d-flex align-items-center justify-content-between px-4 py-3 border-bottom" style="background:#f8fafc; border-top-left-radius:16px; border-top-right-radius:16px;">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger text-white" style="font-size:11px; font-weight:700;"><i class="fa fa-life-ring me-1"/>RELIEF DISPATCH</span>
+                            <h5 class="mb-0 fw-bold" style="color:#0f172a; font-size:16px;">Dispatch Relief Guard to Open Gap</h5>
+                        </div>
+                        <t t-if="state.candidatePoolModal.slot">
+                            <div style="font-size:11px; color:#64748b; margin-top:3px;">
+                                <i class="fa fa-map-marker me-1 text-danger"/>
+                                <b><t t-esc="state.candidatePoolModal.slot.site_name"/></b> · <t t-esc="state.candidatePoolModal.slot.post_name"/>
+                                <span class="mx-1">·</span>
+                                <i class="fa fa-clock-o me-1"/>
+                                <t t-esc="state.candidatePoolModal.slot.shift_label || 'Scheduled Shift'"/>
+                                <span class="mx-1">·</span>
+                                <span class="fw-semibold text-dark"><t t-esc="state.candidatePoolModal.slot.shift_date"/></span>
+                            </div>
+                        </t>
+                    </div>
+                    <button class="btn btn-sm btn-link text-muted p-0 fs-5 text-decoration-none" t-on-click="closeCandidatePoolModal">✕</button>
                 </div>
 
-                <!-- Reason textarea -->
-                <div style="font-size:12px; font-weight:600; color:#334155; margin-bottom:6px;">Override Reason</div>
-                <textarea
-                    style="width:100%; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; font-size:12px; resize:vertical; min-height:90px; font-family:inherit; color:#1e293b; outline:none;"
-                    placeholder="e.g. Guard requested swap, client preference, medical leave, training conflict…"
-                    t-on-input="(ev) => { state.swapDialog.reason = ev.target.value; }"
-                    t-on-focus="(ev) => { ev.target.style.borderColor = '#3b82f6'; }"
-                    t-on-blur="(ev) => { ev.target.style.borderColor = '#e2e8f0'; }"
-                />
-                <div style="font-size:10px; color:#94a3b8; margin-top:4px; margin-bottom:16px;">
-                    Reason is optional but helps the compliance audit trail.
+                <!-- Body -->
+                <div class="p-4 d-flex flex-column gap-3">
+                    <!-- Pool Tabs and Search -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-2 border-bottom">
+                        <div class="btn-group btn-group-sm">
+                            <button t-att-class="'btn ' + (state.candidatePoolModal.poolTab === 'relief' ? 'btn-warning text-dark fw-bold' : 'btn-light border')"
+                                    t-on-click="() => { state.candidatePoolModal.poolTab = 'relief'; }">
+                                <i class="fa fa-life-ring me-1"/>Relief Pool (<t t-esc="state.candidatePoolModal.reliefGuards.length"/>)
+                            </button>
+                            <button t-att-class="'btn ' + (state.candidatePoolModal.poolTab === 'regular' ? 'btn-primary text-white fw-bold' : 'btn-light border')"
+                                    t-on-click="() => { state.candidatePoolModal.poolTab = 'regular'; }">
+                                <i class="fa fa-users me-1"/>Site Team (<t t-esc="state.candidatePoolModal.regularGuards.length"/>)
+                            </button>
+                            <button t-att-class="'btn ' + (state.candidatePoolModal.poolTab === 'all' ? 'btn-secondary text-white fw-bold' : 'btn-light border')"
+                                    t-on-click="() => { state.candidatePoolModal.poolTab = 'all'; }">
+                                All Guards (<t t-esc="state.candidatePoolModal.allGuards.length"/>)
+                            </button>
+                        </div>
+                        <div class="input-group input-group-sm" style="max-width:240px;">
+                            <span class="input-group-text bg-white"><i class="fa fa-search text-muted"/></span>
+                            <input type="text" class="form-control" placeholder="Search guard name, code, grade…"
+                                   t-att-value="state.candidatePoolModal.searchQuery"
+                                   t-on-input="(ev) => { state.candidatePoolModal.searchQuery = ev.target.value; }"/>
+                        </div>
+                    </div>
+
+                    <!-- Candidates List -->
+                    <div style="max-height:360px; overflow-y:auto;" class="d-flex flex-column gap-2">
+                        <t t-if="state.candidatePoolModal.loading">
+                            <div class="py-4 text-center text-muted">
+                                <i class="fa fa-spinner fa-spin fa-2x mb-2 text-primary"/>
+                                <div>Scanning guard availability, 12h turnaround rest &amp; competencies…</div>
+                            </div>
+                        </t>
+                        <t t-elif="candidatesForDispatch.length === 0">
+                            <div class="py-4 text-center text-muted fst-italic">
+                                No guards found matching search in this pool.
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <t t-foreach="candidatesForDispatch" t-as="g" t-key="g.id">
+                                <div class="p-3 border rounded-3 d-flex align-items-center justify-content-between gap-3 bg-white hover-shadow"
+                                     style="transition:all .15s ease;">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                                             style="width:36px; height:36px; background:#f1f5f9; color:#1e293b; font-size:13px; flex-shrink:0;">
+                                            🛡️
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                <span class="fw-bold text-dark" style="font-size:13px;" t-esc="g.name"/>
+                                                <span t-if="g.code and g.code !== '—'" class="badge bg-light text-muted border" style="font-size:10px;" t-esc="g.code"/>
+                                                <span class="badge" style="background:#e2e8f0; color:#334155; font-size:10px;" t-esc="g.grade || '—'"/>
+                                                <span t-if="g.is_eligible === false" class="badge bg-warning text-dark" style="font-size:9px;">⚠️ Constraint Warning</span>
+                                            </div>
+
+                                            <!-- Namibian Operational Competence Tags -->
+                                            <div class="d-flex gap-1 flex-wrap mt-1">
+                                                <span t-if="g.can_read !== undefined" class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;">
+                                                    <t t-esc="g.can_read ? '📖 Read: Yes' : '📖 No Read'"/>
+                                                </span>
+                                                <span t-if="g.can_write !== undefined" class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;">
+                                                    <t t-esc="g.can_write ? '✍️ Write: Yes' : '✍️ No Write'"/>
+                                                </span>
+                                                <span t-if="g.english" class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;">
+                                                    Eng: <t t-esc="g.english"/>
+                                                </span>
+                                                <span t-if="g.smartness" class="badge bg-light text-muted border py-0 px-1" style="font-size:9px;">
+                                                    ⭐ <t t-esc="g.smartness"/>/5
+                                                </span>
+                                            </div>
+
+                                            <!-- Warnings / Conflicts if any -->
+                                            <t t-if="g.reasons and g.reasons.length">
+                                                <div class="mt-1 text-danger small" style="font-size:10px;">
+                                                    <t t-foreach="g.reasons" t-as="r" t-key="r">
+                                                        <div>• <t t-esc="r"/></div>
+                                                    </t>
+                                                </div>
+                                            </t>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                        <button class="btn btn-sm btn-success px-3 fw-bold shadow-sm"
+                                                style="font-size:11px;"
+                                                t-on-click="() => this.dispatchCandidateGuard(g.id, g.name)"
+                                                t-att-disabled="state.candidatePoolModal.submitting">
+                                            <i class="fa fa-bolt me-1"/> Dispatch Guard
+                                        </button>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+
+                    <!-- Dispatch Override Inline Sub-Dialog -->
+                    <t t-if="state.candidatePoolModal.overrideModal and state.candidatePoolModal.overrideModal.visible">
+                        <div class="p-3 border rounded-3 bg-light border-warning mt-2">
+                            <div class="fw-bold text-warning d-flex align-items-center gap-1 mb-1" style="font-size:12px;">
+                                <i class="fa fa-exclamation-triangle"/> Manager Override Required
+                            </div>
+                            <div class="text-muted small mb-2" style="font-size:11px;">
+                                Guard <b class="text-dark"><t t-esc="state.candidatePoolModal.overrideModal.guardName"/></b> has constraint warnings:
+                                <ul class="mb-1 ps-3 text-danger">
+                                    <t t-foreach="state.candidatePoolModal.overrideModal.reasons" t-as="r" t-key="r">
+                                        <li><t t-esc="r"/></li>
+                                    </t>
+                                </ul>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <input type="text" class="form-control form-control-sm"
+                                       placeholder="Enter override reason (e.g. Approved emergency gap coverage)…"
+                                       t-att-value="state.candidatePoolModal.overrideModal.reasonInput"
+                                       t-on-input="(ev) => { state.candidatePoolModal.overrideModal.reasonInput = ev.target.value; }"/>
+                                <button class="btn btn-sm btn-warning text-dark fw-bold px-3 text-nowrap"
+                                        t-on-click="submitDispatchOverride">
+                                    Confirm Override
+                                </button>
+                                <button class="btn btn-sm btn-light border" t-on-click="closeDispatchOverride">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </t>
                 </div>
 
-                <!-- Action buttons -->
-                <div class="d-flex gap-2 justify-content-end">
-                    <button class="rb-btn rb-btn-ghost" t-on-click="closeSwapDialog">Cancel</button>
-                    <button class="rb-btn rb-btn-primary" t-on-click="confirmSwap">
-                        <i class="fa fa-exchange me-1"/>Confirm Swap
-                    </button>
+                <!-- Footer -->
+                <div class="px-4 py-3 bg-light border-top d-flex justify-content-end" style="border-bottom-left-radius:16px; border-bottom-right-radius:16px;">
+                    <button class="btn btn-sm btn-secondary px-3" t-on-click="closeCandidatePoolModal">Close</button>
                 </div>
-
             </div>
         </div>
     </t>
