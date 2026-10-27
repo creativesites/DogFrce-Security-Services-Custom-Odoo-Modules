@@ -91,6 +91,11 @@ class TestContractWorkspace(TransactionCase):
 
     def test_atomic_activation_and_sync(self):
         """A complete contract setup syncs atomically to live operational records."""
+        self.env["security.contract.rate"].create({
+            "contract_id": self.contract.id,
+            "shift_category": "normal",
+            "hourly_rate": 110.0,
+        })
         c_site = self.env["security.contract.site"].create({
             "contract_id": self.contract.id,
             "name": "Windhoek Brewery Main Gate",
@@ -119,7 +124,7 @@ class TestContractWorkspace(TransactionCase):
         })
 
         self.contract._compute_summary_counts()
-        self.contract._evaluate_setup_health()
+        self.contract._compute_setup_health()
         self.assertEqual(self.contract.readiness_pct, 100)
 
         # Activate contract
@@ -185,7 +190,8 @@ class TestContractWorkspace(TransactionCase):
             "guard_count": 1,
             "bill_rate_override": False,
         })
-        req_inherited._compute_bill_rates()
+        req_inherited._compute_contract_rates()
+        req_inherited._compute_rates()
         self.assertEqual(req_inherited.bill_rate, 95.0)
 
         # 2. Overridden requirement (override = True)
@@ -195,10 +201,11 @@ class TestContractWorkspace(TransactionCase):
             "shift_template_id": self.shift_day.id,
             "guard_count": 1,
             "bill_rate_override": True,
-            "contract_bill_rate": 135.0,
+            "bill_rate": 135.0,
             "override_reason": "High risk zone premium",
         })
-        req_override._compute_bill_rates()
+        req_override._compute_contract_rates()
+        req_override._compute_rates()
         self.assertEqual(req_override.bill_rate, 135.0)
 
     def test_legacy_migration_wizard(self):
