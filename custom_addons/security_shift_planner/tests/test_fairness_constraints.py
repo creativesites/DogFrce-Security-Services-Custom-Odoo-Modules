@@ -30,14 +30,12 @@ class TestFairnessConstraints(TransactionCase):
             "name": "Day 06-18",
             "start_hour": 6.0,
             "end_hour": 18.0,
-            "shift_category": "day",
             "duration_hours": 12.0,
         })
         cls.shift_night = env["security.shift.template"].create({
             "name": "Night 18-06",
             "start_hour": 18.0,
             "end_hour": 6.0,
-            "shift_category": "night",
             "duration_hours": 12.0,
         })
 
@@ -82,14 +80,15 @@ class TestFairnessConstraints(TransactionCase):
             "state": "draft",
         })
 
-        eligible, reason = slot2.check_guard_eligibility(self.guard)
-        self.assertFalse(eligible, "Guard must be ineligible for a 2nd Sunday in the same cycle")
-        self.assertIn("Sunday", reason)
+        res = slot2.check_guard_eligibility(self.guard)
+        is_eligible = not res.get("hard_block") and not bool(res.get("reasons"))
+        self.assertFalse(is_eligible, "Guard must be ineligible for a 2nd Sunday in the same cycle")
+        self.assertTrue(any("Sunday" in r for r in res.get("reasons", [])))
 
     def test_max_working_days_per_cycle_constraint(self):
         """A guard must not exceed max working days (default 22) in the same cycle."""
         self.env["ir.config_parameter"].sudo().set_param(
-            "security_roster.max_working_days_per_cycle", "22"
+            "security.max_working_days_per_cycle", "22"
         )
 
         # Create 22 working day slots starting from 2026-02-21
@@ -121,9 +120,10 @@ class TestFairnessConstraints(TransactionCase):
             "state": "draft",
         })
 
-        eligible, reason = slot_23.check_guard_eligibility(self.guard)
-        self.assertFalse(eligible, "Guard must be ineligible after reaching max working days")
-        self.assertIn("working days", reason.lower())
+        res = slot_23.check_guard_eligibility(self.guard)
+        is_eligible = not res.get("hard_block") and not bool(res.get("reasons"))
+        self.assertFalse(is_eligible, "Guard must be ineligible after reaching max working days")
+        self.assertTrue(any("working days" in r.lower() for r in res.get("reasons", [])))
 
     def test_minimum_rest_interval_day_night(self):
         """Guard working night shift must have required rest interval before day shift."""
@@ -148,6 +148,7 @@ class TestFairnessConstraints(TransactionCase):
             "state": "draft",
         })
 
-        eligible, reason = day_slot.check_guard_eligibility(self.guard)
-        self.assertFalse(eligible, "Guard cannot work morning shift immediately following night shift")
-        self.assertIn("rest", reason.lower())
+        res = day_slot.check_guard_eligibility(self.guard)
+        is_eligible = not res.get("hard_block") and not bool(res.get("reasons"))
+        self.assertFalse(is_eligible, "Guard cannot work morning shift immediately following night shift")
+        self.assertTrue(any("rest" in r.lower() for r in res.get("reasons", [])))

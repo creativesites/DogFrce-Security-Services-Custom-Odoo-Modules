@@ -107,6 +107,14 @@ export class RosterGrid extends Component {
         }
     }
 
+    onDispatchRelief(slot) {
+        if (this.props.onDispatchRelief) {
+            this.props.onDispatchRelief(slot);
+        } else {
+            this.selectSlot(slot);
+        }
+    }
+
     onSlotContextMenu(slot, ev) {
         if (this.props.onSlotContextMenu) {
             ev.preventDefault();

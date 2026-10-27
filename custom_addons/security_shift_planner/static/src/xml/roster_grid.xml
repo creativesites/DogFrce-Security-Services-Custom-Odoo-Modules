@@ -65,8 +65,11 @@
                                                          t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
                                                          t-on-dragleave="onDragLeaveSlot"
                                                          t-on-drop="(ev) => this.onDropSlot(slot, ev)"
-                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : (slot.is_override ? '#fef3c7' : (slot.conflict ? '#fee2e2' : (slot.is_relief ? '#fef9c3' : '#dcfce7')))) + '; border-left:3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : (slot.is_override ? '#f59e0b' : (slot.conflict ? '#dc2626' : (slot.is_relief ? '#d97706' : '#16a34a')))) + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:grab; min-height:30px; transition:box-shadow .15s;'">
+                                                         t-att-style="'background:' + (state.dragOverSlotId === slot.id ? '#dbeafe' : ((props.isRollCallMode or isToday(d)) ? '#f0fdf4' : (slot.is_override ? '#fef3c7' : (slot.conflict ? '#fee2e2' : (slot.is_relief ? '#fef9c3' : '#dcfce7'))))) + '; border-left:' + ((props.isRollCallMode or isToday(d)) ? '4px solid #16a34a' : '3px solid ' + (state.dragOverSlotId === slot.id ? '#3b82f6' : (slot.is_override ? '#f59e0b' : (slot.conflict ? '#dc2626' : (slot.is_relief ? '#d97706' : '#16a34a'))))) + '; border:' + ((props.isRollCallMode or isToday(d)) ? '1px solid #bbf7d0' : 'none') + '; border-radius:4px; padding:4px 7px; margin-bottom:2px; cursor:grab; min-height:30px; transition:box-shadow .15s;'">
                                                         <div class="d-flex align-items-center flex-wrap gap-1">
+                                                            <t t-if="props.isRollCallMode or isToday(d)">
+                                                                <span style="font-size:9px; font-weight:700; color:#15803d; background:#dcfce7; padding:1px 5px; border-radius:2px; margin-right:3px; letter-spacing:.3px;">🟢 ASSIGNED</span>
+                                                            </t>
                                                             <t t-if="slot.is_override">
                                                                 <span style="font-size:9px; font-weight:700; color:#b45309; background:#fde68a; border:1px solid #f59e0b; padding:1px 4px; border-radius:2px; margin-right:3px;"
                                                                       t-att-title="'WRONG FIT INELIGIBILITY:\n' + (slot.wrong_fit_reasons || 'Ineligible guard assigned') + '\n\nOVERRIDE REASON:\n' + (slot.override_reason || 'No reason specified')">
@@ -83,7 +86,7 @@
                                                                 </span>
                                                             </t>
                                                         </div>
-                                                        <div class="fw-semibold" t-att-style="'font-size:11px; color:' + (slot.is_override ? '#b45309' : (slot.conflict ? '#991b1b' : (slot.is_relief ? '#92400e' : '#15803d'))) + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
+                                                        <div class="fw-semibold" t-att-style="'font-size:11px; color:' + ((props.isRollCallMode or isToday(d)) ? '#15803d' : (slot.is_override ? '#b45309' : (slot.conflict ? '#991b1b' : (slot.is_relief ? '#92400e' : '#15803d')))) + '; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'"
                                                              t-esc="slot.employee_name"/>
                                                         <div class="d-flex align-items-center justify-content-between mt-1">
                                                             <div t-if="slot.shift_label" style="font-size:9px; color:#16a34a;" t-esc="slot.shift_label"/>
@@ -97,6 +100,29 @@
                                                                 </span>
                                                             </t>
                                                         </div>
+                                                    </div>
+                                                </t>
+
+                                                <!-- Unassigned slot for Roll Call / Today: Clear Red Critical Gap + One-Click Dispatch Button -->
+                                                <t t-elif="props.isRollCallMode or isToday(d)">
+                                                    <div t-on-click="() => this.selectSlot(slot)"
+                                                         t-on-dragover="(ev) => this.onDragOverSlot(slot, ev)"
+                                                         t-on-dragleave="onDragLeaveSlot"
+                                                         t-on-drop="(ev) => this.onDropSlot(slot, ev)"
+                                                         style="background:#fef2f2; border:1px solid #fca5a5; border-left:4px solid #dc2626; border-radius:6px; padding:6px 8px; margin-bottom:4px; transition:box-shadow .15s;">
+                                                        <div class="d-flex align-items-center justify-content-between">
+                                                            <span style="font-size:9px; font-weight:700; color:#b91c1c; background:#fee2e2; padding:1px 5px; border-radius:2px; letter-spacing:.3px;">🔴 CRITICAL GAP</span>
+                                                            <div t-if="slot.shift_label" style="font-size:9px; font-weight:600; color:#dc2626;" t-esc="slot.shift_label"/>
+                                                        </div>
+                                                        <div style="font-size:11px; font-weight:600; color:#7f1d1d; margin-top:2px;">
+                                                            Unassigned Post
+                                                        </div>
+                                                        <button class="btn btn-sm btn-danger w-100 mt-2 py-1 px-2 fw-bold d-flex align-items-center justify-content-center gap-1 shadow-sm"
+                                                                style="font-size:10px; border-radius:4px; background:#dc2626; border-color:#b91c1c;"
+                                                                t-on-click.stop="() => this.onDispatchRelief(slot)"
+                                                                title="Dispatch Relief Guard to fill this open shift">
+                                                            <i class="fa fa-life-ring"/> Dispatch Relief Guard
+                                                        </button>
                                                     </div>
                                                 </t>
 
