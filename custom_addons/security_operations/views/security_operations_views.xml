@@ -1058,6 +1058,10 @@
                     <button name="action_auto_fill_slots" type="object" string="Auto-Fill Gaps" class="oe_highlight"
                             invisible="state in ('draft', 'cancelled')"
                             icon="fa-magic"/>
+                    <button name="action_fill_gaps_with_idle_guards" type="object" string="Deploy Idle Guards" class="btn-secondary"
+                            invisible="state in ('draft', 'cancelled')"
+                            icon="fa-users"
+                            title="Fill remaining unassigned gaps with company guards who have the fewest shifts in this cycle"/>
                     <button name="action_submit" type="object" string="Submit for Approval"
                             invisible="state not in ('draft', 'generated')"/>
                     <button name="action_approve" type="object" string="Approve"

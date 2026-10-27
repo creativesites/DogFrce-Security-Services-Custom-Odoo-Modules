@@ -394,12 +394,35 @@ class SecurityRosterScheduleImportWizard(models.TransientModel):
                 target_slot.write(vals)
                 updated_slots += 1
             elif self.create_missing_slots and batch:
-                # Create new slot
+                # Find or assign post for the site
+                target_post = line.site_id.post_ids.filtered("active")[:1]
+                if not target_post:
+                    target_post = line.site_id.post_ids[:1]
+                if not target_post:
+                    default_post_type = self.env["security.post.type"].search([], limit=1)
+                    target_post = self.env["security.post"].create({
+                        "name": f"{line.site_id.name} - Post 1",
+                        "site_id": line.site_id.id,
+                        "post_type_id": default_post_type.id if default_post_type else False,
+                    })
+
+                shift_tmpl = (
+                    line.shift_template_id
+                    or self.default_shift_template_id
+                    or self.env["security.shift.template"].search([], limit=1)
+                )
+                req = self.env["security.shift.requirement"].search([
+                    ("site_id", "=", line.site_id.id),
+                    ("active", "=", True),
+                    ("shift_template_id", "=", shift_tmpl.id if shift_tmpl else False),
+                ], limit=1)
+
                 vals = {
                     "batch_id": batch.id,
-                    "site_id": line.site_id.id,
+                    "post_id": req.post_id.id if req and req.post_id else target_post.id,
+                    "shift_requirement_id": req.id if req else False,
                     "shift_date": line.shift_date,
-                    "shift_template_id": line.shift_template_id.id if line.shift_template_id else False,
+                    "shift_template_id": shift_tmpl.id if shift_tmpl else False,
                     "employee_id": line.employee_id.id,
                     "state": "assigned",
                     "critical_gap": False,

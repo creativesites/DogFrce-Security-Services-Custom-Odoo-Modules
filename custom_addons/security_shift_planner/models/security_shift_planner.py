@@ -2,7 +2,7 @@ import datetime
 import logging
 from datetime import timedelta
 
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 
 _logger = logging.getLogger(__name__)
 
@@ -305,6 +305,35 @@ class SecurityRosterBatch(models.Model):
                 "sticky": False,
             },
         }
+
+    def action_fill_gaps_with_idle_guards(self):
+        """
+        Batch idle-guard gap solver: fills unassigned slots across the batch(es)
+        by deploying company guards with the fewest shifts in this cycle.
+        """
+        unassigned_slots = self.mapped("slot_ids").filtered(
+            lambda s: not s.employee_id and s.state != "cancelled"
+        )
+        if not unassigned_slots:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("No Gaps Found"),
+                    "message": _("All slots in this batch are already assigned."),
+                    "type": "info",
+                    "sticky": False,
+                },
+            }
+        res = unassigned_slots.action_fill_gaps_with_idle_guards()
+        for batch in self:
+            filled_count = len(batch.slot_ids.filtered(lambda s: s.employee_id and s.state != "cancelled"))
+            total_count = len(batch.slot_ids.filtered(lambda s: s.state != "cancelled"))
+            if hasattr(batch, "message_post"):
+                batch.message_post(
+                    body=_("Idle Guard Solver executed. Assigned slots: %d / %d.") % (filled_count, total_count)
+                )
+        return res
 
 
 class SecurityRosterSlot(models.Model):
@@ -984,6 +1013,299 @@ class SecurityRosterSlot(models.Model):
             "tag": "display_notification",
             "params": {
                 "title": "Auto-Assignment Complete",
+                "message": ". ".join(parts) + ".",
+                "type": "success" if filled > 0 else "warning",
+                "sticky": False,
+            },
+        }
+
+    def action_fill_gaps_with_idle_guards(self):
+        """
+        Idle Guard Solver:
+        Fills unassigned slots across self by deploying company guards with the fewest
+        assigned shifts in the operational cycle (idle guards), respecting:
+          1. 12-hour turnaround rest between shifts (Namibian standard)
+          2. Working days cap (default 22 days per cycle)
+          3. Sunday cap (max 1 Sunday per cycle)
+          4. Minimum grade requirements
+          5. Required certifications (none expired)
+          6. Approved leaves and client/site exclusions
+          7. Intra-run rest and double-booking avoidance
+
+        Guards deployed from outside the site's pool are marked is_relief=True with audit notes.
+        Workload is dynamically balanced as newly assigned shifts increment candidate cycle counts.
+        """
+        unassigned = self.filtered(lambda s: not s.employee_id and s.state != "cancelled")
+        if not unassigned:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("No Gaps Found"),
+                    "message": _("All selected slots are already assigned."),
+                    "type": "info",
+                    "sticky": False,
+                },
+            }
+
+        # 1. Determine operational cycle window
+        batches = unassigned.mapped("batch_id").filtered(lambda b: b.date_from and b.date_to)
+        if batches:
+            cycle_from = min(batches.mapped("date_from"))
+            cycle_to = max(batches.mapped("date_to"))
+        else:
+            shift_dates = [s.shift_date for s in unassigned if s.shift_date]
+            if shift_dates:
+                ref_d = min(shift_dates)
+                if ref_d.day >= 21:
+                    cycle_from = ref_d.replace(day=21)
+                    cycle_to = ref_d.replace(year=ref_d.year + 1, month=1, day=20) if ref_d.month == 12 else ref_d.replace(month=ref_d.month + 1, day=20)
+                else:
+                    cycle_to = ref_d.replace(day=20)
+                    cycle_from = ref_d.replace(year=ref_d.year - 1, month=12, day=21) if ref_d.month == 1 else ref_d.replace(month=ref_d.month - 1, day=21)
+            else:
+                cycle_from = fields.Date.context_today(self)
+                cycle_to = fields.Date.context_today(self)
+
+        # 2. Configurable caps & turnaround rest
+        max_cycle_days = 22
+        min_rest_hours = 12.0
+        try:
+            p_days = self.env["ir.config_parameter"].sudo().get_param("security.max_working_days_per_cycle", "22")
+            max_cycle_days = int(p_days)
+        except (TypeError, ValueError):
+            pass
+        try:
+            p_rest = self.env["ir.config_parameter"].sudo().get_param("security.min_rest_hours", "12")
+            min_rest_hours = float(p_rest)
+        except (TypeError, ValueError):
+            pass
+
+        # 3. Company Guard Census & Initial Cycle Load
+        employee_model = self.env["hr.employee"]
+        all_guards = employee_model.search([
+            ("security_guard", "=", True),
+            ("active", "=", True),
+            ("security_disqualified", "=", False),
+        ])
+        if not all_guards:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": _("No Guards Available"),
+                    "message": _("No active, non-disqualified security guards found in the company."),
+                    "type": "warning",
+                    "sticky": False,
+                },
+            }
+
+        cycle_slots = self.search([
+            ("shift_date", ">=", cycle_from),
+            ("shift_date", "<=", cycle_to),
+            ("employee_id", "!=", False),
+            ("state", "not in", ("cancelled",)),
+        ])
+
+        guard_cycle_shift_count = {g.id: 0 for g in all_guards}
+        guard_cycle_days = {g.id: set() for g in all_guards}
+        guard_sundays = {g.id: 0 for g in all_guards}
+        assigned_by_date = {}
+
+        for cs in cycle_slots:
+            gid = cs.employee_id.id
+            if gid in guard_cycle_shift_count:
+                guard_cycle_shift_count[gid] += 1
+                guard_cycle_days[gid].add(cs.shift_date)
+                if cs.shift_date and cs.shift_date.weekday() == 6:
+                    guard_sundays[gid] += 1
+            if cs.shift_date:
+                assigned_by_date.setdefault(cs.shift_date, set()).add(gid)
+
+        # 4. Pre-fetch Leaves & Exclusions
+        guard_leaves = {}
+        if "security.leave.request" in self.env:
+            leaves = self.env["security.leave.request"].search([
+                ("state", "=", "approved"),
+                ("date_from", "<=", cycle_to),
+                ("date_to", ">=", cycle_from),
+            ])
+            for lv in leaves:
+                gid = lv.employee_id.id
+                curr = lv.date_from
+                while curr <= lv.date_to:
+                    guard_leaves.setdefault(gid, set()).add(curr)
+                    curr += timedelta(days=1)
+
+        exclusion_model = self.env["security.guard.exclusion"]
+        exclusions = exclusion_model.search([("active", "=", True)])
+        excluded_pairs = set()
+        for exc in exclusions:
+            if exc.employee_id:
+                if exc.site_id:
+                    excluded_pairs.add((exc.employee_id.id, "site", exc.site_id.id))
+                if exc.partner_id:
+                    excluded_pairs.add((exc.employee_id.id, "partner", exc.partner_id.id))
+
+        # 5. Order Slots by Difficulty, Date, Start Hour
+        def _difficulty(s):
+            d = 0
+            if getattr(s, "high_value_shift", False):
+                d += 50
+            if s.post_id and s.post_id.post_type_id and s.post_id.post_type_id.min_grade_id:
+                d += s.post_id.post_type_id.min_grade_id.sequence * 10
+            return d
+
+        unassigned = unassigned.sorted(
+            key=lambda s: (
+                -_difficulty(s),
+                str(s.shift_date) if s.shift_date else "",
+                s.shift_template_id.start_hour if s.shift_template_id else 0,
+            )
+        )
+
+        run_assigned_shifts = {}
+        filled = 0
+        no_candidates = 0
+
+        # 6. Solve Each Slot
+        for slot in unassigned:
+            if not slot.shift_date:
+                no_candidates += 1
+                continue
+
+            s_date = slot.shift_date
+            is_sun = (s_date.weekday() == 6)
+            self_start, self_end = slot._get_slot_datetime_range()
+            site = slot.site_id
+            post_type = slot.post_id.post_type_id
+            req = slot.shift_requirement_id
+
+            site_pool_ids = set()
+            if site:
+                if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                    eff_pool, _mode = slot.batch_id._get_effective_site_pool(site)
+                    site_pool_ids = set(eff_pool.ids)
+                elif site.site_guard_pool_ids:
+                    site_pool_ids = set(site.site_guard_pool_ids.ids)
+
+            required_certs = set(post_type.required_certification_ids.ids) if post_type else set()
+            if req:
+                required_certs |= set(req.required_certification_ids.ids)
+            min_grade_seq = post_type.min_grade_id.sequence if (post_type and post_type.min_grade_id) else 0
+            min_score = max(
+                post_type.minimum_reliability_score if post_type else 0,
+                req.minimum_reliability_score if req else 0,
+            )
+
+            # Restrict to preferred employee only if allow_preferred_only is set
+            if req and req.allow_preferred_only and req.preferred_employee_id:
+                pref = req.preferred_employee_id
+                candidate_guards = pref if (pref.active and pref.security_guard and not pref.security_disqualified) else self.env["hr.employee"]
+            else:
+                candidate_guards = all_guards
+
+            eligible_candidates = []
+            for g in candidate_guards:
+                # Double booking on this date
+                if g.id in assigned_by_date.get(s_date, set()):
+                    continue
+                # Approved leave
+                if s_date in guard_leaves.get(g.id, set()):
+                    continue
+                # Exclusions
+                if site and (g.id, "site", site.id) in excluded_pairs:
+                    continue
+                if slot.partner_id and (g.id, "partner", slot.partner_id.id) in excluded_pairs:
+                    continue
+                # Sunday cap
+                if is_sun and guard_sundays.get(g.id, 0) >= 1:
+                    continue
+                # Working days cap
+                if len(guard_cycle_days.get(g.id, set())) >= max_cycle_days:
+                    continue
+                # Minimum grade
+                if min_grade_seq > 0:
+                    emp_seq = g.security_grade_id.sequence if g.security_grade_id else 0
+                    if not g.security_grade_id or emp_seq > min_grade_seq:
+                        continue
+                # Minimum reliability score
+                if g.security_reliability_score < min_score:
+                    continue
+                # Certifications
+                g_certs = set(g.security_certification_ids.ids)
+                if required_certs - g_certs:
+                    continue
+                if hasattr(g, "get_expired_certification_ids"):
+                    if required_certs & g.get_expired_certification_ids():
+                        continue
+                # Languages
+                if post_type and post_type.required_language_ids and (set(post_type.required_language_ids.ids) - set(g.security_language_ids.ids)):
+                    continue
+                # 12-hour turnaround rest check (includes DB shifts + intra-run assigned shifts)
+                if min_rest_hours > 0 and self_start and self_end:
+                    passes_rest, _ = slot._check_turnaround_rest(
+                        g, min_rest_hours=min_rest_hours, extra_ranges=run_assigned_shifts.get(g.id)
+                    )
+                    if not passes_rest:
+                        continue
+
+                # Passed all constraints: compute sorting metrics
+                c_shifts = guard_cycle_shift_count.get(g.id, 0)
+                is_regular = (g.id in site_pool_ids)
+                score, _breakdown = slot._score_guard(slot, g)
+                # Primary key: c_shifts ASC (fewest shifts first = idle guard)
+                # Secondary key: not is_regular (regular site guards preferred over relief if both idle)
+                # Tertiary key: -score (higher score preferred)
+                eligible_candidates.append((c_shifts, not is_regular, -score, g))
+
+            if not eligible_candidates:
+                no_candidates += 1
+                slot.critical_gap = True
+                slot.wrong_fit_reasons = _("No eligible idle guard passed constraints (12h turnaround rest, 22-day working cap, 1 Sunday cap, minimum grade, or certifications).")
+                continue
+
+            eligible_candidates.sort(key=lambda x: (x[0], x[1], x[2], x[3].id))
+            c_shifts, not_regular, _neg_score, winner = eligible_candidates[0]
+
+            is_relief_val = not_regular
+            relief_reason_val = False
+            if is_relief_val:
+                if not site_pool_ids:
+                    relief_reason_val = _("Deployed via Idle Guard Solver (no site pool configured, %d cycle shifts)") % c_shifts
+                else:
+                    relief_reason_val = _("Deployed via Idle Guard Solver (idle company guard with %d cycle shifts)") % c_shifts
+
+            slot.write({
+                "employee_id": winner.id,
+                "state": "assigned",
+                "critical_gap": False,
+                "is_relief": is_relief_val,
+                "relief_reason": relief_reason_val,
+                "is_preferred_assignment": bool(req and req.preferred_employee_id == winner),
+            })
+
+            # Update tracking for intra-run and cycle fairness
+            assigned_by_date.setdefault(s_date, set()).add(winner.id)
+            guard_cycle_shift_count[winner.id] = c_shifts + 1
+            guard_cycle_days.setdefault(winner.id, set()).add(s_date)
+            if is_sun:
+                guard_sundays[winner.id] = guard_sundays.get(winner.id, 0) + 1
+            if self_start and self_end:
+                run_assigned_shifts.setdefault(winner.id, []).append(
+                    (self_start, self_end, f"{slot.site_id.name or 'site'} on {s_date}")
+                )
+            filled += 1
+
+        parts = [_("%d slot(s) filled by deploying idle guards") % filled]
+        if no_candidates:
+            parts.append(_("%d slot(s) had no eligible idle guards") % no_candidates)
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": _("Idle Guard Solver Complete"),
                 "message": ". ".join(parts) + ".",
                 "type": "success" if filled > 0 else "warning",
                 "sticky": False,

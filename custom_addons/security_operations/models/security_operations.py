@@ -1687,6 +1687,34 @@ class SecurityRosterBatch(models.Model):
             },
         }
 
+    def action_fill_gaps_with_idle_guards(self):
+        """
+        Fill unassigned slots across batch with idle guards.
+        Delegates to SecurityRosterSlot.action_fill_gaps_with_idle_guards.
+        """
+        unassigned = self.mapped("slot_ids").filtered(lambda s: not s.employee_id and s.state != "cancelled")
+        if not unassigned:
+            return {
+                "type": "ir.actions.client",
+                "tag": "display_notification",
+                "params": {
+                    "title": "No Gaps Found",
+                    "message": "All slots in this batch already have guards assigned.",
+                    "type": "info",
+                },
+            }
+        if hasattr(unassigned, "action_fill_gaps_with_idle_guards"):
+            return unassigned.action_fill_gaps_with_idle_guards()
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Solver Not Installed",
+                "message": "security_shift_planner is required for the Idle Guard Solver.",
+                "type": "warning",
+            },
+        }
+
     @api.model
     def get_operational_cycle_dates(self, target_date=None):
         """
@@ -2393,6 +2421,18 @@ class SecurityRosterSlot(models.Model):
                 [tuple(self.ids)]
             )
         return super().write(vals)
+
+    def action_fill_gaps_with_idle_guards(self):
+        """Base stub for idle guard gap filling. Overridden by security_shift_planner."""
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Solver Not Installed",
+                "message": "security_shift_planner is required for the Idle Guard Solver.",
+                "type": "warning",
+            },
+        }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
