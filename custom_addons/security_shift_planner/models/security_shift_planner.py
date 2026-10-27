@@ -367,7 +367,7 @@ class SecurityRosterSlot(models.Model):
             end_dt = datetime.datetime.combine(self.shift_date, datetime.time(0, 0)) + timedelta(hours=end_h)
         return start_dt, end_dt
 
-    def _check_turnaround_rest(self, employee, min_rest_hours=12.0, extra_ranges=None):
+    def _check_turnaround_rest(self, employee, min_rest_hours=12.0, extra_ranges=None, exclude_slot_ids=None):
         """
         Check if guard receives at least min_rest_hours (default 12h) before and after adjacent shifts.
         Returns (passes: bool, reason: str or None).
@@ -401,13 +401,16 @@ class SecurityRosterSlot(models.Model):
         emp_id = employee.id if hasattr(employee, "id") else employee
         d_from = self.shift_date - timedelta(days=2)
         d_to = self.shift_date + timedelta(days=2)
-        adjacent_slots = self.search([
+        domain = [
             ("employee_id", "=", emp_id),
             ("shift_date", ">=", d_from),
             ("shift_date", "<=", d_to),
             ("state", "not in", ("cancelled",)),
             ("id", "!=", self.id),
-        ])
+        ]
+        if exclude_slot_ids:
+            domain.append(("id", "not in", list(exclude_slot_ids)))
+        adjacent_slots = self.search(domain)
 
         for other in adjacent_slots:
             o_start, o_end = other._get_slot_datetime_range()
@@ -440,7 +443,7 @@ class SecurityRosterSlot(models.Model):
 
         return True, None
 
-    def check_guard_eligibility(self, employee):
+    def check_guard_eligibility(self, employee, exclude_slot_ids=None):
         """
         Check if an employee is eligible for assignment to this slot.
         Returns a dict:
@@ -485,12 +488,15 @@ class SecurityRosterSlot(models.Model):
                 warnings.append(f"Approved Leave: {employee.name} has approved leave on {self.shift_date}.")
 
         # 3. Double-Booking Check
-        if self.env["security.roster.slot"].search_count([
+        domain_db = [
             ("shift_date", "=", self.shift_date),
             ("employee_id", "=", employee.id),
             ("state", "not in", ["cancelled"]),
             ("id", "!=", self.id),
-        ]):
+        ]
+        if exclude_slot_ids:
+            domain_db.append(("id", "not in", list(exclude_slot_ids)))
+        if self.env["security.roster.slot"].search_count(domain_db):
             warnings.append(f"Double-Booking: {employee.name} is already assigned to another post on {self.shift_date}.")
 
         # 4. Location Exclusion Check
@@ -536,13 +542,16 @@ class SecurityRosterSlot(models.Model):
 
         # 6. Hard Fairness Constraint: Maximum 1 Sunday per Cycle
         if self.shift_date and self.shift_date.weekday() == 6 and cycle_start and cycle_end:
-            other_sundays = self.search([
+            domain_sun = [
                 ("shift_date", ">=", cycle_start),
                 ("shift_date", "<=", cycle_end),
                 ("employee_id", "=", employee.id),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", self.id),
-            ]).filtered(lambda s: s.shift_date and s.shift_date.weekday() == 6)
+            ]
+            if exclude_slot_ids:
+                domain_sun.append(("id", "not in", list(exclude_slot_ids)))
+            other_sundays = self.search(domain_sun).filtered(lambda s: s.shift_date and s.shift_date.weekday() == 6)
             if other_sundays:
                 warnings.append(
                     f"Sunday Limit Breach: {employee.name} is already assigned to a Sunday on "
@@ -559,13 +568,16 @@ class SecurityRosterSlot(models.Model):
                 max_days = int(param_days)
             except (TypeError, ValueError):
                 pass
-            assigned_dates = self.search([
+            domain_wd = [
                 ("shift_date", ">=", cycle_start),
                 ("shift_date", "<=", cycle_end),
                 ("employee_id", "=", employee.id),
                 ("state", "not in", ("cancelled",)),
                 ("id", "!=", self.id),
-            ]).mapped("shift_date")
+            ]
+            if exclude_slot_ids:
+                domain_wd.append(("id", "not in", list(exclude_slot_ids)))
+            assigned_dates = self.search(domain_wd).mapped("shift_date")
             unique_days = len(set(assigned_dates))
             if unique_days >= max_days:
                 warnings.append(
@@ -583,7 +595,9 @@ class SecurityRosterSlot(models.Model):
         except (TypeError, ValueError):
             pass
 
-        passes_rest, rest_reason = self._check_turnaround_rest(employee, min_rest_hours=min_rest_hours)
+        passes_rest, rest_reason = self._check_turnaround_rest(
+            employee, min_rest_hours=min_rest_hours, exclude_slot_ids=exclude_slot_ids
+        )
         if not passes_rest and rest_reason:
             warnings.append(rest_reason)
 
@@ -817,6 +831,185 @@ class SecurityRosterSlot(models.Model):
             "is_override": self.is_override,
             "is_relief": self.is_relief,
         }
+
+    def action_swap_with_slot(self, target_slot, override=False, override_reason=False, raise_on_error=True):
+        """
+        Atomically swap assigned guards between this slot (self) and target_slot.
+        Validates:
+          1. Both slots must exist and not be cancelled.
+          2. Both slots must have assigned guards (self.employee_id and target_slot.employee_id).
+          3. Guard A (currently on self) must be eligible for target_slot (grade, 12h turnaround rest, etc.).
+          4. Guard B (currently on target_slot) must be eligible for self (grade, 12h turnaround rest, etc.).
+        """
+        self.ensure_one()
+        if isinstance(target_slot, int):
+            target_slot = self.browse(target_slot)
+        target_slot.ensure_one()
+
+        if self.id == target_slot.id:
+            msg = "Cannot swap a slot with itself."
+            if raise_on_error:
+                raise UserError(_(msg))
+            return {"status": "error", "message": msg}
+
+        if self.state == "cancelled" or target_slot.state == "cancelled":
+            msg = "Cannot swap cancelled roster slots."
+            if raise_on_error:
+                raise UserError(_(msg))
+            return {"status": "error", "message": msg}
+
+        guard_a = self.employee_id
+        guard_b = target_slot.employee_id
+
+        if not guard_a or not guard_b:
+            msg = "Both slots must have assigned guards to perform a shift swap."
+            if raise_on_error:
+                raise UserError(_(msg))
+            return {"status": "error", "message": msg}
+
+        if guard_a.id == guard_b.id:
+            msg = f"{guard_a.name} is already assigned to both slots. Cannot swap guard with themselves."
+            if raise_on_error:
+                raise UserError(_(msg))
+            return {"status": "error", "message": msg}
+
+        # Check eligibility of guard_b for self
+        exclude_pair = (self.id, target_slot.id)
+        elig_b = self.check_guard_eligibility(guard_b, exclude_slot_ids=exclude_pair)
+        reasons_b = list(elig_b.get("reasons", []))
+
+        # Check eligibility of guard_a for target_slot
+        elig_a = target_slot.check_guard_eligibility(guard_a, exclude_slot_ids=exclude_pair)
+        reasons_a = list(elig_a.get("reasons", []))
+
+        # Check site pool restrictions
+        for slot, guard, reasons in [(self, guard_b, reasons_b), (target_slot, guard_a, reasons_a)]:
+            eff_pool = self.env["hr.employee"]
+            eff_mode = "site_only"
+            if slot.site_id:
+                if slot.batch_id and hasattr(slot.batch_id, "_get_effective_site_pool"):
+                    eff_pool, eff_mode = slot.batch_id._get_effective_site_pool(slot.site_id)
+                elif slot.site_id.site_guard_pool_ids:
+                    eff_pool = slot.site_id.site_guard_pool_ids
+                    eff_mode = slot.site_id.guard_pool_mode or "site_only"
+                else:
+                    eff_mode = slot.site_id.guard_pool_mode or "site_only"
+            if eff_pool and guard.id not in eff_pool.ids and eff_mode == "site_only":
+                reasons.append(
+                    f"Site Pool Restriction: {guard.name} is not in {slot.site_id.name}'s regular guard pool."
+                )
+
+        all_reasons = []
+        if elig_b.get("hard_block"):
+            all_reasons.extend(elig_b.get("reasons", []))
+        if elig_a.get("hard_block"):
+            all_reasons.extend(elig_a.get("reasons", []))
+        all_reasons.extend(reasons_b)
+        all_reasons.extend(reasons_a)
+
+        # De-duplicate reasons while preserving order
+        seen = set()
+        deduped_reasons = [r for r in all_reasons if not (r in seen or seen.add(r))]
+
+        if isinstance(override, str):
+            override = override.lower() in ("true", "1", "t", "y", "yes")
+        override = bool(override)
+
+        if deduped_reasons and not override:
+            msg = "Shift Swap Blocked:\n" + "\n".join(f"• {r}" for r in deduped_reasons)
+            if raise_on_error:
+                raise UserError(_(msg))
+            return {
+                "status": "blocked",
+                "reasons": deduped_reasons,
+                "message": msg,
+            }
+
+        if deduped_reasons and override:
+            if not override_reason or not str(override_reason).strip():
+                msg = "An override reason is required when swapping with compliance warnings."
+                if raise_on_error:
+                    raise UserError(_(msg))
+                return {"status": "error", "message": msg}
+
+        # Perform atomic swap
+        clean_reason = str(override_reason).strip() if (override and override_reason) else False
+        vals_self = {
+            "employee_id": guard_b.id,
+            "state": "assigned",
+            "critical_gap": False,
+        }
+        vals_target = {
+            "employee_id": guard_a.id,
+            "state": "assigned",
+            "critical_gap": False,
+        }
+        if deduped_reasons and override:
+            vals_self.update({
+                "is_override": True,
+                "override_reason": clean_reason,
+                "wrong_fit_reasons": "\n".join(reasons_b) if reasons_b else "Swap Override",
+            })
+            vals_target.update({
+                "is_override": True,
+                "override_reason": clean_reason,
+                "wrong_fit_reasons": "\n".join(reasons_a) if reasons_a else "Swap Override",
+            })
+        else:
+            vals_self.update({
+                "is_override": False,
+                "override_reason": False,
+                "wrong_fit_reasons": False,
+            })
+            vals_target.update({
+                "is_override": False,
+                "override_reason": False,
+                "wrong_fit_reasons": False,
+            })
+
+        # Relief flags
+        for slot, guard, vals in [(self, guard_b, vals_self), (target_slot, guard_a, vals_target)]:
+            eff_pool = slot.site_id.site_guard_pool_ids if slot.site_id else self.env["hr.employee"]
+            if eff_pool and guard.id not in eff_pool.ids:
+                vals["is_relief"] = True
+                vals["relief_reason"] = "Shift swap outside regular site pool"
+            else:
+                vals["is_relief"] = False
+                vals["relief_reason"] = False
+
+        self.write(vals_self)
+        target_slot.write(vals_target)
+
+        # Chatter audit
+        audit_body = (
+            f"<b>Shift Swap Executed:</b><br/>"
+            f"• Slot #{self.id} ({self.post_id.name if self.post_id else 'Post'}, {self.shift_date}): "
+            f"{guard_a.name} &rarr; <b>{guard_b.name}</b><br/>"
+            f"• Slot #{target_slot.id} ({target_slot.post_id.name if target_slot.post_id else 'Post'}, {target_slot.shift_date}): "
+            f"{guard_b.name} &rarr; <b>{guard_a.name}</b>"
+        )
+        if clean_reason:
+            audit_body += f"<br/><b>Override Reason:</b> {clean_reason}"
+
+        if hasattr(self, "message_post"):
+            self.message_post(body=audit_body)
+        if hasattr(target_slot, "message_post"):
+            target_slot.message_post(body=audit_body)
+
+        return {
+            "status": "success",
+            "message": f"Successfully swapped {guard_a.name} and {guard_b.name}.",
+            "slot_a_id": self.id,
+            "guard_a_id": guard_b.id,
+            "slot_b_id": target_slot.id,
+            "guard_b_id": guard_a.id,
+        }
+
+    def action_swap_guards(self, target_slot, override=False, override_reason=False, raise_on_error=True):
+        return self.action_swap_with_slot(target_slot, override=override, override_reason=override_reason, raise_on_error=raise_on_error)
+
+    def swap_with_slot(self, target_slot, override=False, override_reason=False, raise_on_error=True):
+        return self.action_swap_with_slot(target_slot, override=override, override_reason=override_reason, raise_on_error=raise_on_error)
 
     def _compute_suggestion_count(self):
         for slot in self:
@@ -1244,7 +1437,7 @@ class SecurityRosterSlot(models.Model):
                     continue
                 # 12-hour turnaround rest check (includes DB shifts + intra-run assigned shifts)
                 if min_rest_hours > 0 and self_start and self_end:
-                    passes_rest, _ = slot._check_turnaround_rest(
+                    passes_rest, _rest_err = slot._check_turnaround_rest(
                         g, min_rest_hours=min_rest_hours, extra_ranges=run_assigned_shifts.get(g.id)
                     )
                     if not passes_rest:
@@ -1253,7 +1446,7 @@ class SecurityRosterSlot(models.Model):
                 # Passed all constraints: compute sorting metrics
                 c_shifts = guard_cycle_shift_count.get(g.id, 0)
                 is_regular = (g.id in site_pool_ids)
-                score, _breakdown = slot._score_guard(slot, g)
+                score, _sc_breakdown = slot._score_guard(slot, g)
                 # Primary key: c_shifts ASC (fewest shifts first = idle guard)
                 # Secondary key: not is_regular (regular site guards preferred over relief if both idle)
                 # Tertiary key: -score (higher score preferred)
@@ -1628,6 +1821,326 @@ class SecurityRosterSlot(models.Model):
             slot.override_reason = reason or ""
             entry = f"[{now.strftime('%Y-%m-%d %H:%M')} UTC] Override by {user_name}: {reason or '(no reason given)'}"
             slot.note = (slot.note + "\n" + entry).strip() if slot.note else entry
+
+    def action_validate_swap(self, slot_b_id):
+        """
+        Validate whether two roster slots (self and slot_b_id) can atomically swap guards.
+        Pre-checks:
+          1. Both slots exist, are active/valid, and currently have assigned guards.
+          2. Guard A meets Slot B's minimum grade requirement and 12-hour turnaround rest rule.
+          3. Guard B meets Slot A's minimum grade requirement and 12-hour turnaround rest rule.
+          4. Double-booking or other hard block / leave constraints.
+        Returns a structured validation payload.
+        """
+        self.ensure_one()
+        slot_a = self
+        slot_b = self.browse(int(slot_b_id))
+        if not slot_b.exists():
+            return {"status": "error", "message": "Target slot B does not exist."}
+        if slot_a.id == slot_b.id:
+            return {"status": "error", "message": "Cannot swap a shift with itself."}
+        if slot_a.state == "cancelled" or slot_b.state == "cancelled":
+            return {"status": "error", "message": "Cannot swap cancelled shifts."}
+
+        guard_a = slot_a.employee_id
+        guard_b = slot_b.employee_id
+        if not guard_a or not guard_b:
+            return {
+                "status": "error",
+                "message": "Both shifts must have an assigned guard to execute a shift swap.",
+            }
+
+        # Check Guard A eligibility for Slot B (excluding Slot A)
+        elig_a = slot_b.check_guard_eligibility(guard_a, exclude_slot_ids=[slot_a.id])
+        # Check Guard B eligibility for Slot A (excluding Slot B)
+        elig_b = slot_a.check_guard_eligibility(guard_b, exclude_slot_ids=[slot_b.id])
+
+        hard_a = elig_a.get("hard_block", False)
+        hard_b = elig_b.get("hard_block", False)
+        warnings_a = list(elig_a.get("reasons", []))
+        warnings_b = list(elig_b.get("reasons", []))
+
+        # Check specific rest and grade status for quick badge rendering
+        # 12-hour turnaround rest check
+        min_rest_hours = 12.0
+        try:
+            param = self.env["ir.config_parameter"].sudo().get_param("security.min_rest_hours", "12")
+            min_rest_hours = float(param)
+        except (TypeError, ValueError):
+            pass
+
+        rest_a_ok, rest_a_reason = slot_b._check_turnaround_rest(guard_a, min_rest_hours=min_rest_hours, exclude_slot_ids=[slot_a.id])
+        rest_b_ok, rest_b_reason = slot_a._check_turnaround_rest(guard_b, min_rest_hours=min_rest_hours, exclude_slot_ids=[slot_b.id])
+
+        # Grade requirements check
+        post_type_b = slot_b.post_id.post_type_id if slot_b.post_id else False
+        grade_a_ok = True
+        grade_a_msg = None
+        if post_type_b and post_type_b.min_grade_id:
+            seq_a = guard_a.security_grade_id.sequence if guard_a.security_grade_id else 0
+            if not guard_a.security_grade_id or seq_a > post_type_b.min_grade_id.sequence:
+                grade_a_ok = False
+                grade_a_msg = f"{guard_a.name} is Grade {guard_a.security_grade_id.name or 'None'}, post requires Grade {post_type_b.min_grade_id.name}"
+
+        post_type_a = slot_a.post_id.post_type_id if slot_a.post_id else False
+        grade_b_ok = True
+        grade_b_msg = None
+        if post_type_a and post_type_a.min_grade_id:
+            seq_b = guard_b.security_grade_id.sequence if guard_b.security_grade_id else 0
+            if not guard_b.security_grade_id or seq_b > post_type_a.min_grade_id.sequence:
+                grade_b_ok = False
+                grade_b_msg = f"{guard_b.name} is Grade {guard_b.security_grade_id.name or 'None'}, post requires Grade {post_type_a.min_grade_id.name}"
+
+        code_a = getattr(guard_a, "employee_code", False) or getattr(guard_a, "guard_code", False) or ""
+        code_b = getattr(guard_b, "employee_code", False) or getattr(guard_b, "guard_code", False) or ""
+
+        can_swap_cleanly = not hard_a and not hard_b and len(warnings_a) == 0 and len(warnings_b) == 0
+        can_swap_with_override = not hard_a and not hard_b
+
+        return {
+            "status": "success",
+            "can_swap_cleanly": can_swap_cleanly,
+            "requires_override": bool(warnings_a or warnings_b),
+            "is_hard_blocked": bool(hard_a or hard_b),
+            "guard_a": {
+                "id": guard_a.id,
+                "name": guard_a.name,
+                "code": code_a,
+                "grade": guard_a.security_grade_id.name if guard_a.security_grade_id else "None",
+                "from_slot": {
+                    "id": slot_a.id,
+                    "site_name": slot_a.site_id.name or "",
+                    "post_name": slot_a.post_id.name or "",
+                    "shift_date": str(slot_a.shift_date),
+                    "shift_label": slot_a.shift_template_id.name if slot_a.shift_template_id else "",
+                },
+                "to_slot": {
+                    "id": slot_b.id,
+                    "site_name": slot_b.site_id.name or "",
+                    "post_name": slot_b.post_id.name or "",
+                    "shift_date": str(slot_b.shift_date),
+                    "shift_label": slot_b.shift_template_id.name if slot_b.shift_template_id else "",
+                    "min_grade": post_type_b.min_grade_id.name if post_type_b and post_type_b.min_grade_id else "Any",
+                },
+                "rest_ok": rest_a_ok,
+                "rest_reason": rest_a_reason,
+                "grade_ok": grade_a_ok,
+                "grade_message": grade_a_msg,
+                "hard_block": hard_a,
+                "warnings": warnings_a,
+            },
+            "guard_b": {
+                "id": guard_b.id,
+                "name": guard_b.name,
+                "code": code_b,
+                "grade": guard_b.security_grade_id.name if guard_b.security_grade_id else "None",
+                "from_slot": {
+                    "id": slot_b.id,
+                    "site_name": slot_b.site_id.name or "",
+                    "post_name": slot_b.post_id.name or "",
+                    "shift_date": str(slot_b.shift_date),
+                    "shift_label": slot_b.shift_template_id.name if slot_b.shift_template_id else "",
+                },
+                "to_slot": {
+                    "id": slot_a.id,
+                    "site_name": slot_a.site_id.name or "",
+                    "post_name": slot_a.post_id.name or "",
+                    "shift_date": str(slot_a.shift_date),
+                    "shift_label": slot_a.shift_template_id.name if slot_a.shift_template_id else "",
+                    "min_grade": post_type_a.min_grade_id.name if post_type_a and post_type_a.min_grade_id else "Any",
+                },
+                "rest_ok": rest_b_ok,
+                "rest_reason": rest_b_reason,
+                "grade_ok": grade_b_ok,
+                "grade_message": grade_b_msg,
+                "hard_block": hard_b,
+                "warnings": warnings_b,
+            },
+        }
+
+    def action_swap_guards(self, slot_b_id, reason, allow_override=False):
+        """
+        Atomically swap assigned guards between slot_a (self) and slot_b_id.
+        Demands a non-empty manager audit reason.
+        Enforces 12-hour turnaround rest rule and minimum grade constraints.
+        If warnings exist and not allow_override, returns override_required.
+        If overridden, marks both slots with is_override=True, stores audit reason,
+        and logs full chatter / audit history.
+        """
+        self.ensure_one()
+        slot_a = self
+        slot_b = self.browse(int(slot_b_id))
+        if not slot_b.exists():
+            return {"status": "error", "message": "Target slot B does not exist."}
+
+        # 1. Enforce manager audit reason
+        if not reason or not str(reason).strip():
+            return {
+                "status": "error",
+                "message": "A manager audit reason is required for guard shift swaps (e.g. 'Mutual swap request' or 'Medical reallocation').",
+            }
+        clean_reason = str(reason).strip()
+
+        # Handle boolean conversion
+        if isinstance(allow_override, str):
+            allow_override = allow_override.lower() in ("true", "1", "t", "y", "yes")
+        allow_override = bool(allow_override)
+
+        val = slot_a.action_validate_swap(slot_b.id)
+        if val.get("status") == "error":
+            return val
+
+        if val.get("is_hard_blocked"):
+            return {
+                "status": "error",
+                "message": "Swap blocked by hard constraint (inactive guard or security disqualified).",
+            }
+
+        guard_a = slot_a.employee_id
+        guard_b = slot_b.employee_id
+        warnings_a = val["guard_a"]["warnings"]
+        warnings_b = val["guard_b"]["warnings"]
+        has_warnings = bool(warnings_a or warnings_b)
+
+        if has_warnings and not allow_override:
+            return {
+                "status": "override_required",
+                "message": "Manager override required due to shift turnaround rest or compliance warnings.",
+                "warnings": warnings_a + warnings_b,
+                "validation": val,
+            }
+
+        # 2. ATOMIC EXECUTION: Update both slots together in a single transaction
+        vals_a = {
+            "employee_id": guard_b.id,
+            "state": "assigned",
+            "critical_gap": False,
+        }
+        if warnings_b or allow_override:
+            vals_a["is_override"] = True
+            vals_a["override_reason"] = clean_reason
+            vals_a["wrong_fit_reasons"] = "\n".join(warnings_b) if warnings_b else "Guard Swap Override"
+        else:
+            vals_a["is_override"] = False
+            vals_a["override_reason"] = False
+            vals_a["wrong_fit_reasons"] = False
+
+        vals_b = {
+            "employee_id": guard_a.id,
+            "state": "assigned",
+            "critical_gap": False,
+        }
+        if warnings_a or allow_override:
+            vals_b["is_override"] = True
+            vals_b["override_reason"] = clean_reason
+            vals_b["wrong_fit_reasons"] = "\n".join(warnings_a) if warnings_a else "Guard Swap Override"
+        else:
+            vals_b["is_override"] = False
+            vals_b["override_reason"] = False
+            vals_b["wrong_fit_reasons"] = False
+
+        slot_a.write(vals_a)
+        slot_b.write(vals_b)
+
+        # 3. Log Chatter & Audit Trail
+        user_name = self.env.user.name
+        log_msg = (
+            f"<b>Guard Shift Swap Executed by {user_name}:</b><br/>"
+            f"• <b>{guard_a.name}</b> moved from <i>{slot_a.post_id.name}</i> ({slot_a.shift_date}) to <i>{slot_b.post_id.name}</i> ({slot_b.shift_date})<br/>"
+            f"• <b>{guard_b.name}</b> moved from <i>{slot_b.post_id.name}</i> ({slot_b.shift_date}) to <i>{slot_a.post_id.name}</i> ({slot_a.shift_date})<br/>"
+            f"<b>Manager Audit Reason:</b> {clean_reason}"
+        )
+        if hasattr(slot_a, "message_post"):
+            slot_a.message_post(body=log_msg, message_type="comment")
+        if hasattr(slot_b, "message_post"):
+            slot_b.message_post(body=log_msg, message_type="comment")
+
+        if slot_a.batch_id and hasattr(slot_a.batch_id, "message_post"):
+            slot_a.batch_id.message_post(body=log_msg, message_type="comment")
+        if slot_b.batch_id and slot_b.batch_id != slot_a.batch_id and hasattr(slot_b.batch_id, "message_post"):
+            slot_b.batch_id.message_post(body=log_msg, message_type="comment")
+
+        if "security.notification" in self.env:
+            try:
+                self.env["security.notification"].sudo().create({
+                    "title": f"Shift Swap: {guard_a.name} ⇄ {guard_b.name}",
+                    "message": f"Swapped shifts at {slot_a.site_id.name or 'Site'} / {slot_b.site_id.name or 'Site'}. Reason: {clean_reason}",
+                    "notification_type": "operational",
+                    "user_id": self.env.user.id,
+                })
+            except Exception:
+                pass
+
+        return {
+            "status": "success",
+            "message": f"Successfully swapped {guard_a.name} and {guard_b.name}!",
+            "slot_a_id": slot_a.id,
+            "slot_b_id": slot_b.id,
+            "guard_a_name": guard_a.name,
+            "guard_b_name": guard_b.name,
+        }
+
+    @api.model
+    def get_today_roll_call(self, today_date=False):
+        """
+        Return roll call and live gap dispatch summary for today (or specified date).
+        Counts assigned vs critical open gaps across all client sites and posts.
+        """
+        d = fields.Date.to_date(today_date) if today_date else fields.Date.context_today(self)
+        slots = self.search([
+            ("shift_date", "=", d),
+            ("state", "!=", "cancelled"),
+            "|", ("batch_id", "=", False), ("batch_id.state", "!=", "cancelled"),
+        ], order="site_id, post_id, shift_template_id")
+
+        assigned_slots = slots.filtered(lambda s: bool(s.employee_id))
+        unassigned_slots = slots.filtered(lambda s: not bool(s.employee_id))
+        total_count = len(slots)
+        assigned_count = len(assigned_slots)
+        gap_count = len(unassigned_slots)
+        fulfillment_rate = round((assigned_count / total_count * 100)) if total_count else 0
+
+        slot_rows = []
+        for s in slots:
+            emp = s.employee_id
+            slot_rows.append({
+                "id": s.id,
+                "site_id": s.site_id.id if s.site_id else False,
+                "site_name": s.site_id.name if s.site_id else "—",
+                "client_id": s.partner_id.id if s.partner_id else False,
+                "client_name": s.partner_id.name or (s.site_id.partner_id.name if s.site_id and s.site_id.partner_id else ""),
+                "post_id": s.post_id.id if s.post_id else False,
+                "post_name": s.post_id.name if s.post_id else "—",
+                "shift_template_id": s.shift_template_id.id if s.shift_template_id else False,
+                "shift_template_name": s.shift_template_id.name if s.shift_template_id else "Shift",
+                "start_hour": s.shift_template_id.start_hour if s.shift_template_id else 6.0,
+                "end_hour": s.shift_template_id.end_hour if s.shift_template_id else 18.0,
+                "state": s.state,
+                "critical_gap": s.critical_gap or (not emp),
+                "is_override": s.is_override,
+                "override_reason": s.override_reason or "",
+                "is_relief": s.is_relief,
+                "relief_reason": s.relief_reason or "",
+                "employee_id": emp.id if emp else False,
+                "employee_name": emp.name if emp else None,
+                "employee_code": getattr(emp, "employee_code", False) or getattr(emp, "guard_code", False) or "—",
+                "employee_grade": emp.security_grade_id.name if emp and emp.security_grade_id else "—",
+                "can_read": getattr(emp, "security_can_read", True) if emp else False,
+                "can_write": getattr(emp, "security_can_write", True) if emp else False,
+                "writes_neatly": getattr(emp, "security_writes_neatly", "average") if emp else "",
+                "english": getattr(emp, "security_english_level", "basic") if emp else "",
+                "afrikaans": getattr(emp, "security_afrikaans_level", "none") if emp else "",
+                "smartness": getattr(emp, "security_smartness_rating", "3") if emp else "",
+            })
+
+        return {
+            "date": str(d),
+            "total": total_count,
+            "assigned": assigned_count,
+            "unassigned": gap_count,
+            "fulfillment_rate": fulfillment_rate,
+            "slots": slot_rows,
+        }
 
 
 class SecurityRosterAttentionBoard(models.Model):

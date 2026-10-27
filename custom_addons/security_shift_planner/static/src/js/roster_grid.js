@@ -10,14 +10,17 @@ export class RosterGrid extends Component {
         sites: Array,
         slots: Array,
         selectedSlotId: { optional: true },
+        isRollCallMode: { type: Boolean, optional: true },
         onSelectSlot: { type: Function, optional: true },
         onSlotContextMenu: { type: Function, optional: true },
         onDropSlot: { type: Function, optional: true },
+        onDispatchRelief: { type: Function, optional: true },
     };
 
     static defaultProps = {
         mode: "full",
         selectedSlotId: null,
+        isRollCallMode: false,
     };
 
     setup() {

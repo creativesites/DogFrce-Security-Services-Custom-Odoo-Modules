@@ -69,7 +69,7 @@ class TestIdleGuardSolver(TransactionCase):
             "partner_id": cls.partner.id,
             "date_from": "2026-03-21",
             "date_to": "2026-04-20",
-            "site_ids": [(4, cls.site.id)],
+            "site_id": cls.site.id,
         })
 
         cls.guard_busy = env["hr.employee"].create({
@@ -166,6 +166,17 @@ class TestIdleGuardSolver(TransactionCase):
 
     def test_03_respects_12h_turnaround_rest(self):
         """Guard with 0 shifts who worked night shift cannot work next morning's day shift."""
+        # Book self.guard_idle on 2026-04-06 night shift so they are not available on this date
+        self.env["security.roster.slot"].create({
+            "batch_id": self.batch.id,
+            "post_id": self.post.id,
+            "site_id": self.site.id,
+            "shift_date": "2026-04-06",
+            "shift_template_id": self.shift_night.id,
+            "employee_id": self.guard_idle.id,
+            "state": "assigned",
+        })
+
         # Create an idle guard who just finished night shift on 2026-04-05 (18:00 to 06:00 on Apr 6)
         tired_guard = self.env["hr.employee"].create({
             "name": "Tired Idle Guard",
@@ -235,7 +246,7 @@ class TestIdleGuardSolver(TransactionCase):
             "partner_id": self.partner.id,
             "date_from": "2026-03-21",
             "date_to": "2026-04-20",
-            "site_ids": [(4, self.site.id)],
+            "site_id": self.site.id,
         })
         slot1 = self.env["security.roster.slot"].create({
             "batch_id": test_batch.id,
