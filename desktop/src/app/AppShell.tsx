@@ -25,7 +25,7 @@ import {
   noticeStatusFrom, noticeStatusFromError, shouldShowOnboarding,
 } from "../api/onboarding";
 import { type Capabilities, isAvailable, probeCapabilities } from "../api/capabilities";
-import { fetchViewerContext, type ViewerContext } from "../api/work";
+import { fetchViewerContext, resolveEmployeeId, type ViewerContext } from "../api/work";
 import dogforceLogo from "../assets/dogforce-logo-256.png";
 
 /** Pages only some roles see. The server decides the roles (ViewerContext). */
@@ -47,6 +47,7 @@ export function AppShell() {
   const appOpen = mode === "app";
 
   const [page, setPage] = useState<AppPage>("home");
+  const [visitedPages, setVisitedPages] = useState<Set<AppPage>>(() => new Set(["home"]));
   // Where Today's "Details" / "Learn this first" should land.
   const [focusTaskId, setFocusTaskId] = useState<number | null>(null);
   const [focusAssignmentId, setFocusAssignmentId] = useState<number | null>(null);
@@ -60,6 +61,15 @@ export function AppShell() {
   const sessionUid = status === "signed_in" ? session?.uid ?? null : null;
   const sessionDb = session?.db ?? null;
 
+  // Keep track of visited tabs to preserve DOM and state across navigation
+  useEffect(() => {
+    setVisitedPages((prev) => (prev.has(page) ? prev : new Set(prev).add(page)));
+  }, [page]);
+
+  useEffect(() => {
+    setVisitedPages(new Set(["home"]));
+  }, [sessionUid]);
+
   // ---- What this server and this person can use ---------------------------
   const [capabilities, setCapabilities] = useState<Capabilities>({});
   const [viewer, setViewer] = useState<ViewerContext | null>(null);
@@ -70,6 +80,7 @@ export function AppShell() {
     let cancelled = false;
     probeCapabilities().then((c) => { if (!cancelled) setCapabilities(c); }).catch(() => {});
     fetchViewerContext().then((v) => { if (!cancelled) setViewer(v); }).catch(() => {});
+    resolveEmployeeId(sessionUid).catch(() => {});
     return () => { cancelled = true; };
   }, [sessionUid, sessionDb]);
 
@@ -295,44 +306,94 @@ export function AppShell() {
             )}
 
             {signedIn && (
-              <div className="dg-canvas__body" key={page}>
-                {page === "home" && (
-                  <Home
-                    reloadSignal={reloadSignal}
-                    pageAvailable={pageAvailable}
-                    canGuide={canGuide}
-                    viewer={viewer}
-                    onGoTo={goTo}
-                    onOpenTask={(id) => { setFocusTaskId(id); setPage("work"); }}
-                    onOpenCourse={(assignmentId) => { setFocusAssignmentId(assignmentId || null); setPage("training"); }}
-                    onReportProblem={openReport}
-                    onHelp={openHelp}
-                  />
+              <>
+                {visitedPages.has("home") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "home" ? undefined : "none" }}
+                    aria-hidden={page !== "home"}
+                  >
+                    <Home
+                      reloadSignal={reloadSignal}
+                      pageAvailable={pageAvailable}
+                      canGuide={canGuide}
+                      viewer={viewer}
+                      onGoTo={goTo}
+                      onOpenTask={(id) => { setFocusTaskId(id); setPage("work"); }}
+                      onOpenCourse={(assignmentId) => { setFocusAssignmentId(assignmentId || null); setPage("training"); }}
+                      onReportProblem={openReport}
+                      onHelp={openHelp}
+                    />
+                  </div>
                 )}
-                {page === "work" && <MyWork reloadSignal={reloadSignal} focusTaskId={focusTaskId} />}
-                {page === "training" && (
-                  <MyTraining reloadSignal={reloadSignal} focusAssignmentId={focusAssignmentId} canGuide={canGuide} />
+                {visitedPages.has("work") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "work" ? undefined : "none" }}
+                    aria-hidden={page !== "work"}
+                  >
+                    <MyWork reloadSignal={reloadSignal} focusTaskId={focusTaskId} />
+                  </div>
                 )}
-                {page === "team" && <TeamToday reloadSignal={reloadSignal} />}
-                {page === "inbox" && <ExceptionsInbox />}
-                {page === "owner" && <OwnerOverview reloadSignal={reloadSignal} />}
-                {page === "adoption" && (
-                  adoptionAllowed(noticeStatus) ? (
-                    <AdoptionOverview viewer={viewer} />
-                  ) : (
-                    <div className="dg-card dg-gatecard dg-page-enter">
-                      <h2 className="dg-onboarding__title">Adoption figures aren't shown yet</h2>
-                      <p>
-                        {noticeStatus.kind === "unavailable"
-                          ? "Your administrator still needs to finish setting up DeployGuard on the server, so there's no record yet that you've been told what's collected. Until then, no adoption figures are shown."
-                          : noticeStatus.kind === "error"
-                            ? noticeStatus.message
-                            : "Checking whether you've seen the monitoring notice…"}
-                      </p>
-                    </div>
-                  )
+                {visitedPages.has("training") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "training" ? undefined : "none" }}
+                    aria-hidden={page !== "training"}
+                  >
+                    <MyTraining reloadSignal={reloadSignal} focusAssignmentId={focusAssignmentId} canGuide={canGuide} />
+                  </div>
                 )}
-              </div>
+                {visitedPages.has("team") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "team" ? undefined : "none" }}
+                    aria-hidden={page !== "team"}
+                  >
+                    <TeamToday reloadSignal={reloadSignal} />
+                  </div>
+                )}
+                {visitedPages.has("inbox") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "inbox" ? undefined : "none" }}
+                    aria-hidden={page !== "inbox"}
+                  >
+                    <ExceptionsInbox />
+                  </div>
+                )}
+                {visitedPages.has("owner") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "owner" ? undefined : "none" }}
+                    aria-hidden={page !== "owner"}
+                  >
+                    <OwnerOverview reloadSignal={reloadSignal} />
+                  </div>
+                )}
+                {visitedPages.has("adoption") && (
+                  <div
+                    className="dg-canvas__body"
+                    style={{ display: page === "adoption" ? undefined : "none" }}
+                    aria-hidden={page !== "adoption"}
+                  >
+                    {adoptionAllowed(noticeStatus) ? (
+                      <AdoptionOverview viewer={viewer} />
+                    ) : (
+                      <div className="dg-card dg-gatecard dg-page-enter">
+                        <h2 className="dg-onboarding__title">Adoption figures aren't shown yet</h2>
+                        <p>
+                          {noticeStatus.kind === "unavailable"
+                            ? "Your administrator still needs to finish setting up DeployGuard on the server, so there's no record yet that you've been told what's collected. Until then, no adoption figures are shown."
+                            : noticeStatus.kind === "error"
+                              ? noticeStatus.message
+                              : "Checking whether you've seen the monitoring notice…"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </main>
         </div>

@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { fetchDrillDownRecords, fetchOwnerOverview, type OwnerMetricTile, type OwnerOverviewData } from "../../api/support";
 import { EvidenceModal } from "../../components/EvidenceModal";
 import { ErrorState } from "../../components/States";
+import { OwnerOverviewSkeleton } from "../../components/Skeletons";
 import { Ramp } from "../../components/Ramp";
+import { AttentionCard, type AttentionItem } from "../../components/AttentionCard";
+import { useQuery } from "../../lib/queryCache";
 import { TrendingUpIcon } from "../icons";
 
 const TREND_WORDS = { up: "Improving", down: "Slipping", flat: "Steady" } as const;
@@ -10,30 +13,45 @@ const TREND_WORDS = { up: "Improving", down: "Slipping", flat: "Steady" } as con
 /**
  * The owner's and GM's company-wide picture. Every tile is a count of real
  * records; opening it shows exactly those records. The trend states the
- * counts it compares. Nothing here is modelled or AI-generated.
+ * counts it compares.
  */
 export function OwnerOverview({ reloadSignal }: { reloadSignal?: number }) {
-  const [data, setData] = useState<OwnerOverviewData | null>(null);
-  const [error, setError] = useState<unknown>(null);
   const [drill, setDrill] = useState<OwnerMetricTile | null>(null);
 
-  const load = useCallback(() => {
-    setError(null);
-    fetchOwnerOverview().then(setData).catch(setError);
-  }, []);
-  useEffect(() => { load(); }, [load, reloadSignal]);
+  const {
+    data,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery<OwnerOverviewData>(
+    "owner:overview",
+    fetchOwnerOverview,
+    { reloadSignal, staleTime: 30_000 },
+  );
 
   const loadDrill = useCallback(
     () => (drill ? fetchDrillDownRecords<Record<string, unknown> & { id: number }>(drill.drill) : Promise.resolve([])),
     [drill],
   );
 
-  if (error) return <ErrorState error={error} fallback="The overview couldn't be loaded." onRetry={load} />;
-  if (!data) return <div className="dg-skeleton dg-upnext-skeleton" />;
+  if (error) return <ErrorState error={error} fallback="The overview couldn't be loaded." onRetry={() => void refetch()} />;
+  if (isLoading && !data) return <OwnerOverviewSkeleton />;
+  if (!data) return <OwnerOverviewSkeleton />;
 
   const [feature, ...rest] = data.tiles;
   const needsAttention = rest.filter((t) => t.tone === "danger" || t.tone === "warning").length;
   const dateLine = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+  const attentionItems: AttentionItem[] = rest
+    .filter((t) => t.tone === "danger" || t.tone === "warning")
+    .map((t) => ({
+      id: t.key,
+      tone: (t.tone === "danger" ? "danger" : "warning") as "danger" | "warning",
+      title: `${t.label}: ${t.value}${t.total != null ? ` / ${t.total}` : ""}`,
+      detail: t.detail,
+      actionLabel: "Inspect records",
+      onAction: () => setDrill(t),
+    }));
 
   return (
     <div className="dg-owner dg-page-enter">
@@ -47,6 +65,14 @@ export function OwnerOverview({ reloadSignal }: { reloadSignal?: number }) {
           </p>
         </div>
       </header>
+
+      <AttentionCard
+        title="Executive Digest"
+        subtitle="Automated executive triage of compliance risks, billing milestones, and operational variances"
+        badge="Owner Digest"
+        items={attentionItems}
+        emptyMessage="Company-wide operations, client renewals, and compliance benchmarks are fully healthy."
+      />
 
       {feature && (
         <button type="button" className="dg-feature" onClick={() => setDrill(feature)}>

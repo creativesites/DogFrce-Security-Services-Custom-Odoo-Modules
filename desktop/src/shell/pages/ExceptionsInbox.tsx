@@ -12,6 +12,7 @@ import {
   RESOLUTION_CODE_LABELS,
   OPEN_EXCEPTION_STATES,
 } from "../../api/exceptions";
+import { fetchWithCache, getQueryData, invalidateQueries } from "../../lib/queryCache";
 import { notifyDesktop } from "../../lib/notifications";
 import { useViewMode } from "../../app/viewMode";
 import {
@@ -62,11 +63,17 @@ export function ExceptionsInbox() {
   const initialLoadDone = useRef(false);
 
   const loadData = useCallback(async (isBackground = false) => {
-    if (!isBackground) setLoading(true);
+    const cachedList = getQueryData<ExceptionInstance[]>(`exceptions:list:${tab}`);
+    if (cachedList && !isBackground) {
+      setItems(cachedList);
+      setLoading(false);
+    } else if (!isBackground) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
-      const newCounts = await getExceptionCounts();
+      const newCounts = await fetchWithCache("exceptions:counts", getExceptionCounts, { staleTime: 15_000, force: isBackground });
       setCounts(newCounts);
 
       let filters = {};
@@ -82,7 +89,11 @@ export function ExceptionsInbox() {
         filters = { state: ["resolved", "auto_resolved"] };
       }
 
-      const list = await fetchExceptions(filters);
+      const list = await fetchWithCache(
+        `exceptions:list:${tab}`,
+        () => fetchExceptions(filters),
+        { staleTime: 15_000, force: isBackground },
+      );
       setItems(list);
       setSelectedIndex((prev) => (list.length === 0 ? 0 : Math.min(prev, list.length - 1)));
 
@@ -140,6 +151,8 @@ export function ExceptionsInbox() {
     setActionLoading(true);
     try {
       await acknowledgeException(item.id);
+      invalidateQueries("exceptions");
+      invalidateQueries("today");
       await loadData(true);
     } catch (err) {
       setError(extractErrorMessage(err, "Acknowledge failed"));
@@ -153,6 +166,8 @@ export function ExceptionsInbox() {
     setActionLoading(true);
     try {
       await dismissException(item.id, "Dismissed via Manager Inbox");
+      invalidateQueries("exceptions");
+      invalidateQueries("today");
       await loadData(true);
     } catch (err) {
       setError(extractErrorMessage(err, "Dismissal failed"));
@@ -174,6 +189,8 @@ export function ExceptionsInbox() {
     setActionLoading(true);
     try {
       await resolveException(resolvingItem.id, resolutionCode, resolutionNote);
+      invalidateQueries("exceptions");
+      invalidateQueries("today");
       setResolvingItem(null);
       await loadData(true);
     } catch (err) {
@@ -386,10 +403,32 @@ export function ExceptionsInbox() {
       <div className="dg-inbox-layout">
         {/* Left Column: Exception Cards */}
         <section className="dg-inbox-list" aria-label="Exceptions List">
-          {loading ? (
-            <div className="dg-inbox-loading">
-              <div className="dg-spinner" />
-              <span>Loading operational exceptions...</span>
+          {loading && items.length === 0 ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="dg-skeleton-tile" style={{ height: 84 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div className="dg-skeleton dg-skeleton-pill" style={{ width: 70, height: 18 }} />
+                  <div className="dg-skeleton dg-skeleton-text" style={{ width: 50, height: 12 }} />
+                </div>
+                <div className="dg-skeleton dg-skeleton-text" style={{ width: "80%", height: 16, marginBottom: 6 }} />
+                <div className="dg-skeleton dg-skeleton-text" style={{ width: "50%", height: 12 }} />
+              </div>
+              <div className="dg-skeleton-tile" style={{ height: 84 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div className="dg-skeleton dg-skeleton-pill" style={{ width: 70, height: 18 }} />
+                  <div className="dg-skeleton dg-skeleton-text" style={{ width: 50, height: 12 }} />
+                </div>
+                <div className="dg-skeleton dg-skeleton-text" style={{ width: "75%", height: 16, marginBottom: 6 }} />
+                <div className="dg-skeleton dg-skeleton-text" style={{ width: "45%", height: 12 }} />
+              </div>
+              <div className="dg-skeleton-tile" style={{ height: 84 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div className="dg-skeleton dg-skeleton-pill" style={{ width: 70, height: 18 }} />
+                  <div className="dg-skeleton dg-skeleton-text" style={{ width: 50, height: 12 }} />
+                </div>
+                <div className="dg-skeleton dg-skeleton-text" style={{ width: "65%", height: 16, marginBottom: 6 }} />
+                <div className="dg-skeleton dg-skeleton-text" style={{ width: "40%", height: 12 }} />
+              </div>
             </div>
           ) : items.length === 0 ? (
             <div className="dg-inbox-empty">

@@ -63,18 +63,32 @@ export async function resolveEmployeeId(uid: number): Promise<number | null> {
     "search_read",
     [[["user_id", "=", uid]], ["id"]],
     { limit: 1 },
-  ).then((rows) => rows[0]?.id ?? null);
+  ).then((rows) => {
+    const id = rows[0]?.id ?? null;
+    resolvedEmployeeIdSync.set(uid, id);
+    return id;
+  });
   employeeIdCache.set(uid, lookup);
   // A failed lookup must not be cached, or the page could never recover.
-  lookup.catch(() => employeeIdCache.delete(uid));
+  lookup.catch(() => {
+    employeeIdCache.delete(uid);
+    resolvedEmployeeIdSync.delete(uid);
+  });
   return lookup;
+}
+
+/** Synchronously returns the resolved employee ID if already cached. */
+export function getCachedEmployeeIdSync(uid: number): number | null | undefined {
+  return resolvedEmployeeIdSync.get(uid);
 }
 
 /** Three pages used to look this up independently on every mount. */
 const employeeIdCache = new Map<number, Promise<number | null>>();
+const resolvedEmployeeIdSync = new Map<number, number | null>();
 
 export function clearEmployeeIdCache(): void {
   employeeIdCache.clear();
+  resolvedEmployeeIdSync.clear();
 }
 
 /** All tasks assigned to `employeeId`, soonest due date first. */

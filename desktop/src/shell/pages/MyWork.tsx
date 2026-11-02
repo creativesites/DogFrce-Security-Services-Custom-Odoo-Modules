@@ -12,10 +12,13 @@ import {
   signRosterBatch,
   fetchTask,
   resolveEmployeeId,
+  getCachedEmployeeIdSync,
   runWorkAction,
   saveChecklistResponse,
 } from "../../api/work";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
+import { fetchWithCache, invalidateQueries } from "../../lib/queryCache";
+import { MyWorkSkeleton } from "../../components/Skeletons";
 import { useViewMode } from "../../app/viewMode";
 import { useSession } from "../../session/SessionContext";
 import {
@@ -90,8 +93,13 @@ interface MyWorkProps {
 export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
   const { session } = useSession();
   const { openInOdoo } = useViewMode();
-  const [employeeState, setEmployeeState] = useState<LoadState>("loading");
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
+  const cachedInitialId = session ? getCachedEmployeeIdSync(session.uid) : undefined;
+  const [employeeState, setEmployeeState] = useState<LoadState>(() =>
+    cachedInitialId !== undefined ? "ready" : "loading",
+  );
+  const [employeeId, setEmployeeId] = useState<number | null>(() =>
+    cachedInitialId !== undefined ? cachedInitialId : null,
+  );
   const [employeeError, setEmployeeError] = useState<string | null>(null);
 
   const [tasksState, setTasksState] = useState<LoadState>("loading");
@@ -122,6 +130,8 @@ export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
     setSignoffBusyId(signoffId);
     try {
       await signRosterBatch(signoffId);
+      invalidateQueries("work");
+      invalidateQueries("today");
       setSignoffFeedback({ id: signoffId, message: "Signed off!" });
       setTimeout(() => {
         setSignoffs((prev) => prev.filter((s) => s.id !== signoffId));
@@ -141,7 +151,7 @@ export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
 
   const loadEmployee = useCallback(async () => {
     if (!session) return;
-    setEmployeeState("loading");
+    if (employeeId == null) setEmployeeState("loading");
     setEmployeeError(null);
     try {
       const id = await resolveEmployeeId(session.uid);
@@ -151,31 +161,38 @@ export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
       setEmployeeError(extractErrorMessage(err, "Couldn't look up your employee record."));
       setEmployeeState("error");
     }
-  }, [session]);
+  }, [session, employeeId]);
 
   useEffect(() => {
-    void loadEmployee();
-  }, [loadEmployee]);
+    if (employeeId == null) {
+      void loadEmployee();
+    }
+  }, [loadEmployee, employeeId]);
 
   const loadTasks = useCallback(async () => {
     if (employeeId == null) return;
-    setTasksState("loading");
+    if (tasks.length === 0) setTasksState("loading");
     setTasksError(null);
     try {
-      const rows = await fetchMyTasks(employeeId);
+      const rows = await fetchWithCache(
+        `work:tasks:${employeeId}`,
+        () => fetchMyTasks(employeeId),
+        { staleTime: 15_000 },
+      );
       setTasks([...rows].sort(byDueDateAscending));
       setTasksState("ready");
     } catch (err) {
       setTasksError(extractErrorMessage(err, "Couldn't load your tasks."));
       setTasksState("error");
     }
-  }, [employeeId]);
+  }, [employeeId, tasks.length]);
 
   useEffect(() => {
     void loadTasks();
   }, [loadTasks]);
 
   const refresh = useCallback(() => {
+    invalidateQueries("work");
     void loadTasks();
     void loadSignoffs();
   }, [loadTasks, loadSignoffs]);
@@ -190,13 +207,7 @@ export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
   const taskCount = tasks.length;
 
   if (employeeState === "loading") {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="dg-skeleton" style={{ height: 56 }} />
-        <div className="dg-skeleton" style={{ height: 56 }} />
-        <div className="dg-skeleton" style={{ height: 56 }} />
-      </div>
-    );
+    return <MyWorkSkeleton />;
   }
 
   if (employeeState === "error") {
@@ -264,11 +275,32 @@ export function MyWork({ reloadSignal, focusTaskId = null }: MyWorkProps) {
         </div>
       </header>
 
-      {tasksState === "loading" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div className="dg-skeleton" style={{ height: 62 }} />
-          <div className="dg-skeleton" style={{ height: 62 }} />
-          <div className="dg-skeleton" style={{ height: 62 }} />
+      {tasksState === "loading" && tasks.length === 0 && (
+        <div className="dg-tasklist" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="dg-skeleton-row" style={{ height: 68 }}>
+            <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+            <div style={{ flex: 1 }}>
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "45%", height: 18, marginBottom: 6 }} />
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "25%", height: 13 }} />
+            </div>
+            <div className="dg-skeleton dg-skeleton-pill" style={{ width: 110, height: 24 }} />
+          </div>
+          <div className="dg-skeleton-row" style={{ height: 68 }}>
+            <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+            <div style={{ flex: 1 }}>
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "50%", height: 18, marginBottom: 6 }} />
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "30%", height: 13 }} />
+            </div>
+            <div className="dg-skeleton dg-skeleton-pill" style={{ width: 110, height: 24 }} />
+          </div>
+          <div className="dg-skeleton-row" style={{ height: 68 }}>
+            <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+            <div style={{ flex: 1 }}>
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "38%", height: 18, marginBottom: 6 }} />
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "20%", height: 13 }} />
+            </div>
+            <div className="dg-skeleton dg-skeleton-pill" style={{ width: 110, height: 24 }} />
+          </div>
         </div>
       )}
 
@@ -398,6 +430,8 @@ function TaskDetail({
       setActionError(null);
       try {
         await runWorkAction(taskId, action, reason);
+        invalidateQueries("work");
+        invalidateQueries("today");
         setShowCncPicker(false);
         setCncReason("");
         await load();

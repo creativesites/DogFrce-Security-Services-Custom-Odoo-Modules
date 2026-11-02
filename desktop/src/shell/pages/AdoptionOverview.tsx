@@ -15,7 +15,9 @@ import {
   WORKFLOW_LABELS,
   CHECKIN_OPTION_LABELS,
 } from "../../api/adoption";
-import { resolveEmployeeId, type ViewerContext } from "../../api/work";
+import { resolveEmployeeId, getCachedEmployeeIdSync, type ViewerContext } from "../../api/work";
+import { fetchWithCache, invalidateQueries } from "../../lib/queryCache";
+import { AdoptionSkeleton } from "../../components/Skeletons";
 import { parseOdooDatetime } from "./myWork.logic";
 import { useSession } from "../../session/SessionContext";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
@@ -36,7 +38,10 @@ function localTime(odooDatetime: string | false | null | undefined): string | nu
 
 export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
   const { session } = useSession();
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
+  const cachedInitialId = session ? getCachedEmployeeIdSync(session.uid) : undefined;
+  const [employeeId, setEmployeeId] = useState<number | null>(() =>
+    cachedInitialId !== undefined ? cachedInitialId : null,
+  );
   const [snapshot, setSnapshot] = useState<AdoptionSnapshot | null>(null);
   const [workItems, setWorkItems] = useState<ExpectedWorkItem[]>([]);
   const [teamSnapshots, setTeamSnapshots] = useState<AdoptionSnapshot[]>([]);
@@ -57,11 +62,11 @@ export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
 
   // Resolve employee ID from session
   useEffect(() => {
-    if (!session) return;
+    if (!session || employeeId != null) return;
     resolveEmployeeId(session.uid)
       .then((id) => setEmployeeId(id))
       .catch(() => setEmployeeId(null));
-  }, [session]);
+  }, [session, employeeId]);
 
   // Load data
   useEffect(() => {
@@ -71,15 +76,20 @@ export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
     }
 
     let cancelled = false;
-    setLoading(true);
+    if (!snapshot) setLoading(true);
     setError(null);
 
-    Promise.all([
-      fetchEmployeeSnapshot(employeeId),
-      fetchExpectedWorkItems(employeeId),
-      fetchPendingCheckin(employeeId),
-      isManagerOrAdmin ? fetchTeamSnapshots() : Promise.resolve([]),
-    ])
+    fetchWithCache(
+      `adoption:overview:${employeeId}:${isManagerOrAdmin}`,
+      () =>
+        Promise.all([
+          fetchEmployeeSnapshot(employeeId),
+          fetchExpectedWorkItems(employeeId),
+          fetchPendingCheckin(employeeId),
+          isManagerOrAdmin ? fetchTeamSnapshots() : Promise.resolve([]),
+        ]),
+      { staleTime: 30_000 },
+    )
       .then(([snap, items, checkin, team]) => {
         if (cancelled) return;
         setSnapshot(snap);
@@ -97,20 +107,26 @@ export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
     return () => {
       cancelled = true;
     };
-  }, [employeeId, isManagerOrAdmin]);
+  }, [employeeId, isManagerOrAdmin, snapshot]);
 
   async function handleRefresh() {
     setRefreshing(true);
     setError(null);
     try {
       await triggerAdoptionRefresh();
+      invalidateQueries("adoption");
       if (employeeId) {
-        const [snap, items, checkin, team] = await Promise.all([
-          fetchEmployeeSnapshot(employeeId),
-          fetchExpectedWorkItems(employeeId),
-          fetchPendingCheckin(employeeId),
-          isManagerOrAdmin ? fetchTeamSnapshots() : Promise.resolve([]),
-        ]);
+        const [snap, items, checkin, team] = await fetchWithCache(
+          `adoption:overview:${employeeId}:${isManagerOrAdmin}`,
+          () =>
+            Promise.all([
+              fetchEmployeeSnapshot(employeeId),
+              fetchExpectedWorkItems(employeeId),
+              fetchPendingCheckin(employeeId),
+              isManagerOrAdmin ? fetchTeamSnapshots() : Promise.resolve([]),
+            ]),
+          { force: true },
+        );
         setSnapshot(snap);
         setWorkItems(items);
         setPendingCheckin(checkin);
@@ -128,6 +144,7 @@ export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
     setCheckinSubmitting(true);
     try {
       await submitCheckinAnswer(pendingCheckin.id, selectedAnswer);
+      invalidateQueries("adoption");
       setCheckinSuccess(true);
       setTimeout(() => {
         setPendingCheckin(null);
@@ -145,13 +162,8 @@ export function AdoptionOverview({ viewer }: { viewer: ViewerContext | null }) {
     return item.state === itemFilter;
   });
 
-  if (loading) {
-    return (
-      <div className="dg-adoption__loading">
-        <span className="dg-adoption__spinner" aria-hidden="true" />
-        <p>Loading adoption metrics and expected work...</p>
-      </div>
-    );
+  if (loading && !snapshot) {
+    return <AdoptionSkeleton />;
   }
 
   return (

@@ -1,4 +1,6 @@
 import { vi } from "vitest";
+import { clearQueryCache } from "../lib/queryCache";
+import { clearEmployeeIdCache } from "../api/work";
 
 /**
  * A fake of the native side for component tests: the Tauri commands the shell
@@ -23,6 +25,8 @@ export const backend = {
     this.viewMode = "odoo";
     this.listeners.clear();
     this.invoked = [];
+    clearQueryCache();
+    clearEmployeeIdCache();
   },
 };
 

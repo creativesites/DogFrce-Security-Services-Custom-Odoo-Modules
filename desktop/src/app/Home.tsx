@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
 import { useSession } from "../session/SessionContext";
 import { fetchMyToday, fetchTeamToday, type MyToday, type TeamToday, type TodayTask } from "../api/today";
 import type { ViewerContext } from "../api/work";
 import { arrangeDay, cardStatus, daySentence, dueTime, nextAction, progress, titleAndSite } from "../domain/work/today";
 import { EmptyState, ErrorState } from "../components/States";
+import { HomeSkeleton } from "../components/Skeletons";
 import { Ramp } from "../components/Ramp";
+import { useQuery } from "../lib/queryCache";
 import { useViewMode } from "./viewMode";
 import { useStartGuidance } from "./useStartGuidance";
 import type { AppPage } from "./pages";
@@ -37,21 +38,30 @@ interface HomeProps {
 export function Home({ reloadSignal, pageAvailable, canGuide, viewer, onGoTo, onOpenTask, onOpenCourse, onReportProblem, onHelp }: HomeProps) {
   const { session, signOut } = useSession();
   const hasToday = pageAvailable("work");
-  const [today, setToday] = useState<MyToday | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [team, setTeam] = useState<TeamToday | null>(null);
   const isManagerView = !!viewer && (viewer.is_supervisor || viewer.is_manager || viewer.is_owner) && pageAvailable("team");
 
-  const load = useCallback(() => {
-    if (!hasToday) return;
-    setError(null);
-    fetchMyToday().then(setToday).catch(setError);
-    if (isManagerView) fetchTeamToday().then(setTeam).catch(() => setTeam(null));
-  }, [hasToday, isManagerView]);
+  const {
+    data: today,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery<MyToday>(
+    hasToday ? "today:my" : null,
+    fetchMyToday,
+    { reloadSignal, staleTime: 20_000 },
+  );
 
-  useEffect(() => { load(); }, [load, reloadSignal]);
+  const { data: team } = useQuery<TeamToday>(
+    isManagerView ? "today:team" : null,
+    fetchTeamToday,
+    { reloadSignal, staleTime: 20_000 },
+  );
 
   if (!session) return null;
+  if (hasToday && isLoading && !today && !error) {
+    return <HomeSkeleton />;
+  }
+
   const firstName = session.name.split(" ")[0];
   const tasks = today?.tasks ?? [];
   const { done, total } = progress(tasks);
@@ -75,8 +85,8 @@ export function Home({ reloadSignal, pageAvailable, canGuide, viewer, onGoTo, on
       {hasToday && (
         <div className="dg-today__grid">
           <div className="dg-today__main">
-            {!!error && <ErrorState error={error} fallback="Today's work couldn't be loaded." onRetry={load} />}
-            {!error && !today && <div className="dg-skeleton dg-upnext-skeleton" />}
+            {!!error && <ErrorState error={error} fallback="Today's work couldn't be loaded." onRetry={() => void refetch()} />}
+            {!error && !today && <HomeSkeleton />}
             {today && today.employee === false && (
               <EmptyState title="Your login isn't linked to an employee yet">
                 Ask the GM to link your user to your employee record. Then your work will appear here.

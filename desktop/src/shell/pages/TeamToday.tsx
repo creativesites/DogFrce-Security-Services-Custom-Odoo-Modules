@@ -1,8 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { fetchTasksByIds, fetchTeamToday, type TeamCell, type TeamPerson, type TeamToday as TeamTodayData } from "../../api/today";
 import { EvidenceModal } from "../../components/EvidenceModal";
 import { EmptyState, ErrorState } from "../../components/States";
+import { TeamTodaySkeleton } from "../../components/Skeletons";
 import { Ramp } from "../../components/Ramp";
+import { AttentionCard, type AttentionItem } from "../../components/AttentionCard";
+import { useQuery } from "../../lib/queryCache";
 import { useViewMode } from "../../app/viewMode";
 
 const TASK_PATH = "/odoo/action-security_work.action_security_work_task";
@@ -35,20 +38,24 @@ const sum = (people: TeamPerson[], k: keyof Pick<TeamPerson, "expected" | "done"
  */
 export function TeamToday({ reloadSignal }: { reloadSignal?: number }) {
   const { openInOdoo } = useViewMode();
-  const [data, setData] = useState<TeamTodayData | null>(null);
-  const [error, setError] = useState<unknown>(null);
   const [evidence, setEvidence] = useState<{ title: string; ids: number[] } | null>(null);
 
-  const load = useCallback(() => {
-    setError(null);
-    fetchTeamToday().then(setData).catch(setError);
-  }, []);
-  useEffect(() => { load(); }, [load, reloadSignal]);
+  const {
+    data,
+    error,
+    isLoading,
+    refetch,
+  } = useQuery<TeamTodayData>(
+    "today:team",
+    fetchTeamToday,
+    { reloadSignal, staleTime: 20_000 },
+  );
 
   const loadEvidence = useCallback(() => fetchTasksByIds(evidence?.ids ?? []), [evidence]);
 
-  if (error) return <ErrorState error={error} fallback="Team Today couldn't be loaded." onRetry={load} />;
-  if (!data) return <div className="dg-skeleton dg-upnext-skeleton" />;
+  if (error) return <ErrorState error={error} fallback="Team Today couldn't be loaded." onRetry={() => void refetch()} />;
+  if (isLoading && !data) return <TeamTodaySkeleton />;
+  if (!data) return <TeamTodaySkeleton />;
 
   const openTask = (id: number) => void openInOdoo(`${TASK_PATH}/${id}`);
   const expected = sum(data.people, "expected");
@@ -57,6 +64,38 @@ export function TeamToday({ reloadSignal }: { reloadSignal?: number }) {
   const waiting = sum(data.people, "waiting");
   const blocked = sum(data.people, "could_not_complete");
   const dateLine = new Date(`${data.date}T12:00:00`).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
+
+  const attentionItems: AttentionItem[] = [];
+  if (overdue.length > 0) {
+    attentionItems.push({
+      id: "overdue",
+      tone: "danger",
+      title: `${overdue.length} overdue ${overdue.length === 1 ? "duty requires" : "duties require"} attention`,
+      detail: "Pending duties have passed their operational deadline. Follow up with site supervisors.",
+      actionLabel: "Inspect overdue",
+      onAction: () => setEvidence({ title: "Overdue duties today", ids: overdue }),
+    });
+  }
+  if (blocked.length > 0) {
+    attentionItems.push({
+      id: "blocked",
+      tone: "warning",
+      title: `${blocked.length} ${blocked.length === 1 ? "duty" : "duties"} couldn't be completed`,
+      detail: "Guard reported obstruction, post lockouts, or safety risks requiring review.",
+      actionLabel: "Review reasons",
+      onAction: () => setEvidence({ title: "Couldn't complete duties", ids: blocked }),
+    });
+  }
+  if (waiting.length > 0) {
+    attentionItems.push({
+      id: "waiting",
+      tone: "info",
+      title: `${waiting.length} ${waiting.length === 1 ? "duty" : "duties"} waiting on handoff`,
+      detail: "Awaiting preceding shift sign-off or relief officer arrival.",
+      actionLabel: "View waiting",
+      onAction: () => setEvidence({ title: "Waiting on someone", ids: waiting }),
+    });
+  }
 
   return (
     <div className="dg-team dg-page-enter">
@@ -74,6 +113,14 @@ export function TeamToday({ reloadSignal }: { reloadSignal?: number }) {
         </EmptyState>
       ) : (
         <>
+          <AttentionCard
+            title="Today's Attention"
+            subtitle="Operational priorities and bottlenecks synthesized across active sites and guard shifts"
+            badge="Manager Attention"
+            items={attentionItems}
+            emptyMessage="All active guard shifts and duty pipelines are progressing smoothly on schedule."
+          />
+
           <div className="dg-stats">
             <button type="button" className="dg-stat dg-stat--wide" onClick={() => setEvidence({ title: "All work today", ids: expected })}>
               <span className="dg-stat__label">Done today</span>

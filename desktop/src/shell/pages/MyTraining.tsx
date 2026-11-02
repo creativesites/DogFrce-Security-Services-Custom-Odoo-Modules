@@ -7,6 +7,8 @@ import {
   askLessonAi, fetchAssignment, fetchAttempts, fetchCourseTree, fetchLessonProgress, fetchMyAssignments,
   markLessonComplete, resolveEmployeeId, startAttempt, submitAttempt,
 } from "../../api/training";
+import { getCachedEmployeeIdSync } from "../../api/work";
+import { fetchWithCache } from "../../lib/queryCache";
 import { extractErrorMessage } from "../../lib/extractErrorMessage";
 import { useSession } from "../../session/SessionContext";
 import {
@@ -42,8 +44,13 @@ interface MyTrainingProps {
 export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = false }: MyTrainingProps) {
   const { openInOdoo } = useViewMode();
   const { session } = useSession();
-  const [employeeState, setEmployeeState] = useState<LoadState>("loading");
-  const [employeeId, setEmployeeId] = useState<number | null>(null);
+  const cachedInitialId = session ? getCachedEmployeeIdSync(session.uid) : undefined;
+  const [employeeState, setEmployeeState] = useState<LoadState>(() =>
+    cachedInitialId !== undefined ? "ready" : "loading",
+  );
+  const [employeeId, setEmployeeId] = useState<number | null>(() =>
+    cachedInitialId !== undefined ? cachedInitialId : null,
+  );
   const [employeeError, setEmployeeError] = useState<string | null>(null);
 
   const [listState, setListState] = useState<LoadState>("loading");
@@ -54,7 +61,7 @@ export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = 
 
   const loadEmployee = useCallback(async () => {
     if (!session) return;
-    setEmployeeState("loading");
+    if (employeeId == null) setEmployeeState("loading");
     setEmployeeError(null);
     try {
       const id = await resolveEmployeeId(session.uid);
@@ -64,23 +71,31 @@ export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = 
       setEmployeeError(extractErrorMessage(err, "Couldn't look up your employee record."));
       setEmployeeState("error");
     }
-  }, [session]);
+  }, [session, employeeId]);
 
-  useEffect(() => { void loadEmployee(); }, [loadEmployee]);
+  useEffect(() => {
+    if (employeeId == null) {
+      void loadEmployee();
+    }
+  }, [loadEmployee, employeeId]);
 
   const loadList = useCallback(async () => {
     if (employeeId == null) return;
-    setListState("loading");
+    if (assignments.length === 0) setListState("loading");
     setListError(null);
     try {
-      const rows = await fetchMyAssignments(employeeId);
+      const rows = await fetchWithCache(
+        `training:assignments:${employeeId}`,
+        () => fetchMyAssignments(employeeId),
+        { staleTime: 30_000 },
+      );
       setAssignments(rows);
       setListState("ready");
     } catch (err) {
       setListError(extractErrorMessage(err, "Couldn't load your training."));
       setListState("error");
     }
-  }, [employeeId]);
+  }, [employeeId, assignments.length]);
 
   useEffect(() => { void loadList(); }, [loadList]);
 
@@ -92,9 +107,23 @@ export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = 
 
   if (employeeState === "loading") {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="dg-skeleton" style={{ height: 56 }} />
-        <div className="dg-skeleton" style={{ height: 56 }} />
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        <div className="dg-skeleton-row" style={{ height: 68 }}>
+          <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+          <div style={{ flex: 1 }}>
+            <div className="dg-skeleton dg-skeleton-text" style={{ width: "45%", height: 18, marginBottom: 6 }} />
+            <div className="dg-skeleton dg-skeleton-text" style={{ width: "25%", height: 13 }} />
+          </div>
+          <div className="dg-skeleton dg-skeleton-pill" style={{ width: 90, height: 24 }} />
+        </div>
+        <div className="dg-skeleton-row" style={{ height: 68 }}>
+          <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+          <div style={{ flex: 1 }}>
+            <div className="dg-skeleton dg-skeleton-text" style={{ width: "50%", height: 18, marginBottom: 6 }} />
+            <div className="dg-skeleton dg-skeleton-text" style={{ width: "30%", height: 13 }} />
+          </div>
+          <div className="dg-skeleton dg-skeleton-pill" style={{ width: 90, height: 24 }} />
+        </div>
       </div>
     );
   }
@@ -158,10 +187,24 @@ export function MyTraining({ reloadSignal, focusAssignmentId = null, canGuide = 
         </div>
       </header>
 
-      {listState === "loading" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div className="dg-skeleton" style={{ height: 62 }} />
-          <div className="dg-skeleton" style={{ height: 62 }} />
+      {listState === "loading" && assignments.length === 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="dg-skeleton-row" style={{ height: 68 }}>
+            <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+            <div style={{ flex: 1 }}>
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "45%", height: 18, marginBottom: 6 }} />
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "25%", height: 13 }} />
+            </div>
+            <div className="dg-skeleton dg-skeleton-pill" style={{ width: 90, height: 24 }} />
+          </div>
+          <div className="dg-skeleton-row" style={{ height: 68 }}>
+            <div className="dg-skeleton dg-skeleton-tile" style={{ width: 32, height: 32 }} />
+            <div style={{ flex: 1 }}>
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "50%", height: 18, marginBottom: 6 }} />
+              <div className="dg-skeleton dg-skeleton-text" style={{ width: "30%", height: 13 }} />
+            </div>
+            <div className="dg-skeleton dg-skeleton-pill" style={{ width: 90, height: 24 }} />
+          </div>
         </div>
       )}
 
