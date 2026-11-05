@@ -398,6 +398,12 @@
                             <t t-elif="state.suggestionsLoaded">Refresh Suggestions</t>
                             <t t-else="">Suggest Guards</t>
                         </button>
+                        <button t-if="!state.selectedSlot.employee_name and state.selectedSlot.state !== 'cancelled'"
+                                class="rb-btn rb-btn-outline-danger"
+                                t-on-click="cancelSlot"
+                                title="Cancel this slot and eliminate the critical gap">
+                            <i class="fa fa-times me-1"/>Remove Slot
+                        </button>
                         <!-- Assigned slot: find replacement + unassign -->
                         <t t-if="state.selectedSlot.employee_name">
                             <button class="rb-btn rb-btn-ghost"

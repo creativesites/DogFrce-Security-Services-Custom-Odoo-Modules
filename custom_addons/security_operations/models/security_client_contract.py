@@ -535,6 +535,33 @@ class SecurityClientContract(models.Model):
             raise UserError("Roster batch system is not available.")
         return self.env["security.roster.batch"].action_run_cycle_autoroster(cycle_type=cycle_type, contract_ids=[self.id])
 
+    def action_sync_current_cycle_slots(self):
+        """
+        Synchronizes all linked operational sites in this contract with the active operational roster cycle.
+        Spawns missing slots or cancels excess unassigned slots based on current contract requirements.
+        """
+        self.ensure_one()
+        sites = self.contract_site_ids.mapped("site_id")
+        if self.site_id and self.site_id not in sites:
+            sites |= self.site_id
+
+        if not sites:
+            raise UserError("No operational sites are linked to this contract.")
+
+        for site in sites:
+            site.action_sync_current_cycle_slots()
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Contract Slots Synchronized",
+                "message": f"Successfully synchronized current cycle roster slots across {len(sites)} site(s) for contract '{self.name}'.",
+                "type": "success",
+                "sticky": False,
+            },
+        }
+
     def action_terminate(self):
         for contract in self:
             contract.state = "terminated"

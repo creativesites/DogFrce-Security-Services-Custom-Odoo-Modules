@@ -1353,22 +1353,41 @@ class RosterBoard extends Component {
         await this.manualAssignGuard(slot, guard.id, guard.name);
     }
 
+    async cancelSlot() {
+        const slot = this.state.selectedSlot;
+        if (!slot) return;
+        try {
+            await this.orm.call("security.roster.slot", "action_cancel_slot", [[slot.id]]);
+            const localSlot = this.state.slots.find((s) => s.id === slot.id);
+            if (localSlot) {
+                localSlot.state = "cancelled";
+                localSlot.critical_gap = false;
+            }
+            this.state.selectedSlot = null;
+            if (this.state.stats.unassigned > 0) {
+                this.state.stats.unassigned--;
+            }
+            this.notification.add("Shift slot cancelled and removed from gaps.", { type: "info" });
+            await this.loadBoard();
+        } catch (e) {
+            this.notification.add("Could not cancel slot: " + (e.message || e), { type: "danger" });
+        }
+    }
+
     async unassignSlot() {
         const slot = this.state.selectedSlot;
         if (!slot) return;
         this.state.assignError = null;
         try {
-            await this.orm.write("security.roster.slot", [slot.id], {
-                employee_id: false,
-                state: "draft",
-            });
+            await this.orm.call("security.roster.slot", "action_unassign", [[slot.id]]);
             const localSlot = this.state.slots.find((s) => s.id === slot.id);
             if (localSlot) {
                 localSlot.employee_id = null;
                 localSlot.employee_name = null;
                 localSlot.state = "draft";
+                localSlot.critical_gap = false;
             }
-            this.state.selectedSlot = { ...slot, employee_id: null, employee_name: null, state: "draft" };
+            this.state.selectedSlot = { ...slot, employee_id: null, employee_name: null, state: "draft", critical_gap: false };
             this.state.stats.assigned = Math.max(0, this.state.stats.assigned - 1);
             this.state.stats.unassigned++;
             this.notification.add("Guard unassigned.", { type: "info" });

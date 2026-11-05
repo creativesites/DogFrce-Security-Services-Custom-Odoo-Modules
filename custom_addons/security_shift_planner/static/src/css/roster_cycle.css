@@ -155,6 +155,32 @@
 .rc-btn-sm:hover { background: #f8fafc; }
 .rc-btn-danger { color: #dc2626; border-color: #fca5a5; }
 .rc-btn-danger:hover { background: #fef2f2; }
+.rc-btn-outline-danger {
+  border: 1px solid #fca5a5;
+  background: #fff;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rc-btn-outline-danger:hover {
+  background: #fef2f2;
+}
+.rc-btn-outline-primary {
+  border: 1px solid #93c5fd;
+  background: #fff;
+  color: #1b3a6b;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.rc-btn-outline-primary:hover {
+  background: #eff6ff;
+}
 
 .rc-slot-unassigned-row {
   padding: 14px;

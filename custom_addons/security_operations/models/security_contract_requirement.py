@@ -49,8 +49,8 @@ class SecurityContractShiftRequirement(models.Model):
     guard_count = fields.Integer(
         default=1,
         required=True,
-        string="Guard Count",
-        help="Number of guards assigned concurrently on this shift.",
+        string="Guards / Shift",
+        help="Number of concurrent guards stationed per shift.",
     )
     min_grade_id = fields.Many2one(
         "security.grade",
@@ -272,6 +272,14 @@ class SecurityContractShiftRequirement(models.Model):
             op_vals = {k: vals[k] for k in sync_keys if k in vals}
             if op_vals:
                 for req in self:
+                    if not req.requirement_id and req.contract_site_id.site_id:
+                        op_site = req.contract_site_id.site_id
+                        matched = self.env["security.shift.requirement"].search([
+                            ("site_id", "=", op_site.id),
+                            ("shift_template_id", "=", req.shift_template_id.id),
+                        ], limit=1)
+                        if matched:
+                            req.requirement_id = matched.id
                     if req.requirement_id and req.requirement_id.exists():
                         req.requirement_id.with_context(syncing_contract_site=True).write(op_vals)
         return res

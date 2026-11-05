@@ -391,10 +391,12 @@ class SecurityClientSite(models.Model):
                         ("shift_template_id", "=", req.shift_template_id.id),
                         ("shift_date", "=", target_date),
                         ("slot_number", "=", slot_num),
-                        ("state", "!=", "cancelled"),
                     ]
-                    existing = Slot.search_count(domain)
+                    existing = Slot.search(domain, limit=1)
                     if existing:
+                        if existing.state == "cancelled":
+                            existing.action_reset_draft()
+                            created_count += 1
                         continue
 
                     vals = {
@@ -1042,7 +1044,12 @@ class SecurityShiftRequirement(models.Model):
     post_id = fields.Many2one("security.post", required=True)
     post_type_id = fields.Many2one(related="post_id.post_type_id", store=True)
     shift_template_id = fields.Many2one("security.shift.template", required=True)
-    guard_count = fields.Integer(default=1, required=True)
+    guard_count = fields.Integer(
+        default=1,
+        required=True,
+        string="Guards per Shift",
+        help="Number of concurrent guards stationed per shift.",
+    )
     monday = fields.Boolean(default=True)
     tuesday = fields.Boolean(default=True)
     wednesday = fields.Boolean(default=True)
@@ -1178,7 +1185,20 @@ class SecurityShiftRequirement(models.Model):
             if requirement.fairness_weight < 0:
                 raise ValidationError("Fairness weight cannot be negative.")
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        if not self.env.context.get("skip_slot_auto_sync"):
+            for req in records:
+                if req.site_id and req.guard_count > 0:
+                    try:
+                        req.site_id.with_context(skip_slot_auto_sync=True).action_sync_current_cycle_slots()
+                    except Exception as e:
+                        _logger.warning("Auto-sync slots for site %s on requirement create failed: %s", req.site_id.name, e)
+        return records
+
     def write(self, vals):
+        old_counts = {req.id: req.guard_count for req in self} if "guard_count" in vals else {}
         res = super().write(vals)
         if not self.env.context.get("syncing_contract_site"):
             sync_keys = [
@@ -1192,6 +1212,31 @@ class SecurityShiftRequirement(models.Model):
                 for req in self:
                     if req.contract_requirement_id and req.contract_requirement_id.exists():
                         req.contract_requirement_id.with_context(syncing_contract_site=True).write(c_vals)
+
+        # Handle automatic slot adjustment on guard_count change
+        if "guard_count" in vals and not self.env.context.get("skip_slot_auto_sync"):
+            new_count = vals["guard_count"]
+            today = fields.Date.today()
+            for req in self:
+                old_count = old_counts.get(req.id, req.guard_count)
+                if new_count > old_count and req.site_id:
+                    # Guard count increased (e.g. 1 -> 2): auto-spawn missing slots for remainder of cycle
+                    try:
+                        req.site_id.with_context(skip_slot_auto_sync=True).action_sync_current_cycle_slots()
+                    except Exception as e:
+                        _logger.warning("Auto-sync slots for site %s on requirement write failed: %s", req.site_id.name, e)
+                elif new_count < old_count:
+                    # Guard count decreased (e.g. 2 -> 1): auto-cancel future unassigned draft slots
+                    excess_slots = self.env["security.roster.slot"].search([
+                        ("shift_requirement_id", "=", req.id),
+                        ("shift_date", ">=", today),
+                        ("slot_number", ">", new_count),
+                        ("employee_id", "=", False),
+                        ("state", "!=", "cancelled"),
+                    ])
+                    if excess_slots:
+                        excess_slots.action_cancel_slot()
+
         return res
 
 
@@ -2112,6 +2157,7 @@ class SecurityRosterSlot(models.Model):
 
     @api.depends(
         "employee_id",
+        "state",
         "resource_requirement_ids",
         "resource_requirement_ids.is_fulfilled",
         "resource_requirement_ids.is_mandatory",
@@ -2120,6 +2166,11 @@ class SecurityRosterSlot(models.Model):
     )
     def _compute_readiness(self):
         for slot in self:
+            if slot.state == "cancelled":
+                slot.readiness_score = 0.0
+                slot.readiness_state = "ready"
+                slot.readiness_summary = "Slot Cancelled"
+                continue
             try:
                 with self.env.cr.savepoint():
                     reqs = slot.resource_requirement_ids
@@ -2227,6 +2278,109 @@ class SecurityRosterSlot(models.Model):
 
             slot._compute_readiness()
         return True
+
+    def action_unassign(self):
+        """Unassigns guard from slot, resets flags, and returns slot to draft."""
+        for slot in self:
+            slot.write({
+                "employee_id": False,
+                "state": "draft",
+                "is_relief": False,
+                "relief_reason": False,
+                "is_override": False,
+                "override_reason": False,
+                "is_preferred_assignment": False,
+                "critical_gap": False,
+            })
+        return True
+
+    def action_cancel_slot(self):
+        """Cancels slot, unassigns guard, and clears critical gap flag so it no longer triggers red alerts."""
+        for slot in self:
+            slot.write({
+                "employee_id": False,
+                "state": "cancelled",
+                "critical_gap": False,
+            })
+        return True
+
+    def action_reset_draft(self):
+        """Re-opens a cancelled slot back into draft status."""
+        for slot in self:
+            slot.write({
+                "state": "draft",
+                "critical_gap": False,
+            })
+        return True
+
+    @api.model
+    def action_create_adhoc_slot(self, site_id, shift_date, shift_template_id, post_id=None):
+        """Create a single ad-hoc / extra shift slot for a site on a specific date."""
+        site = self.env["security.client.site"].browse(int(site_id))
+        if not site.exists():
+            raise ValidationError(_("Site not found."))
+
+        post = None
+        if post_id:
+            post = self.env["security.post"].browse(int(post_id))
+        if not post or not post.exists() or post.site_id.id != site.id:
+            post = site.post_ids.filtered(lambda p: p.active)[:1]
+            if not post:
+                post = self.env["security.post"].create({
+                    "name": "Main Post",
+                    "site_id": site.id,
+                    "partner_id": site.partner_id.id if site.partner_id else False,
+                })
+
+        d = fields.Date.to_date(shift_date)
+        Batch = self.env["security.roster.batch"]
+        cycle_from, cycle_to = Batch.get_operational_cycle_dates(d)
+        batch = Batch.search([
+            ("date_from", "=", str(cycle_from)),
+            ("date_to", "=", str(cycle_to)),
+            ("state", "!=", "cancelled"),
+            "|", ("site_id", "=", site.id), ("site_id", "=", False),
+        ], order="site_id desc, id desc", limit=1)
+
+        existing_slots = self.search([
+            ("site_id", "=", site.id),
+            ("post_id", "=", post.id),
+            ("shift_template_id", "=", int(shift_template_id)),
+            ("shift_date", "=", d),
+            ("state", "!=", "cancelled"),
+        ])
+        next_slot_num = len(existing_slots) + 1
+
+        req = self.env["security.shift.requirement"].search([
+            ("site_id", "=", site.id),
+            ("post_id", "=", post.id),
+            ("shift_template_id", "=", int(shift_template_id)),
+            ("active", "=", True),
+        ], limit=1)
+
+        vals = {
+            "site_id": site.id,
+            "partner_id": site.partner_id.id if site.partner_id else False,
+            "post_id": post.id,
+            "shift_template_id": int(shift_template_id),
+            "shift_date": d,
+            "slot_number": next_slot_num,
+            "state": "draft",
+            "critical_gap": False,
+        }
+        if req:
+            vals["shift_requirement_id"] = req.id
+        if batch:
+            vals["batch_id"] = batch.id
+
+        slot = self.create(vals)
+        return {
+            "id": slot.id,
+            "name": slot.name,
+            "site_id": site.id,
+            "post_name": post.name,
+            "shift_date": str(d),
+        }
 
     @api.onchange("shift_requirement_id")
     def _onchange_shift_requirement_id(self):

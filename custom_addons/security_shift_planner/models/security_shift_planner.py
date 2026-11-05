@@ -2235,6 +2235,20 @@ class SecurityRosterCycleGrid(models.Model):
                 "relief_guards": pool_info.get("relief_guards", [])[:50],
             })
 
+        available_posts = [
+            {"id": p.id, "name": p.name}
+            for p in site.post_ids.filtered(lambda p: p.active)
+        ]
+        available_templates = [
+            {
+                "id": t.id,
+                "name": t.name,
+                "start_hour": t.start_hour,
+                "end_hour": t.end_hour,
+            }
+            for t in self.env["security.shift.template"].search([("active", "=", True)], order="start_hour, name")
+        ]
+
         return {
             "site_id": site.id,
             "site_name": site.name,
@@ -2242,4 +2256,6 @@ class SecurityRosterCycleGrid(models.Model):
             "shift_date": str(d),
             "dow": d.strftime("%A"),
             "slots": slot_data,
+            "available_posts": available_posts,
+            "available_shift_templates": available_templates,
         }

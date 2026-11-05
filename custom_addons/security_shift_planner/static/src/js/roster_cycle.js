@@ -76,6 +76,10 @@ export class RosterCycle extends Component {
             poolTab: "regular",
             poolSearch: "",
             overrideModal: null,
+            showAddSlot: false,
+            newSlotPostId: null,
+            newSlotTemplateId: null,
+            savingNewSlot: false,
 
             // Today's Roll Call & Live Gap Dispatch State
             showTodayRollCall: false,
@@ -230,6 +234,9 @@ export class RosterCycle extends Component {
         this.state.dayData = null;
         this.state.activeSlotId = null;
         this.state.poolSearch = "";
+        this.state.showAddSlot = false;
+        this.state.newSlotPostId = null;
+        this.state.newSlotTemplateId = null;
     }
 
     toggleAssignDrawer(slotId) {
@@ -305,15 +312,65 @@ export class RosterCycle extends Component {
         this.state.overrideModal = null;
     }
 
-    async clearSlot(slotId) {
+    toggleAddSlot() {
+        this.state.showAddSlot = !this.state.showAddSlot;
+        if (this.state.showAddSlot && this.state.dayData) {
+            const posts = this.state.dayData.available_posts || [];
+            const templates = this.state.dayData.available_shift_templates || [];
+            this.state.newSlotPostId = posts.length > 0 ? posts[0].id : null;
+            this.state.newSlotTemplateId = templates.length > 0 ? templates[0].id : null;
+        }
+    }
+
+    async addExtraSlot() {
+        if (!this.state.selectedDay) return;
+        if (!this.state.newSlotTemplateId) {
+            this.notification.add("Please select a shift template.", { type: "warning" });
+            return;
+        }
+        this.state.savingNewSlot = true;
         try {
-            await this.orm.call("security.roster.slot", "write", [[slotId], { employee_id: false, state: "draft" }]);
-            this.notification.add("Shift cleared", { type: "info" });
+            await this.orm.call("security.roster.slot", "action_create_adhoc_slot", [], {
+                site_id: this.state.selectedDay.site_id,
+                shift_date: this.state.selectedDay.shift_date,
+                shift_template_id: this.state.newSlotTemplateId,
+                post_id: this.state.newSlotPostId || false,
+            });
+            this.notification.add("Extra shift slot created successfully.", { type: "success" });
+            this.state.showAddSlot = false;
+            await this.loadDaySlots();
+            this.load();
+        } catch (e) {
+            this.notification.add("Failed to create slot: " + (e.message || e), { type: "danger" });
+        } finally {
+            this.state.savingNewSlot = false;
+        }
+    }
+
+    async cancelSlot(slotId) {
+        try {
+            await this.orm.call("security.roster.slot", "action_cancel_slot", [[slotId]]);
+            this.notification.add("Shift slot removed and cleared from critical gaps.", { type: "success" });
             await this.loadDaySlots();
             this.load(); // refresh background grid metrics
         } catch (e) {
-            this.notification.add("Could not clear shift: " + (e.message || e), { type: "danger" });
+            this.notification.add("Could not remove slot: " + (e.message || e), { type: "danger" });
         }
+    }
+
+    async unassignSlot(slotId) {
+        try {
+            await this.orm.call("security.roster.slot", "action_unassign", [[slotId]]);
+            this.notification.add("Guard unassigned. Slot returned to draft.", { type: "info" });
+            await this.loadDaySlots();
+            this.load(); // refresh background grid metrics
+        } catch (e) {
+            this.notification.add("Could not unassign guard: " + (e.message || e), { type: "danger" });
+        }
+    }
+
+    async clearSlot(slotId) {
+        return this.unassignSlot(slotId);
     }
 
     openSite(siteId) {

@@ -66,6 +66,10 @@
                 <header>
                     <button name="action_open_contract_workspace" type="object"
                             string="Open Contract Workspace" class="oe_highlight btn-primary"/>
+                    <button name="action_sync_current_cycle_slots" type="object"
+                            string="Sync Roster Slots" class="btn-outline-primary" icon="fa-refresh"
+                            invisible="state not in ('draft', 'active')"
+                            title="Generate missing roster slots or sync staffing adjustments for active cycles"/>
                     <button name="action_request_adhoc_guard" type="object"
                             string="Request Additional Guard" class="btn-secondary"
                             invisible="state not in ('draft', 'active')"/>
@@ -297,7 +301,7 @@
                             <field name="contract_site_id" readonly="1"/>
                             <field name="contract_post_id"/>
                             <field name="shift_template_id"/>
-                            <field name="guard_count" string="Number of Guards / Workers"/>
+                            <field name="guard_count" string="Guards per Shift"/>
                             <field name="min_grade_id"/>
                         </group>
                         <group string="Active Operating Days">
@@ -357,7 +361,7 @@
                 <field name="contract_site_id"/>
                 <field name="contract_post_id"/>
                 <field name="shift_template_id"/>
-                <field name="guard_count" string="Workers"/>
+                <field name="guard_count" string="Guards / Shift"/>
                 <field name="monday"/>
                 <field name="tuesday"/>
                 <field name="wednesday"/>

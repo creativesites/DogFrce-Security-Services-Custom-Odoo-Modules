@@ -443,7 +443,7 @@
                                 <list editable="bottom">
                                     <field name="post_id"/>
                                     <field name="shift_template_id"/>
-                                    <field name="guard_count" sum="Total Shift Guards"/>
+                                    <field name="guard_count" string="Guards / Shift" sum="Total Shift Guards"/>
                                     <field name="monday" string="Mon"/>
                                     <field name="tuesday" string="Tue"/>
                                     <field name="wednesday" string="Wed"/>
@@ -714,7 +714,7 @@
                                 <list editable="bottom">
                                     <field name="site_id"/>
                                     <field name="shift_template_id"/>
-                                    <field name="guard_count"/>
+                                    <field name="guard_count" string="Guards / Shift"/>
                                     <field name="bill_rate"/>
                                     <field name="pay_rate"/>
                                     <field name="rate_multiplier"/>
@@ -779,7 +779,7 @@
                 <field name="site_id"/>
                 <field name="post_id"/>
                 <field name="shift_template_id"/>
-                <field name="guard_count"/>
+                <field name="guard_count" string="Guards / Shift"/>
                 <field name="bill_rate"/>
                 <field name="pay_rate"/>
                 <field name="active" column_invisible="1"/>
@@ -814,7 +814,7 @@
                             <field name="shift_template_id"/>
                         </group>
                         <group>
-                            <field name="guard_count"/>
+                            <field name="guard_count" string="Guards / Shift"/>
                             <field name="bill_rate"/>
                             <field name="pay_rate"/>
                             <field name="rate_multiplier"/>
@@ -1133,7 +1133,7 @@
                                 <list editable="bottom">
                                     <field name="site_id" readonly="1"/>
                                     <field name="guard_ids" widget="many2many_tags" placeholder="Select guards for this cycle..."/>
-                                    <field name="guard_count"/>
+                                    <field name="guard_count" string="Guards in Pool"/>
                                     <field name="guard_pool_mode"/>
                                     <field name="is_modified_from_defaults" widget="boolean_toggle" readonly="1"/>
                                     <button name="action_reset_to_site_defaults" type="object" string="Reset to Defaults" 
@@ -1215,7 +1215,15 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed"/>
+                    <button name="action_unassign" type="object" string="Unassign Guard"
+                            class="btn-warning" invisible="not employee_id or state == 'cancelled'"
+                            confirm="Are you sure you want to unassign this guard? The slot will return to draft."/>
+                    <button name="action_cancel_slot" type="object" string="Cancel Slot"
+                            class="btn-danger" invisible="state == 'cancelled'"
+                            confirm="Are you sure you want to cancel this shift slot? It will be removed from critical gaps and rostering."/>
+                    <button name="action_reset_draft" type="object" string="Re-open Slot"
+                            class="btn-secondary" invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,assigned,confirmed,cancelled"/>
                 </header>
                 <sheet>
                     <group>
